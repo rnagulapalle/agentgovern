@@ -44,13 +44,20 @@ export const metadata: Metadata = {
     siteName: SITE.name,
     title: SITE.title,
     description: SITE.description,
-    images: [{ url: "/media/og.jpg", width: 1200, height: 630, alt: SITE.name }],
+    images: [
+      {
+        url: "/media/og.png",
+        width: 1200,
+        height: 630,
+        alt: "AgentGovernance — control what your company's AI is allowed to do",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE.title,
     description: SITE.description,
-    images: ["/media/og.jpg"],
+    images: ["/media/og.png"],
     creator: SITE.twitter,
   },
 };
