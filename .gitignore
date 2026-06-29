@@ -1,0 +1,35 @@
+# dependencies
+/node_modules
+.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+
+# production / build artifacts
+*.tsbuildinfo
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (keep .env.example if added later)
+.env
+.env*.local
+.env.production
+
+# TLS certificates — NEVER commit
+*.pem
+nginx/certs/*.pem
+
+# local agent / editor state
+.claude/
+
+# os
+.DS_Store
+*.pem

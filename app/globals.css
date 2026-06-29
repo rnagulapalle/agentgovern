@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #09090b;
+  @apply text-white/90;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  letter-spacing: -0.011em;
+  /* Single, near-imperceptible top vignette — no decorative gradient washes. */
+  background-image: radial-gradient(
+    120% 80% at 50% -20%,
+    rgba(99, 102, 241, 0.05),
+    transparent 60%
+  );
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Restrained, thin scrollbar */
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
+  background-clip: content-box;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.28);
+}
+
+@layer components {
+  /* Flat card — hairline border, faint fill, no glow. */
+  .card {
+    @apply rounded-xl border border-white/[0.07];
+    background-color: #0c0c0e;
+  }
+
+  .card-head {
+    @apply flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-3;
+  }
+
+  /* Inset technical surface (mono content blocks). */
+  .inset {
+    @apply rounded-lg border border-white/[0.06] bg-white/[0.015];
+  }
+
+  /* Micro uppercase label */
+  .label {
+    @apply font-mono text-[10px] uppercase tracking-[0.12em] text-white/35;
+  }
+
+  /* Small status chip */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium leading-none;
+  }
+
+  .kbd {
+    @apply rounded border border-white/[0.08] bg-white/[0.03] px-1.5 py-0.5 font-mono text-[10px] text-white/40;
+  }
+
+  /* macOS window traffic lights */
+  .dots {
+    @apply flex items-center gap-1.5;
+  }
+  .dots span {
+    @apply h-2.5 w-2.5 rounded-full;
+  }
+}
+
+/* Range slider thumb — consistent across browsers */
+.at-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border-radius: 9999px;
+  background: #fafafa;
+  border: 2px solid #0b0b0d;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.at-range::-moz-range-thumb {
+  height: 14px;
+  width: 14px;
+  border-radius: 9999px;
+  background: #fafafa;
+  border: 2px solid #0b0b0d;
+  cursor: pointer;
+}
+.at-range:disabled::-webkit-slider-thumb {
+  cursor: default;
+}
+
+@keyframes ring-draw {
+  from {
+    stroke-dashoffset: var(--ring-c);
+  }
+  to {
+    stroke-dashoffset: var(--ring-off);
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .animate-blink {
+    animation: blink 1s steps(1) infinite;
+  }
+  .ring-draw {
+    stroke-dashoffset: var(--ring-off);
+    animation: ring-draw 1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  }
+  .mono {
+    font-family: var(--font-mono), monospace;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}

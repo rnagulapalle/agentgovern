@@ -1,0 +1,29 @@
+services:
+  web:
+    image: agentgovernance-web:latest
+    build:
+      context: .
+      args:
+        - NEXT_PUBLIC_WAITLIST_ENDPOINT=${NEXT_PUBLIC_WAITLIST_ENDPOINT:-}
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    expose:
+      - "3000"
+    mem_limit: 1024m
+    memswap_limit: 1280m
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      - web
+    mem_limit: 64m

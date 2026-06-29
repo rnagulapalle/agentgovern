@@ -1,0 +1,3 @@
+# Never commit real certificates. Put fullchain.pem + privkey.pem here on the server.
+*.pem
+!.gitignore
