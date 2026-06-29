@@ -70,3 +70,23 @@ Full backlog with slugs, queries, and evidence: **`docs/research/industry-narrow
 ## Deploy
 
 - `docs/DEPLOY.md` — Lightsail + Docker + Cloudflare
+
+## Dev.to (weekly)
+
+**Cadence:** 1 post every **Tuesday** · drafts in `docs/devto/` · calendar in `docs/devto/devto-weekly-calendar.md`
+
+| Step | Action |
+|------|--------|
+| Pick | Next row in weekly calendar (matches a live guide URL) |
+| Draft | `docs/devto/week-NN-*.md` — narrow incident, business/IT voice, `published: false` |
+| Canonical | Always `https://agentgovern.ai/<guide-slug>` — not Dev.to as primary |
+| Publish | Dev.to editor → paste markdown → set canonical URL → 4 tags |
+| After | Ledger `Posted` + Dev.to URL; optional Hashnode (canonical = Dev.to) |
+| Measure | GSC impressions on **guide** (Friday check, 7-day lag) |
+
+**Month 1 drafts ready:** weeks 01–04 in `docs/devto/`. Weeks 05–12 scheduled in calendar — draft the Friday before publish week.
+
+**Tags (pick 4):** `ai`, `security`, `devops`, `microsoft`, `chatgpt`, `compliance`, `startup`
+
+**Do not:** broad AI safety essays; repeat same industry+failure within 30 days; use dev jargon (policy engine, OPA, MCP) in titles.
+

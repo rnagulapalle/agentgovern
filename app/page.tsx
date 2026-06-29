@@ -432,8 +432,8 @@ export default function LandingPage() {
             <div className="label mb-3">Connect</div>
             <ul className="space-y-2 text-[13px] text-white/50">
               <li>
-                <a href={`https://twitter.com/${SITE.twitter.replace("@", "")}`} className="hover:text-white">
-                  {SITE.twitter}
+                <a href="https://x.com/rnagulapalle" target="_blank" rel="noopener noreferrer" className="hover:text-white">
+                  @rnagulapalle
                 </a>
               </li>
             </ul>

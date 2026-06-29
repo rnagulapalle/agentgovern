@@ -30,6 +30,10 @@ Read **`~/.cursor/skills/agentgovern-gtm/SKILL.md`** first — full Research Gat
 4. Bump `UPDATED` in `app/sitemap.ts`
 5. Ledger row + matrix status update
 
+## Dev.to weekly
+
+See `docs/devto/devto-weekly-calendar.md`. One post/Tuesday; canonical always points to a live guide on agentgovern.ai.
+
 ## One post rule
 
 **One industry · one failure mode · one action type** — no exceptions.

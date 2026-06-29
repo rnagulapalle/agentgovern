@@ -3,7 +3,7 @@
 > **Rule:** One post = **one industry** + **one failure mode** + **one action type**.  
 > No broad "AI agent governance" essays. Every post cites research before draft.
 
-Last updated: 2026-06-28
+Last updated: 2026-05-27
 
 ## How to use this file
 
@@ -49,7 +49,7 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 
 | ID | Slug (proposed) | Query cluster | Failure mode | Action | Evidence sources | Demo tie-in | Status |
 |----|-----------------|---------------|--------------|--------|------------------|-------------|--------|
-| S-01 | `/sales-agent-discount-approval-threshold` | SDR agent discount approval, AI sales agent authority limit | 25% discount above 10% delegated authority | Offer discount in outbound | Reddit thread; demo mock data | Pending approvals card, SDR-Agent-17 | Planned |
+| S-01 | `/retail-copilot-ai-governance` | SDR agent discount approval, AI sales agent authority limit | 25% discount above 10% delegated authority | Offer discount in outbound | Reddit thread; demo mock data | Pending approvals card, SDR-Agent-17 | Built |
 | S-02 | `/stale-crm-contact-agent-blocked` | AI agent wrong email CRM stale, agent sent wrong contact | CRM not refreshed in N days | Vendor-facing email | Reddit OP + signals 8, 15; HubSpot governance article | Freshness gate + hold state | Planned |
 | S-03 | `/external-party-actions-always-approve` | human in the loop sales agent external email | Category gate: money/external party never auto | Any external send | Signal 13 (procurement); HubSpot write approval | Policy: touchesExternalParty | Planned |
 | S-04 | `/hubspot-agent-write-without-rollback` | HubSpot AI agent CRM write governance | Agent bulk-wrote fields; no rollback trace | CRM record update | Rework HubSpot Breeze governance | Audit trail + separate approval/result logs | Planned |
@@ -67,7 +67,7 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 | ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
 |----|------|---------------|--------------|--------|----------|-------------|--------|
 | H-01 | `/prior-auth-agent-without-audit-trail` | prior authorization AI agent audit | Agent submitted PA; no draft→approval→send log | Prior auth submit | MindMap healthcare deployments; HIPAA §164.312(b) | Lifecycle audit (signal 14) | Planned |
-| H-02 | `/phi-export-agent-blocked` | AI agent PHI export blocked | Agent attempted export outside minimum necessary | Data export / API read | Elixir HIPAA steps; audit-log-spec | Policy save / blocked verdict | Planned |
+| H-02 | `/healthcare-copilot-ai-governance` | AI agent PHI export blocked | Agent attempted export outside minimum necessary | Data export / API read | Elixir HIPAA steps; audit-log-spec | Policy save / blocked verdict | Built |
 | H-03 | `/stale-patient-record-agent-hold` | stale EHR data AI agent | Action on patient record stale > N days | Schedule / notify patient | Signal 15 (auto-hold); healthcare freshness | Hold state, not silent block | Planned |
 
 ### Procurement / vendor ops
@@ -98,6 +98,24 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 |----|------|---------------|--------------|--------|----------|-------------|--------|
 | C-01 | `/zendesk-ticket-reply-agent-auto` | AI agent Zendesk reply governance | Auto-replied with wrong macro / no approval | Ticket public reply | Demo: Reply to ticket #4821 auto | Auto vs exception vs blocked | Planned |
 | C-02 | `/refund-ticket-agent-above-limit` | AI support agent refund limit | Refund $640 without approval chain | Stripe refund from ticket | Demo mock: Refund $640 approved path | Approval + receipt | Planned |
+
+### Logistics / freight
+
+| ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
+|----|------|---------------|--------------|--------|----------|-------------|--------|
+| L-01 | `/logistics-ai-governance` | freight broker Copilot TMS governance | Stale appointment → wrong customer delivery commit | Customer/carrier email | Signal 15 stale data; logistics ops pattern | Hold + approval | Built |
+
+### Construction
+
+| ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
+|----|------|---------------|--------------|--------|----------|-------------|--------|
+| N-01 | `/construction-ai-governance` | construction change order AI approval | CO cost/scope emailed before PM approval | Subcontractor / owner email | Construction dispute patterns | Approval queue | Built |
+
+### Real estate
+
+| ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
+|----|------|---------------|--------------|--------|----------|-------------|--------|
+| R-01 | `/real-estate-ai-governance` | real estate Copilot offer email governance | Counteroffer draft leaks seller motivation | Client/co-broker email | Broker confidentiality duties | External approval | Built |
 
 ### Cross-industry (principle posts — still narrow)
 
