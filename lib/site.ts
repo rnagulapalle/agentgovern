@@ -7,11 +7,10 @@ export const SITE = {
   name: "AgentGovernance",
   url: "https://agentgovern.ai",
   twitter: "@agentgovern",
-  title:
-    "AgentGovernance — AI governance between business AI tools and your company systems",
+  title: "AgentGovernance — AI governance for business AI tools",
   tagline: "Enterprise AI controls",
   description:
-    "Employees use Copilot, ChatGPT, and other AI assistants to access company systems and take real actions. AgentGovernance is the control layer that enforces business policies, requires human approval for risky moves, and keeps a complete AI audit trail.",
+    "Employees use Copilot, ChatGPT, and Gemini to act on company systems. AgentGovernance adds human approval, access control, and a full AI audit trail.",
 };
 
 /** Five-second clarity — what leadership needs to know. */
