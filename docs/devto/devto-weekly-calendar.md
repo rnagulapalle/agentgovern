@@ -7,6 +7,8 @@
 ## Rules (same as SEO pages)
 
 - One industry · one failure mode · one action
+- **Strict variations:** pass `~/promo/content/strict-variation-protocol.md` before every draft
+- **Cover:** `docs/devto/covers/week-NN-*-cover.png` — mandatory, Dev.to PNG only (SVG optional source only); never ask user (`docs/devto-cover-spec.md`)
 - Business / IT-admin voice — not "policy engine" jargon
 - Link one guide + one CTA (`/agent-governance-demo` or waitlist)
 - Tags: pick 4 from `ai, security, devops, microsoft, chatgpt, compliance, startup`
@@ -36,7 +38,7 @@ Weeks 5–12: draft on demand the Friday before publish week (or ask agent to ba
 ```
 □ Read draft in docs/devto/ — tweak hook if needed
 □ Confirm canonical_url matches live guide
-□ Cover image: optional PNG 1000×420 (brand purple #6C5CE7 / dark bg) — or skip
+□ Cover image: **PNG only** — upload `*-cover.png` (not SVG)
 □ Dev.to → New post → paste markdown → set canonical URL field
 □ Tags: 4 max from list above
 □ Publish → copy Dev.to URL to ledger

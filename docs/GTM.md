@@ -41,6 +41,10 @@ Every blog post, SEO page, Dev.to article, and social thread =
 
 No broad "AI agent governance" essays. No prompt-guardrails thought leadership.
 
+**Strict variations:** see `~/promo/content/strict-variation-protocol.md` — ≥3 dimensions must change vs last same-channel post; log `variation:` frontmatter on every draft.
+
+**Covers:** mandatory **PNG** on every Dev.to draft — `docs/devto/covers/*.png` + `docs/devto-cover-spec.md`. Dev.to does not accept SVG. Agent creates PNG; never ask user.
+
 ## Industries we target (narrow posts each)
 
 - RevOps / sales (GTM agents, CRM writes, discounts, external email)
@@ -74,6 +78,8 @@ Full backlog with slugs, queries, and evidence: **`docs/research/industry-narrow
 ## Dev.to (weekly)
 
 **Cadence:** 1 post every **Tuesday** · drafts in `docs/devto/` · calendar in `docs/devto/devto-weekly-calendar.md`
+
+**Strict variations:** `~/promo/content/strict-variation-protocol.md` — never same `industry + failure_mode + action` on Dev.to; ≥40% new prose if syndicating from a guide.
 
 | Step | Action |
 |------|--------|

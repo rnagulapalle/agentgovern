@@ -1,15 +1,21 @@
 ---
 name: agentgovern-seo-engineer
-description: AgentGovernance SEO and content for this repo. Use before creating any blog post, SEO page, or indexable route in agent-trust-demo. Enforces industry-specific narrow posts with mandatory research.
+description: AgentGovernance SEO for agent-trust-demo repo. Use before creating indexable routes here. For portfolio-wide SEO + duplicate checks, read ~/.cursor/skills/portfolio-seo-engineer/SKILL.md first.
 ---
 
 # AgentGovernance SEO (this repo)
+
+**Portfolio SEO:** `~/.cursor/skills/portfolio-seo-engineer/SKILL.md` · **Growth rubric:** `~/promo/content/seo-growth-rubric.md` · duplicate gate: `~/promo/scripts/check-seo-duplicate.sh` · **GSC:** `~/promo/content/gsc-submission-playbook.md`
 
 Read **`~/.cursor/skills/agentgovern-gtm/SKILL.md`** first — full Research Gate protocol lives there.
 
 ## Scope boundary (standing rule)
 
 **SEO only.** Do not edit homepage, demo app, components, or UX unless the user explicitly asks. Ship new indexable routes + registry/sitemap/ledger updates; leave existing pages alone.
+
+**Strict variations:** `~/promo/content/strict-variation-protocol.md` — same variation key within 30 days on same channel = do not draft.
+
+**Dev.to covers:** mandatory **PNG** per `docs/devto-cover-spec.md` — never SVG on Dev.to; never ask user.
 
 ## Local paths
 

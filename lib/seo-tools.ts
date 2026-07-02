@@ -13,6 +13,7 @@ export type SeoLink = { label: string; href: string };
 /** Shipped indexable pages (beyond `/` and `/agent-governance-demo`). */
 export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
   { label: "Guides hub", href: "/guides" },
+  { label: "AI governance & privacy news", href: "/news" },
   {
     label: "AI governance for mid-size companies (50–1,000 employees)",
     href: "/ai-governance-for-mid-size-companies",

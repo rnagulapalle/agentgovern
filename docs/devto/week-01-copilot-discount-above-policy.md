@@ -4,7 +4,16 @@ published: false
 description: "Microsoft Copilot can draft customer emails and update your CRM in one thread. That speed is the problem — unless risky actions stop for approval."
 tags: ai, security, microsoft, devops
 canonical_url: https://agentgovern.ai/retail-copilot-ai-governance
+# Upload cover manually on Dev.to (do not use cover_image frontmatter — breaks preview):
+# docs/devto/covers/week-01-copilot-discount-devto.png
 series: agentgovernance-copilot-rollouts
+variation:
+  industry: retail
+  failure_mode: discount-above-policy
+  action_type: send-email
+  channel: devto
+  differs_from: greenfield
+  dimensions_changed: [D1-industry, D2-failure-mode, D3-action, D5-copilot]
 ---
 
 Our sales team got Copilot in January. By February someone almost sent a 25% discount email when leadership caps discretionary offers at 10%.
@@ -29,9 +38,9 @@ Prompt guidelines fail at the moment of **send** — same way "double-check your
 
 What we needed:
 
-- **Visibility** before customer-facing email goes out  
-- **A threshold** — discounts above X need a named approver  
-- **A log** — what was requested, who approved, what went to the customer  
+- **Visibility** before customer-facing email goes out
+- **A threshold** — discounts above X need a named approver
+- **A log** — what was requested, who approved, what went to the customer
 
 Not a better system prompt. Not "always review AI output." Enforcement.
 
@@ -45,8 +54,8 @@ That action crosses M365 and your CRM. Governance has to sit where **actions** h
 
 ## What we put in place (plain English policies)
 
-1. **External customer email with pricing** → manager approval  
-2. **CRM field changes on amount or stage** → logged; large deltas need approval  
+1. **External customer email with pricing** → manager approval
+2. **CRM field changes on amount or stage** → logged; large deltas need approval
 3. **Stale account data** → hold, don't send (contact not verified in 30 days)
 
 No custom model. No "AI team." Three rules the ops lead already understood.
@@ -57,14 +66,14 @@ We're piloting [AgentGovernance](https://agentgovern.ai) as the control layer be
 
 You don't need to become AI experts. You need the same discipline you use for refunds and vendor payments:
 
-- What actions can AI **attempt**?  
-- Which ones **stop for a human**?  
-- What gets **logged** when compliance asks?  
+- What actions can AI **attempt**?
+- Which ones **stop for a human**?
+- What gets **logged** when compliance asks?
 
 Start with one department and one threshold. Measure for a month. Expand.
 
-Longer write-up on the retail angle: [Retail Copilot AI governance](https://agentgovern.ai/retail-copilot-ai-governance).
+Full guide: [Retail Copilot AI governance](https://agentgovern.ai/retail-copilot-ai-governance)
 
 ---
 
-*Early access — [agentgovern.ai](https://agentgovern.ai) · [interactive demo](https://agentgovern.ai/agent-governance-demo)*
+Early access — [agentgovern.ai](https://agentgovern.ai) · [interactive demo](https://agentgovern.ai/agent-governance-demo)
