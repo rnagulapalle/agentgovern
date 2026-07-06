@@ -2,20 +2,30 @@
 
 import { ListTree } from "lucide-react";
 import type { Decision, Phase } from "@/lib/types";
+import type { Scenario } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
 
+const HUMAN_TITLE: Record<Exclude<Decision, null>, string> = {
+  approved: "Human approved",
+  edited: "Human edited within policy",
+  exception: "Human approved override",
+  rejected: "Human rejected",
+};
+
 export function AuditTimeline({
+  scenario,
   phase,
   decision,
   timestamp,
-  overCap,
-  discount,
+  over,
+  value,
 }: {
+  scenario: Scenario;
   phase: Phase;
   decision: Decision;
   timestamp: string | null;
-  overCap: boolean;
-  discount: number;
+  over: boolean;
+  value: number;
 }) {
   if (phase === "idle") {
     return (
@@ -34,41 +44,36 @@ export function AuditTimeline({
     return order.indexOf(phase) >= order.indexOf(p);
   };
   const resolvedTime = timestamp ? timestamp.split(", ")[1] ?? "—" : "—";
+  const a = scenario.audit;
 
   type Ev = { title: string; detail: string; time: string; tone: string; show: boolean; pending?: boolean };
   const events: Ev[] = [
-    { title: "Human issued task", detail: "raj → SDR-Agent-17", time: "23:41:02", tone: "neutral", show: true },
-    { title: "Agent generated plan", detail: "4 tool calls", time: "23:41:03", tone: "neutral", show: true },
+    { title: "Human issued task", detail: `raj → ${scenario.agentCard.name}`, time: "23:41:02", tone: "neutral", show: true },
+    { title: "Agent generated plan", detail: `${scenario.plannedActions.length} tool calls`, time: "23:41:03", tone: "neutral", show: true },
     { title: "AgentGovernance intercepted calls", detail: "identity + delegation verified", time: "23:41:03", tone: "accent", show: reached("policy") },
-    { title: "CRM update auto-approved", detail: "calendar + delegation cleared", time: "23:41:03", tone: "ok", show: reached("policy") },
+    { title: a.othersTitle, detail: a.othersDetail, time: "23:41:03", tone: "ok", show: reached("policy") },
     {
-      title: overCap ? "Email action blocked" : "Email within authority",
-      detail: overCap ? `${discount}% > 10% policy cap` : `${discount}% ≤ 10% cap`,
+      title: over ? a.governedBadTitle : a.governedOkTitle,
+      detail: a.governedDetail(over, value),
       time: "23:41:04",
-      tone: overCap ? "bad" : "ok",
+      tone: over ? "bad" : "ok",
       show: reached("policy"),
     },
     {
       title: decision
-        ? decision === "rejected"
-          ? "Human rejected exception"
-          : decision === "exception"
-            ? "Human approved exception"
-            : decision === "edited"
-              ? "Human edited to 10%"
-              : "Cleared — no approval needed"
-        : overCap
+        ? HUMAN_TITLE[decision]
+        : over
           ? "Awaiting human review"
           : "No approval required",
-      detail: decision ? "resolved by raj" : overCap ? "needs decision" : "within authority",
+      detail: decision ? "resolved by raj" : over ? "needs decision" : "within authority",
       time: decision ? resolvedTime : "—",
-      tone: decision ? (decision === "rejected" ? "bad" : "accent") : overCap ? "wait" : "ok",
+      tone: decision ? (decision === "rejected" ? "bad" : "accent") : over ? "wait" : "ok",
       show: reached("review"),
       pending: !decision && reached("review"),
     },
     {
       title: "Action receipt generated",
-      detail: decision ? "act_9281 · signed" : "pending resolution",
+      detail: decision ? `${scenario.receipt.agentName} · signed` : "pending resolution",
       time: decision ? resolvedTime : "—",
       tone: decision ? "ok" : "neutral",
       show: reached("resolved"),

@@ -1,19 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatTime } from "./utils";
 import type { Decision, Phase } from "./types";
-import {
-  DISCOUNT_POLICY,
-  PLANNED_ACTIONS,
-  POLICY_CHECKS,
-  RUN_NOW,
-  JOHN_SOURCE,
-} from "./mock-data";
-import { evaluate, SDR_AGENT_17, type ActionRequest } from "./engine";
-
-const ACTION_COUNT = PLANNED_ACTIONS.length;
-const POLICY_COUNT = POLICY_CHECKS.length;
+import type { Scenario } from "./scenarios";
+import { evaluate } from "./engine";
 
 /**
  * Playback pacing (ms). Tuned slow + cinematic so each beat is readable on a
@@ -28,17 +19,22 @@ const TIMING = {
 };
 
 /**
- * Drives the staged "live agent run" used by the demo:
+ * Drives the staged "live agent run" for one Scenario:
  *   idle → planning (actions stream in) → policy (rules evaluate) → review → resolved
  *
- * Built for screen-recording: one `run()` choreographs the whole sequence with
- * realistic pacing, while the discount slider + approval buttons stay interactive.
+ * The single control (discount / record-age slider) builds a real ActionRequest
+ * and runs it through the engine, so the verdict, risk, evidence and receipt are
+ * all genuine — not scripted.
  */
-export function useSimulation() {
+export function useSimulation(scenario: Scenario) {
+  const actionCount = scenario.plannedActions.length;
+  // reveal each context row + the one governed row
+  const policyCount = scenario.policyRows.length + 1;
+
   const [phase, setPhase] = useState<Phase>("idle");
   const [revealedActions, setRevealedActions] = useState(0);
   const [revealedPolicies, setRevealedPolicies] = useState(0);
-  const [discount, setDiscount] = useState(DISCOUNT_POLICY.requested);
+  const [controlValue, setControlValue] = useState(scenario.control.default);
   const [decision, setDecision] = useState<Decision>(null);
   const [timestamp, setTimestamp] = useState<string | null>(null);
 
@@ -60,7 +56,7 @@ export function useSimulation() {
     setPhase("planning");
 
     let t = TIMING.startDelay;
-    for (let i = 1; i <= ACTION_COUNT; i++) {
+    for (let i = 1; i <= actionCount; i++) {
       const n = i;
       at(t, () => setRevealedActions(n));
       t += TIMING.actionStep;
@@ -68,24 +64,24 @@ export function useSimulation() {
     t += TIMING.toPolicy;
     at(t, () => setPhase("policy"));
     t += TIMING.policyStep;
-    for (let i = 1; i <= POLICY_COUNT; i++) {
+    for (let i = 1; i <= policyCount; i++) {
       const n = i;
       at(t, () => setRevealedPolicies(n));
       t += TIMING.policyStep;
     }
     t += TIMING.toReview;
     at(t, () => setPhase("review"));
-  }, []);
+  }, [actionCount, policyCount]);
 
   const reset = useCallback(() => {
     clearTimers();
     setPhase("idle");
     setRevealedActions(0);
     setRevealedPolicies(0);
-    setDiscount(DISCOUNT_POLICY.requested);
+    setControlValue(scenario.control.default);
     setDecision(null);
     setTimestamp(null);
-  }, []);
+  }, [scenario]);
 
   const decide = useCallback((d: Exclude<Decision, null>) => {
     clearTimers();
@@ -94,34 +90,32 @@ export function useSimulation() {
     setPhase("resolved");
   }, []);
 
-  // tidy up any in-flight timers on unmount
+  // tidy up any in-flight timers on unmount / scenario switch
   useEffect(() => () => clearTimers(), []);
 
   // ── The slider drives the REAL engine ──────────────────────────────────
-  // Build the agent's proposed action from the current discount and evaluate it.
-  const emailRequest: ActionRequest = {
-    id: "act_9281",
-    agentId: SDR_AGENT_17.id,
-    capability: "email.send",
-    tool: "Gmail",
-    summary: `Send follow-up email · ${discount}% discount`,
-    target: "john@acme.com",
-    params: { discountPct: discount },
-    sourceRecord: JOHN_SOURCE,
-    at: RUN_NOW,
-  };
-  const evaluation = evaluate(emailRequest, { agent: SDR_AGENT_17, now: RUN_NOW });
-  const overCap = evaluation.decision === "require_approval";
+  const evaluation = useMemo(() => {
+    const request = scenario.buildRequest(controlValue);
+    return evaluate(request, { agent: scenario.agent, now: scenario.now });
+  }, [scenario, controlValue]);
+
+  const decision3 = evaluation.decision; // "allow" | "require_approval" | "block"
+  const over = decision3 !== "allow";
+  const needsHuman = decision3 === "require_approval";
+  const blocked = decision3 === "block";
 
   return {
     phase,
     revealedActions,
     revealedPolicies,
-    discount,
-    setDiscount,
+    controlValue,
+    setControlValue,
     decision,
     timestamp,
-    overCap,
+    over,
+    needsHuman,
+    blocked,
+    decision3,
     evaluation,
     run,
     reset,

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Play, RotateCcw, Loader2, ArrowRight, Check } from "lucide-react";
-import { HUMAN_TASK, AGENT, REASONING_LINES, RUN_STEPS } from "@/lib/mock-data";
+import { RUN_STEPS } from "@/lib/mock-data";
+import type { Scenario } from "@/lib/scenarios";
 import type { Phase } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -84,11 +85,13 @@ function Stepper({ phase }: { phase: Phase }) {
 }
 
 export function RunConsole({
+  scenario,
   phase,
   revealedActions,
   onRun,
   onReset,
 }: {
+  scenario: Scenario;
   phase: Phase;
   revealedActions: number;
   onRun: () => void;
@@ -100,7 +103,10 @@ export function RunConsole({
   // reasoning lines stream in while the agent plans
   const reasoningShown =
     phase === "planning"
-      ? REASONING_LINES.slice(0, Math.min(revealedActions + 1, REASONING_LINES.length))
+      ? scenario.reasoningLines.slice(
+          0,
+          Math.min(revealedActions + 1, scenario.reasoningLines.length)
+        )
       : [];
 
   return (
@@ -113,7 +119,7 @@ export function RunConsole({
           <span className="bg-[#28c840]" />
         </div>
         <span className="ml-2 font-mono text-[11px] text-white/40">
-          agent-console · SDR-Agent-17
+          {scenario.consoleName}
         </span>
         <span className="ml-auto flex items-center gap-1.5 font-mono text-[11px]">
           <span
@@ -133,7 +139,7 @@ export function RunConsole({
         <div className="flex items-start gap-3">
           <span className="mt-1 select-none font-mono text-[13px] text-indigo-400">›</span>
           <p className="text-pretty text-[17px] font-medium leading-snug text-white sm:text-[19px]">
-            {HUMAN_TASK}
+            {scenario.humanTask}
           </p>
         </div>
 
@@ -186,7 +192,7 @@ export function RunConsole({
             <span>routed_to</span>
             <ArrowRight className="h-3.5 w-3.5 text-white/25" />
             <span className="rounded border border-indigo-400/25 bg-indigo-500/[0.08] px-2 py-0.5 text-indigo-200">
-              {AGENT.name}
+              {scenario.agentCard.name}
             </span>
           </div>
 

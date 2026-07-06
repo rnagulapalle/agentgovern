@@ -1,10 +1,4 @@
-import {
-  Mail,
-  Database,
-  CalendarClock,
-  Sparkles,
-  type LucideIcon,
-} from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -39,130 +33,12 @@ export interface PolicyCheck {
 }
 
 /* ------------------------------------------------------------------ */
-/*  The human task that kicked off the run                             */
+/*  Per-run demo content (human task, agent card, planned actions,     */
+/*  policy rows, control) now lives in lib/scenarios.ts — one Scenario */
+/*  object per governance run, driven by the real engine.              */
 /* ------------------------------------------------------------------ */
 
-export const HUMAN_TASK =
-  "Follow up with John from Acme. Offer a 25% discount, update HubSpot, and schedule a call tomorrow if he doesn’t reply.";
-
-/* ------------------------------------------------------------------ */
-/*  Agent identity                                                     */
-/* ------------------------------------------------------------------ */
-
-export const AGENT = {
-  name: "SDR-Agent-17",
-  handle: "agent_sdr_17",
-  owner: "Raj Nagulapalle",
-  role: "Outbound Sales Assistant",
-  delegatedBy: "Raj",
-  sessionExpires: "24h",
-  sessionRemaining: "23h 41m",
-  riskTier: "Medium" as const,
-  allowedTools: ["Gmail", "HubSpot", "Calendar"],
-  restrictedTools: ["Stripe", "DocuSign", "Payroll"],
-  fingerprint: "did:agentgovern:0x4f2a91c7",
-};
-
-/* ------------------------------------------------------------------ */
-/*  Planned actions (the agent's plan)                                 */
-/* ------------------------------------------------------------------ */
-
-export const PLANNED_ACTIONS: PlannedAction[] = [
-  {
-    id: "email",
-    title: "Draft follow-up email to John",
-    detail: "Personalized re-engagement with a 25% discount offer.",
-    tool: "Gmail",
-    icon: Mail,
-    status: "blocked",
-  },
-  {
-    id: "crm",
-    title: "Update Acme CRM stage",
-    detail: "Move deal Acme · Q3 Expansion → “Negotiation”.",
-    tool: "HubSpot",
-    icon: Database,
-    status: "auto-approved",
-  },
-  {
-    id: "call",
-    title: "Schedule follow-up call (tomorrow)",
-    detail: "Hold 15-min slot if no reply within 24h.",
-    tool: "Calendar",
-    icon: CalendarClock,
-    status: "auto-approved",
-  },
-  {
-    id: "delegate",
-    title: "Delegate lead enrichment to Research-Agent-02",
-    detail: "Scoped, read-only access to public firmographics.",
-    tool: "Agent Mesh",
-    icon: Sparkles,
-    status: "auto-approved",
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/*  Policy engine checks                                               */
-/* ------------------------------------------------------------------ */
-
-export const POLICY_CHECKS: PolicyCheck[] = [
-  {
-    id: "crm",
-    label: "CRM stage update",
-    detail: "Within delegated authority for HubSpot deal stages.",
-    verdict: "allowed",
-  },
-  {
-    id: "calendar",
-    label: "Calendar scheduling",
-    detail: "Booking on owner’s calendar is permitted for SDR agents.",
-    verdict: "allowed",
-  },
-  {
-    id: "delegate",
-    label: "Research delegation",
-    detail: "Allowed with scoped, read-only access — no write tools shared.",
-    verdict: "scoped",
-  },
-  {
-    id: "email",
-    label: "Email with 25% discount",
-    detail: "Blocked: discount exceeds delegated authority.",
-    verdict: "blocked",
-  },
-];
-
-export const DISCOUNT_POLICY = {
-  id: "POL-SDR-DISCOUNT-002",
-  name: "Outbound discount authority",
-  text: "AI SDR agents may offer discounts up to 10%. Discounts above 10% require human approval.",
-  cap: 10,
-  requested: 25,
-  max: 40,
-};
-
-/**
- * Fixed clock + source-of-truth record so the engine stays deterministic.
- * John's HubSpot contact was synced 2 days ago — fresh (within the 14-day cap).
- */
-export const RUN_NOW = "2026-06-28T23:41:00Z";
-export const JOHN_SOURCE = {
-  id: "hubspot/contact/8842",
-  system: "HubSpot",
-  lastSyncedAt: "2026-06-26T23:41:00Z",
-};
-
-/** Streamed one at a time in the console while the agent "plans". */
-export const REASONING_LINES = [
-  "Loading lead context — Acme · John Carter (VP Sales)",
-  "Last touch 11 days ago · opened 2 emails · no reply",
-  "Selecting tools — Gmail, HubSpot, Calendar",
-  "Drafting re-engagement offer · discount 25%",
-  "Composing 4-step action plan",
-];
-
-/** Stepper shown in the run console. */
+/** Stepper shown in the run console (shared across scenarios). */
 export const RUN_STEPS = [
   { key: "plan", label: "Plan" },
   { key: "intercept", label: "Intercept" },

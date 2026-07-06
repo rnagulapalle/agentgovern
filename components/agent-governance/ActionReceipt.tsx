@@ -1,51 +1,15 @@
 "use client";
 
-import { ShieldCheck, CornerUpRight, XCircle, BadgeCheck, Download } from "lucide-react";
+import { ShieldCheck, CornerUpRight, XCircle, BadgeCheck, Download, type LucideIcon } from "lucide-react";
 import type { Decision } from "@/lib/types";
+import type { Scenario } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
 
-const RESULT: Record<
-  Exclude<Decision, null>,
-  {
-    label: string;
-    tone: string;
-    icon: React.ElementType;
-    output: (d: number) => string;
-    approver: string;
-  }
-> = {
-  approved: {
-    label: "Approved",
-    tone: "emerald",
-    icon: ShieldCheck,
-    output: (d) =>
-      `Email sent to john@acme.com with a ${d}% discount — within delegated authority, no human approval required.`,
-    approver: "Auto · within authority",
-  },
-  edited: {
-    label: "Approved",
-    tone: "emerald",
-    icon: ShieldCheck,
-    output: () =>
-      "Email sent to john@acme.com with a 10% discount (auto-corrected to policy cap).",
-    approver: "Raj · auto-corrected",
-  },
-  exception: {
-    label: "Approved · exception",
-    tone: "indigo",
-    icon: CornerUpRight,
-    output: (d) =>
-      `Email sent to john@acme.com with a ${d}% discount under a signed one-time exception.`,
-    approver: "Raj · manager override",
-  },
-  rejected: {
-    label: "Rejected",
-    tone: "red",
-    icon: XCircle,
-    output: () =>
-      "No email sent. Agent notified to revise the discount within policy and resubmit.",
-    approver: "Raj · denied",
-  },
+const RESOLVED_ICON: Record<Exclude<Decision, null>, LucideIcon> = {
+  approved: ShieldCheck,
+  edited: ShieldCheck,
+  exception: CornerUpRight,
+  rejected: XCircle,
 };
 
 const TONE: Record<string, { chip: string; text: string; dot: string }> = {
@@ -94,27 +58,30 @@ function Row({
 }
 
 export function ActionReceipt({
+  scenario,
   decision,
   timestamp,
-  discount,
+  value,
   evidenceHash,
   signature,
   riskScore,
   freshness,
 }: {
+  scenario: Scenario;
   decision: Exclude<Decision, null>;
   timestamp: string;
-  discount: number;
+  value: number;
   evidenceHash: string;
   signature: string;
   riskScore: number;
   freshness: string;
 }) {
-  const r = RESULT[decision];
+  const r = scenario.resolved[decision];
+  const meta = scenario.receipt;
   const shortHash = `${evidenceHash.slice(0, 6)}…${evidenceHash.slice(-4)}`;
   const sigOk = signature.startsWith("ed25519:");
   const tone = TONE[r.tone];
-  const Icon = r.icon;
+  const Icon = RESOLVED_ICON[decision];
 
   return (
     <div className="animate-fade-in overflow-hidden rounded-xl border border-white/[0.08] bg-[#0b0b0d] shadow-2xl shadow-black/50">
@@ -125,12 +92,10 @@ export function ActionReceipt({
           <span className="bg-[#febc2e]" />
           <span className="bg-[#28c840]" />
         </div>
-        <span className="ml-2 font-mono text-[11px] text-white/40">
-          receipt · act_9281.json
-        </span>
+        <span className="ml-2 font-mono text-[11px] text-white/40">{meta.file}</span>
         <span className={cn("ml-auto chip font-mono", tone.chip)}>
           <Icon className="h-3 w-3" strokeWidth={2.4} />
-          {r.label}
+          {r.receiptLabel}
         </span>
       </div>
 
@@ -139,23 +104,21 @@ export function ActionReceipt({
           <h3 className="text-[13px] font-semibold tracking-tight text-white">
             Agent Action Receipt
           </h3>
-          <span className="font-mono text-[11px] text-white/30">
-            seq 9281 · immutable
-          </span>
+          <span className="font-mono text-[11px] text-white/30">{meta.seq}</span>
         </div>
 
         <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
           <div className="divide-y divide-white/[0.05]">
-            <Row label="Agent" mono>SDR-Agent-17</Row>
-            <Row label="Owner">Raj Nagulapalle</Row>
-            <Row label="Tool">Gmail</Row>
-            <Row label="Action">Send email</Row>
+            <Row label="Agent" mono>{meta.agentName}</Row>
+            <Row label="Owner">{meta.owner}</Row>
+            <Row label="Tool">{meta.tool}</Row>
+            <Row label="Action">{meta.action}</Row>
             <Row label="Source" mono>{freshness}</Row>
             <Row label="Approved by">{r.approver}</Row>
           </div>
           <div className="divide-y divide-white/[0.05]">
             <Row label="Policy result" tone={cn("font-semibold", tone.text)}>
-              {r.label}
+              {r.receiptLabel}
             </Row>
             <Row label="Risk score" mono>{riskScore}/100</Row>
             <Row label="Timestamp" mono>{timestamp}</Row>
@@ -174,14 +137,13 @@ export function ActionReceipt({
           <div className="inset p-3">
             <div className="label mb-1.5">Input</div>
             <p className="font-mono text-[11px] leading-relaxed text-white/55">
-              “Follow up with John from Acme. Offer 25% off, update HubSpot,
-              schedule a call tomorrow if no reply.”
+              {meta.inputQuote}
             </p>
           </div>
           <div className="inset p-3">
             <div className="label mb-1.5">Output</div>
             <p className="font-mono text-[11px] leading-relaxed text-white/55">
-              {r.output(discount)}
+              {r.receiptOutput(value)}
             </p>
           </div>
         </div>
@@ -189,9 +151,7 @@ export function ActionReceipt({
 
       {/* Footer */}
       <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] bg-white/[0.015] px-4 py-2.5">
-        <div className="font-mono text-[10px] text-white/30">
-          chain: blk_0x4f2a · verifiable on AgentGovernance ledger
-        </div>
+        <div className="font-mono text-[10px] text-white/30">{meta.chainLabel}</div>
         <button className="inline-flex items-center gap-1.5 font-mono text-[11px] text-white/55 transition-colors hover:text-white">
           <Download className="h-3.5 w-3.5" />
           export

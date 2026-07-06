@@ -8,44 +8,13 @@ import {
   CornerUpRight,
   Send,
   CheckSquare,
+  AlertTriangle,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "./ui";
 import type { Decision } from "@/lib/types";
+import type { Scenario } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
-
-const RESOLVED_COPY: Record<
-  Exclude<Decision, null>,
-  { title: string; tone: string; icon: React.ElementType; line: (d: number) => string }
-> = {
-  approved: {
-    title: "Approved & executed",
-    tone: "emerald",
-    icon: CheckCircle2,
-    line: (d) =>
-      `Within delegated authority — the agent sent the email with a ${d}% discount autonomously. No human approval was required.`,
-  },
-  edited: {
-    title: "Edited to 10% & executed",
-    tone: "emerald",
-    icon: CheckCircle2,
-    line: () =>
-      "Discount auto-corrected to the 10% policy cap. Email sent within delegated authority — no exception logged.",
-  },
-  exception: {
-    title: "Approved with exception",
-    tone: "indigo",
-    icon: CornerUpRight,
-    line: (d) =>
-      `Raj approved a one-time exception for the ${d}% discount. A signed override is attached to the audit receipt.`,
-  },
-  rejected: {
-    title: "Rejected",
-    tone: "red",
-    icon: XCircle,
-    line: () =>
-      "Action rejected. The agent was instructed to revise the offer and resubmit for review.",
-  },
-};
 
 const TONE: Record<string, string> = {
   emerald: "border-emerald-500/25 bg-emerald-500/[0.06] text-emerald-200",
@@ -53,25 +22,40 @@ const TONE: Record<string, string> = {
   red: "border-red-500/25 bg-red-500/[0.06] text-red-200",
 };
 
+const RESOLVED_ICON: Record<Exclude<Decision, null>, LucideIcon> = {
+  approved: CheckCircle2,
+  edited: CheckCircle2,
+  exception: CornerUpRight,
+  rejected: XCircle,
+};
+
+const BTN_ICON: Record<string, LucideIcon> = {
+  edit: Pencil,
+  shield: ShieldCheck,
+  override: AlertTriangle,
+  reject: XCircle,
+};
+
 export function ApprovalRequestCard({
+  scenario,
   active,
-  discount,
-  overCap,
+  value,
+  over,
+  riskScore,
   decision,
-  onApprove,
-  onEdit,
-  onException,
-  onReject,
+  onDecide,
 }: {
+  scenario: Scenario;
   active: boolean;
-  discount: number;
-  overCap: boolean;
+  value: number;
+  /** Engine decision is not "allow" — the governed action needs a human. */
+  over: boolean;
+  riskScore: number;
   decision: Decision;
-  onApprove: () => void;
-  onEdit: () => void;
-  onException: () => void;
-  onReject: () => void;
+  onDecide: (d: Exclude<Decision, null>) => void;
 }) {
+  const { approval, resolved } = scenario;
+
   // Idle — policy hasn't reached review yet
   if (!active) {
     return (
@@ -85,6 +69,8 @@ export function ApprovalRequestCard({
     );
   }
 
+  const fields = approval.summary(value, riskScore);
+
   return (
     <div className="card overflow-hidden">
       <div className="card-head">
@@ -92,15 +78,11 @@ export function ApprovalRequestCard({
           <span
             className={cn(
               "h-1.5 w-1.5 rounded-full",
-              decision
-                ? "bg-emerald-400"
-                : overCap
-                  ? "animate-pulse bg-amber-400"
-                  : "bg-emerald-400"
+              decision ? "bg-emerald-400" : over ? "animate-pulse bg-amber-400" : "bg-emerald-400"
             )}
           />
           <h3 className="text-[13px] font-semibold tracking-tight text-white/90">
-            {overCap ? "Approval required" : "Authority check"}
+            {over ? approval.headerNeedsDecision : approval.headerOk}
           </h3>
         </div>
         <span
@@ -108,24 +90,19 @@ export function ApprovalRequestCard({
             "chip font-mono",
             decision
               ? "border-emerald-500/20 bg-emerald-500/[0.07] text-emerald-300"
-              : overCap
+              : over
                 ? "border-amber-500/25 bg-amber-500/[0.07] text-amber-300"
                 : "border-emerald-500/20 bg-emerald-500/[0.07] text-emerald-300"
           )}
         >
-          {decision ? "resolved · raj" : overCap ? "awaiting · raj" : "auto · cleared"}
+          {decision ? "resolved · raj" : over ? "awaiting · raj" : "auto · cleared"}
         </span>
       </div>
 
       <div className="p-4">
         {/* Request summary */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-          {[
-            { l: "Action", v: `Send email · ${discount}% off`, mono: false },
-            { l: "Risk", v: overCap ? "Medium" : "Low", mono: false },
-            { l: "Tool", v: "Gmail", mono: false },
-            { l: "Policy", v: "POL-SDR-002", mono: true },
-          ].map((f) => (
+          {fields.map((f) => (
             <div key={f.l} className="min-w-0">
               <div className="label mb-1">{f.l}</div>
               <div
@@ -143,59 +120,53 @@ export function ApprovalRequestCard({
         <div className="my-3.5 inset p-3">
           <div className="label mb-1">Reason</div>
           <p className="text-[13px] text-white/70">
-            {overCap ? (
-              <>
-                Discount of {discount}% is above delegated authority.{" "}
-                <span className="text-white/45">
-                  Recommended — edit to 10% or request manager approval.
-                </span>
-              </>
-            ) : (
-              <>
-                Discount of {discount}% is within the 10% cap.{" "}
-                <span className="text-white/45">
-                  The agent is cleared to execute autonomously.
-                </span>
-              </>
-            )}
+            {over ? approval.reasonBad(value) : approval.reasonOk(value)}
           </p>
         </div>
 
         {/* Actions / resolved state */}
         {decision ? (
-          <div
-            className={cn(
-              "animate-fade-in flex items-start gap-2.5 rounded-lg border p-3",
-              TONE[RESOLVED_COPY[decision].tone]
-            )}
-          >
-            {(() => {
-              const Icon = RESOLVED_COPY[decision].icon;
-              return <Icon className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.2} />;
-            })()}
-            <div>
-              <div className="text-[13px] font-semibold">
-                {RESOLVED_COPY[decision].title}
+          (() => {
+            const r = resolved[decision];
+            const Icon = RESOLVED_ICON[decision];
+            return (
+              <div
+                className={cn(
+                  "animate-fade-in flex items-start gap-2.5 rounded-lg border p-3",
+                  TONE[r.tone]
+                )}
+              >
+                <Icon className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.2} />
+                <div>
+                  <div className="text-[13px] font-semibold">{r.approvalTitle}</div>
+                  <p className="mt-0.5 text-[12px] leading-relaxed opacity-75">
+                    {r.approvalLine(value)}
+                  </p>
+                </div>
               </div>
-              <p className="mt-0.5 text-[12px] leading-relaxed opacity-75">
-                {RESOLVED_COPY[decision].line(discount)}
-              </p>
-            </div>
-          </div>
-        ) : overCap ? (
+            );
+          })()
+        ) : over ? (
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button variant="primary" icon={Pencil} onClick={onEdit} className="flex-1">
-              Edit to 10%
-            </Button>
-            <Button variant="secondary" icon={ShieldCheck} onClick={onException} className="flex-1">
-              Approve exception
-            </Button>
-            <Button variant="danger" icon={XCircle} onClick={onReject} className="flex-1">
-              Reject
-            </Button>
+            {approval.buttons.map((b) => (
+              <Button
+                key={b.decision}
+                variant={b.variant}
+                icon={BTN_ICON[b.icon]}
+                onClick={() => onDecide(b.decision)}
+                className="flex-1"
+              >
+                {b.label}
+              </Button>
+            ))}
           </div>
         ) : (
-          <Button variant="primary" icon={Send} onClick={onApprove} className="w-full">
+          <Button
+            variant="primary"
+            icon={Send}
+            onClick={() => onDecide("approved")}
+            className="w-full"
+          >
             Execute &amp; sign receipt
           </Button>
         )}

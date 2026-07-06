@@ -1,15 +1,17 @@
 "use client";
 
 import { Loader2, Sparkles } from "lucide-react";
-import { PLANNED_ACTIONS, type ActionId, type ActionStatus } from "@/lib/mock-data";
+import { type ActionId, type ActionStatus, type PlannedAction } from "@/lib/mock-data";
 import { StatusBadge } from "./ui";
 import { cn } from "@/lib/utils";
 
 export function ActionPlanTimeline({
+  actions,
   statuses,
   revealed,
   generating,
 }: {
+  actions: PlannedAction[];
   statuses: Record<ActionId, ActionStatus>;
   revealed: number;
   generating: boolean;
@@ -27,8 +29,8 @@ export function ActionPlanTimeline({
     );
   }
 
-  const visible = PLANNED_ACTIONS.slice(0, revealed);
-  const stillGenerating = generating && revealed < PLANNED_ACTIONS.length;
+  const visible = actions.slice(0, revealed);
+  const stillGenerating = generating && revealed < actions.length;
 
   return (
     <div className="card">
@@ -38,7 +40,7 @@ export function ActionPlanTimeline({
             Planned actions
           </h3>
           <span className="font-mono text-[11px] text-white/30">
-            {revealed}/{PLANNED_ACTIONS.length} tool calls
+            {revealed}/{actions.length} tool calls
           </span>
         </div>
         <span className="label">pre-execution</span>

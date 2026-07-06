@@ -1,7 +1,7 @@
 "use client";
 
 import { Bot, Copy, Check } from "lucide-react";
-import { AGENT } from "@/lib/mock-data";
+import type { AgentCard } from "@/lib/scenarios";
 import { cn } from "@/lib/utils";
 
 function ToolPill({ name, allowed }: { name: string; allowed: boolean }) {
@@ -41,7 +41,7 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
   );
 }
 
-export function AgentIdentityCard() {
+export function AgentIdentityCard({ agent: AGENT }: { agent: AgentCard }) {
   return (
     <div className="card overflow-hidden">
       <div className="flex items-start justify-between gap-2 px-4 pt-4">
