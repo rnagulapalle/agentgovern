@@ -30,6 +30,8 @@ export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
   },
   { label: "Insurance AI governance", href: "/insurance-ai-governance" },
   { label: "Retail Copilot AI governance", href: "/retail-copilot-ai-governance" },
+  { label: "Stale CRM contact blocked", href: "/stale-crm-contact-agent-blocked" },
+  { label: "AI support refund approval", href: "/refund-ticket-agent-above-limit" },
   { label: "Education AI governance (FERPA)", href: "/education-ai-governance" },
   { label: "Logistics AI governance", href: "/logistics-ai-governance" },
   { label: "Construction AI governance", href: "/construction-ai-governance" },
