@@ -132,6 +132,21 @@ log "Health check"
 code=$($SSH "$SERVER" "curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true")
 echo "  nginx http://localhost → $code (301 = redirecting to HTTPS, good)"
 
+# ─── 6. Notify IndexNow (Bing/Yandex) of the current sitemap URLs ─────────
+# The sitemap is the single source of URL truth; we submit exactly what it
+# lists to the app's own /api/indexnow route (reuses lib/indexnow + the key
+# file at /$INDEXNOW_KEY.txt). Safe to resubmit every deploy at this scale.
+log "Pinging IndexNow with sitemap URLs"
+locs=$(curl -s "https://$DOMAIN/sitemap.xml" | grep -o '<loc>[^<]*</loc>' | sed 's/<loc>//; s#</loc>##')
+if [ -n "$locs" ]; then
+  payload=$(printf '%s\n' "$locs" | python3 -c 'import sys, json; print(json.dumps({"urls": [l.strip() for l in sys.stdin if l.strip()]}))')
+  resp=$(curl -s -X POST "https://$DOMAIN/api/indexnow" \
+    -H 'Content-Type: application/json' -d "$payload" || true)
+  echo "  → $resp"
+else
+  echo "  ⚠ could not read sitemap; skipped IndexNow (submit manually if needed)"
+fi
+
 log "Done → https://$DOMAIN"
 echo "  Logs:    $SSH $SERVER 'cd $APP_DIR && sudo docker compose logs -f web'"
 echo "  Status:  $SSH $SERVER 'cd $APP_DIR && sudo docker compose ps'"
