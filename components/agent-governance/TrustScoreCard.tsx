@@ -53,16 +53,17 @@ export function TrustScoreCard({ active }: { active: boolean }) {
         <h3 className="text-[13px] font-semibold tracking-tight text-white/90">
           Agent Trust Score
         </h3>
-        <span className="chip font-mono border-amber-500/25 bg-amber-500/[0.07] text-amber-300">
-          needs work
+        <span className="chip font-mono border-indigo-400/25 bg-indigo-500/[0.08] text-indigo-200">
+          supervised
         </span>
       </div>
 
       <div className="flex items-center gap-4">
         <ScoreRing score={TRUST_SCORE} />
         <p className="text-[12px] leading-relaxed text-white/45">
-          5 of 8 trust controls satisfied. Three production gaps remain before
-          this agent is cleared for autonomous execution.
+          5 of 8 trust controls satisfied — cleared for supervised execution.
+          Three controls remain before this agent earns fully autonomous
+          clearance.
         </p>
       </div>
 
@@ -81,8 +82,8 @@ export function TrustScoreCard({ active }: { active: boolean }) {
           </ul>
         </div>
         <div>
-          <div className="label mb-2 text-amber-300/70">
-            Missing · {TRUST_MISSING.length}
+          <div className="label mb-2 text-indigo-300/70">
+            To reach autonomous tier · {TRUST_MISSING.length}
           </div>
           <ul className="space-y-1.5">
             {TRUST_MISSING.map((m) => (

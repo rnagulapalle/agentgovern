@@ -13,7 +13,15 @@ export type ActionStatus =
   | "rejected"
   | "executed-exception";
 
-export type ActionId = "email" | "crm" | "call" | "delegate";
+export type ActionId =
+  | "email"
+  | "crm"
+  | "call"
+  | "delegate"
+  | "query"
+  | "export"
+  | "notify"
+  | "log";
 
 export interface PlannedAction {
   id: ActionId;
@@ -316,7 +324,7 @@ export const TRUST_PASSED = [
 ];
 
 export const TRUST_MISSING = [
-  "No instant revoke workflow",
-  "No policy version history",
-  "No customer-facing trust center",
+  "Revocation drill not yet run",
+  "Secondary approver not configured",
+  "Under 30-day monitoring window",
 ];

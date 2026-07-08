@@ -12,9 +12,18 @@
  *  - Run 2 (stale CRM)  → source-of-truth freshness → hard block     (Signals 3, 8, 15 — the origin incident)
  */
 
-import { Mail, Database, CalendarClock, Sparkles, type LucideIcon } from "lucide-react";
+import {
+  Mail,
+  Database,
+  CalendarClock,
+  Sparkles,
+  Download,
+  Bell,
+  FileText,
+  type LucideIcon,
+} from "lucide-react";
 import type { AgentIdentity, ActionRequest } from "./engine";
-import { SDR_AGENT_17 } from "./engine";
+import { SDR_AGENT_17, ANALYTICS_AGENT_09 } from "./engine";
 import type { PlannedAction, PolicyCheck, ActionId } from "./mock-data";
 import type { Decision } from "./types";
 
@@ -39,8 +48,8 @@ export interface AgentCard {
 /** The single interactive control that drives the governed action live. */
 export interface ScenarioControl {
   /** How the control value maps into the ActionRequest. */
-  kind: "discount" | "freshness";
-  unit: string; // "%" | "d"
+  kind: "discount" | "freshness" | "records";
+  unit: string; // "%" | "d" | " rows"
   min: number;
   max: number;
   step: number;
@@ -538,7 +547,225 @@ const STALE_CRM_SCENARIO: Scenario = {
   },
 };
 
-export const SCENARIOS: Scenario[] = [DISCOUNT_SCENARIO, STALE_CRM_SCENARIO];
+/* ================================================================== */
+/*  Run 3 — FERPA: bulk student-PII export → data-steward approval     */
+/*  Higher-ed / data-governance story. An analytics agent exports a    */
+/*  Collibra-classified dataset from Databricks; exports above the      */
+/*  self-service row limit route to a human data steward.              */
+/*  (estCostUsd carries the row count for the engine's threshold check) */
+/* ================================================================== */
+
+const ANALYTICS_CARD: AgentCard = {
+  name: "Analytics-Agent-09",
+  owner: "Priya Raman",
+  role: "Institutional Analytics Assistant",
+  delegatedBy: "Priya (Data Governance)",
+  sessionExpires: "8h",
+  sessionRemaining: "7h 12m",
+  riskTier: "High",
+  allowedTools: ["Databricks", "Collibra", "Tableau"],
+  restrictedTools: ["SIS-Write", "Payroll", "Stripe"],
+  fingerprint: "did:agentgovern:0x09ab77e2",
+};
+
+const FERPA_EXPORT_SCENARIO: Scenario = {
+  id: "ferpa-data-export",
+  tab: "Higher-ed · PII export",
+  tabHint: "regulated export → steward approval",
+  runId: "run_c73d-4402",
+  consoleName: "agent-console · Analytics-Agent-09",
+  agent: ANALYTICS_AGENT_09,
+  agentCard: ANALYTICS_CARD,
+  humanTask:
+    "Pull the full undergraduate cohort — names, SIS IDs, and GPAs — and push it to the Tableau workspace for the enrollment dashboard.",
+  reasoningLines: [
+    "Loading dataset — Collibra: student_enrollment (classified: Restricted · FERPA)",
+    "Resolving access grant — data steward: Priya Raman",
+    "Selecting export target — Tableau enrollment workspace",
+    "Preparing extract from Databricks Unity Catalog",
+    "Composing 4-step action plan",
+  ],
+  plannedActions: [
+    {
+      id: "query",
+      title: "Query student_enrollment from Unity Catalog",
+      detail: "Read the classified cohort table from Databricks.",
+      tool: "Databricks",
+      icon: Database,
+      status: "auto-approved",
+    },
+    {
+      id: "export",
+      title: "Export cohort extract to Tableau",
+      detail: "Push student-PII rows to the enrollment dashboard workspace.",
+      tool: "Tableau",
+      icon: Download,
+      status: "blocked",
+    },
+    {
+      id: "notify",
+      title: "Notify dashboard owner",
+      detail: "Ping the analytics channel that the extract is ready.",
+      tool: "Slack",
+      icon: Bell,
+      status: "auto-approved",
+    },
+    {
+      id: "log",
+      title: "Write lineage entry to Collibra",
+      detail: "Record the export in the data catalog’s lineage.",
+      tool: "Collibra",
+      icon: FileText,
+      status: "auto-approved",
+    },
+  ],
+  governedActionId: "export",
+  governedCheckId: "spend",
+  policyRows: [
+    {
+      id: "read",
+      label: "Dataset read",
+      detail: "Read from Unity Catalog is within the agent’s grant.",
+      verdict: "allowed",
+    },
+    {
+      id: "classification",
+      label: "Data classification",
+      detail: "Collibra: Restricted · FERPA — recognized and enforced.",
+      verdict: "allowed",
+    },
+    {
+      id: "destination",
+      label: "Export destination",
+      detail: "Tableau enrollment workspace is a sanctioned destination.",
+      verdict: "scoped",
+    },
+  ],
+  now: RUN_NOW,
+  control: {
+    kind: "records",
+    unit: " rows",
+    min: 0,
+    max: 5000,
+    step: 20,
+    cap: 500,
+    capMarkerLabel: "steward > 500",
+    default: 3120,
+    presets: [100, 500, 3120],
+    staticLabel: "Rows in the export",
+    interactiveLabel: "Drag — size the student-data export",
+    policyId: "POL-DATA-EXPORT-011",
+    policyText:
+      "Exports of FERPA-classified student records above 500 rows require data-steward approval before they run.",
+    okBannerTitle: "Within self-service export limit",
+    badBannerTitle: "Data-steward approval required — FERPA export",
+    rowLabel: (v) => `Export ${v} student records`,
+    rowDetailOk: (v) => `${v} rows is within the 500-row self-service limit.`,
+    rowDetailBad: (v) => `${v} rows exceeds the 500-row self-service limit for FERPA data.`,
+  },
+  buildRequest: (value) => ({
+    id: "act_4402",
+    agentId: ANALYTICS_AGENT_09.id,
+    capability: "data.export",
+    tool: "Databricks",
+    summary: `Export ${value} student records to Tableau`,
+    target: "tableau://enrollment-workspace",
+    params: {},
+    estCostUsd: value, // engine threshold check reads this as the row count
+    sourceRecord: {
+      id: "collibra/dataset/student_enrollment",
+      system: "Collibra",
+      lastSyncedAt: isoDaysBefore(RUN_NOW, 3),
+    },
+    at: RUN_NOW,
+  }),
+  approval: {
+    headerOk: "Export authority",
+    headerNeedsDecision: "Data-steward approval required",
+    reasonOk: (v) =>
+      `${v} rows is within the 500-row self-service limit. The agent is cleared to export to the sanctioned Tableau workspace.`,
+    reasonBad: (v) =>
+      `${v} FERPA-classified student records is above the 500-row self-service limit. Recommended — route to the data steward, or reduce the export scope.`,
+    summary: (v, risk) => [
+      { l: "Action", v: "Export student PII" },
+      { l: "Risk", v: risk >= 60 ? "High" : "Medium" },
+      { l: "Rows", v: `${v}`, mono: true },
+      { l: "Policy", v: "POL-DATA-011", mono: true },
+    ],
+    buttons: [
+      { decision: "exception", label: "Approve as steward", variant: "secondary", icon: "shield" },
+      { decision: "edited", label: "Reduce to 500 rows", variant: "primary", icon: "edit" },
+      { decision: "rejected", label: "Reject", variant: "danger", icon: "reject" },
+    ],
+  },
+  receipt: {
+    file: "receipt · act_4402.json",
+    seq: "seq 4402 · immutable",
+    agentName: "Analytics-Agent-09",
+    owner: "Priya Raman",
+    tool: "Databricks → Tableau",
+    action: "Export student records",
+    inputQuote:
+      "“Pull the full undergraduate cohort — names, SIS IDs, and GPAs — and push it to the Tableau enrollment dashboard.”",
+    chainLabel: "chain: blk_0x4402 · verifiable on AgentGovernance ledger",
+  },
+  audit: {
+    othersTitle: "Dataset read auto-approved",
+    othersDetail: "classification + destination verified",
+    governedOkTitle: "Export within self-service limit",
+    governedBadTitle: "Export held for data steward",
+    governedDetail: (over, v) =>
+      over ? `${v} rows > 500-row FERPA limit` : `${v} rows ≤ 500-row limit`,
+  },
+  resolved: {
+    approved: {
+      approvalTitle: "Approved & exported",
+      tone: "emerald",
+      approvalLine: (v) =>
+        `Within the self-service limit — the agent exported ${v} student records to the sanctioned Tableau workspace. No steward approval required.`,
+      receiptLabel: "Approved",
+      receiptOutput: (v) =>
+        `${v} student records exported to the Tableau enrollment dashboard — within self-service limit.`,
+      approver: "Auto · within limit",
+    },
+    edited: {
+      approvalTitle: "Reduced to 500 & exported",
+      tone: "emerald",
+      approvalLine: () =>
+        "Export scope reduced to the 500-row self-service limit. Extract delivered — no steward exception logged.",
+      receiptLabel: "Approved",
+      receiptOutput: () =>
+        "500 student records exported to Tableau (reduced to the policy limit).",
+      approver: "Priya Raman · scope reduced",
+    },
+    exception: {
+      approvalTitle: "Approved by data steward",
+      tone: "indigo",
+      approvalLine: (v) =>
+        `Priya Raman approved the ${v}-row FERPA export as data steward. A signed approval is attached to the receipt.`,
+      receiptLabel: "Approved · steward",
+      receiptOutput: (v) =>
+        `${v} student records exported under a signed data-steward approval.`,
+      approver: "Priya Raman · data steward",
+    },
+    rejected: {
+      approvalTitle: "Rejected",
+      tone: "red",
+      approvalLine: () =>
+        "Export rejected. Returned to narrow the dataset and re-scope under FERPA minimum-necessary.",
+      receiptLabel: "Rejected",
+      receiptOutput: () =>
+        "No export. Request returned to re-scope under FERPA minimum-necessary.",
+      approver: "Priya Raman · denied",
+    },
+  },
+};
+
+export const SCENARIOS: Scenario[] = [
+  DISCOUNT_SCENARIO,
+  STALE_CRM_SCENARIO,
+  FERPA_EXPORT_SCENARIO,
+];
 
 export function getScenario(id: string): Scenario {
   return SCENARIOS.find((s) => s.id === id) ?? SCENARIOS[0];

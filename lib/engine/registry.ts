@@ -31,8 +31,31 @@ export const SDR_AGENT_17: AgentIdentity = {
   ],
 };
 
+/**
+ * Institutional analytics agent (higher-ed / data-governance demo).
+ * Reads governed datasets; large exports of regulated data route to a human
+ * data steward. estCostUsd carries the row count for the threshold check.
+ */
+export const ANALYTICS_AGENT_09: AgentIdentity = {
+  id: "Analytics-Agent-09",
+  owner: "Priya Raman",
+  role: "Institutional Analytics Assistant",
+  riskTier: "High",
+  restrictedTools: ["Payroll", "SIS-Write", "Stripe"],
+  capabilities: [
+    {
+      id: "data.export",
+      maxSpendUsd: 500, // rows: exports above 500 need data-steward approval
+      requiresTarget: true, // must go to a sanctioned destination
+      requiresFreshSourceWithinDays: 180, // dataset classification must be reviewed
+    },
+    { id: "crm.update", requiresFreshSourceWithinDays: 180, requiresDiff: true },
+  ],
+};
+
 const REGISTRY: Record<string, AgentIdentity> = {
   [SDR_AGENT_17.id]: SDR_AGENT_17,
+  [ANALYTICS_AGENT_09.id]: ANALYTICS_AGENT_09,
 };
 
 export function getAgent(agentId: string): AgentIdentity | undefined {
