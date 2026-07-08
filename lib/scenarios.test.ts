@@ -11,9 +11,9 @@ function decisionAt(scenarioId: string, value: number) {
 describe("demo scenarios (engine-driven verdicts)", () => {
   it("registers all three runs", () => {
     expect(SCENARIOS.map((s) => s.id)).toEqual([
+      "ferpa-data-export",
       "sales-discount",
       "stale-crm",
-      "ferpa-data-export",
     ]);
   });
 

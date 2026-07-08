@@ -761,10 +761,12 @@ const FERPA_EXPORT_SCENARIO: Scenario = {
   },
 };
 
+// Order = tab order; SCENARIOS[0] is the default run. FERPA/data-governance
+// leads for the enterprise governance-VP audience.
 export const SCENARIOS: Scenario[] = [
+  FERPA_EXPORT_SCENARIO,
   DISCOUNT_SCENARIO,
   STALE_CRM_SCENARIO,
-  FERPA_EXPORT_SCENARIO,
 ];
 
 export function getScenario(id: string): Scenario {
