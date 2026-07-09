@@ -46,7 +46,7 @@ export function WaitlistForm({ id }: { id?: string }) {
     return (
       <div
         id={id}
-        className="flex items-center gap-2.5 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] px-4 py-3.5 text-[14px] text-emerald-200"
+        className="flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-50 px-4 py-3.5 text-[14px] text-emerald-700"
       >
         <Check className="h-4 w-4 shrink-0" strokeWidth={2.4} />
         You&apos;re on the list. We&apos;ll be in touch as we onboard teams.
@@ -66,7 +66,7 @@ export function WaitlistForm({ id }: { id?: string }) {
         }}
         placeholder="you@company.com"
         aria-label="Work email"
-        className="h-11 flex-1 rounded-lg border border-white/[0.1] bg-white/[0.03] px-3.5 text-[14px] text-white placeholder:text-white/30 focus:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/25"
+        className="h-11 flex-1 rounded-lg border border-hairline/15 bg-elevate px-3.5 text-[14px] text-fg placeholder:text-faint focus:border-indigo-500/60 focus:outline-none focus:ring-2 focus:ring-indigo-500/25"
       />
       <button
         type="submit"
@@ -155,23 +155,23 @@ export function DemoPlayer() {
 function FaqRow({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-b border-white/[0.07]">
+    <div className="border-b border-hairline/10">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between gap-4 py-5 text-left"
       >
-        <span className="text-[15px] font-medium text-white/90">{q}</span>
+        <span className="text-[15px] font-medium text-fg">{q}</span>
         <ChevronDown
           className={cn(
-            "h-4 w-4 shrink-0 text-white/40 transition-transform",
+            "h-4 w-4 shrink-0 text-faint transition-transform",
             open && "rotate-180"
           )}
           strokeWidth={2}
         />
       </button>
       {open && (
-        <div className="-mt-1 pb-5 pr-8 text-[14px] leading-relaxed text-white/55">{a}</div>
+        <div className="-mt-1 pb-5 pr-8 text-[14px] leading-relaxed text-subtle">{a}</div>
       )}
     </div>
   );

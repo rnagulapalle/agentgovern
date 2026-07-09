@@ -1,20 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import { SITE } from "@/lib/site";
 import "./globals.css";
 
-// Matches the FetchSandbox product brand: Inter for UI, JetBrains Mono for technical metadata.
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
+// Geist for UI (modern grotesque), Geist Mono for technical metadata.
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -70,7 +60,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} dark`}
+      className={`${GeistSans.variable} ${GeistMono.variable} dark`}
     >
       <body>{children}</body>
     </html>

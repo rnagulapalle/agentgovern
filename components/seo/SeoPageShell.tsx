@@ -8,13 +8,13 @@ function Mark({ className = "h-4 w-4" }: { className?: string }) {
     <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden>
       <path
         d="M12 2.5 4.5 5.5v6c0 4.4 3.1 8.2 7.5 9.5 4.4-1.3 7.5-5.1 7.5-9.5v-6L12 2.5Z"
-        stroke="#818cf8"
+        stroke="#4f46e5"
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
       <path
         d="m8.8 12 2.2 2.2 4.2-4.4"
-        stroke="#818cf8"
+        stroke="#4f46e5"
         strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -47,27 +47,27 @@ export function SeoPageShell({
   children: React.ReactNode;
 }) {
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-bg/70 backdrop-blur-xl">
+    <div className="theme-light min-h-screen bg-bg">
+      <header className="sticky top-0 z-40 border-b border-hairline/10 bg-bg/80 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-3xl items-center gap-2 px-5 sm:px-8">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md border border-white/10 bg-white/[0.03]">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md border border-hairline/15 bg-surface">
               <Mark />
             </span>
-            <span className="text-[14px] font-semibold tracking-tight text-white">
-              Agent<span className="text-white/55">Governance</span>
+            <span className="text-[14px] font-semibold tracking-tight text-fg">
+              Agent<span className="text-subtle">Governance</span>
             </span>
           </Link>
           <div className="ml-auto flex items-center gap-2">
             <Link
               href="/guides"
-              className="hidden text-[13px] text-white/50 hover:text-white sm:inline"
+              className="hidden text-[13px] text-subtle hover:text-fg sm:inline"
             >
               Guides
             </Link>
             <Link
               href={primaryCta.href}
-              className="inline-flex items-center gap-1 rounded-lg border border-indigo-500/40 bg-indigo-600 px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-indigo-500"
+              className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm hover:bg-indigo-500"
             >
               {primaryCta.label}
             </Link>
@@ -77,10 +77,10 @@ export function SeoPageShell({
 
       <main className="mx-auto max-w-3xl px-5 pb-20 pt-12 sm:px-8">
         <p className="label">{eyebrow}</p>
-        <h1 className="mt-3 text-balance text-[30px] font-semibold leading-[1.15] tracking-tight text-white sm:text-[38px]">
+        <h1 className="mt-3 text-balance text-[30px] font-bold leading-[1.12] tracking-tight text-fg sm:text-[40px]">
           {title}
         </h1>
-        <p className="mt-5 text-pretty text-[16px] leading-relaxed text-white/55">
+        <p className="mt-5 text-pretty text-[16px] leading-relaxed text-subtle">
           {description}
         </p>
 
@@ -88,8 +88,8 @@ export function SeoPageShell({
           <div className="mt-8 grid grid-cols-3 gap-3">
             {stats.map((s) => (
               <div key={s.label} className="card px-3 py-3 text-center">
-                <div className="text-[18px] font-semibold text-white">{s.value}</div>
-                <div className="mt-0.5 text-[11px] text-white/40">{s.label}</div>
+                <div className="text-[18px] font-semibold text-fg">{s.value}</div>
+                <div className="mt-0.5 text-[11px] text-faint">{s.label}</div>
               </div>
             ))}
           </div>
@@ -98,13 +98,13 @@ export function SeoPageShell({
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={primaryCta.href}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/40 bg-indigo-600 px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-indigo-500"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2.5 text-[14px] font-semibold text-white shadow-sm hover:bg-indigo-500"
           >
             {primaryCta.label} <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href={secondaryCta.href}
-            className="inline-flex items-center rounded-lg border border-white/[0.09] bg-white/[0.02] px-4 py-2.5 text-[14px] font-medium text-white/75 hover:bg-white/[0.05]"
+            className="inline-flex items-center rounded-lg border border-hairline/15 bg-surface px-4 py-2.5 text-[14px] font-medium text-muted hover:border-hairline/25"
           >
             {secondaryCta.label}
           </Link>
@@ -113,13 +113,13 @@ export function SeoPageShell({
         <article className="prose-seo mt-14 space-y-12">{children}</article>
 
         {faq && faq.length > 0 && (
-          <section className="mt-16 border-t border-white/[0.06] pt-12">
-            <h2 className="text-[22px] font-semibold text-white">Common questions</h2>
+          <section className="mt-16 border-t border-hairline/10 pt-12">
+            <h2 className="text-[22px] font-semibold text-fg">Common questions</h2>
             <dl className="mt-6 space-y-6">
               {faq.map((item) => (
                 <div key={item.q}>
-                  <dt className="text-[15px] font-medium text-white/90">{item.q}</dt>
-                  <dd className="mt-2 text-[14px] leading-relaxed text-white/55">{item.a}</dd>
+                  <dt className="text-[15px] font-medium text-fg">{item.q}</dt>
+                  <dd className="mt-2 text-[14px] leading-relaxed text-subtle">{item.a}</dd>
                 </div>
               ))}
             </dl>
@@ -127,10 +127,10 @@ export function SeoPageShell({
         )}
 
         <section className="card mt-16 p-8 text-center">
-          <h2 className="text-[22px] font-semibold text-white">
+          <h2 className="text-[22px] font-semibold text-fg">
             Let employees use AI — with controls your team can run
           </h2>
-          <p className="mx-auto mt-3 max-w-lg text-[14px] leading-relaxed text-white/50">
+          <p className="mx-auto mt-3 max-w-lg text-[14px] leading-relaxed text-subtle">
             No AI platform team required. AgentGovernance sits between Copilot, ChatGPT
             Enterprise, and the systems they reach — approvals, access control, and audit
             trails in plain business terms.
@@ -138,13 +138,13 @@ export function SeoPageShell({
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               href="/agent-governance-demo"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-500/40 bg-indigo-600 px-4 py-2.5 text-[14px] font-semibold text-white hover:bg-indigo-500"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2.5 text-[14px] font-semibold text-white shadow-sm hover:bg-indigo-500"
             >
               Try the demo <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/#join"
-              className="inline-flex rounded-lg border border-white/[0.09] px-4 py-2.5 text-[14px] font-medium text-white/75 hover:bg-white/[0.05]"
+              className="inline-flex rounded-lg border border-hairline/15 bg-surface px-4 py-2.5 text-[14px] font-medium text-muted hover:border-hairline/25"
             >
               Join waitlist
             </Link>
@@ -152,7 +152,7 @@ export function SeoPageShell({
         </section>
       </main>
 
-      <footer className="border-t border-white/[0.06]">
+      <footer className="border-t border-hairline/10">
         <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
           <p className="label mb-3">More guides</p>
           <ul className="grid gap-2 sm:grid-cols-2">
@@ -160,19 +160,19 @@ export function SeoPageShell({
               <li key={t.href}>
                 <Link
                   href={t.href}
-                  className="text-[13px] text-white/50 transition-colors hover:text-white"
+                  className="text-[13px] text-subtle transition-colors hover:text-fg"
                 >
                   {t.label}
                 </Link>
               </li>
             ))}
           </ul>
-          <p className="mt-8 text-[12px] text-white/30">
+          <p className="mt-8 text-[12px] text-faint">
             © 2026 {SITE.name} · {SITE.url.replace("https://", "")}
           </p>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
 
@@ -185,8 +185,8 @@ export function SeoSection({
 }) {
   return (
     <section>
-      <h2 className="text-[20px] font-semibold tracking-tight text-white">{title}</h2>
-      <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-white/55">{children}</div>
+      <h2 className="text-[20px] font-semibold tracking-tight text-fg">{title}</h2>
+      <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-subtle">{children}</div>
     </section>
   );
 }
@@ -203,14 +203,14 @@ export function SeoCards({
           key={item.title}
           className={`rounded-xl border p-4 ${
             item.tone === "warn"
-              ? "border-red-500/15 bg-red-500/[0.03]"
+              ? "border-red-500/20 bg-red-50"
               : item.tone === "ok"
-                ? "border-emerald-500/15 bg-emerald-500/[0.03]"
+                ? "border-emerald-500/25 bg-emerald-50"
                 : "card"
           }`}
         >
-          <p className="text-[14px] font-semibold text-white/90">{item.title}</p>
-          <p className="mt-2 text-[13px] leading-relaxed text-white/50">{item.body}</p>
+          <p className="text-[14px] font-semibold text-fg">{item.title}</p>
+          <p className="mt-2 text-[13px] leading-relaxed text-subtle">{item.body}</p>
         </div>
       ))}
     </div>
@@ -219,7 +219,7 @@ export function SeoCards({
 
 export function SeoList({ items }: { items: string[] }) {
   return (
-    <ul className="mt-3 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-white/55">
+    <ul className="mt-3 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-subtle marker:text-faint">
       {items.map((item) => (
         <li key={item}>{item}</li>
       ))}

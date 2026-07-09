@@ -10,10 +10,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Zinc-based surfaces (matches FetchSandbox: #09090b base)
-        bg: "#09090b",
-        surface: "#0c0c0e",
-        elevate: "#101013",
+        // Theme-aware semantic tokens (light default, .dark flips them).
+        // Channel triplets in CSS vars so `/opacity` modifiers still work.
+        bg: "rgb(var(--bg) / <alpha-value>)",
+        surface: "rgb(var(--surface) / <alpha-value>)",
+        elevate: "rgb(var(--elevate) / <alpha-value>)",
+        fg: "rgb(var(--fg) / <alpha-value>)",
+        muted: "rgb(var(--muted) / <alpha-value>)",
+        subtle: "rgb(var(--subtle) / <alpha-value>)",
+        faint: "rgb(var(--faint) / <alpha-value>)",
+        hairline: "rgb(var(--hairline) / <alpha-value>)",
         // Single brand accent — indigo, used sparingly
         accent: {
           DEFAULT: "#6366f1",
@@ -26,7 +32,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: [
-          "var(--font-sans)",
+          "var(--font-geist-sans)",
           "ui-sans-serif",
           "system-ui",
           "-apple-system",
@@ -37,7 +43,7 @@ const config: Config = {
           "sans-serif",
         ],
         mono: [
-          "var(--font-mono)",
+          "var(--font-geist-mono)",
           "ui-monospace",
           "SFMono-Regular",
           "Menlo",

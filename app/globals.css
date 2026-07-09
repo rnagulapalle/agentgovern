@@ -2,8 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/*
+ * Semantic theme tokens (channel triplets so Tailwind alpha modifiers work).
+ * Light is the default (marketing surface); `.dark` flips them for the
+ * product/demo. `.theme-light` re-asserts light inside a dark ancestor, so we
+ * can convert marketing pages to light one at a time during the rollout.
+ */
+:root,
+.theme-light {
+  color-scheme: light;
+  --bg: 255 255 255;
+  --surface: 248 250 252; /* slate-50 */
+  --elevate: 255 255 255;
+  --fg: 15 23 42; /* slate-900 — headings */
+  --muted: 51 65 85; /* slate-700 — body */
+  --subtle: 71 85 105; /* slate-600 — secondary */
+  --faint: 100 116 139; /* slate-500 — captions/labels */
+  --hairline: 15 23 42; /* used at low alpha */
+}
+
+.dark {
   color-scheme: dark;
+  --bg: 9 9 11;
+  --surface: 12 12 14;
+  --elevate: 16 16 19;
+  --fg: 245 245 247;
+  --muted: 205 205 212;
+  --subtle: 150 150 160;
+  --faint: 120 120 130;
+  --hairline: 255 255 255;
 }
 
 html {
@@ -13,19 +40,21 @@ html {
 }
 
 body {
-  background-color: #09090b;
-  @apply text-white/90;
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg) / 0.92);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
   letter-spacing: -0.011em;
-  /* Single, near-imperceptible top vignette — no decorative gradient washes. */
+  min-height: 100vh;
+}
+
+/* Dark-only ambient vignette — kept off the clean light surface. */
+.dark body {
   background-image: radial-gradient(
     120% 80% at 50% -20%,
     rgba(99, 102, 241, 0.05),
     transparent 60%
   );
   background-attachment: fixed;
-  min-height: 100vh;
 }
 
 /* Restrained, thin scrollbar */
@@ -51,22 +80,27 @@ body {
 @layer components {
   /* Flat card — hairline border, faint fill, no glow. */
   .card {
-    @apply rounded-xl border border-white/[0.07];
-    background-color: #0c0c0e;
+    @apply rounded-xl border;
+    background-color: rgb(var(--surface));
+    border-color: rgb(var(--hairline) / 0.08);
   }
 
   .card-head {
-    @apply flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-3;
+    @apply flex items-center justify-between gap-3 px-4 py-3;
+    border-bottom: 1px solid rgb(var(--hairline) / 0.07);
   }
 
   /* Inset technical surface (mono content blocks). */
   .inset {
-    @apply rounded-lg border border-white/[0.06] bg-white/[0.015];
+    @apply rounded-lg border;
+    border-color: rgb(var(--hairline) / 0.07);
+    background-color: rgb(var(--fg) / 0.015);
   }
 
   /* Micro uppercase label */
   .label {
-    @apply font-mono text-[10px] uppercase tracking-[0.12em] text-white/35;
+    @apply font-mono text-[10px] uppercase tracking-[0.12em];
+    color: rgb(var(--faint));
   }
 
   /* Small status chip */
@@ -158,7 +192,7 @@ body {
     animation: ring-draw 1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
   }
   .mono {
-    font-family: var(--font-mono), monospace;
+    font-family: var(--font-geist-mono), monospace;
   }
   .text-balance {
     text-wrap: balance;
