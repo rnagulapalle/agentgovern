@@ -14,6 +14,7 @@ export function PolicyCheckPanel({
   setValue,
   over,
   interactive,
+  evalMs,
 }: {
   /** Static context rows (evaluated before the governed action). */
   rows: PolicyCheck[];
@@ -24,6 +25,8 @@ export function PolicyCheckPanel({
   /** Engine decision is not "allow" — the governed action is over authority. */
   over: boolean;
   interactive: boolean;
+  /** Measured engine evaluation time (ms). */
+  evalMs: number;
 }) {
   // Idle
   if (revealed === 0) {
@@ -58,7 +61,7 @@ export function PolicyCheckPanel({
           Evaluated rules
         </h3>
         <span className="font-mono text-[11px] text-white/30">
-          {revealed}/{total} rules · 12ms
+          {revealed}/{total} rules · {evalMs}ms
         </span>
       </div>
 

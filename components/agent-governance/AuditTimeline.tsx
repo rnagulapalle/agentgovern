@@ -16,14 +16,16 @@ export function AuditTimeline({
   scenario,
   phase,
   decision,
-  timestamp,
+  startedAt,
+  resolvedAt,
   over,
   value,
 }: {
   scenario: Scenario;
   phase: Phase;
   decision: Decision;
-  timestamp: string | null;
+  startedAt: Date | null;
+  resolvedAt: Date | null;
   over: boolean;
   value: number;
 }) {
@@ -43,19 +45,23 @@ export function AuditTimeline({
     const order: Phase[] = ["idle", "planning", "policy", "review", "resolved"];
     return order.indexOf(phase) >= order.indexOf(p);
   };
-  const resolvedTime = timestamp ? timestamp.split(", ")[1] ?? "—" : "—";
+  // Real wall-clock times derived from this run — not a frozen script.
+  const hhmmss = (d: Date) => d.toTimeString().slice(0, 8);
+  const at = (offsetMs: number) =>
+    startedAt ? hhmmss(new Date(startedAt.getTime() + offsetMs)) : "—";
+  const resolvedTime = resolvedAt ? hhmmss(resolvedAt) : "—";
   const a = scenario.audit;
 
   type Ev = { title: string; detail: string; time: string; tone: string; show: boolean; pending?: boolean };
   const events: Ev[] = [
-    { title: "Human issued task", detail: `raj → ${scenario.agentCard.name}`, time: "23:41:02", tone: "neutral", show: true },
-    { title: "Agent generated plan", detail: `${scenario.plannedActions.length} tool calls`, time: "23:41:03", tone: "neutral", show: true },
-    { title: "AgentGovernance intercepted calls", detail: "identity + delegation verified", time: "23:41:03", tone: "accent", show: reached("policy") },
-    { title: a.othersTitle, detail: a.othersDetail, time: "23:41:03", tone: "ok", show: reached("policy") },
+    { title: "Human issued task", detail: `raj → ${scenario.agentCard.name}`, time: at(0), tone: "neutral", show: true },
+    { title: "Agent generated plan", detail: `${scenario.plannedActions.length} tool calls`, time: at(1200), tone: "neutral", show: true },
+    { title: "AgentGovernance intercepted calls", detail: "identity + delegation verified", time: at(2400), tone: "accent", show: reached("policy") },
+    { title: a.othersTitle, detail: a.othersDetail, time: at(2600), tone: "ok", show: reached("policy") },
     {
       title: over ? a.governedBadTitle : a.governedOkTitle,
       detail: a.governedDetail(over, value),
-      time: "23:41:04",
+      time: at(3400),
       tone: over ? "bad" : "ok",
       show: reached("policy"),
     },

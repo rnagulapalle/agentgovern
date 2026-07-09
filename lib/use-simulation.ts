@@ -37,6 +37,9 @@ export function useSimulation(scenario: Scenario) {
   const [controlValue, setControlValue] = useState(scenario.control.default);
   const [decision, setDecision] = useState<Decision>(null);
   const [timestamp, setTimestamp] = useState<string | null>(null);
+  // Real wall-clock times so the audit trail reflects THIS run, not a script.
+  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [resolvedAt, setResolvedAt] = useState<Date | null>(null);
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const clearTimers = () => {
@@ -51,6 +54,8 @@ export function useSimulation(scenario: Scenario) {
     clearTimers();
     setDecision(null);
     setTimestamp(null);
+    setResolvedAt(null);
+    setStartedAt(new Date());
     setRevealedActions(0);
     setRevealedPolicies(0);
     setPhase("planning");
@@ -81,22 +86,29 @@ export function useSimulation(scenario: Scenario) {
     setControlValue(scenario.control.default);
     setDecision(null);
     setTimestamp(null);
+    setStartedAt(null);
+    setResolvedAt(null);
   }, [scenario]);
 
   const decide = useCallback((d: Exclude<Decision, null>) => {
     clearTimers();
+    const now = new Date();
+    setResolvedAt(now);
     setDecision(d);
-    setTimestamp(formatTime(new Date()));
+    setTimestamp(formatTime(now));
     setPhase("resolved");
   }, []);
 
   // tidy up any in-flight timers on unmount / scenario switch
   useEffect(() => () => clearTimers(), []);
 
-  // ── The slider drives the REAL engine ──────────────────────────────────
-  const evaluation = useMemo(() => {
+  // ── The slider drives the REAL engine (and we measure how long it takes) ──
+  const { evaluation, evalMs } = useMemo(() => {
     const request = scenario.buildRequest(controlValue);
-    return evaluate(request, { agent: scenario.agent, now: scenario.now });
+    const t0 = performance.now();
+    const result = evaluate(request, { agent: scenario.agent, now: scenario.now });
+    const ms = performance.now() - t0;
+    return { evaluation: result, evalMs: Math.max(0.1, Math.round(ms * 100) / 100) };
   }, [scenario, controlValue]);
 
   const decision3 = evaluation.decision; // "allow" | "require_approval" | "block"
@@ -112,11 +124,14 @@ export function useSimulation(scenario: Scenario) {
     setControlValue,
     decision,
     timestamp,
+    startedAt,
+    resolvedAt,
     over,
     needsHuman,
     blocked,
     decision3,
     evaluation,
+    evalMs,
     run,
     reset,
     decide,

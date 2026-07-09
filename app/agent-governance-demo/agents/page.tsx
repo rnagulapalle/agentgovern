@@ -1,8 +1,12 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Bot, ArrowUpRight, Plus } from "lucide-react";
 import { TopHeader } from "@/components/agent-governance/TopHeader";
-import { PageMain, PageIntro, RiskPill, TrustMeter } from "@/components/agent-governance/ui";
-import { FLEET } from "@/lib/mock-data";
+import { PageMain, PageIntro, RiskPill, TrustMeter, Button } from "@/components/agent-governance/ui";
+import { SlideOver, Field } from "@/components/agent-governance/SlideOver";
+import { FLEET, type FleetAgent } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 const STATUS: Record<string, { label: string; dot: string; text: string }> = {
@@ -11,7 +15,38 @@ const STATUS: Record<string, { label: string; dot: string; text: string }> = {
   paused: { label: "paused", dot: "bg-white/35", text: "text-white/45" },
 };
 
+let didSeq = 90;
+
 export default function AgentsPage() {
+  const [fleet, setFleet] = useState<FleetAgent[]>(FLEET);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [owner, setOwner] = useState("");
+
+  function register() {
+    if (!name.trim()) return;
+    didSeq += 7;
+    setFleet((f) => [
+      {
+        name: name.trim(),
+        did: `did:agentgovern:0x${(didSeq * 0x51a3).toString(16).slice(0, 8)}`,
+        owner: owner.trim() || "Unassigned",
+        role: role.trim() || "New agent",
+        tools: ["Gmail"],
+        risk: "Medium",
+        trust: 60,
+        status: "review",
+        actions: 0,
+      },
+      ...f,
+    ]);
+    setName("");
+    setRole("");
+    setOwner("");
+    setOpen(false);
+  }
+
   return (
     <>
       <TopHeader crumbs={["fleet"]} title="Agents" />
@@ -20,12 +55,35 @@ export default function AgentsPage() {
           title="Agent fleet"
           sub="Every agent has a verifiable identity, an owner, scoped tools, and a trust score."
           action={
-            <button className="inline-flex items-center gap-2 rounded-lg border border-white/[0.09] bg-white/[0.02] px-3.5 py-2 text-[13px] font-medium text-white/80 transition-all hover:bg-white/[0.05]">
+            <button
+              onClick={() => setOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-white/[0.09] bg-white/[0.02] px-3.5 py-2 text-[13px] font-medium text-white/80 transition-all hover:bg-white/[0.05]"
+            >
               <Plus className="h-4 w-4" />
               Register agent
             </button>
           }
         />
+
+        <SlideOver open={open} onClose={() => setOpen(false)} title="Register agent">
+          <div className="space-y-4">
+            <Field label="Agent name" value={name} onChange={setName} placeholder="e.g. Finance-Agent-11" />
+            <Field label="Role" value={role} onChange={setRole} placeholder="e.g. AP Invoice Assistant" />
+            <Field label="Owner" value={owner} onChange={setOwner} placeholder="e.g. Priya Raman" />
+            <p className="text-[12px] leading-relaxed text-white/40">
+              New agents start at Medium risk with a read-only tool scope and land in
+              review until an owner grants capabilities.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <Button variant="primary" icon={Plus} onClick={register} className="flex-1">
+                Register agent
+              </Button>
+              <Button variant="ghost" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </SlideOver>
 
         <div className="card overflow-hidden">
           {/* table head */}
@@ -39,7 +97,7 @@ export default function AgentsPage() {
           </div>
 
           <div className="divide-y divide-white/[0.05]">
-            {FLEET.map((a) => {
+            {fleet.map((a) => {
               const st = STATUS[a.status];
               const isStar = a.name === "SDR-Agent-17";
               const row = (

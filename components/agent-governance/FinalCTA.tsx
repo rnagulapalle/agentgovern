@@ -1,9 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { FileBarChart, Download, RotateCcw } from "lucide-react";
 import { Button } from "./ui";
 
-export function FinalCTA({ onReset }: { onReset: () => void }) {
+export function FinalCTA({
+  onReset,
+  receipt,
+}: {
+  onReset: () => void;
+  receipt: unknown;
+}) {
+  function exportReceipt() {
+    const blob = new Blob([JSON.stringify(receipt, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "agent-action-receipt.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="card relative overflow-hidden p-6 sm:p-8">
       {/* faint corner hairline accent — not a glow */}
@@ -27,14 +46,18 @@ export function FinalCTA({ onReset }: { onReset: () => void }) {
         </div>
 
         <div className="flex shrink-0 flex-col gap-2.5 sm:flex-row lg:flex-col">
-          <Button variant="primary" icon={FileBarChart}>
+          <Link
+            href="/agent-governance-demo/trust-reports"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-indigo-500/40 bg-indigo-600 px-3.5 py-2 text-[13px] font-medium text-white transition-all duration-150 hover:bg-indigo-500 active:scale-[0.98]"
+          >
+            <FileBarChart className="h-3.5 w-3.5" strokeWidth={2.2} />
             Generate Trust Report
-          </Button>
-          <Button variant="secondary" icon={Download}>
+          </Link>
+          <Button variant="secondary" icon={Download} onClick={exportReceipt}>
             Export Audit Receipt
           </Button>
           <Button variant="ghost" icon={RotateCcw} onClick={onReset}>
-            Run another simulation
+            Run another action
           </Button>
         </div>
       </div>

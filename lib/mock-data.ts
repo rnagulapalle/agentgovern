@@ -234,7 +234,7 @@ export const APPROVALS: ApprovalItem[] = [
   {
     id: "apr_5519",
     agent: "Billing-Agent-03",
-    action: "Refund $640 to Acme Corp",
+    action: "Refund $640 to Vantage Retail",
     tool: "Stripe",
     risk: "High",
     policy: "POL-SPEND-LIMIT-004",
@@ -303,8 +303,8 @@ export interface RecentAction {
 export const RECENT_ACTIONS: RecentAction[] = [
   { agent: "Support-Agent-09", action: "Reply to ticket #4821", tool: "Zendesk", verdict: "auto", time: "23:41" },
   { agent: "SDR-Agent-17", action: "Send email · 25% discount", tool: "Gmail", verdict: "exception", time: "23:41" },
-  { agent: "Research-Agent-02", action: "Enrich lead · Acme Corp", tool: "Clearbit", verdict: "auto", time: "23:39" },
-  { agent: "Billing-Agent-03", action: "Refund $640 to Acme Corp", tool: "Stripe", verdict: "approved", time: "23:29" },
+  { agent: "Research-Agent-02", action: "Enrich lead · Vantage Retail", tool: "Clearbit", verdict: "auto", time: "23:39" },
+  { agent: "Billing-Agent-03", action: "Refund $640 to Vantage Retail", tool: "Stripe", verdict: "approved", time: "23:29" },
   { agent: "Ops-Agent-21", action: "Delete Jira project ATLAS", tool: "Jira", verdict: "blocked", time: "23:18" },
   { agent: "Support-Agent-09", action: "Export 2,400 contacts", tool: "Zendesk", verdict: "blocked", time: "23:04" },
 ];

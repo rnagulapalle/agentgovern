@@ -14,7 +14,7 @@ export default function TrustReportsPage() {
           sub="Turn every agent's audit record into evidence your customers and auditors can verify."
           action={
             <span className="inline-flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3.5 py-2 font-mono text-[12px] text-white/40">
-              publishing · soon
+              auto-published
             </span>
           }
         />
@@ -57,9 +57,9 @@ export default function TrustReportsPage() {
             </div>
             <div className="p-5">
               <div className="rounded-lg border border-white/[0.07] bg-white/[0.015] p-4">
-                <div className="font-mono text-[11px] text-white/35">trust.acme.com/agents</div>
+                <div className="font-mono text-[11px] text-white/35">trust.meridiangroup.com/agents</div>
                 <div className="mt-3 text-[15px] font-semibold text-white">
-                  Acme runs AI agents you can verify.
+                  Meridian Group runs AI agents you can verify.
                 </div>
                 <p className="mt-1.5 text-[12px] text-white/50">
                   Every customer-facing action is identity-bound, policy-checked,

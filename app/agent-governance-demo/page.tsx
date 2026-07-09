@@ -161,6 +161,7 @@ function DemoRun({ scenario }: { scenario: Scenario }) {
               setValue={sim.setControlValue}
               over={over}
               interactive={phase === "review"}
+              evalMs={sim.evalMs}
             />
           </section>
 
@@ -220,7 +221,8 @@ function DemoRun({ scenario }: { scenario: Scenario }) {
               scenario={scenario}
               phase={phase}
               decision={decision}
-              timestamp={timestamp}
+              startedAt={sim.startedAt}
+              resolvedAt={sim.resolvedAt}
               over={over}
               value={controlValue}
             />
@@ -230,7 +232,7 @@ function DemoRun({ scenario }: { scenario: Scenario }) {
 
       {/* ---------- Final CTA ---------- */}
       <section className="mt-6">
-        <FinalCTA onReset={sim.reset} />
+        <FinalCTA onReset={sim.reset} receipt={evaluation.receipt} />
       </section>
     </>
   );
@@ -251,7 +253,7 @@ export default function AgentGovernanceDemoPage() {
 
         <footer className="mt-8 flex flex-col items-start justify-between gap-2 border-t border-white/[0.06] pt-5 font-mono text-[11px] text-white/30 sm:flex-row sm:items-center">
           <span>AgentGovernance — control plane for agentic actions</span>
-          <span>demo build · mock data · no external calls</span>
+          <span>Sample data · your policies run in production</span>
         </footer>
       </main>
     </>

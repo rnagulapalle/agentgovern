@@ -24,8 +24,8 @@ const SECTIONS = [
   {
     title: "Organization",
     rows: [
-      { label: "Workspace", value: "Acme Corp", kind: "text" },
-      { label: "Environment", value: "Sandbox", kind: "text" },
+      { label: "Workspace", value: "Meridian Group", kind: "text" },
+      { label: "Environment", value: "Production", kind: "text" },
       { label: "Default session TTL", value: "24h", kind: "text" },
     ],
   },
@@ -65,7 +65,7 @@ export default function SettingsPage() {
           sub="Org-wide defaults for identity, delegation, approvals, and audit."
           action={
             <span className="inline-flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3.5 py-2 font-mono text-[12px] text-white/40">
-              read-only · demo
+              read-only
             </span>
           }
         />

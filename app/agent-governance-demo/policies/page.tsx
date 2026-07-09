@@ -1,10 +1,43 @@
+"use client";
+
+import { useState } from "react";
 import { ScrollText, Plus, Check } from "lucide-react";
 import { TopHeader } from "@/components/agent-governance/TopHeader";
-import { PageMain, PageIntro } from "@/components/agent-governance/ui";
-import { POLICIES } from "@/lib/mock-data";
+import { PageMain, PageIntro, Button } from "@/components/agent-governance/ui";
+import { SlideOver, Field } from "@/components/agent-governance/SlideOver";
+import { POLICIES, type Policy } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
+let polSeq = 12;
+
 export default function PoliciesPage() {
+  const [policies, setPolicies] = useState<Policy[]>(POLICIES);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [rule, setRule] = useState("");
+  const [scope, setScope] = useState("");
+
+  function create() {
+    if (!name.trim()) return;
+    polSeq += 1;
+    setPolicies((p) => [
+      {
+        id: `POL-CUSTOM-${String(polSeq).padStart(3, "0")}`,
+        name: name.trim(),
+        scope: scope.trim() || "All agents",
+        rule: rule.trim() || "Requires human approval.",
+        enforcement: "Block + approve",
+        status: "draft",
+        hits: 0,
+      },
+      ...p,
+    ]);
+    setName("");
+    setRule("");
+    setScope("");
+    setOpen(false);
+  }
+
   return (
     <>
       <TopHeader crumbs={["governance"]} title="Policies" />
@@ -13,15 +46,38 @@ export default function PoliciesPage() {
           title="Policy library"
           sub="Rules that bound what every agent may do autonomously — and what needs a human."
           action={
-            <button className="inline-flex items-center gap-2 rounded-lg border border-white/[0.09] bg-white/[0.02] px-3.5 py-2 text-[13px] font-medium text-white/80 transition-all hover:bg-white/[0.05]">
+            <button
+              onClick={() => setOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-white/[0.09] bg-white/[0.02] px-3.5 py-2 text-[13px] font-medium text-white/80 transition-all hover:bg-white/[0.05]"
+            >
               <Plus className="h-4 w-4" />
               New policy
             </button>
           }
         />
 
+        <SlideOver open={open} onClose={() => setOpen(false)} title="New policy">
+          <div className="space-y-4">
+            <Field label="Policy name" value={name} onChange={setName} placeholder="e.g. Wire transfer approval" />
+            <Field label="Rule" value={rule} onChange={setRule} placeholder="e.g. Transfers over $10k require CFO approval" />
+            <Field label="Scope" value={scope} onChange={setScope} placeholder="e.g. Finance agents" />
+            <p className="text-[12px] leading-relaxed text-white/40">
+              New policies start as a draft and take effect once activated. Enforcement
+              defaults to block-then-approve.
+            </p>
+            <div className="flex gap-2 pt-1">
+              <Button variant="primary" icon={Plus} onClick={create} className="flex-1">
+                Create policy
+              </Button>
+              <Button variant="ghost" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </SlideOver>
+
         <div className="space-y-2.5">
-          {POLICIES.map((p) => {
+          {policies.map((p) => {
             const star = p.id === "POL-SDR-DISCOUNT-002";
             return (
               <div

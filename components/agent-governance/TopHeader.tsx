@@ -30,14 +30,14 @@ export function TopHeader({
           </h1>
         </div>
 
-        {/* Environment + live */}
+        {/* Workspace + live */}
         <span className="ml-1 hidden items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-1 font-mono text-[11px] text-white/55 sm:inline-flex">
-          demo · sandbox
+          Meridian Group
         </span>
         {live && (
           <span className="hidden items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/[0.07] px-2 py-1 font-mono text-[11px] text-emerald-300 md:inline-flex">
             <Radio className="h-3 w-3 animate-pulse" />
-            live simulation
+            live
           </span>
         )}
 

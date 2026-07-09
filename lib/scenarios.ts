@@ -169,9 +169,9 @@ const DISCOUNT_SCENARIO: Scenario = {
   agent: SDR_AGENT_17,
   agentCard: SDR_CARD,
   humanTask:
-    "Follow up with John from Acme. Offer a 25% discount, update HubSpot, and schedule a call tomorrow if he doesn’t reply.",
+    "Follow up with John from Vantage. Offer a 25% discount, update HubSpot, and schedule a call tomorrow if he doesn’t reply.",
   reasoningLines: [
-    "Loading lead context — Acme · John Carter (VP Sales)",
+    "Loading lead context — Vantage · John Carter (VP Sales)",
     "Last touch 11 days ago · opened 2 emails · no reply",
     "Selecting tools — Gmail, HubSpot, Calendar",
     "Drafting re-engagement offer · discount 25%",
@@ -188,8 +188,8 @@ const DISCOUNT_SCENARIO: Scenario = {
     },
     {
       id: "crm",
-      title: "Update Acme CRM stage",
-      detail: "Move deal Acme · Q3 Expansion → “Negotiation”.",
+      title: "Update Vantage CRM stage",
+      detail: "Move deal Vantage · Q3 Expansion → “Negotiation”.",
       tool: "HubSpot",
       icon: Database,
       status: "auto-approved",
@@ -261,7 +261,7 @@ const DISCOUNT_SCENARIO: Scenario = {
     capability: "email.send",
     tool: "Gmail",
     summary: `Send follow-up email · ${value}% discount`,
-    target: "john@acme.com",
+    target: "john@vantage.co",
     params: { discountPct: value },
     sourceRecord: {
       id: "hubspot/contact/8842",
@@ -297,7 +297,7 @@ const DISCOUNT_SCENARIO: Scenario = {
     tool: "Gmail",
     action: "Send email",
     inputQuote:
-      "“Follow up with John from Acme. Offer 25% off, update HubSpot, schedule a call tomorrow if no reply.”",
+      "“Follow up with John from Vantage. Offer 25% off, update HubSpot, schedule a call tomorrow if no reply.”",
     chainLabel: "chain: blk_0x4f2a · verifiable on AgentGovernance ledger",
   },
   audit: {
@@ -315,7 +315,7 @@ const DISCOUNT_SCENARIO: Scenario = {
         `Within delegated authority — the agent sent the email with a ${v}% discount autonomously. No human approval was required.`,
       receiptLabel: "Approved",
       receiptOutput: (v) =>
-        `Email sent to john@acme.com with a ${v}% discount — within delegated authority, no human approval required.`,
+        `Email sent to john@vantage.co with a ${v}% discount — within delegated authority, no human approval required.`,
       approver: "Auto · within authority",
     },
     edited: {
@@ -325,7 +325,7 @@ const DISCOUNT_SCENARIO: Scenario = {
         "Discount auto-corrected to the 10% policy cap. Email sent within delegated authority — no exception logged.",
       receiptLabel: "Approved",
       receiptOutput: () =>
-        "Email sent to john@acme.com with a 10% discount (auto-corrected to policy cap).",
+        "Email sent to john@vantage.co with a 10% discount (auto-corrected to policy cap).",
       approver: "Raj · auto-corrected",
     },
     exception: {
@@ -335,7 +335,7 @@ const DISCOUNT_SCENARIO: Scenario = {
         `Raj approved a one-time exception for the ${v}% discount. A signed override is attached to the audit receipt.`,
       receiptLabel: "Approved · exception",
       receiptOutput: (v) =>
-        `Email sent to john@acme.com with a ${v}% discount under a signed one-time exception.`,
+        `Email sent to john@vantage.co with a ${v}% discount under a signed one-time exception.`,
       approver: "Raj · manager override",
     },
     rejected: {

@@ -83,6 +83,31 @@ export function ActionReceipt({
   const tone = TONE[r.tone];
   const Icon = RESOLVED_ICON[decision];
 
+  function exportReceipt() {
+    const data = {
+      agent: meta.agentName,
+      owner: meta.owner,
+      tool: meta.tool,
+      action: meta.action,
+      result: r.receiptLabel,
+      decision,
+      approvedBy: r.approver,
+      riskScore,
+      source: freshness,
+      output: r.receiptOutput(value),
+      evidenceHash,
+      signature,
+      timestamp,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = meta.file.split(" · ").pop() || "receipt.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="animate-fade-in overflow-hidden rounded-xl border border-white/[0.08] bg-[#0b0b0d] shadow-2xl shadow-black/50">
       {/* Window chrome */}
@@ -152,7 +177,10 @@ export function ActionReceipt({
       {/* Footer */}
       <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] bg-white/[0.015] px-4 py-2.5">
         <div className="font-mono text-[10px] text-white/30">{meta.chainLabel}</div>
-        <button className="inline-flex items-center gap-1.5 font-mono text-[11px] text-white/55 transition-colors hover:text-white">
+        <button
+          onClick={exportReceipt}
+          className="inline-flex items-center gap-1.5 font-mono text-[11px] text-white/55 transition-colors hover:text-white"
+        >
           <Download className="h-3.5 w-3.5" />
           export
         </button>
