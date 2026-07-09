@@ -119,6 +119,8 @@ const NAV = [
   { href: "#faq", label: "FAQ" },
 ];
 
+const CAL_URL = "https://cal.com/rajnagulapalle";
+
 // Confident, TRUE product guarantees — not fabricated customer metrics.
 const STATS = [
   {
@@ -191,10 +193,12 @@ export default function LandingPage() {
               Live demo
             </Link>
             <a
-              href="#join"
+              href={CAL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
             >
-              Join waitlist
+              Book a demo
             </a>
           </div>
         </div>
@@ -220,14 +224,29 @@ export default function LandingPage() {
               and audit every action AI takes on company systems — before it happens.
             </p>
 
-            <div className="mt-8 flex flex-col items-center gap-3">
-              <WaitlistForm id="join" />
-              <Link
-                href="/agent-governance-demo"
-                className="inline-flex items-center gap-1.5 text-[13px] font-medium text-subtle transition-colors hover:text-fg"
+            <div className="mt-8 flex flex-col items-center gap-4">
+              <div className="flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row">
+                <a
+                  href={CAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-5 py-3 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500 sm:w-auto"
+                >
+                  Book a demo <ArrowRight className="h-4 w-4" />
+                </a>
+                <Link
+                  href="/agent-governance-demo"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-hairline/15 bg-surface px-5 py-3 text-[15px] font-medium text-muted transition-colors hover:border-hairline/25 sm:w-auto"
+                >
+                  See the live demo
+                </Link>
+              </div>
+              <a
+                href="#join"
+                className="text-[13px] font-medium text-subtle transition-colors hover:text-fg"
               >
-                See an approval workflow in the demo <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+                or get launch updates →
+              </a>
             </div>
           </div>
 
@@ -468,14 +487,27 @@ export default function LandingPage() {
           <div className="card relative overflow-hidden p-8 text-center sm:p-12">
             <div className="pointer-events-none absolute right-0 top-0 h-px w-1/2 bg-gradient-to-l from-indigo-500/40 to-transparent" />
             <h2 className="mx-auto max-w-2xl text-balance text-[26px] font-semibold leading-tight tracking-tight text-fg sm:text-[32px]">
-              Let employees use AI — with controls leadership can trust.
+              Ready to govern what your AI can do?
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-[15px] text-subtle">
-              Early access for organizations rolling out Copilot, ChatGPT Enterprise, and
-              other business AI tools. Join the waitlist.
+              Book a 20-minute walkthrough with the founder — see the control plane run
+              against your governance scenarios. Or get launch updates as we onboard teams.
             </p>
-            <div className="mt-7 flex justify-center">
-              <WaitlistForm />
+            <div className="mt-7 flex flex-col items-center gap-5">
+              <a
+                href={CAL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-5 py-3 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
+              >
+                Book a demo <ArrowRight className="h-4 w-4" />
+              </a>
+              <div className="flex w-full max-w-md items-center gap-3">
+                <span className="h-px flex-1 bg-hairline/10" />
+                <span className="text-[12px] text-faint">or get launch updates</span>
+                <span className="h-px flex-1 bg-hairline/10" />
+              </div>
+              <WaitlistForm id="join" />
             </div>
           </div>
         </section>
