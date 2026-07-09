@@ -8,8 +8,8 @@ import {
   HelpCircle,
   Users,
   Banknote,
-  LifeBuoy,
-  TrendingUp,
+  Database,
+  Mail,
   Lock,
   type LucideIcon,
 } from "lucide-react";
@@ -32,11 +32,11 @@ export const metadata: Metadata = {
 };
 
 const DEPT_ICON: Record<string, LucideIcon> = {
-  HR: Users,
-  Finance: Banknote,
-  "Customer Support": LifeBuoy,
-  Sales: TrendingUp,
-  "IT & Security": Lock,
+  "Regulated data": Database,
+  "Financial actions": Banknote,
+  "Systems of record": FileCheck2,
+  "External communications": Mail,
+  "Access & identity": Lock,
 };
 
 function Mark({ className = "h-5 w-5" }: { className?: string }) {
@@ -210,15 +210,14 @@ export default function LandingPage() {
             </span>
 
             <h1 className="mt-6 text-balance text-[40px] font-bold leading-[1.04] tracking-tight text-fg sm:text-[60px]">
-              Control what your company&apos;s AI{" "}
-              <span className="text-subtle">is allowed to do.</span>
+              Govern every action{" "}
+              <span className="text-subtle">your AI agents take.</span>
             </h1>
 
             <p className="mx-auto mt-5 max-w-2xl text-pretty text-[16px] leading-relaxed text-subtle sm:text-[17px]">
-              Your team is using Microsoft Copilot, ChatGPT, and Gemini to send emails,
-              update records, and open confidential documents. AgentGovernance is the{" "}
-              <span className="font-medium text-fg">control layer between your AI tools and your systems</span>{" "}
-              — with human approval, access control, and a complete audit trail.
+              Security, compliance, and data teams get{" "}
+              <span className="font-medium text-fg">one control plane</span> to see, approve,
+              and audit every action AI takes on company systems — before it happens.
             </p>
 
             <div className="mt-8 flex flex-col items-center gap-3">
@@ -235,7 +234,7 @@ export default function LandingPage() {
           <div className="mx-auto mt-14 max-w-4xl">
             <DemoPlayer />
             <p className="mt-3 text-center text-[12px] text-faint">
-              Watch a discount above policy get blocked and routed to a manager for approval.
+              Watch a bulk export of regulated data get held and routed to a data steward for approval.
             </p>
           </div>
 
@@ -298,8 +297,8 @@ export default function LandingPage() {
                 <ShieldX className="h-4 w-4" /> Without AI governance
               </div>
               <p className="mt-2 text-[13px] leading-relaxed text-subtle">
-                A rep asks AI to email a 25% discount — policy allows 10%. It sends
-                immediately. No review, no record, no way to prove who authorized it.
+                An analytics agent exports 3,000 student records to a dashboard. It runs
+                instantly — no data-steward sign-off, no record of what left or why.
               </p>
             </div>
             <div className="rounded-xl border border-emerald-500/25 bg-emerald-50 p-4">
@@ -307,8 +306,8 @@ export default function LandingPage() {
                 <FileCheck2 className="h-4 w-4" /> With AgentGovernance
               </div>
               <p className="mt-2 text-[13px] leading-relaxed text-subtle">
-                The action is held. Policy checked — 25% exceeds the limit. A manager
-                approves or denies. The full audit trail is saved for compliance.
+                The export is held. Policy checked — it exceeds the limit for regulated
+                data. A data steward approves or denies, and a signed receipt is saved for audit.
               </p>
             </div>
           </div>
@@ -384,7 +383,7 @@ export default function LandingPage() {
           <div className="mb-10 max-w-2xl">
             <div className="label mb-3">Use cases</div>
             <h2 className="text-balance text-[26px] font-semibold tracking-tight text-fg sm:text-[30px]">
-              Safer AI in every department.
+              Govern AI wherever it touches your systems.
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

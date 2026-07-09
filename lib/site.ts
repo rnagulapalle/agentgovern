@@ -8,7 +8,7 @@ export const SITE = {
   url: "https://agentgovern.ai",
   twitter: "@agentgovern",
   title: "AgentGovernance — AI governance for business AI tools",
-  tagline: "Enterprise AI controls",
+  tagline: "AI action governance",
   description:
     "Employees use Copilot, ChatGPT, and Gemini to act on company systems. AgentGovernance adds human approval, access control, and a full AI audit trail.",
 };
@@ -33,8 +33,8 @@ export const CUSTOMER_QUESTIONS = [
 ];
 
 export const WHO_ITS_FOR = {
-  headline: "For organizations adopting AI — not building it",
-  body: "Healthcare, financial services, law, logistics, manufacturing, retail, education, real estate, consulting — teams of 50 to 1,000 people rolling out Copilot, ChatGPT Enterprise, Gemini, Salesforce Agentforce, and similar assistants.",
+  headline: "Built for regulated, high-stakes organizations",
+  body: "Healthcare, financial services, higher education, public sector, insurance, and legal — where AI now touches PHI, PII, financial systems, and systems of record, and every action has to be seen, approved, and audited. Governs Copilot, ChatGPT Enterprise, Gemini, Agentforce, and the agents your teams are building.",
   tools: [
     "Microsoft Copilot",
     "ChatGPT Enterprise",
@@ -43,27 +43,27 @@ export const WHO_ITS_FOR = {
   ],
 };
 
-/** Use cases by department (homepage). */
+/** Use cases by risk surface (homepage) — governance-team framing. */
 export const USE_CASES = [
   {
-    dept: "HR",
-    body: "Onboarding, offer letters, and employee records — AI assists, but anything sent or changed waits for approval.",
+    dept: "Regulated data",
+    body: "Exports and queries touching PHI, PII, or student records are scoped, checked, and held for a data steward — before anything leaves.",
   },
   {
-    dept: "Finance",
-    body: "Invoices, refunds, and payments — anything above your limit needs a human sign-off before it happens.",
+    dept: "Financial actions",
+    body: "Refunds, payments, and adjustments above policy stop for human sign-off, with the approval recorded for audit.",
   },
   {
-    dept: "Customer Support",
-    body: "Tickets and refunds resolved fast, inside the limits you set, with every action logged for review.",
+    dept: "Systems of record",
+    body: "Writes to CRM, EHR, or ERP run only on fresh, verified data — actions on stale source-of-truth are blocked.",
   },
   {
-    dept: "Sales",
-    body: "Follow-ups and CRM updates — discounts or external emails above policy route to a manager first.",
+    dept: "External communications",
+    body: "Anything AI sends to a customer, vendor, or regulator routes for approval when it exceeds delegated authority.",
   },
   {
-    dept: "IT & Security",
-    body: "AI reaches only the systems and documents each role is allowed to, with a full access trail.",
+    dept: "Access & identity",
+    body: "Agents reach only the systems and data each role is cleared for — with a full, replayable access trail.",
   },
 ];
 
