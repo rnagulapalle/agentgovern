@@ -50,8 +50,8 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 | ID | Slug (proposed) | Query cluster | Failure mode | Action | Evidence sources | Demo tie-in | Status |
 |----|-----------------|---------------|--------------|--------|------------------|-------------|--------|
 | S-01 | `/retail-copilot-ai-governance` | SDR agent discount approval, AI sales agent authority limit | 25% discount above 10% delegated authority | Offer discount in outbound | Reddit thread; demo mock data | Pending approvals card, SDR-Agent-17 | Built |
-| S-02 | `/stale-crm-contact-agent-blocked` | AI agent wrong email CRM stale, agent sent wrong contact | CRM not refreshed in N days | Vendor-facing email | Reddit OP + signals 8, 15; HubSpot governance article | Freshness gate + hold state | Planned |
-| S-03 | `/external-party-actions-always-approve` | human in the loop sales agent external email | Category gate: money/external party never auto | Any external send | Signal 13 (procurement); HubSpot write approval | Policy: touchesExternalParty | Planned |
+| S-02 | `/stale-crm-contact-agent-blocked` | AI agent wrong email CRM stale, agent sent wrong contact | CRM not refreshed in N days | Vendor-facing email | Reddit OP + signals 8, 15; HubSpot governance article | Freshness gate + hold state | Built |
+| S-03 | `/external-party-actions-always-approve` | human in the loop sales agent external email | Category gate: money/external party never auto | Any external send | Signal 13 (procurement); HubSpot write approval | Policy: touchesExternalParty | Built |
 | S-04 | `/hubspot-agent-write-without-rollback` | HubSpot AI agent CRM write governance | Agent bulk-wrote fields; no rollback trace | CRM record update | Rework HubSpot Breeze governance | Audit trail + separate approval/result logs | Planned |
 
 ### Finance / BFSI
@@ -74,7 +74,7 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 
 | ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
 |----|------|---------------|--------------|--------|----------|-------------|--------|
-| P-01 | `/contract-amendment-wrong-vendor-contact` | AI agent vendor contract email wrong recipient | Amendment to wrong contact (OP story) | Send contract / amendment | Reddit OP origin story | Receipt: target + freshness | Planned |
+| P-01 | `/contract-amendment-wrong-vendor-contact` | AI agent vendor contract email wrong recipient | Amendment to wrong contact (OP story) | Send contract / amendment | Reddit OP origin story | Receipt: target + freshness | Built |
 | P-02 | `/supplier-payment-dual-approval` | AI agent supplier payment approval | Single agent path to payment release | Supplier payment | Signal 13 category approval | Money + external party gates | Planned |
 
 ### Public sector
@@ -88,7 +88,7 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 
 | ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
 |----|------|---------------|--------------|--------|----------|-------------|--------|
-| E-01 | `/jira-delete-project-agent-blocked` | AI agent delete Jira project blocked | Agent attempted destructive delete | Jira project delete | Demo mock: "Delete Jira project ATLAS" blocked | Blocked verdict in recent actions | Planned |
+| E-01 | `/jira-delete-project-agent-blocked` | AI agent delete Jira project blocked | Agent attempted destructive delete | Jira project delete | Demo mock: "Delete Jira project ATLAS" blocked | Blocked verdict in recent actions | Built |
 | E-02 | `/github-agent-webhook-missed-event` | AI agent GitHub webhook reconcile | Agent acted on issue; webhook missed | Issue state change | FetchSandbox github webhooks post (bridge link) | Reconcile via API read | Planned |
 | E-03 | `/mcp-tool-call-without-receipt` | MCP agent governance tool calls | Agent called MCP tool with no evidence bundle | Arbitrary MCP tool | Product principle 4; MCP bridge page | Propose → decide → prove | Planned |
 
@@ -97,7 +97,7 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 | ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
 |----|------|---------------|--------------|--------|----------|-------------|--------|
 | C-01 | `/zendesk-ticket-reply-agent-auto` | AI agent Zendesk reply governance | Auto-replied with wrong macro / no approval | Ticket public reply | Demo: Reply to ticket #4821 auto | Auto vs exception vs blocked | Planned |
-| C-02 | `/refund-ticket-agent-above-limit` | AI support agent refund limit | Refund $640 without approval chain | Stripe refund from ticket | Demo mock: Refund $640 approved path | Approval + receipt | Planned |
+| C-02 | `/refund-ticket-agent-above-limit` | AI support agent refund limit | Refund $640 without approval chain | Stripe refund from ticket | Demo mock: Refund $640 approved path | Approval + receipt | Built |
 
 ### Logistics / freight
 
