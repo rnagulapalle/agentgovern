@@ -35,6 +35,8 @@ export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
   { label: "External party actions approval", href: "/external-party-actions-always-approve" },
   { label: "Contract amendment wrong vendor contact", href: "/contract-amendment-wrong-vendor-contact" },
   { label: "Jira delete blocked (destructive actions)", href: "/jira-delete-project-agent-blocked" },
+  { label: "Invoice approval above threshold", href: "/invoice-approval-agent-threshold" },
+  { label: "Prior auth without audit trail", href: "/prior-auth-agent-without-audit-trail" },
   { label: "Education AI governance (FERPA)", href: "/education-ai-governance" },
   { label: "Logistics AI governance", href: "/logistics-ai-governance" },
   { label: "Construction AI governance", href: "/construction-ai-governance" },

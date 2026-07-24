@@ -59,14 +59,14 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 | ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
 |----|------|---------------|--------------|--------|----------|-------------|--------|
 | F-01 | `/agent-refund-without-stripe-reconcile` | AI agent refund approval Stripe | Refund posted; local state not reconciled | Stripe refund | FetchSandbox dispute/refund posts (link, don't repeat) | Block until receipt + reconcile | Planned |
-| F-02 | `/invoice-approval-agent-threshold` | AI agent invoice approval workflow | Agent approved invoice above SOX threshold | AP invoice approve | SOX / Elixir pipeline step 6; MindMap BFSI patterns | Approval queue + capability contract | Planned |
+| F-02 | `/invoice-approval-agent-threshold` | AI agent invoice approval workflow | Agent approved invoice above SOX threshold | AP invoice approve | SOX / Elixir pipeline step 6; MindMap BFSI patterns | Approval queue + capability contract | Built |
 | F-03 | `/aml-alert-agent-auto-close` | AI agent AML triage governance | Agent closed alert without human on high risk | AML case status change | MindMap AML triage deployments | Risk score → human required | Planned |
 
 ### Healthcare admin
 
 | ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
 |----|------|---------------|--------------|--------|----------|-------------|--------|
-| H-01 | `/prior-auth-agent-without-audit-trail` | prior authorization AI agent audit | Agent submitted PA; no draft→approval→send log | Prior auth submit | MindMap healthcare deployments; HIPAA §164.312(b) | Lifecycle audit (signal 14) | Planned |
+| H-01 | `/prior-auth-agent-without-audit-trail` | prior authorization AI agent audit | Agent submitted PA; no draft→approval→send log | Prior auth submit | MindMap healthcare deployments; HIPAA §164.312(b) | Lifecycle audit (signal 14) | Built |
 | H-02 | `/healthcare-copilot-ai-governance` | AI agent PHI export blocked | Agent attempted export outside minimum necessary | Data export / API read | Elixir HIPAA steps; audit-log-spec | Policy save / blocked verdict | Built |
 | H-03 | `/stale-patient-record-agent-hold` | stale EHR data AI agent | Action on patient record stale > N days | Schedule / notify patient | Signal 15 (auto-hold); healthcare freshness | Hold state, not silent block | Planned |
 

@@ -1,0 +1,50 @@
+---
+description: Hard guardrails to prevent clobbering shipped work in agent-trust-demo
+alwaysApply: true
+---
+
+# Guardrails — READ BEFORE EDITING (agent-trust-demo)
+
+This site is live at agentgovern.ai and deploys the working tree. A previous
+run reverted the homepage, positioning, theme, and font by regenerating files
+from stale context. Do not repeat that.
+
+## 1. Scope discipline — touch only what the task needs
+- Do the **smallest set of files** that satisfies the request. If the task is
+  "add an SEO page", the allowed changes are: the new route dir under `app/`,
+  `lib/seo-tools.ts` (add a link), `app/sitemap.ts` (lastmod), and the ledger.
+  **Nothing else.**
+- **NEVER edit these without the user explicitly naming them in the request:**
+  `app/page.tsx`, `app/layout.tsx`, `lib/site.ts`, `app/globals.css`,
+  `tailwind.config.ts`, `components/seo/SeoPageShell.tsx`,
+  `components/news/*`, `components/landing/*`, `components/agent-governance/*`.
+
+## 2. Surgical edits only — never regenerate whole files
+- **Read the current file first.** Make the minimal diff. Do NOT rewrite a file
+  from a template or from memory — you will revert recent work.
+- If your edit would change a file's imports, theme classes, fonts, or copy
+  that are unrelated to the task, that is a red flag: **stop.**
+
+## 3. Preserve these invariants (do not "fix" them)
+- **Theme:** marketing pages are LIGHT — wrapped in `theme-light`, using the
+  `bg`/`surface`/`fg`/`muted`/`subtle`/`faint`/`hairline` tokens. The product
+  demo (`/agent-governance-demo`) is DARK. Never swap `text-fg`→`text-white`,
+  never remove `theme-light`, never restore `#818cf8` marks to a light page.
+- **Font:** Geist (`geist/font`) in `app/layout.tsx`. Never revert to Inter.
+- **Positioning:** `lib/site.ts` is the enterprise governance ICP (security /
+  compliance / data teams; risk-surface use cases). Never revert to the SMB
+  "HR / Finance / 50–1,000 employees" copy.
+- **CTA:** the homepage primary CTA is "Book a demo" → cal.com/rajnagulapalle.
+  Keep it.
+- If the task seems to require changing any invariant above, **STOP and ask**
+  the user first. Do not decide on your own.
+
+## 4. Git hygiene
+- Before editing, confirm the working tree is clean and synced to `origin/main`
+  (`git status`, `git pull`). If there are unexpected pre-existing modifications,
+  **stop and report** — do not build on top of a dirty/stale tree.
+- Commit per task with a clear message. Do not bundle unrelated reverts.
+
+## 5. Verify before finishing
+- Run `pnpm build`. Report the full `git diff --stat` so the user can see the
+  blast radius before anything ships.
