@@ -41,6 +41,14 @@ SCP="scp $SSH_OPTS"
 
 log() { printf "\n\033[1;34m▸ %s\033[0m\n" "$*"; }
 
+# ─── 0. Local preflight (abort on reverted invariants / broken build) ─────
+log "Preflight — verifying shipped invariants, build, and tests"
+bash "$REPO_DIR/scripts/preflight.sh" || {
+  echo ""
+  echo "  ✗ Preflight failed — NOT deploying. Nothing was sent to the server."
+  exit 1
+}
+
 # ─── 1. Pre-flight ────────────────────────────────────────────────────────
 log "Checking connection to $SERVER"
 $SSH "$SERVER" 'echo "  connected: $(lsb_release -ds)"'
