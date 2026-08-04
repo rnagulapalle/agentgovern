@@ -37,6 +37,7 @@ export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
   { label: "Jira delete blocked (destructive actions)", href: "/jira-delete-project-agent-blocked" },
   { label: "Invoice approval above threshold", href: "/invoice-approval-agent-threshold" },
   { label: "Prior auth without audit trail", href: "/prior-auth-agent-without-audit-trail" },
+  { label: "HubSpot write without rollback", href: "/hubspot-agent-write-without-rollback" },
   { label: "Education AI governance (FERPA)", href: "/education-ai-governance" },
   { label: "Logistics AI governance", href: "/logistics-ai-governance" },
   { label: "Construction AI governance", href: "/construction-ai-governance" },

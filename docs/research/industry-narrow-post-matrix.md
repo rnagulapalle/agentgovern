@@ -52,7 +52,7 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 | S-01 | `/retail-copilot-ai-governance` | SDR agent discount approval, AI sales agent authority limit | 25% discount above 10% delegated authority | Offer discount in outbound | Reddit thread; demo mock data | Pending approvals card, SDR-Agent-17 | Built |
 | S-02 | `/stale-crm-contact-agent-blocked` | AI agent wrong email CRM stale, agent sent wrong contact | CRM not refreshed in N days | Vendor-facing email | Reddit OP + signals 8, 15; HubSpot governance article | Freshness gate + hold state | Built |
 | S-03 | `/external-party-actions-always-approve` | human in the loop sales agent external email | Category gate: money/external party never auto | Any external send | Signal 13 (procurement); HubSpot write approval | Policy: touchesExternalParty | Built |
-| S-04 | `/hubspot-agent-write-without-rollback` | HubSpot AI agent CRM write governance | Agent bulk-wrote fields; no rollback trace | CRM record update | Rework HubSpot Breeze governance | Audit trail + separate approval/result logs | Planned |
+| S-04 | `/hubspot-agent-write-without-rollback` | HubSpot AI agent CRM write governance | Agent bulk-wrote fields; no rollback trace | CRM record update | Rework HubSpot Breeze governance | Audit trail + separate approval/result logs | Built |
 
 ### Finance / BFSI
 
