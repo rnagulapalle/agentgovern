@@ -90,7 +90,7 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 |----|------|---------------|--------------|--------|----------|-------------|--------|
 | E-01 | `/jira-delete-project-agent-blocked` | AI agent delete Jira project blocked | Agent attempted destructive delete | Jira project delete | Demo mock: "Delete Jira project ATLAS" blocked | Blocked verdict in recent actions | Built |
 | E-02 | `/github-agent-webhook-missed-event` | AI agent GitHub webhook reconcile | Agent acted on issue; webhook missed | Issue state change | FetchSandbox github webhooks post (bridge link) | Reconcile via API read | Planned |
-| E-03 | `/mcp-tool-call-without-receipt` | MCP agent governance tool calls | Agent called MCP tool with no evidence bundle | Arbitrary MCP tool | Product principle 4; MCP bridge page | Propose → decide → prove | Planned |
+| E-03 | `/mcp-tool-call-without-receipt` | MCP agent governance tool calls | Agent called MCP tool with no evidence bundle | Arbitrary MCP tool | Product principle 4; MCP bridge page | Propose → decide → prove | Built |
 
 ### Customer support
 

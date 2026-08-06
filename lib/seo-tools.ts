@@ -38,6 +38,7 @@ export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
   { label: "Invoice approval above threshold", href: "/invoice-approval-agent-threshold" },
   { label: "Prior auth without audit trail", href: "/prior-auth-agent-without-audit-trail" },
   { label: "HubSpot write without rollback", href: "/hubspot-agent-write-without-rollback" },
+  { label: "MCP tool call without receipt", href: "/mcp-tool-call-without-receipt" },
   { label: "Education AI governance (FERPA)", href: "/education-ai-governance" },
   { label: "Logistics AI governance", href: "/logistics-ai-governance" },
   { label: "Construction AI governance", href: "/construction-ai-governance" },

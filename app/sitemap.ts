@@ -4,7 +4,7 @@ import { listNewsPosts, newsPath } from "@/lib/news-markdown";
 import { SITE } from "@/lib/site";
 
 // Static date (per SEO practice — never new Date() on every build). Bump on change.
-const UPDATED = new Date("2026-08-04");
+const UPDATED = new Date("2026-08-06");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages: MetadataRoute.Sitemap = AGENTGOVERN_SITEMAP_PATHS.map((path) => ({
