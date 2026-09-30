@@ -9,14 +9,14 @@ export const SITE = {
   title: "LoopLabs — Build agent workflows. Keep control.",
   tagline: "Build workflows. Control actions. Recover execution.",
   description:
-    "Build multi-agent workflows and control what they do in production. Set permissions, supervise execution, check outputs, approve risky actions, and recover failed state.",
+    "Design agent workflows and add controls before production. Set permissions, supervise execution, check outputs, approve risky actions, and recover affected state.",
   email: "founders@looplabs.run",
 };
 
 export const PRODUCT_PILLARS = [
   {
     title: "Build workflows",
-    body: "Design one-agent and multi-agent workflows, connect approved models and tools, and assign every agent an owner and role.",
+    body: "Map one-agent and multi-agent workflows, choose approved models and tools, and assign every agent an owner and role. Early-access deployments are configured with the LoopLabs team.",
   },
   {
     title: "Control actions",
@@ -49,7 +49,7 @@ export const CUSTOMER_QUESTIONS = [
 
 export const WHO_ITS_FOR = {
   headline: "Built for regulated, high-stakes organizations",
-  body: "Healthcare, financial services, higher education, public sector, insurance, and legal — where AI now touches PHI, PII, financial systems, and systems of record, and every action has to be seen, approved, and audited. Governs Copilot, ChatGPT Enterprise, Gemini, Agentforce, and the agents your teams are building.",
+  body: "Healthcare, financial services, higher education, public sector, insurance, and legal — where AI may touch PHI, PII, financial systems, and systems of record. LoopLabs is designed to put one control model around assistants and agents as integrations are added during early-access deployments.",
   tools: [
     "Microsoft Copilot",
     "ChatGPT Enterprise",
@@ -86,7 +86,7 @@ export const STEPS = [
   {
     n: "01",
     title: "Intercept",
-    body: "When AI tries to email a customer, update a record, or access sensitive data, LoopLabs captures the request before it runs in your systems.",
+    body: "In a connected deployment, an email, record update, or sensitive-data request passes through LoopLabs before the business-system executor runs it.",
   },
   {
     n: "02",
@@ -123,14 +123,14 @@ export const FEATURES = [
   },
   {
     title: "Works across AI assistants",
-    body: "One governance layer whether employees use Copilot, ChatGPT Enterprise, Gemini, Agentforce, or other business AI tools.",
+    body: "A provider-neutral control model for assistants and agents. Each model, tool, and business system still requires an explicit integration before production use.",
   },
 ];
 
 export const FAQ = [
   {
     q: "What is LoopLabs?",
-    a: "LoopLabs is an AI governance layer that sits between your business AI tools and company systems. When an employee's AI assistant tries to send an email, update a CRM record, or access confidential documents, LoopLabs checks it against your policies, routes risky actions for human approval, and records everything in an audit trail.",
+    a: "LoopLabs is an agent automation and control layer designed to sit between agents and company systems. In a connected deployment, proposed actions are checked against policy, higher-risk work is routed for approval, and outcomes are written to an audit store.",
   },
   {
     q: "We aren't building AI — we just let employees use Copilot and ChatGPT. Is this for us?",
@@ -154,7 +154,7 @@ export const FAQ = [
   },
   {
     q: "Is the demo real?",
-    a: "Yes. The interactive demo shows a real approval workflow — for example, a discount above policy blocked and routed to a manager — using the same decision logic we deploy for customers. Sample data only; your policies would be your own.",
+    a: "The demo is a working browser prototype with deterministic policy evaluation, approvals, output checks, audit events, and version-aware recovery over sample data. It does not call models or external business systems. Production integrations and server-side evidence stores are part of an early-access deployment.",
   },
   {
     q: "When can we get started?",

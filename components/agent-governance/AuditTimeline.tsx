@@ -79,7 +79,7 @@ export function AuditTimeline({
     },
     {
       title: "Action receipt generated",
-      detail: decision ? `${scenario.receipt.agentName} · signed` : "pending resolution",
+      detail: decision ? `${scenario.receipt.agentName} · demo checksum recorded` : "pending resolution",
       time: decision ? resolvedTime : "—",
       tone: decision ? "ok" : "neutral",
       show: reached("resolved"),

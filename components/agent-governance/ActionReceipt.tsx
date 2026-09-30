@@ -79,7 +79,7 @@ export function ActionReceipt({
   const r = scenario.resolved[decision];
   const meta = scenario.receipt;
   const shortHash = `${evidenceHash.slice(0, 6)}…${evidenceHash.slice(-4)}`;
-  const sigOk = signature.startsWith("ed25519:");
+  const sigOk = signature.startsWith("demo:");
   const tone = TONE[r.tone];
   const Icon = RESOLVED_ICON[decision];
 
@@ -153,7 +153,7 @@ export function ActionReceipt({
               </span>
             </Row>
             <Row label="Evidence hash" mono>{shortHash}</Row>
-            <Row label="Signature" mono>{sigOk ? "ed25519 ✓" : "unsigned"}</Row>
+            <Row label="Demo checksum" mono>{sigOk ? "verified locally" : "missing"}</Row>
           </div>
         </div>
 

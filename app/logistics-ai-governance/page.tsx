@@ -16,7 +16,7 @@ const FAQ = [
   },
   {
     q: "We dispatch from spreadsheets and email — does AI governance still apply?",
-    a: "Yes. Governance intercepts the moment AI tries to send a customer update, book a load, or change a record in your TMS — regardless of whether the workflow started in Copilot, ChatGPT, or a CRM plugin.",
+    a: "In a connected deployment, those actions can pass through the same policy boundary before a customer update, load booking, or TMS change is executed. Each assistant, plugin, and business system requires an explicit integration.",
   },
   {
     q: "We're a 200-person brokerage with two IT people. Where do we start?",

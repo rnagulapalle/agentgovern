@@ -97,7 +97,7 @@ export interface ReceiptEvidence {
   permittingRule: string | null;
 }
 
-/** Immutable, signed record produced for every evaluated action. */
+/** Deterministic demo record produced for every evaluated action. */
 export interface ActionReceipt {
   id: string; // "rcpt_…"
   actionId: string;
@@ -110,7 +110,7 @@ export interface ActionReceipt {
   checks: PolicyCheck[];
   createdAt: string;
   evidenceHash: string; // 0x… deterministic hash of the evidence
-  signature: string; // ed25519:… deterministic demo signature
+  signature: string; // demo:… deterministic checksum, not a production signature
 }
 
 export interface EvaluationResult {

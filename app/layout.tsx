@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { SITE } from "@/lib/site";
+import { Analytics } from "@/components/analytics/Analytics";
 import "./globals.css";
 
 // Geist for UI (modern grotesque), Geist Mono for technical metadata.
@@ -73,7 +74,10 @@ export default function RootLayout({
       lang="en"
       className={`${GeistSans.variable} ${GeistMono.variable} dark`}
     >
-      <body>{children}</body>
+      <body>
+        <Analytics />
+        {children}
+      </body>
     </html>
   );
 }

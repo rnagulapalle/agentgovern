@@ -179,7 +179,7 @@ function DemoRun({ scenario }: { scenario: Scenario }) {
           </section>
 
           <section>
-            <SectionLabel index="E" title="Action receipt" hint="signed artifact" />
+            <SectionLabel index="E" title="Action receipt" hint="demo artifact" />
             {decision && timestamp ? (
               <ActionReceipt
                 scenario={scenario}
@@ -196,7 +196,7 @@ function DemoRun({ scenario }: { scenario: Scenario }) {
                 <ReceiptText className="h-4 w-4 text-white/25" />
                 <p className="text-[13px] font-medium text-white/55">No receipt yet</p>
                 <p className="max-w-xs text-[12px] text-white/35">
-                  A signed, replayable receipt is minted the moment the action is resolved.
+                  A deterministic demo receipt is created when the action is resolved.
                 </p>
               </div>
             )}
@@ -253,7 +253,7 @@ export default function LoopLabsDemoPage() {
 
         <footer className="mt-8 flex flex-col items-start justify-between gap-2 border-t border-white/[0.06] pt-5 font-mono text-[11px] text-white/30 sm:flex-row sm:items-center">
           <span>LoopLabs — control plane for agentic actions</span>
-          <span>Sample data · your policies run in production</span>
+          <span>Sample data · no production systems are connected</span>
         </footer>
       </main>
     </>

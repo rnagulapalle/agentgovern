@@ -174,9 +174,10 @@ export default function LandingPage() {
                 Keep control.
               </h1>
               <p>
-                Build one-agent and multi-agent workflows, then control what
-                they can do in production. Set permissions, supervise every
-                execution, check outputs, and recover failed state.
+                Map one-agent and multi-agent workflows, then control what
+                they can do before production systems accept the change. Set
+                permissions, supervise execution, check outputs, and recover
+                affected state.
               </p>
               <div className="ll-hero-actions">
                 <a
@@ -232,6 +233,11 @@ export default function LandingPage() {
                   the workflow with you, beginning with a frequent process and
                   adapting the agents, tools, approvals, and recovery steps to
                   the way your team works.
+                </p>
+                <p className="ll-small-copy">
+                  Early access is guided implementation. The product tour shows
+                  a prepared workflow and its controls; it is not a drag-and-drop
+                  workflow builder.
                 </p>
                 <a
                   className="ll-text-link"
@@ -473,8 +479,9 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="ll-sandbox-note">
-              The product tour uses sample data. Model calls, external actions, and
-              recovery are simulated.
+              The product tour uses sample browser data and a prepared renewal
+              workflow. Policy evaluation and state transitions run locally;
+              model calls, external actions, and production recovery are simulated.
             </p>
           </section>
 

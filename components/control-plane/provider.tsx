@@ -11,9 +11,11 @@ import {
 import {
   controlReducer,
   initialState,
+  outputCheck,
   type ControlAction,
   type ControlState,
 } from "@/lib/control-plane/model";
+import { track } from "@/lib/analytics";
 
 const KEY = "looplabs.control-plane.v1";
 const LEGACY_KEY = "agentgovern.control-plane.v1";
@@ -84,6 +86,46 @@ export function ControlProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state, ready, notify]);
   const send = useCallback((action: InputAction) => {
+    if (action.type === "onboard") {
+      track("agent_onboarded", {
+        role: action.agent.role,
+        team: action.agent.team,
+        model_tier: action.agent.tier,
+        delegated: Boolean(action.agent.parentId),
+        tool_count: action.agent.tools.length,
+      });
+    } else if (action.type === "simulate") {
+      const policy = state.policies.find((item) => item.id === "discount");
+      const outcome =
+        action.sourceAge > 14
+          ? "blocked"
+          : action.discount > (policy?.threshold ?? 10)
+            ? "held"
+            : "allowed";
+      track("run_simulated", {
+        outcome,
+        discount: action.discount,
+        source_age_days: action.sourceAge,
+      });
+    } else if (action.type === "approval") {
+      track("approval_decided", { decision: action.decision });
+    } else if (action.type === "output") {
+      track("output_evaluated", {
+        outcome: outputCheck(action.text).status,
+        character_count: action.text.length,
+      });
+    } else if (["contain", "plan", "reconcile"].includes(action.type)) {
+      track("recovery_step_completed", { step: action.type });
+      if (action.type === "reconcile") track("activation_milestone_reached", { milestone: "state_recovered" });
+    } else if (action.type === "agent_status") {
+      track("agent_status_changed", { status: action.status });
+    } else if (action.type === "terminate") {
+      track("run_terminated", {});
+    } else if (action.type === "policy") {
+      track("policy_updated", { policy_id: action.policyId });
+    } else if (action.type === "budget") {
+      track("agent_budget_updated", { budget: action.budget });
+    }
     setState((s) =>
       controlReducer(s, {
         ...action,
@@ -91,8 +133,9 @@ export function ControlProvider({ children }: { children: React.ReactNode }) {
         id: crypto.randomUUID().slice(0, 8),
       } as ControlAction),
     );
-  }, []);
+  }, [state.policies]);
   const reset = () => {
+    track("demo_reset", {});
     setState(initialState());
     notify("Demo workspace restored to its starting state.");
   };

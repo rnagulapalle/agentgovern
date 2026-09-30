@@ -34,11 +34,11 @@ export function evidenceHash(evidence: unknown): string {
   return "0x" + hex(fnv1a(json)) + hex(fnv1a("at:" + json));
 }
 
-/** Deterministic demo signature derived from the hash + signer. */
+/** Deterministic demo checksum derived from the hash + signer. Not cryptographic. */
 export function signEvidence(hash: string, signer: string): string {
   const a = hex(fnv1a("sig:" + hash + ":" + signer));
   const b = hex(fnv1a("sig2:" + signer + ":" + hash));
-  return "ed25519:" + a + b;
+  return "demo:" + a + b;
 }
 
 /** Short, stable receipt id from the action id. */

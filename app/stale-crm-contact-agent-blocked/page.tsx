@@ -105,7 +105,7 @@ export default function StaleCrmContactAgentBlockedPage() {
               },
               {
                 title: "Refresh or signed override",
-                body: "The reviewer can send it back to refresh the record or approve a signed exception that stays in the audit trail.",
+                body: "The reviewer can send it back to refresh the record or approve an explicit exception that stays in the audit trail.",
               },
               {
                 title: "Receipt after decision",
@@ -121,7 +121,7 @@ export default function StaleCrmContactAgentBlockedPage() {
               "No external email may use a CRM contact older than 14 or 30 days",
               "Reviewer sees contact source, last sync time, intended recipient, and message diff",
               "Stale records route to RevOps or the account owner before send",
-              "Approved exceptions are signed and attached to the action receipt",
+              "Approved exceptions are attached to the action receipt; production deployments require cryptographic signing",
               "CRM stage updates and calendar holds can have separate lower-risk policies",
             ]}
           />

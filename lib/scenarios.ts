@@ -332,10 +332,10 @@ const DISCOUNT_SCENARIO: Scenario = {
       approvalTitle: "Approved with exception",
       tone: "indigo",
       approvalLine: (v) =>
-        `Raj approved a one-time exception for the ${v}% discount. A signed override is attached to the audit receipt.`,
+        `Raj approved a one-time exception for the ${v}% discount. The decision is attached to the demo receipt.`,
       receiptLabel: "Approved · exception",
       receiptOutput: (v) =>
-        `Email sent to john@vantage.co with a ${v}% discount under a signed one-time exception.`,
+        `Simulated email release to john@vantage.co with a ${v}% discount under a one-time exception.`,
       approver: "Raj · manager override",
     },
     rejected: {
@@ -473,7 +473,7 @@ const STALE_CRM_SCENARIO: Scenario = {
     reasonOk: (v) =>
       `Source record was synced ${v}d ago (within 14 days). The agent is cleared to send to the verified contact.`,
     reasonBad: (v) =>
-      `The HubSpot contact was last synced ${v} days ago — beyond the 14-day freshness limit. Recommended — refresh the record before any send, or approve a signed override.`,
+      `The sample HubSpot contact was last synced ${v} days ago — beyond the 14-day freshness limit. Recommended — refresh the record before any send, or approve an explicit override.`,
     summary: (v, risk) => [
       { l: "Action", v: "Send renewal quote" },
       { l: "Risk", v: risk >= 60 ? "High" : "Medium" },
@@ -528,10 +528,10 @@ const STALE_CRM_SCENARIO: Scenario = {
       approvalTitle: "Override — sent on stale data",
       tone: "indigo",
       approvalLine: (v) =>
-        `Raj approved a one-time override to send against a ${v}-day-old record. A signed exception is attached to the receipt.`,
+        `Raj approved a one-time override to send against a ${v}-day-old record. The exception is attached to the demo receipt.`,
       receiptLabel: "Approved · exception",
       receiptOutput: (v) =>
-        `Renewal quote sent to ops@northwind.co under a signed override, against a ${v}-day-old record.`,
+        `Simulated renewal quote release to ops@northwind.co under an override, against a ${v}-day-old record.`,
       approver: "Raj · risk override",
     },
     rejected: {
@@ -742,10 +742,10 @@ const FERPA_EXPORT_SCENARIO: Scenario = {
       approvalTitle: "Approved by data steward",
       tone: "indigo",
       approvalLine: (v) =>
-        `Priya Raman approved the ${v}-row FERPA export as data steward. A signed approval is attached to the receipt.`,
+        `Priya Raman approved the ${v}-row FERPA export as data steward. The decision is attached to the demo receipt.`,
       receiptLabel: "Approved · steward",
       receiptOutput: (v) =>
-        `${v} student records exported under a signed data-steward approval.`,
+        `Simulated export of ${v} student records under data-steward approval.`,
       approver: "Priya Raman · data steward",
     },
     rejected: {

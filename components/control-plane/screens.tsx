@@ -49,6 +49,7 @@ import {
   type Tier,
 } from "@/lib/control-plane/model";
 import { useControl } from "./provider";
+import { track } from "@/lib/analytics";
 import {
   Avatar,
   BrandMark,
@@ -87,6 +88,10 @@ export function ControlScreen({
         id: initialInspect,
       });
   }, [initialInspect, section]);
+  useEffect(() => {
+    track("tour_section_viewed", { section });
+    if (section === "overview") track("product_tour_started", {});
+  }, [section]);
   if (!ready)
     return (
       <div className="cp-loading" role="status">
@@ -201,6 +206,42 @@ function Overview({ open }: { open: Open }) {
         </div>
         <SignalArt />
       </div>
+      <section className="cp-tour-map" aria-labelledby="guided-tour-title">
+        <div className="cp-tour-map-head">
+          <div>
+            <span className="cp-eyebrow">GUIDED PRODUCT TOUR · ABOUT 4 MINUTES</span>
+            <h2 id="guided-tour-title">Follow one controlled workflow from identity to recovery.</h2>
+          </div>
+          <p>
+            This workspace uses a prepared renewal workflow and sample browser
+            data. Complete the steps in order to see what the prototype proves.
+          </p>
+        </div>
+        <div className="cp-tour-map-steps">
+          {[
+            ["01", "Set agent access", "Owner, role, tools, model tier, and budget", "/control-plane/agents"],
+            ["02", "Run the workflow", "Change discount and data freshness to allow, hold, or block", "/control-plane/runs"],
+            ["03", "Review the result", "Approve a risky action and inspect an output decision", "/control-plane/approvals"],
+            ["04", "Recover state", "Contain drift, preview the plan, then verify and restore", "/control-plane/reconciliation"],
+          ].map(([number, title, detail, href]) => (
+            <Link href={href} key={number}>
+              <span>{number}</span>
+              <strong>{title}</strong>
+              <small>{detail}</small>
+              <ArrowUpRight size={15} />
+            </Link>
+          ))}
+        </div>
+        <div className="cp-tour-scope">
+          <ShieldAlert size={15} />
+          <span>
+            Demonstrated here: deterministic policy decisions, local approvals,
+            output pattern checks, audit events, and version-aware recovery.
+            Production connectors, credentials, model calls, and durable audit
+            storage are not connected in this tour.
+          </span>
+        </div>
+      </section>
       <div className="cp-stats">
         {[
           {
@@ -1447,11 +1488,14 @@ function Audit({ open }: { open: Open }) {
           <button
             className="cp-button"
             onClick={() =>
-              exportJson("looplabs-demo-audit.json", {
-                environment: "demo",
-                exportedAt: new Date().toISOString(),
-                events: rows,
-              })
+              {
+                track("audit_exported", { event_count: rows.length });
+                exportJson("looplabs-demo-audit.json", {
+                  environment: "demo",
+                  exportedAt: new Date().toISOString(),
+                  events: rows,
+                });
+              }
             }
           >
             <Download size={15} />

@@ -20,7 +20,7 @@ const FAQ = [
   },
   {
     q: "Will this slow down associates using ChatGPT Enterprise for research?",
-    a: "No. Reading and drafting inside approved boundaries stays fast. Governance intercepts the moment AI tries to send, file, or export — the actions that create malpractice and confidentiality risk.",
+    a: "The intended model keeps reading and drafting inside approved boundaries fast, while connected send, file, and export actions pass through policy and approval checks. The interactive tour demonstrates the decision flow without connecting a law firm's systems.",
   },
 ];
 

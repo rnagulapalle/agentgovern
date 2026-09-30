@@ -82,10 +82,10 @@ describe("execution policy engine", () => {
     expect(a.receipt.signature).toBe(b.receipt.signature);
   });
 
-  it("produces a signed, immutable receipt for every decision", () => {
+  it("produces a deterministic demo receipt for every decision", () => {
     const r = evaluate(emailReq(), ctx);
     expect(r.receipt.evidenceHash).toMatch(/^0x[0-9a-f]{16}$/);
-    expect(r.receipt.signature).toMatch(/^ed25519:/);
+    expect(r.receipt.signature).toMatch(/^demo:/);
     expect(r.receipt.id).toMatch(/^rcpt_/);
   });
 

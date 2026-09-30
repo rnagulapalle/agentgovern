@@ -25,7 +25,7 @@ const SECTIONS = [
     title: "Organization",
     rows: [
       { label: "Workspace", value: "Meridian Group", kind: "text" },
-      { label: "Environment", value: "Production", kind: "text" },
+      { label: "Environment", value: "Interactive demo", kind: "text" },
       { label: "Default session TTL", value: "24h", kind: "text" },
     ],
   },
@@ -49,7 +49,7 @@ const SECTIONS = [
     title: "Audit & retention",
     rows: [
       { label: "Receipt retention", value: "7 years", kind: "text" },
-      { label: "Cryptographic signing", value: "ed25519", kind: "text" },
+      { label: "Receipt checksum", value: "Deterministic demo only", kind: "text" },
       { label: "Immutable ledger", value: true, kind: "toggle" },
     ],
   },
