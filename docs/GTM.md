@@ -1,10 +1,10 @@
-# AgentGovernance — GTM / SEO / PR
+# LoopLabs — GTM / SEO / PR
 
-**Product:** AgentGovernance — AI governance between business AI tools and company systems  
-**Domain:** https://agentgovern.ai  
-**Repo:** `~/agent-trust-demo`  
-**Demo UI:** AgentGovernance Control Plane at `/agent-governance-demo`  
-**Twitter:** @agentgovern
+**Product:** LoopLabs — AI governance between business AI tools and company systems\
+**Domain:** https://looplabs.run\
+**Repo:** `~/agent-trust-demo`\
+**Demo UI:** LoopLabs Control Plane at `/control-plane` (original scenarios at `/agent-governance-demo`)\
+**Twitter:** Not configured for the new brand
 
 ## Positioning (Mar 2026)
 
@@ -85,7 +85,7 @@ Full backlog with slugs, queries, and evidence: **`docs/research/industry-narrow
 |------|--------|
 | Pick | Next row in weekly calendar (matches a live guide URL) |
 | Draft | `docs/devto/week-NN-*.md` — narrow incident, business/IT voice, `published: false` |
-| Canonical | Always `https://agentgovern.ai/<guide-slug>` — not Dev.to as primary |
+| Canonical | Always `https://looplabs.run/<guide-slug>` — not Dev.to as primary |
 | Publish | Dev.to editor → paste markdown → set canonical URL → 4 tags |
 | After | Ledger `Posted` + Dev.to URL; optional Hashnode (canonical = Dev.to) |
 | Measure | GSC impressions on **guide** (Friday check, 7-day lag) |
@@ -95,4 +95,3 @@ Full backlog with slugs, queries, and evidence: **`docs/research/industry-narrow
 **Tags (pick 4):** `ai`, `security`, `devops`, `microsoft`, `chatgpt`, `compliance`, `startup`
 
 **Do not:** broad AI safety essays; repeat same industry+failure within 30 days; use dev jargon (policy engine, OPA, MCP) in titles.
-

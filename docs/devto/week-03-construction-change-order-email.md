@@ -4,7 +4,22 @@ published: false
 description: "General contractors use Copilot for RFIs and sub coordination. Email is still the system of record — and AI sends faster than your approval habits."
 tags: ai, security, devops, microsoft
 canonical_url: https://agentgovern.ai/construction-ai-governance
+# Upload cover manually on Dev.to (do not use cover_image frontmatter):
+# docs/devto/covers/week-03-construction-change-order-devto.png
 series: agentgovernance-copilot-rollouts
+growth_rubric:
+  target_query: "copilot construction change order email approval"
+  scores: { A1: 5, A2: 5, A3: 5, A4: 5, A5: 4, A6: 5, A7: 5, A8: 4 }
+  average: 4.75
+  serp_gap: "SERP shows generic Copilot construction tips; we add unsigned change order emailed to sub before PM sign-off"
+  research_sources: [procore-community, copilot-rollout-gc, first-party-construction-guide]
+variation:
+  industry: construction
+  failure_mode: unsigned-change-order
+  action_type: sub-email
+  channel: devto
+  differs_from: week-02-logistics-stale-eta
+  dimensions_changed: [D1-construction, D2-unsigned-co, D3-sub-email, D5-copilot]
 ---
 
 Regional GC, ~400 people. Copilot rolled out to project engineers and admin staff. I'm IT — also the person who sits in on risk meetings when someone says "the email speaks for itself."

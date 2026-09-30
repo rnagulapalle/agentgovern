@@ -74,11 +74,11 @@ In other words: do not only ask whether a team can use a model. Ask whether the 
 
 **Week 4: test the audit trail.** For one workflow, prove you can answer: who asked AI to do what, which policy applied, who approved, and what happened in the target system.
 
-## Where AgentGovernance fits
+## Where LoopLabs fits
 
-[AgentGovernance](https://agentgovern.ai) is a control layer between business AI tools and company systems. It helps teams enforce AI approvals, access control, and audit trails when AI tries to act, not only when it chats.
+[LoopLabs](https://looplabs.run) is a control layer between business AI tools and company systems. It helps teams enforce AI approvals, access control, and audit trails when AI tries to act, not only when it chats.
 
-For the rollout pattern, start with the [AI governance guide for mid-size companies](/ai-governance-for-mid-size-companies). To see the action-level controls, try the [AgentGovernance demo](/agent-governance-demo).
+For the rollout pattern, start with the [AI governance guide for mid-size companies](/ai-governance-for-mid-size-companies). To see the action-level controls, try the [LoopLabs demo](/agent-governance-demo).
 
 ---
 

@@ -114,7 +114,7 @@ export default function LogisticsAiGovernancePage() {
             ]}
           />
           <p>
-            Your team already runs on commitments and exceptions. AgentGovernance
+            Your team already runs on commitments and exceptions. LoopLabs
             applies those rules when Copilot or ChatGPT tries to act — without
             disabling the speed AI provides.
           </p>

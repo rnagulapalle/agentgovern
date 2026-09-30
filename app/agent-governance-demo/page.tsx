@@ -238,7 +238,7 @@ function DemoRun({ scenario }: { scenario: Scenario }) {
   );
 }
 
-export default function AgentGovernanceDemoPage() {
+export default function LoopLabsDemoPage() {
   const [scenarioId, setScenarioId] = useState(SCENARIOS[0].id);
   const scenario = getScenario(scenarioId);
 
@@ -252,7 +252,7 @@ export default function AgentGovernanceDemoPage() {
         <DemoRun key={scenario.id} scenario={scenario} />
 
         <footer className="mt-8 flex flex-col items-start justify-between gap-2 border-t border-white/[0.06] pt-5 font-mono text-[11px] text-white/30 sm:flex-row sm:items-center">
-          <span>AgentGovernance — control plane for agentic actions</span>
+          <span>LoopLabs — control plane for agentic actions</span>
           <span>Sample data · your policies run in production</span>
         </footer>
       </main>

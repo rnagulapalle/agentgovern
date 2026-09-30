@@ -78,5 +78,5 @@ export function listNewsPosts(): NewsPost[] {
 }
 
 export function newsPath(slug: string) {
-  return `/news/${slug}`;
+  return `/blog/${slug}`;
 }

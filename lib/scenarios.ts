@@ -298,7 +298,7 @@ const DISCOUNT_SCENARIO: Scenario = {
     action: "Send email",
     inputQuote:
       "“Follow up with John from Vantage. Offer 25% off, update HubSpot, schedule a call tomorrow if no reply.”",
-    chainLabel: "chain: blk_0x4f2a · verifiable on AgentGovernance ledger",
+    chainLabel: "chain: blk_0x4f2a · verifiable on LoopLabs ledger",
   },
   audit: {
     othersTitle: "CRM update auto-approved",
@@ -494,7 +494,7 @@ const STALE_CRM_SCENARIO: Scenario = {
     action: "Send renewal quote",
     inputQuote:
       "“Email the renewal quote to our contact at Northwind Logistics and move the deal forward in HubSpot.”",
-    chainLabel: "chain: blk_0x6120 · verifiable on AgentGovernance ledger",
+    chainLabel: "chain: blk_0x6120 · verifiable on LoopLabs ledger",
   },
   audit: {
     othersTitle: "CRM update auto-approved",
@@ -707,7 +707,7 @@ const FERPA_EXPORT_SCENARIO: Scenario = {
     action: "Export student records",
     inputQuote:
       "“Pull the full undergraduate cohort — names, SIS IDs, and GPAs — and push it to the Tableau enrollment dashboard.”",
-    chainLabel: "chain: blk_0x4402 · verifiable on AgentGovernance ledger",
+    chainLabel: "chain: blk_0x4402 · verifiable on LoopLabs ledger",
   },
   audit: {
     othersTitle: "Dataset read auto-approved",

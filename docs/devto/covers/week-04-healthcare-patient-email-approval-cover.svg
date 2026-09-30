@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" fill="none">
+  <rect width="1600" height="900" fill="#0c0c10"/>
+  <rect x="72" y="72" width="1456" height="756" rx="32" fill="#12121a" stroke="#ffffff" stroke-opacity="0.08"/>
+  <rect x="112" y="118" width="330" height="42" rx="21" fill="#6366f1" fill-opacity="0.15" stroke="#818cf8" stroke-opacity="0.35"/>
+  <text x="277" y="146" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#a5b4fc">HEALTHCARE · COPILOT ROLLOUT</text>
+  <text x="112" y="245" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="800" fill="#f8fafc">Copilot drafted patient follow-up.</text>
+  <text x="112" y="318" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="800" fill="#818cf8">PHI was one click from send.</text>
+  <text x="112" y="382" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="500" fill="#94a3b8">Patient-facing send approval before external email or SMS</text>
+  <rect x="112" y="448" width="540" height="88" rx="22" fill="#ef4444" fill-opacity="0.12" stroke="#f87171" stroke-opacity="0.4"/>
+  <text x="140" y="492" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" fill="#fecaca">Blocked · minimum necessary review required</text>
+  <text x="140" y="522" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="600" fill="#94a3b8">Approver + patient identifiers + policy outcome logged</text>
+  <rect x="860" y="430" width="520" height="340" rx="24" fill="#0f0f14" stroke="#ffffff" stroke-opacity="0.08"/>
+  <text x="892" y="490" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700" fill="#e2e8f0">Healthcare AI controls</text>
+  <text x="912" y="545" font-family="Inter, Arial, sans-serif" font-size="18" fill="#94a3b8">&#10003; Patient send needs human approval</text>
+  <text x="912" y="590" font-family="Inter, Arial, sans-serif" font-size="18" fill="#94a3b8">&#10003; PHI bulk export blocked by default</text>
+  <text x="912" y="635" font-family="Inter, Arial, sans-serif" font-size="18" fill="#94a3b8">&#10003; Audit trail proves who approved what</text>
+  <text x="112" y="846" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="600" fill="#64748b">agentgovern.ai/healthcare-copilot-ai-governance</text>
+</svg>

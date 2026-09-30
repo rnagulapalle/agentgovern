@@ -9,9 +9,9 @@ import { buildSeoMetadata } from "@/lib/seo-metadata";
 import { AGENTGOVERN_SEO_TOOLS } from "@/lib/seo-tools";
 
 export const metadata = buildSeoMetadata({
-  title: "AI Governance Guides for Mid-Size Companies",
+  title: "Agent Workflow and Control Guides",
   description:
-    "Practical AI governance for 50–1,000 employee organizations rolling out Copilot, ChatGPT Enterprise, and Gemini — without an AI platform team.",
+    "Practical guides for building agent workflows, controlling actions and execution, checking outputs, and recovering failed state.",
   path: "/guides",
   keywords: [
     "AI governance mid size company",
@@ -25,24 +25,22 @@ export default function GuidesPage() {
   return (
     <SeoPageShell
       eyebrow="Guides"
-      title="AI governance for organizations that aren't building AI"
-      description="You rolled out Copilot or ChatGPT Enterprise so people could work faster — not so IT would become an AI lab. These guides are written for 50–1,000 employee companies with a small security or compliance team and no dedicated AI platform group."
+      title="Build useful agent workflows without losing control"
+      description="Practical guidance for teams automating work with agents. Start with a real workflow, give every agent a role, control what it can do, supervise the full execution, and recover when production state changes unexpectedly."
       primaryCta={{ href: "/ai-governance-for-mid-size-companies", label: "Start with the overview" }}
-      secondaryCta={{ href: "/agent-governance-demo", label: "Live demo" }}
+      secondaryCta={{ href: "/control-plane", label: "Product tour" }}
     >
       <SeoSection title="Who these guides are for">
         <p>
-          Manufacturing plants, regional hospitals, law firms, freight brokers, CPA
-          practices, insurance agencies, contractors, retailers, brokerages, school
-          districts, and property firms share the same rollout pattern: business AI
-          tools first, governance questions second.
+          Product and operations teams building agent workflows, and security teams
+          responsible for what those agents can do once they reach real systems.
         </p>
         <SeoList
           items={[
-            "50–1,000 employees — big enough for real systems, small enough that IT wears many hats",
-            "Recently enabled Microsoft Copilot, ChatGPT Enterprise, Google Gemini, or Salesforce Agentforce",
-            "No AI platform team — maybe one security lead and a compliance-minded ops manager",
-            "Goal: let people use AI safely without turning every manager into an AI expert",
+            "Teams automating multi-step work across models, tools, and business systems",
+            "Agents that send messages, change records, approve work, or delegate to other agents",
+            "Workflows that need role-based permissions, approval thresholds, and execution history",
+            "Operators who need to stop a bad run and recover affected state without guessing",
           ]}
         />
       </SeoSection>
@@ -73,8 +71,8 @@ export default function GuidesPage() {
               body: "Human approval thresholds, access boundaries, and audit trails you can explain to leadership without a PhD in machine learning.",
             },
             {
-              title: "How AgentGovernance helps",
-              body: "A control layer between the AI tools employees already use and the systems those tools can reach.",
+              title: "How LoopLabs fits",
+              body: "A workflow and control layer between your agents and the models, tools, data, and systems they use.",
             },
           ]}
         />

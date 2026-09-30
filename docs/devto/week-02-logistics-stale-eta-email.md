@@ -4,7 +4,22 @@ published: false
 description: "Freight teams use Copilot for customer updates. Stale TMS data plus one-click send is how brokers eat chargebacks."
 tags: ai, devops, security, startup
 canonical_url: https://agentgovern.ai/logistics-ai-governance
+# Upload cover manually on Dev.to (do not use cover_image frontmatter):
+# docs/devto/covers/week-02-logistics-stale-eta-devto.png
 series: agentgovernance-copilot-rollouts
+growth_rubric:
+  target_query: "copilot logistics customer ETA email wrong"
+  scores: { A1: 5, A2: 5, A3: 5, A4: 5, A5: 4, A6: 5, A7: 5, A8: 4 }
+  average: 4.75
+  serp_gap: "SERP shows generic Copilot rollout guides; we add stale TMS spreadsheet vs inbox export failure"
+  research_sources: [reddit-freight-broker, copilot-enterprise-rollout, first-party-logistics-guide]
+variation:
+  industry: logistics
+  failure_mode: stale-appointment
+  action_type: customer-email
+  channel: devto
+  differs_from: week-01-retail-discount
+  dimensions_changed: [D1-logistics, D2-stale-eta, D3-customer-email, D5-copilot]
 ---
 
 We run a mid-size brokerage — dispatch, customer service, sales on shared tools. Someone enabled Copilot for email and Excel workflows. Within a week we had a near-miss that would've cost a shipper relationship.

@@ -1,130 +1,151 @@
-# Deploy AgentGovernance — Lightsail + Docker + Cloudflare
+# LoopLabs deployment
 
-Simple guide to put the site live at **https://agentgovern.ai**.
-
-Same shape as the FetchSandbox setup: a Lightsail box runs **Docker Compose**
-(the Next.js app + nginx). **Cloudflare** sits in front for DNS, HTTPS, and CDN.
+LoopLabs runs on the existing AgentGovern AWS Lightsail server. Cloudflare
+provides authoritative DNS, the public HTTPS endpoint and its reverse proxy.
+Squarespace remains the domain registrar.
 
 ```
-visitor → Cloudflare (HTTPS, CDN) → Lightsail box → nginx :443 → web :3000 (Next.js)
+Browser → Cloudflare HTTPS → Lightsail nginx HTTPS → Next.js container
 ```
 
----
+## Infrastructure
 
-## 1. Create the Lightsail box
+- Server: `184.32.118.87` (`ubuntu`, AWS Lightsail, us-west-2)
+- Application: `/home/ubuntu/agent-trust-demo`
+- Staged releases: `/home/ubuntu/releases/`
+- Backups and rollback images: `/home/ubuntu/deploy-backups/`
+- New public address: `https://looplabs.run`
+- Legacy address: `https://agentgovern.ai`
 
-1. AWS Lightsail → **Create instance**.
-2. Platform: **Linux/Unix** · Blueprint: **Ubuntu 22.04 LTS**.
-3. Plan: **4 GB RAM** (plenty for one Next.js app).
-4. Create. Then **Networking → attach a Static IP** (so the IP never changes).
-5. **Networking → Firewall**: open ports **80 (HTTP)** and **443 (HTTPS)**.
-   (22/SSH is open by default.)
+### Rollout status — September 30, 2026
 
-Your static IP is **184.32.118.87** (Oregon / us-west-2a).
+The LoopLabs landing page, interactive product tour, logo, social image, blog, and
+SEO routes are deployed in image `looplabs-web:looplabs-20260930T174317Z`
+(Next.js 15.5.26). The release includes content-driven article metadata,
+per-article social images, RSS, `llms.txt`, and the shared public-page design.
+The production build, 30 tests, app/asset checks, sitemap,
+legacy blog redirects, and public AgentGovern endpoint passed.
 
----
+The public cutover completed on September 30, 2026. Squarespace remains the
+registrar and delegates the zone to `burt.ns.cloudflare.com` and
+`eleanor.ns.cloudflare.com`. Cloudflare reports the zone active, proxies the
+apex and `www`, and uses Full (strict). The edge returns the LoopLabs app and
+the final nginx configuration redirects AgentGovern and `www` URLs to the
+LoopLabs apex while preserving paths and query strings.
 
-## 2. Point Cloudflare at the box
+A Let's Encrypt certificate for `looplabs.run` and `www.looplabs.run` is
+installed under `nginx/certs/looplabs/` and expires December 29, 2026. Its
+renewal dry run passed after the cutover. Cloudflare DNSSEC was enabled and its
+DS record (key tag 2371, algorithm 13, digest type 2) was published at
+Squarespace. The registrar UI contains the correct Cloudflare DS record; the
+`.run` registry publication is still propagating. Google Public DNS's stale
+Squarespace answers were flushed and it now returns the Cloudflare edge.
+Google Search Console ownership is verified, and
+`https://looplabs.run/sitemap.xml` is successfully processed with 32 discovered
+pages.
 
-In the Cloudflare dashboard for **agentgovern.ai**:
+The control plane is currently an interactive product tour. Its state is
+stored in the visitor's browser. Deploying it does not connect the Python LLM
+gateway or enable enforcement against real agents or external systems.
 
-1. **DNS → Records**, add two **A** records (both **Proxied**, orange cloud):
-   - `@`   → `184.32.118.87`
-   - `www` → `184.32.118.87`
-2. **SSL/TLS → Overview**: set mode to **Full (strict)**.
+Founder mail routing is defined in `cloudflare/email-router`. Email Routing is
+enabled with Cloudflare MX, DKIM and SPF records, and the
+`looplabs-founder-router` Worker is deployed. `raj@looplabs.run` actively routes
+to Raj's verified destination. Pratibha's destination remains pending until she
+clicks Cloudflare's verification email; after verification, add the
+`pratibha@`, `founders@`, and `hello@` routes to the deployed Worker.
 
----
-
-## 3. Make a Cloudflare Origin Certificate
-
-This is the cert nginx uses. It lasts 15 years — no renewals.
-
-1. **SSL/TLS → Origin Server → Create Certificate**.
-2. Hostnames: `agentgovern.ai` and `*.agentgovern.ai`. Create.
-3. Copy the two blocks into files **on the server** (step 5):
-   - **Origin Certificate** → `nginx/certs/fullchain.pem`
-   - **Private Key**        → `nginx/certs/privkey.pem`
-
----
-
-## 4. Install Docker on the box
-
-SSH in (Lightsail → Connect, or your key), then:
+## App releases
 
 ```bash
-sudo apt-get update
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker $USER
-exit   # log out and back in so the group applies
+./deploy.sh
 ```
 
----
-
-## 5. Get the code + certs onto the box
+To verify through the legacy address and its production redirect:
 
 ```bash
-# clone your repo (or scp the folder up)
-git clone <your-repo-url> agent-trust-demo
-cd agent-trust-demo
-
-# create the cert files (paste from step 3)
-mkdir -p nginx/certs
-nano nginx/certs/fullchain.pem    # paste Origin Certificate, save
-nano nginx/certs/privkey.pem      # paste Private Key, save
+DEPLOY_CHECK_HOST=agentgovern.ai ./deploy.sh
 ```
 
-If you don't use git yet, from your Mac:
-```bash
-rsync -az --exclude node_modules --exclude .next \
-  ./agent-trust-demo/ ubuntu@184.32.118.87:~/agent-trust-demo/
-```
+Set `LIGHTSAIL_KEY` if the SSH key is not at
+`~/work/aws/LightsailDefaultKey-us-west-2.pem`. The server must already be in
+`known_hosts`; the script never bypasses host verification.
 
----
+The script runs the preflight, saves the previous image and server files, uploads
+a separate source directory, builds an immutable image, and checks the landing
+page, control plane and JavaScript asset in a private candidate container. It
+then replaces only the web container, reloads nginx to resolve its new address,
+and verifies the public page. A failure after the switch restores the previous
+image and Compose configuration.
 
-## 6. (Optional) Real waitlist emails
+App releases preserve the live nginx configuration, certificates and `.env`.
+Secrets and certificates are excluded from Docker build contexts. Do not run
+`docker compose up --build` directly during the domain transition: the repository
+nginx file describes the final domain setup, which must be activated separately.
 
-The waitlist works without this (it just confirms locally). To collect real
-emails, set an endpoint **before building** (it bakes into the page):
+## Move looplabs.run to Cloudflare
 
-```bash
-echo 'NEXT_PUBLIC_WAITLIST_ENDPOINT=https://your-form-endpoint' > .env
-```
-(Use Formspree, ConvertKit, Resend, or your own API.)
+1. In the existing Cloudflare account, add `looplabs.run` on the Free plan. Review
+   imported records; preserve any mail and verification records in use.
+2. Replace Squarespace website records for the apex and `www` with:
 
----
+   | Type | Name | Target | Proxy |
+   | --- | --- | --- | --- |
+   | A | `@` | `184.32.118.87` | Proxied |
+   | CNAME | `www` | `looplabs.run` | Proxied |
 
-## 7. Build + run
+   Remove conflicting website A/AAAA/CNAME records for these names. Do not remove
+   unrelated MX, TXT or other service records.
+3. In **SSL/TLS → Origin Server**, issue a certificate for `looplabs.run` and
+   `www.looplabs.run`. Prefer generating the private key and CSR on the server,
+   then submitting only the public CSR to Cloudflare. Install the certificate and
+   its matching private key under:
 
-```bash
-docker compose up -d --build
-```
+   ```text
+   /home/ubuntu/agent-trust-demo/nginx/certs/looplabs/fullchain.pem
+   /home/ubuntu/agent-trust-demo/nginx/certs/looplabs/privkey.pem
+   ```
 
-First build takes a few minutes. Then open **https://agentgovern.ai**. Done.
+   Keep the private key restricted to its owner. The existing AgentGovern
+   certificate stays at `nginx/certs/fullchain.pem` and `privkey.pem`; its current
+   Let's Encrypt renewal hooks must not overwrite the LoopLabs certificate.
+4. Set Cloudflare **SSL/TLS → Overview → Full (strict)**. Do not use Flexible or
+   downgrade certificate validation. A Cloudflare Origin CA certificate is
+   trusted by Cloudflare, but not by a browser connecting directly to the origin.
+5. In Squarespace's domain settings, use custom nameservers and enter the exact
+   two nameservers assigned to **this Cloudflare zone**. Do not copy the old
+   AgentGovern nameservers unless Cloudflare explicitly assigns the same pair.
+   Check DNSSEC before the move; any old DS record must match the new provider's
+   signing configuration. Enable Cloudflare DNSSEC after the zone is active and
+   publish the DS values Cloudflare supplies at the registrar.
+6. Activate the nginx host configuration only when the new certificate is
+   installed and valid. Start by serving the app on both domains; activate the
+   final legacy redirects only after Cloudflare reports the zone active, its
+   edge certificate is active, and `https://looplabs.run` returns the app.
 
----
+   The repository's `nginx/nginx.conf` is the final configuration: it serves
+   LoopLabs, redirects `www` to the apex, and redirects AgentGovern URLs while
+   preserving their path and query string. Keep a backup of the current file,
+   validate a candidate with `nginx -t`, then reload. Since the configuration is
+   bind-mounted as a file, write into the existing file rather than replacing
+   its inode, or explicitly recreate the nginx container.
+7. Verify HTTPS for the apex and `www`, old URL redirects, `/control-plane`,
+   application assets and `/sitemap.xml`. Responses through the proxy should
+   include Cloudflare headers such as `cf-ray`. Keep both domains proxied.
 
-## Everyday commands
+Do not enable a blanket cache-everything rule for app/API routes. Cloudflare can
+cache static assets under its normal policy; runtime/API responses need their
+own appropriate cache controls.
 
-```bash
-docker compose logs -f web      # app logs
-docker compose ps               # what's running
-docker compose restart          # restart
-```
+## Recovery
 
-**To deploy a new version:**
-```bash
-git pull
-docker compose up -d --build
-```
+Each release saves the old Compose file and image ID in its backup directory and
+creates `looplabs-web:rollback-<release>`. To restore an app release, use the
+backup Compose configuration with an override selecting that rollback image,
+start only `web` using `--no-deps --no-build`, then run `nginx -t` and reload
+nginx. Verify the public page. Source archives include server files and
+certificates: keep them private on the server.
 
----
-
-## Notes
-
-- **4 GB is enough.** The app container is capped at ~1 GB; nginx ~64 MB.
-- **Cloudflare is the CDN.** Your video and images are cached at the edge.
-- **No certbot needed.** The Cloudflare Origin Cert + Full (strict) handles HTTPS
-  end to end (browser↔Cloudflare↔your nginx).
-- Simpler alternative without Docker: install Node 22, `pnpm install && pnpm build`,
-  run `pnpm start` under `pm2`, and use host nginx as the reverse proxy. Docker is
-  recommended — it matches the FetchSandbox setup and is reproducible.
+A domain rollback is separate from an app rollback. Restore the prior nginx
+configuration and DNS values if necessary; do not overwrite or discard either
+domain's certificate.

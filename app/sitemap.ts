@@ -4,14 +4,14 @@ import { listNewsPosts, newsPath } from "@/lib/news-markdown";
 import { SITE } from "@/lib/site";
 
 // Static date (per SEO practice — never new Date() on every build). Bump on change.
-const UPDATED = new Date("2026-08-06");
+const UPDATED = new Date("2026-09-30");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages: MetadataRoute.Sitemap = AGENTGOVERN_SITEMAP_PATHS.map((path) => ({
     url: `${SITE.url}${path === "/" ? "" : path}`,
     lastModified: UPDATED,
     changeFrequency: path === "/" ? ("weekly" as const) : ("monthly" as const),
-    priority: path === "/" ? 1 : path.startsWith("/agent-governance-demo") ? 0.85 : 0.75,
+    priority: path === "/" ? 1 : path === "/control-plane" ? 0.85 : 0.75,
   }));
 
   // News articles are content-driven: enumerate from the markdown files so the

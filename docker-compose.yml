@@ -1,6 +1,6 @@
 services:
   web:
-    image: agentgovernance-web:latest
+    image: ${LOOPLABS_IMAGE:-looplabs-web:latest}
     build:
       context: .
       args:

@@ -83,7 +83,7 @@ export default function StaleCrmContactAgentBlockedPage() {
 
         <SeoSection title="What the live demo blocks">
           <p>
-            AgentGovernance includes this exact stale-CRM scenario in the{" "}
+            LoopLabs includes this exact stale-CRM scenario in the{" "}
             <Link href="/agent-governance-demo" className="text-indigo-300 hover:text-indigo-200">
               live demo
             </Link>

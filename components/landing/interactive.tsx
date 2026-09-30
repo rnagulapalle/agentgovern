@@ -111,7 +111,7 @@ export function DemoPlayer() {
           <span className="bg-[#28c840]" />
         </div>
         <span className="ml-2 font-mono text-[11px] text-white/40">
-          agentgovern.ai/demo · 90s
+          looplabs.run/demo · 90s
         </span>
         <span className="ml-auto flex items-center gap-1.5 text-[11px] text-emerald-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />

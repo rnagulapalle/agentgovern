@@ -8,10 +8,12 @@ export function buildSeoMetadata(opts: {
   keywords?: string[];
   socialTitle?: string;
   socialDescription?: string;
+  imagePath?: string;
 }): Metadata {
   const ogTitle = opts.socialTitle ?? opts.title;
   const ogDescription = opts.socialDescription ?? opts.description;
 
+  const imagePath = opts.imagePath ?? "/opengraph-image";
   return {
     title: opts.title,
     description: opts.description,
@@ -23,14 +25,13 @@ export function buildSeoMetadata(opts: {
       siteName: SITE.name,
       title: ogTitle,
       description: ogDescription,
-      images: [{ url: "/media/og.jpg", width: 1200, height: 630, alt: SITE.name }],
+      images: [{ url: imagePath, width: 1200, height: 630, alt: ogTitle }],
     },
     twitter: {
       card: "summary_large_image",
       title: ogTitle,
       description: ogDescription,
-      images: ["/media/og.jpg"],
-      creator: SITE.twitter,
+      images: [imagePath],
     },
   };
 }
@@ -65,6 +66,12 @@ export function articleJsonLd(opts: {
     datePublished: opts.datePublished ?? "2026-06-28",
     dateModified: opts.dateModified ?? "2026-06-28",
     author: { "@type": "Organization", name: SITE.name, url: SITE.url },
-    publisher: { "@type": "Organization", name: SITE.name, url: SITE.url },
+    publisher: {
+      "@type": "Organization",
+      name: SITE.name,
+      url: SITE.url,
+      logo: { "@type": "ImageObject", url: `${SITE.url}/icon.svg` },
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE.url}${opts.path}` },
   };
 }

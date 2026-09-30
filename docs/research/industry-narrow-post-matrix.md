@@ -68,14 +68,14 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 |----|------|---------------|--------------|--------|----------|-------------|--------|
 | H-01 | `/prior-auth-agent-without-audit-trail` | prior authorization AI agent audit | Agent submitted PA; no draft→approval→send log | Prior auth submit | MindMap healthcare deployments; HIPAA §164.312(b) | Lifecycle audit (signal 14) | Built |
 | H-02 | `/healthcare-copilot-ai-governance` | AI agent PHI export blocked | Agent attempted export outside minimum necessary | Data export / API read | Elixir HIPAA steps; audit-log-spec | Policy save / blocked verdict | Built |
-| H-03 | `/stale-patient-record-agent-hold` | stale EHR data AI agent | Action on patient record stale > N days | Schedule / notify patient | Signal 15 (auto-hold); healthcare freshness | Hold state, not silent block | Planned |
+| H-03 | `/stale-patient-record-agent-hold` | stale EHR data AI agent | Action on patient record stale > N days | Schedule / notify patient | Signal 15 (auto-hold); healthcare freshness | Hold state, not silent block | Built |
 
 ### Procurement / vendor ops
 
 | ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
 |----|------|---------------|--------------|--------|----------|-------------|--------|
 | P-01 | `/contract-amendment-wrong-vendor-contact` | AI agent vendor contract email wrong recipient | Amendment to wrong contact (OP story) | Send contract / amendment | Reddit OP origin story | Receipt: target + freshness | Built |
-| P-02 | `/supplier-payment-dual-approval` | AI agent supplier payment approval | Single agent path to payment release | Supplier payment | Signal 13 category approval | Money + external party gates | Planned |
+| P-02 | `/supplier-payment-dual-approval` | AI agent supplier payment approval | Single agent path to payment release | Supplier payment | Signal 13 category approval | Money + external party gates | Built |
 
 ### Public sector
 
@@ -96,7 +96,7 @@ Before writing any blog post, SEO page, Dev.to draft, or social thread:
 
 | ID | Slug | Query cluster | Failure mode | Action | Evidence | Demo tie-in | Status |
 |----|------|---------------|--------------|--------|----------|-------------|--------|
-| C-01 | `/zendesk-ticket-reply-agent-auto` | AI agent Zendesk reply governance | Auto-replied with wrong macro / no approval | Ticket public reply | Demo: Reply to ticket #4821 auto | Auto vs exception vs blocked | Planned |
+| C-01 | `/zendesk-ticket-reply-agent-auto` | AI agent Zendesk reply governance | Auto-replied with wrong macro / no approval | Ticket public reply | Demo: Reply to ticket #4821 auto | Auto vs exception vs blocked | Built |
 | C-02 | `/refund-ticket-agent-above-limit` | AI support agent refund limit | Refund $640 without approval chain | Stripe refund from ticket | Demo mock: Refund $640 approved path | Approval + receipt | Built |
 
 ### Logistics / freight

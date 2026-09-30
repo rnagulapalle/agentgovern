@@ -1,27 +1,12 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { SITE } from "@/lib/site";
 import { AGENTGOVERN_SEO_TOOLS } from "@/lib/seo-tools";
-
-function Mark({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden>
-      <path
-        d="M12 2.5 4.5 5.5v6c0 4.4 3.1 8.2 7.5 9.5 4.4-1.3 7.5-5.1 7.5-9.5v-6L12 2.5Z"
-        stroke="#4f46e5"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="m8.8 12 2.2 2.2 4.2-4.4"
-        stroke="#4f46e5"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+import {
+  MarketingFooter,
+  MarketingHeader,
+  marketingPrimaryButton,
+  marketingSecondaryButton,
+} from "@/components/marketing/chrome";
 
 export type SeoStat = { value: string; label: string };
 
@@ -32,8 +17,8 @@ export function SeoPageShell({
   title,
   description,
   stats,
-  primaryCta = { href: "/agent-governance-demo", label: "See the live demo" },
-  secondaryCta = { href: "/#join", label: "Join waitlist" },
+  primaryCta = { href: "/control-plane", label: "Explore the product tour" },
+  secondaryCta = { href: "/#demo", label: "Book a demo" },
   faq,
   children,
 }: {
@@ -47,37 +32,13 @@ export function SeoPageShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="theme-light min-h-screen bg-bg">
-      <header className="sticky top-0 z-40 border-b border-hairline/10 bg-bg/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-3xl items-center gap-2 px-5 sm:px-8">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md border border-hairline/15 bg-surface">
-              <Mark />
-            </span>
-            <span className="text-[14px] font-semibold tracking-tight text-fg">
-              Agent<span className="text-subtle">Governance</span>
-            </span>
-          </Link>
-          <div className="ml-auto flex items-center gap-2">
-            <Link
-              href="/guides"
-              className="hidden text-[13px] text-subtle hover:text-fg sm:inline"
-            >
-              Guides
-            </Link>
-            <Link
-              href={primaryCta.href}
-              className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm hover:bg-indigo-500"
-            >
-              {primaryCta.label}
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="marketing-surface theme-light">
+      <div className="marketing-frame">
+        <MarketingHeader section={eyebrow} />
 
-      <main className="mx-auto max-w-3xl px-5 pb-20 pt-12 sm:px-8">
+      <main className="marketing-main">
         <p className="label">{eyebrow}</p>
-        <h1 className="mt-3 text-balance text-[30px] font-bold leading-[1.12] tracking-tight text-fg sm:text-[40px]">
+        <h1 className="marketing-page-title">
           {title}
         </h1>
         <p className="mt-5 text-pretty text-[16px] leading-relaxed text-subtle">
@@ -98,13 +59,13 @@ export function SeoPageShell({
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href={primaryCta.href}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2.5 text-[14px] font-semibold text-white shadow-sm hover:bg-indigo-500"
+            className={marketingPrimaryButton}
           >
             {primaryCta.label} <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href={secondaryCta.href}
-            className="inline-flex items-center rounded-lg border border-hairline/15 bg-surface px-4 py-2.5 text-[14px] font-medium text-muted hover:border-hairline/25"
+            className={marketingSecondaryButton}
           >
             {secondaryCta.label}
           </Link>
@@ -114,7 +75,7 @@ export function SeoPageShell({
 
         {faq && faq.length > 0 && (
           <section className="mt-16 border-t border-hairline/10 pt-12">
-            <h2 className="text-[22px] font-semibold text-fg">Common questions</h2>
+            <h2 className="text-[22px] font-medium tracking-[-0.03em] text-fg">Common questions</h2>
             <dl className="mt-6 space-y-6">
               {faq.map((item) => (
                 <div key={item.q}>
@@ -127,32 +88,31 @@ export function SeoPageShell({
         )}
 
         <section className="card mt-16 p-8 text-center">
-          <h2 className="text-[22px] font-semibold text-fg">
-            Let employees use AI — with controls your team can run
+          <h2 className="text-[22px] font-medium tracking-[-0.03em] text-fg">
+            Build the workflow. Keep authority over what runs.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-[14px] leading-relaxed text-subtle">
-            No AI platform team required. AgentGovernance sits between Copilot, ChatGPT
-            Enterprise, and the systems they reach — approvals, access control, and audit
-            trails in plain business terms.
+            LoopLabs gives each agent a role, controls its actions, follows the
+            full execution, checks outputs, and helps your team recover affected state.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
-              href="/agent-governance-demo"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2.5 text-[14px] font-semibold text-white shadow-sm hover:bg-indigo-500"
+              href="/control-plane"
+              className={marketingPrimaryButton}
             >
-              Try the demo <ArrowRight className="h-4 w-4" />
+              Explore the product tour <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/#join"
-              className="inline-flex rounded-lg border border-hairline/15 bg-surface px-4 py-2.5 text-[14px] font-medium text-muted hover:border-hairline/25"
+              href="/#demo"
+              className={marketingSecondaryButton}
             >
-              Join waitlist
+              Book a demo
             </Link>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-hairline/10">
+      <section className="border-t border-hairline/10">
         <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
           <p className="label mb-3">More guides</p>
           <ul className="grid gap-2 sm:grid-cols-2">
@@ -167,11 +127,10 @@ export function SeoPageShell({
               </li>
             ))}
           </ul>
-          <p className="mt-8 text-[12px] text-faint">
-            © 2026 {SITE.name} · {SITE.url.replace("https://", "")}
-          </p>
         </div>
-      </footer>
+      </section>
+      <MarketingFooter />
+      </div>
     </div>
   );
 }
@@ -185,7 +144,7 @@ export function SeoSection({
 }) {
   return (
     <section>
-      <h2 className="text-[20px] font-semibold tracking-tight text-fg">{title}</h2>
+      <h2 className="text-[20px] font-medium tracking-[-0.025em] text-fg">{title}</h2>
       <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-subtle">{children}</div>
     </section>
   );
@@ -201,7 +160,7 @@ export function SeoCards({
       {items.map((item) => (
         <div
           key={item.title}
-          className={`rounded-xl border p-4 ${
+          className={`border p-4 ${
             item.tone === "warn"
               ? "border-red-500/20 bg-red-50"
               : item.tone === "ok"
@@ -209,7 +168,7 @@ export function SeoCards({
                 : "card"
           }`}
         >
-          <p className="text-[14px] font-semibold text-fg">{item.title}</p>
+          <p className="text-[14px] font-medium text-fg">{item.title}</p>
           <p className="mt-2 text-[13px] leading-relaxed text-subtle">{item.body}</p>
         </div>
       ))}

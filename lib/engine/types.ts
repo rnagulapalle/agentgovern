@@ -1,5 +1,5 @@
 /**
- * AgentGovernance — Execution Policy Engine · types
+ * LoopLabs — Execution Policy Engine · types
  *
  * Design principles (from docs/research/2026-06-agent-governance-reddit.md):
  *  - The model proposes (ActionRequest). The engine decides (evaluate()).

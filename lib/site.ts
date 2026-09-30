@@ -1,17 +1,32 @@
 /**
  * Single source of truth for marketing copy + SEO.
- * Positioning: SMB/traditional orgs (50–1,000 employees) adopting business AI tools —
- * not AI-native builders. Business language first; technical detail second.
+ * Positioning: the control layer for agent actions, execution, and outputs.
+ * Business language first; explain technical terms through concrete actions.
  */
 export const SITE = {
-  name: "AgentGovernance",
-  url: "https://agentgovern.ai",
-  twitter: "@agentgovern",
-  title: "AgentGovernance — AI governance for business AI tools",
-  tagline: "AI action governance",
+  name: "LoopLabs",
+  url: "https://looplabs.run",
+  title: "LoopLabs — Build agent workflows. Keep control.",
+  tagline: "Build workflows. Control actions. Recover execution.",
   description:
-    "Employees use Copilot, ChatGPT, and Gemini to act on company systems. AgentGovernance adds human approval, access control, and a full AI audit trail.",
+    "Build multi-agent workflows and control what they do in production. Set permissions, supervise execution, check outputs, approve risky actions, and recover failed state.",
+  email: "founders@looplabs.run",
 };
+
+export const PRODUCT_PILLARS = [
+  {
+    title: "Build workflows",
+    body: "Design one-agent and multi-agent workflows, connect approved models and tools, and assign every agent an owner and role.",
+  },
+  {
+    title: "Control actions",
+    body: "Check permissions and business rules before an agent sends, writes, pays, deletes, or calls another tool.",
+  },
+  {
+    title: "Recover execution",
+    body: "Follow every run, stop work that goes off course, inspect outputs, and reconcile affected state with a reviewable recovery plan.",
+  },
+] as const;
 
 /** Five-second clarity — what leadership needs to know. */
 export const PRINCIPLES = [
@@ -71,7 +86,7 @@ export const STEPS = [
   {
     n: "01",
     title: "Intercept",
-    body: "When AI tries to email a customer, update a record, or access sensitive data, AgentGovernance captures the request before it runs in your systems.",
+    body: "When AI tries to email a customer, update a record, or access sensitive data, LoopLabs captures the request before it runs in your systems.",
   },
   {
     n: "02",
@@ -114,16 +129,16 @@ export const FEATURES = [
 
 export const FAQ = [
   {
-    q: "What is AgentGovernance?",
-    a: "AgentGovernance is an AI governance layer that sits between your business AI tools and company systems. When an employee's AI assistant tries to send an email, update a CRM record, or access confidential documents, AgentGovernance checks it against your policies, routes risky actions for human approval, and records everything in an audit trail.",
+    q: "What is LoopLabs?",
+    a: "LoopLabs is an AI governance layer that sits between your business AI tools and company systems. When an employee's AI assistant tries to send an email, update a CRM record, or access confidential documents, LoopLabs checks it against your policies, routes risky actions for human approval, and records everything in an audit trail.",
   },
   {
     q: "We aren't building AI — we just let employees use Copilot and ChatGPT. Is this for us?",
-    a: "Yes. The trigger isn't that you're building AI — it's that employees are using AI to access company systems and take real business actions. AgentGovernance gives security, compliance, and operations leaders visibility and control without slowing down adoption.",
+    a: "Yes. The trigger isn't that you're building AI — it's that employees are using AI to access company systems and take real business actions. LoopLabs gives security, compliance, and operations leaders visibility and control without slowing down adoption.",
   },
   {
     q: "Can AI send emails or change records without approval?",
-    a: "Not if your policies say otherwise. You set thresholds — for example, emails above a certain discount or changes to customer records — and AgentGovernance holds those actions until the right person approves, or blocks them entirely.",
+    a: "Not if your policies say otherwise. You set thresholds — for example, emails above a certain discount or changes to customer records — and LoopLabs holds those actions until the right person approves, or blocks them entirely.",
   },
   {
     q: "How does this help with compliance and audit?",
@@ -131,11 +146,11 @@ export const FAQ = [
   },
   {
     q: "Does this replace Copilot, ChatGPT, or our CRM?",
-    a: "No. AgentGovernance doesn't replace the AI tools your teams already use. It governs the moment AI tries to act on your systems — so you can roll out AI assistants with enterprise controls leadership can trust.",
+    a: "No. LoopLabs doesn't replace the AI tools your teams already use. It governs the moment AI tries to act on your systems — so you can roll out AI assistants with enterprise controls leadership can trust.",
   },
   {
     q: "How are business policies set up?",
-    a: "You define rules in plain business terms: who can do what, which actions need approval, spending limits, and data access boundaries. AgentGovernance enforces those rules consistently, regardless of which AI assistant initiated the action.",
+    a: "You define rules in plain business terms: who can do what, which actions need approval, spending limits, and data access boundaries. LoopLabs enforces those rules consistently, regardless of which AI assistant initiated the action.",
   },
   {
     q: "Is the demo real?",
@@ -143,6 +158,6 @@ export const FAQ = [
   },
   {
     q: "When can we get started?",
-    a: "AgentGovernance is in early access for organizations rolling out AI across teams. Join the waitlist and we'll reach out as we onboard the next cohort.",
+    a: "LoopLabs is in early access for organizations rolling out AI across teams. Join the waitlist and we'll reach out as we onboard the next cohort.",
   },
 ];

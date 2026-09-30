@@ -108,7 +108,7 @@ export default function InsuranceAiGovernancePage() {
             ]}
           />
           <p>
-            AgentGovernance sits between Agentforce, Copilot, and your policy admin —
+            LoopLabs sits between Agentforce, Copilot, and your policy admin —
             so your compliance officers enforce rules without disabling the tools adjusters
             rely on.
           </p>

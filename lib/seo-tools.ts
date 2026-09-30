@@ -1,19 +1,19 @@
 /**
- * SEO landing page registry for AgentGovernance (agent-governance-demo).
+ * SEO landing page registry for LoopLabs.
  *
  * Add a slug here when a new indexable page ships — sitemap.ts imports this
  * list so footer clusters and /sitemap.xml stay in sync.
  *
- * Repo: ~/agent-trust-demo · Domain: agentgovern.ai · Ledger:
+ * Repo: ~/agent-trust-demo · Domain: looplabs.run · Ledger:
  * /Users/raj/promo/content/gtm-content-ledger.md
  */
 
 export type SeoLink = { label: string; href: string };
 
-/** Shipped indexable pages (beyond `/` and `/agent-governance-demo`). */
+/** Shipped indexable pages beyond the homepage. */
 export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
   { label: "Guides hub", href: "/guides" },
-  { label: "AI governance & privacy news", href: "/news" },
+  { label: "Agent workflow and control blog", href: "/blog" },
   {
     label: "AI governance for mid-size companies (50–1,000 employees)",
     href: "/ai-governance-for-mid-size-companies",
@@ -39,6 +39,9 @@ export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
   { label: "Prior auth without audit trail", href: "/prior-auth-agent-without-audit-trail" },
   { label: "HubSpot write without rollback", href: "/hubspot-agent-write-without-rollback" },
   { label: "MCP tool call without receipt", href: "/mcp-tool-call-without-receipt" },
+  { label: "Zendesk ticket reply auto", href: "/zendesk-ticket-reply-agent-auto" },
+  { label: "Stale patient record hold", href: "/stale-patient-record-agent-hold" },
+  { label: "Supplier payment dual approval", href: "/supplier-payment-dual-approval" },
   { label: "Education AI governance (FERPA)", href: "/education-ai-governance" },
   { label: "Logistics AI governance", href: "/logistics-ai-governance" },
   { label: "Construction AI governance", href: "/construction-ai-governance" },
@@ -48,6 +51,6 @@ export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
 /** Paths included in sitemap.xml (SEO tools + core product surfaces). */
 export const AGENTGOVERN_SITEMAP_PATHS: string[] = [
   "/",
-  "/agent-governance-demo",
+  "/control-plane",
   ...AGENTGOVERN_SEO_TOOLS.map((t) => t.href),
 ];

@@ -1,160 +1,135 @@
 #!/usr/bin/env bash
-# ╔══════════════════════════════════════════════════════════════════════╗
-# ║  AgentGovernance — Deploy to AWS Lightsail (agentgovern.ai)                ║
-# ║                                                                      ║
-# ║  Mirrors the FetchSandbox deploy: rsync the repo to the box, then    ║
-# ║  `docker compose up -d --build` over SSH. nginx terminates TLS with  ║
-# ║  the Cloudflare Origin Cert; Cloudflare sits in front for DNS/CDN.   ║
-# ║                                                                      ║
-# ║  Usage:   ./deploy.sh                                                 ║
-# ║  Key:     $LIGHTSAIL_KEY env, or ~/work/aws/LightsailDefaultKey-*    ║
-# ╚══════════════════════════════════════════════════════════════════════╝
+# Deploy the app to the existing Lightsail server. DNS, TLS and nginx host
+# configuration are managed separately; an app release must not replace them.
 set -euo pipefail
 
-# ─── Config ───────────────────────────────────────────────────────────────
-SERVER_IP="184.32.118.87"
-SERVER="ubuntu@${SERVER_IP}"
+SERVER="ubuntu@184.32.118.87"
 APP_DIR="/home/ubuntu/agent-trust-demo"
-DOMAIN="agentgovern.ai"
-EMAIL="raj.jsp@gmail.com"   # Let's Encrypt account / renewal notices
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RELEASE="${DEPLOY_RELEASE:-looplabs-$(date -u +%Y%m%dT%H%M%SZ)}"
+HEALTH_HOST="${DEPLOY_CHECK_HOST:-looplabs.run}"
+[[ "$RELEASE" =~ ^looplabs-[a-zA-Z0-9-]+$ ]] || { echo 'Invalid release name'; exit 1; }
+[[ "$HEALTH_HOST" == looplabs.run || "$HEALTH_HOST" == agentgovern.ai ]] || { echo 'Invalid health-check host'; exit 1; }
 
-# ─── SSH key discovery (same order as FetchSandbox) ───────────────────────
-if [ -n "${LIGHTSAIL_KEY:-}" ] && [ -f "$LIGHTSAIL_KEY" ]; then
-  SSH_KEY="$LIGHTSAIL_KEY"
-elif [ -f "$HOME/work/aws/LightsailDefaultKey-us-west-2.pem" ]; then
-  SSH_KEY="$HOME/work/aws/LightsailDefaultKey-us-west-2.pem"
-elif [ -f "$HOME/work/LightsailDefaultKey-us-west-2.pem" ]; then
-  SSH_KEY="$HOME/work/LightsailDefaultKey-us-west-2.pem"
-elif [ -f "$HOME/.ssh/LightsailDefaultKey-us-west-2.pem" ]; then
-  SSH_KEY="$HOME/.ssh/LightsailDefaultKey-us-west-2.pem"
-else
-  echo "ERROR: Lightsail SSH key not found. Set LIGHTSAIL_KEY or place it at:"
-  echo "  ~/work/aws/LightsailDefaultKey-us-west-2.pem"
-  exit 1
-fi
-chmod 400 "$SSH_KEY" 2>/dev/null || true
+SSH_KEY="${LIGHTSAIL_KEY:-$HOME/work/aws/LightsailDefaultKey-us-west-2.pem}"
+[[ -f "$SSH_KEY" ]] || { echo 'Set LIGHTSAIL_KEY to the Lightsail SSH key path.'; exit 1; }
+SSH_ARGS=(-i "$SSH_KEY" -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ConnectTimeout=20)
+printf -v RSYNC_SSH '%q ' ssh "${SSH_ARGS[@]}"
 
-SSH_OPTS="-i $SSH_KEY -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o ConnectTimeout=20"
-SSH="ssh $SSH_OPTS"
-SCP="scp $SSH_OPTS"
-
-log() { printf "\n\033[1;34m▸ %s\033[0m\n" "$*"; }
-
-# ─── 0. Local preflight (abort on reverted invariants / broken build) ─────
-log "Preflight — verifying shipped invariants, build, and tests"
-bash "$REPO_DIR/scripts/preflight.sh" || {
-  echo ""
-  echo "  ✗ Preflight failed — NOT deploying. Nothing was sent to the server."
-  exit 1
-}
-
-# ─── 1. Pre-flight ────────────────────────────────────────────────────────
-log "Checking connection to $SERVER"
-$SSH "$SERVER" 'echo "  connected: $(lsb_release -ds)"'
-
-# ─── 2. Copy the repo up (preserve server-side certs) ─────────────────────
-log "Syncing code → $SERVER:$APP_DIR"
-$SSH "$SERVER" "mkdir -p $APP_DIR/nginx/certs $APP_DIR/certbot/www"
-rsync -az --delete \
-  --exclude node_modules \
-  --exclude .next \
-  --exclude .git \
-  --exclude 'nginx/certs/*' \
-  --exclude 'certbot' \
-  -e "$SSH" \
-  "$REPO_DIR/" "$SERVER:$APP_DIR/"
-
-# Ship local certs if present (otherwise the box must already have them).
-if [ -f "$REPO_DIR/nginx/certs/fullchain.pem" ] && [ -f "$REPO_DIR/nginx/certs/privkey.pem" ]; then
-  log "Shipping local Cloudflare Origin Cert"
-  $SCP "$REPO_DIR/nginx/certs/fullchain.pem" "$SERVER:$APP_DIR/nginx/certs/fullchain.pem"
-  $SCP "$REPO_DIR/nginx/certs/privkey.pem" "$SERVER:$APP_DIR/nginx/certs/privkey.pem"
-fi
-
-# ─── 3. Build, run, and auto-provision a real TLS cert ────────────────────
-# nginx boots with a self-signed cert, then certbot gets a real Let's Encrypt
-# cert through the webroot (works behind Cloudflare) and configures auto-renew.
-log "Building & starting containers + provisioning TLS on $SERVER"
-$SSH "$SERVER" "DOMAIN='$DOMAIN' APP_DIR='$APP_DIR' EMAIL='$EMAIL' bash -s" <<'REMOTE'
+bash "$REPO_DIR/scripts/preflight.sh"
+STAGE="/home/ubuntu/releases/$RELEASE"
+BACKUP="/home/ubuntu/deploy-backups/$RELEASE"
+printf -v PREPARE 'bash -s -- %q %q %q %q' "$APP_DIR" "$STAGE" "$BACKUP" "$RELEASE"
+ssh "${SSH_ARGS[@]}" "$SERVER" "$PREPARE" <<'REMOTE'
 set -euo pipefail
-cd "$APP_DIR"
-mkdir -p nginx/certs certbot/www
-
-# Docker (first run only)
-if ! command -v docker >/dev/null 2>&1; then
-  echo "  installing Docker…"
-  sudo apt-get update -y -qq
-  curl -fsSL https://get.docker.com | sudo sh
-fi
-
-# Bootstrap a self-signed cert so nginx can start (only if none present yet)
-if [ ! -s nginx/certs/fullchain.pem ]; then
-  echo "  creating temporary self-signed cert…"
-  sudo openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
-    -keyout nginx/certs/privkey.pem -out nginx/certs/fullchain.pem \
-    -subj "/CN=$DOMAIN" >/dev/null 2>&1
-  sudo chown $USER:$USER nginx/certs/*.pem
-  sudo chmod 600 nginx/certs/privkey.pem
-fi
-
-# Bring everything up
-sudo docker compose up -d --build
-
-# Issue/renew a real Let's Encrypt cert via the nginx webroot
-if ! command -v certbot >/dev/null 2>&1; then
-  echo "  installing certbot…"
-  sudo apt-get install -y -qq certbot
-fi
-echo "  requesting Let's Encrypt certificate for $DOMAIN…"
-if sudo certbot certonly --webroot -w "$APP_DIR/certbot/www" \
-     -d "$DOMAIN" -d "www.$DOMAIN" \
-     --email "$EMAIL" --agree-tos --non-interactive --keep-until-expiring 2>&1 | tail -6 \
-   && sudo test -s /etc/letsencrypt/live/$DOMAIN/fullchain.pem; then
-  sudo cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem nginx/certs/fullchain.pem
-  sudo cp /etc/letsencrypt/live/$DOMAIN/privkey.pem  nginx/certs/privkey.pem
-  sudo chown $USER:$USER nginx/certs/*.pem
-  sudo chmod 600 nginx/certs/privkey.pem
-  sudo docker compose exec -T nginx nginx -s reload 2>/dev/null || sudo docker compose restart nginx
-  # Auto-renew: copy renewed certs into the app + reload nginx
-  HOOK=/etc/letsencrypt/renewal-hooks/deploy/agentgovernance.sh
-  sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
-  printf '%s\n' '#!/bin/sh' \
-    "cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem $APP_DIR/nginx/certs/fullchain.pem" \
-    "cp /etc/letsencrypt/live/$DOMAIN/privkey.pem  $APP_DIR/nginx/certs/privkey.pem" \
-    "cd $APP_DIR && docker compose exec -T nginx nginx -s reload" \
-    | sudo tee $HOOK >/dev/null
-  sudo chmod +x $HOOK
-  echo "  ✅ Real TLS cert installed; auto-renew configured."
-else
-  echo "  ⚠ certbot could not issue a cert yet (nginx is up on a self-signed cert)."
-  echo "    With Cloudflare 'Full (strict)' the site shows 526 until a real cert exists."
-  echo "    Fallbacks: set Cloudflare SSL to 'Full', or add a CF Origin Cert and re-run."
-fi
-
-sudo docker compose ps
+app=$1 stage=$2 backup=$3 release=$4
+# Never overwrite a previous release or backup.
+test ! -e "$stage"
+test ! -e "$backup"
+mkdir -p "$stage" "$backup"
+chmod 700 "$stage" "$backup"
+cd "$app"
+container=$(sudo docker compose ps -q web)
+test -n "$container"
+previous=$(sudo docker inspect --format '{{.Image}}' "$container")
+sudo docker tag "$previous" "looplabs-web:rollback-$release"
+printf '%s\n' "$previous" > "$backup/previous-image.txt"
+cp docker-compose.yml "$backup/docker-compose.yml"
+cp nginx/nginx.conf "$backup/nginx.conf"
+sudo tar --exclude='./node_modules' --exclude='./.next' --exclude='./.git' -czf "$backup/app-before.tar.gz" .
+# Keep server-owned configuration local to the server. .dockerignore prevents
+# these files from entering the Docker context; Compose reads build settings.
+if [ -f .env ]; then cp .env "$stage/.env"; chmod 600 "$stage/.env"; fi
 REMOTE
 
-# ─── 5. Health check ──────────────────────────────────────────────────────
-log "Health check"
-code=$($SSH "$SERVER" "curl -s -o /dev/null -w '%{http_code}' http://localhost/ || true")
-echo "  nginx http://localhost → $code (301 = redirecting to HTTPS, good)"
+rsync -az \
+  --exclude node_modules --exclude .next --exclude .git --exclude '.env*' \
+  --exclude nginx/certs --exclude certbot --exclude '*.tsbuildinfo' --exclude .DS_Store \
+  -e "$RSYNC_SSH" "$REPO_DIR/" "$SERVER:$STAGE/"
 
-# ─── 6. Notify IndexNow (Bing/Yandex) of the current sitemap URLs ─────────
-# The sitemap is the single source of URL truth; we submit exactly what it
-# lists to the app's own /api/indexnow route (reuses lib/indexnow + the key
-# file at /$INDEXNOW_KEY.txt). Safe to resubmit every deploy at this scale.
-log "Pinging IndexNow with sitemap URLs"
-locs=$(curl -s "https://$DOMAIN/sitemap.xml" | grep -o '<loc>[^<]*</loc>' | sed 's/<loc>//; s#</loc>##')
-if [ -n "$locs" ]; then
-  payload=$(printf '%s\n' "$locs" | python3 -c 'import sys, json; print(json.dumps({"urls": [l.strip() for l in sys.stdin if l.strip()]}))')
-  resp=$(curl -s -X POST "https://$DOMAIN/api/indexnow" \
-    -H 'Content-Type: application/json' -d "$payload" || true)
-  echo "  → $resp"
-else
-  echo "  ⚠ could not read sitemap; skipped IndexNow (submit manually if needed)"
-fi
+printf -v DEPLOY 'bash -s -- %q %q %q %q %q' "$APP_DIR" "$STAGE" "$BACKUP" "$RELEASE" "$HEALTH_HOST"
+ssh "${SSH_ARGS[@]}" "$SERVER" "$DEPLOY" <<'REMOTE'
+set -euo pipefail
+app=$1 stage=$2 backup=$3 release=$4 health_host=$5
+image="looplabs-web:$release"
+candidate="candidate-$release"
+activated=0
+cleanup() {
+  code=$?
+  trap - EXIT
+  sudo docker rm -f "$candidate" >/dev/null 2>&1 || true
+  if [ "$code" -ne 0 ] && [ "$activated" -eq 1 ]; then
+    echo 'Release check failed. Restoring the previous application image.' >&2
+    cd "$app"
+    cp "$backup/docker-compose.yml" docker-compose.yml
+    printf 'services:\n  web:\n    image: looplabs-web:rollback-%s\n' "$release" > "$backup/rollback.yml"
+    sudo docker compose -f docker-compose.yml -f "$backup/rollback.yml" up -d --no-deps --no-build web
+    sudo docker compose exec -T nginx nginx -t </dev/null
+    sudo docker compose exec -T nginx nginx -s reload </dev/null
+  fi
+  exit "$code"
+}
+trap cleanup EXIT
 
-log "Done → https://$DOMAIN"
-echo "  Logs:    $SSH $SERVER 'cd $APP_DIR && sudo docker compose logs -f web'"
-echo "  Status:  $SSH $SERVER 'cd $APP_DIR && sudo docker compose ps'"
+cd "$stage"
+sudo env LOOPLABS_IMAGE="$image" docker compose build web
+cd "$app"
+web=$(sudo docker compose ps -q web)
+network=$(sudo docker inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{end}}' "$web")
+sudo docker run -d --name "$candidate" --network "$network" \
+  --memory=1024m --memory-swap=1280m "$image" >/dev/null
+
+check_app() {
+  sudo docker exec "$1" node -e '
+    (async () => {
+      let html;
+      for (const path of ["/", "/control-plane"]) {
+        const response = await fetch("http://127.0.0.1:3000" + path);
+        const body = await response.text();
+        if (response.status !== 200 || !body.includes("LoopLabs")) throw new Error("Page failed: " + path);
+        if (path === "/") html = body;
+      }
+      const asset = html.match(/src="([^\"]+\/_next\/static\/[^\"]+\.js[^\"]*)"/)
+        || html.match(/src="(\/_next\/static\/[^\"]+\.js[^\"]*)"/);
+      if (!asset) throw new Error("No application script found");
+      const response = await fetch(new URL(asset[1], "http://127.0.0.1:3000"));
+      if (!response.ok) throw new Error("Application asset failed");
+      console.log("Landing page, control plane and JavaScript asset passed");
+    })().catch(error => { console.error(error.message); process.exit(1); });
+  '
+}
+ready=0
+for attempt in $(seq 1 30); do
+  if check_app "$candidate"; then ready=1; break; fi
+  sleep 2
+done
+[ "$ready" -eq 1 ]
+
+# Keep active TLS/nginx settings and secrets. Source is a reference copy;
+# the tested immutable image is what actually runs.
+rsync -a --exclude '.env*' --exclude nginx/nginx.conf --exclude nginx/certs \
+  --exclude certbot "$stage/" "$app/"
+sudo docker tag "$image" looplabs-web:latest
+activated=1
+sudo env LOOPLABS_IMAGE="$image" docker compose up -d --no-deps --no-build web
+web=$(sudo docker compose ps -q web)
+ready=0
+for attempt in $(seq 1 30); do
+  if check_app "$web"; then ready=1; break; fi
+  sleep 2
+done
+[ "$ready" -eq 1 ]
+# nginx resolves the Compose service when it loads its configuration.
+sudo docker compose exec -T nginx nginx -t </dev/null
+sudo docker compose exec -T nginx nginx -s reload </dev/null
+curl --fail --silent --show-error --retry 3 --retry-delay 2 \
+  "https://$health_host/?release=$release" -o "$backup/deployed-home.html"
+python3 - "$backup/deployed-home.html" <<'PY'
+import sys
+from pathlib import Path
+assert 'LoopLabs' in Path(sys.argv[1]).read_text(), 'Public endpoint did not return LoopLabs'
+PY
+printf '%s\n' "$image" > "$app/.deployed-image"
+sudo docker compose ps
+printf 'Deployed %s at https://%s; rollback: %s\n' "$image" "$health_host" "$backup"
+REMOTE

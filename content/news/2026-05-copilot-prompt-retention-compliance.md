@@ -73,11 +73,11 @@ We wrote a longer guide for mid-size rollouts: [AI governance for mid-size compa
 - One department, Copilot enabled, **action approvals** piloted alongside chat retention.
 - Review weekly: what was blocked, what was approved, what was logged.
 
-## Where AgentGovernance fits
+## Where LoopLabs fits
 
-[AgentGovernance](https://agentgovern.ai) is a control layer between business AI tools and company systems — human approval, access control, and audit trails when AI tries to act, not only when it chats.
+[LoopLabs](https://looplabs.run) is a control layer between business AI tools and company systems — human approval, access control, and audit trails when AI tries to act, not only when it chats.
 
-See the [interactive demo](https://agentgovern.ai/agent-governance-demo) for a discount-above-policy approval workflow.
+See the [interactive demo](https://looplabs.run/agent-governance-demo) for a discount-above-policy approval workflow.
 
 ---
 

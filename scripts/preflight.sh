@@ -18,12 +18,15 @@ need() {
 }
 
 echo "▸ Invariants (shipped work must not be silently reverted)"
-need "homepage enterprise hero"    "Govern every action"    app/page.tsx
+need "homepage control-layer positioning" "Control actions," app/page.tsx
 need "Book-a-demo CTA (Cal)"       "cal.com/rajnagulapalle" app/page.tsx
 need "Geist font"                  "GeistSans"              app/layout.tsx
-need "enterprise positioning"      "AI action governance"  lib/site.ts
+need "workflow positioning"        "Build workflows. Control actions. Recover execution." lib/site.ts
+need "product-tour language"       "Explore the product tour" app/page.tsx
+need "content feed"                "application/rss+xml" app/layout.tsx
 need "light theme · SEO shell"     "theme-light"           components/seo/SeoPageShell.tsx
-need "light theme · news index"    "theme-light"           app/news/page.tsx
+need "light theme · blog index"    "theme-light"           app/blog/page.tsx
+need "legacy news redirect"        "permanentRedirect"      app/news/page.tsx
 need "light theme · news article"  "theme-light"           components/news/NewsArticle.tsx
 need "guides via light SEO shell"  "SeoPageShell"          app/guides/page.tsx
 

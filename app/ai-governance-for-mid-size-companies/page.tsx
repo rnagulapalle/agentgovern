@@ -12,7 +12,7 @@ const PATH = "/ai-governance-for-mid-size-companies";
 const FAQ = [
   {
     q: "Do we need an AI platform team to govern Copilot?",
-    a: "No. Most mid-size organizations need clear policies, approval thresholds for risky actions, and an audit trail — not a team building custom models. AgentGovernance is designed for companies where IT and compliance share the workload.",
+    a: "No. Most mid-size organizations need clear policies, approval thresholds for risky actions, and an audit trail — not a team building custom models. LoopLabs is designed for companies where IT and compliance share the workload.",
   },
   {
     q: "We already have Microsoft Purview. Isn't that enough?",
@@ -159,7 +159,7 @@ export default function MidSizeAiGovernancePage() {
             ]}
           />
           <p>
-            AgentGovernance is built for this cadence: intercept, enforce, audit — without
+            LoopLabs is built for this cadence: intercept, enforce, audit — without
             asking your IT generalist to become an ML engineer.
           </p>
         </SeoSection>

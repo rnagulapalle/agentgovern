@@ -56,7 +56,7 @@ export function AuditTimeline({
   const events: Ev[] = [
     { title: "Human issued task", detail: `raj → ${scenario.agentCard.name}`, time: at(0), tone: "neutral", show: true },
     { title: "Agent generated plan", detail: `${scenario.plannedActions.length} tool calls`, time: at(1200), tone: "neutral", show: true },
-    { title: "AgentGovernance intercepted calls", detail: "identity + delegation verified", time: at(2400), tone: "accent", show: reached("policy") },
+    { title: "LoopLabs intercepted calls", detail: "identity + delegation verified", time: at(2400), tone: "accent", show: reached("policy") },
     { title: a.othersTitle, detail: a.othersDetail, time: at(2600), tone: "ok", show: reached("policy") },
     {
       title: over ? a.governedBadTitle : a.governedOkTitle,

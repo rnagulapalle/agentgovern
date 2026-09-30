@@ -1,5 +1,5 @@
 {
-  "name": "agentgovernance",
+  "name": "looplabs",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.32.1",
@@ -14,7 +14,7 @@
     "clsx": "^2.1.1",
     "geist": "^1.7.2",
     "lucide-react": "^0.471.1",
-    "next": "15.1.6",
+    "next": "15.5.26",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.6.0"

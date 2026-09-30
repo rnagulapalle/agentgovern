@@ -84,7 +84,7 @@ export default function HubspotAgentWriteWithoutRollbackPage() {
           </p>
         </SeoSection>
 
-        <SeoSection title="What AgentGovernance demonstrates">
+        <SeoSection title="What LoopLabs demonstrates">
           <p>
             In the{" "}
             <Link

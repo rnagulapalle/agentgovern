@@ -35,7 +35,7 @@ export function PolicyCheckPanel({
         <ScrollText className="h-4 w-4 text-white/25" />
         <p className="text-[13px] font-medium text-white/55">Policy engine idle</p>
         <p className="max-w-xs text-[12px] text-white/35">
-          Rules evaluate the moment AgentGovernance intercepts the agent&apos;s tool calls.
+          Rules evaluate the moment LoopLabs intercepts the agent&apos;s tool calls.
         </p>
       </div>
     );

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "looplabs-founder-router",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-30",
+  "addresses": [
+    "founders@looplabs.run",
+    "hello@looplabs.run",
+    "raj@looplabs.run",
+    "pratibha@looplabs.run"
+  ]
+}

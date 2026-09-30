@@ -10,3 +10,6 @@ npm-debug.log*
 .DS_Store
 .vscode
 nginx/certs
+certbot
+.env*
+*.tsbuildinfo

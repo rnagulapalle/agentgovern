@@ -2,62 +2,74 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
+  ArrowUpRight,
+  Bot,
   Check,
-  ShieldX,
   FileCheck2,
-  HelpCircle,
-  Users,
-  Banknote,
-  Database,
-  Mail,
-  Lock,
-  type LucideIcon,
+  GitBranch,
+  Plus,
+  ShieldCheck,
+  SlidersHorizontal,
+  Undo2,
 } from "lucide-react";
+import { SITE } from "@/lib/site";
 import {
-  SITE,
-  PRINCIPLES,
-  STEPS,
-  FEATURES,
-  FAQ,
-  CUSTOMER_QUESTIONS,
-  WHO_ITS_FOR,
-  USE_CASES,
-} from "@/lib/site";
-import { WaitlistForm, DemoPlayer, Faq } from "@/components/landing/interactive";
+  ControlExplorer,
+  ControlWave,
+  IdentityDiagram,
+  LandingHeader,
+  RecoveryDiagram,
+} from "@/components/landing/experience";
+import { LoopMark } from "@/components/brand/loop-mark";
+import "./landing.css";
 
 export const metadata: Metadata = {
-  title: SITE.title,
+  title: { absolute: SITE.title },
   description: SITE.description,
   alternates: { canonical: "/" },
 };
 
-const DEPT_ICON: Record<string, LucideIcon> = {
-  "Regulated data": Database,
-  "Financial actions": Banknote,
-  "Systems of record": FileCheck2,
-  "External communications": Mail,
-  "Access & identity": Lock,
-};
+const CAL_URL = "https://cal.com/rajnagulapalle";
+const FAQ = [
+  {
+    q: "What does LoopLabs control?",
+    a: "Three things: the actions an agent is allowed to take, the work it performs during a run, and the outputs it returns. Agent identities, permissions, model access, and approval rules support those controls in one workspace.",
+  },
+  {
+    q: "What is the difference between an action and an execution?",
+    a: "An action is one proposed operation, such as sending an email or updating a CRM record. An execution is the whole run: the steps, tool calls, and handoffs between agents. You can approve a specific action while keeping the rest of the run on hold.",
+  },
+  {
+    q: "What happens when an agent goes off course?",
+    a: "Suspend the agent, stop pending work, and review the affected records. The recovery workflow compares the current record with the reviewed state before restoring permitted fields as a new version. Changes that cannot be reversed, such as an email already sent, need manual handling.",
+  },
+  {
+    q: "How does the model gateway fit in?",
+    a: "The model gateway controls which models agents may call and how much they may spend. The control plane ties those limits to each agent's identity, workflow, actions, running execution, and outputs. The interactive tour uses representative data; a production deployment connects these controls to your gateway and tools.",
+  },
+  {
+    q: "What can I try today?",
+    a: "The interactive product tour includes agent onboarding, workflow controls, approvals, execution traces, output checks, and recovery previews. It uses sample data saved in your browser and does not change external systems. Book a demo to map LoopLabs to one of your production workflows.",
+  },
+];
 
-function Mark({ className = "h-5 w-5" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden>
-      <path
-        d="M12 2.5 4.5 5.5v6c0 4.4 3.1 8.2 7.5 9.5 4.4-1.3 7.5-5.1 7.5-9.5v-6L12 2.5Z"
-        stroke="#4f46e5"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="m8.8 12 2.2 2.2 4.2-4.4"
-        stroke="#4f46e5"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+const layers = [
+  {
+    title: "Build workflows",
+    sub: "Agents, models, tools, and handoffs",
+    icon: GitBranch,
+  },
+  {
+    title: "Control actions",
+    sub: "Permissions, policy, and approval",
+    icon: SlidersHorizontal,
+  },
+  {
+    title: "Recover execution",
+    sub: "Stop, inspect, and reconcile state",
+    icon: Undo2,
+  },
+];
 
 function JsonLd() {
   const schema = {
@@ -71,34 +83,33 @@ function JsonLd() {
         description: SITE.description,
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
-        offers: {
-          "@type": "Offer",
-          price: "0",
-          priceCurrency: "USD",
-          description: "Early access — join the waitlist",
-        },
-        featureList: FEATURES.map((f) => f.title),
+        featureList: [
+          "Agent identity and permissions",
+          "Action controls",
+          "Execution controls",
+          "Output controls",
+          "State recovery",
+        ],
       },
       {
         "@type": "Organization",
         "@id": `${SITE.url}/#org`,
         name: SITE.name,
         url: SITE.url,
-        sameAs: [`https://twitter.com/${SITE.twitter.replace("@", "")}`],
       },
       {
         "@type": "WebSite",
         "@id": `${SITE.url}/#website`,
-        url: SITE.url,
         name: SITE.name,
+        url: SITE.url,
         publisher: { "@id": `${SITE.url}/#org` },
       },
       {
         "@type": "FAQPage",
-        mainEntity: FAQ.map((item) => ({
+        mainEntity: FAQ.map(({ q, a }) => ({
           "@type": "Question",
-          name: item.q,
-          acceptedAnswer: { "@type": "Answer", text: item.a },
+          name: q,
+          acceptedAnswer: { "@type": "Answer", text: a },
         })),
       },
     ],
@@ -111,462 +122,412 @@ function JsonLd() {
   );
 }
 
-const NAV = [
-  { href: "#problem", label: "The problem" },
-  { href: "#how", label: "How it works" },
-  { href: "#use-cases", label: "Use cases" },
-  { href: "#security", label: "Security" },
-  { href: "#faq", label: "FAQ" },
-];
-
-const CAL_URL = "https://cal.com/rajnagulapalle";
-
-// Confident, TRUE product guarantees — not fabricated customer metrics.
-const STATS = [
-  {
-    n: "0",
-    label: "Blind actions",
-    body: "Nothing runs without a signed receipt of what, why, and who approved it.",
-  },
-  {
-    n: "3",
-    label: "Governed outcomes",
-    body: "Allow within authority, hold for a human, or block — decided by policy, every time.",
-  },
-  {
-    n: "100%",
-    label: "Actions on the record",
-    body: "Allowed, held, or blocked — every attempt lands on an immutable audit trail.",
-  },
-];
-
-// Proof pillars — describe the real engine, no invented social proof.
-const PROOF_POINTS = [
-  {
-    title: "Grounded in real failures",
-    body: "Built from agent-governance incidents teams hit in production — stale-data sends, over-authority actions, unapproved exports.",
-  },
-  {
-    title: "Deterministic, not vibes",
-    body: "Same inputs, same decision, every time — and every decision is replayable from its receipt.",
-  },
-  {
-    title: "Evidence before action",
-    body: "No external action runs without provenance, data freshness, and the permitting policy attached.",
-  },
-];
-
 export default function LandingPage() {
   return (
-    <div className="theme-light min-h-screen bg-bg">
+    <div className="ll-landing theme-light">
       <JsonLd />
-
-      {/* ── Nav ─────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 border-b border-hairline/10 bg-bg/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-5 sm:px-8">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md border border-hairline/15 bg-surface">
-              <Mark className="h-4 w-4" />
-            </span>
-            <span className="text-[15px] font-semibold tracking-tight text-fg">
-              Agent<span className="text-subtle">Governance</span>
-            </span>
-          </Link>
-
-          <nav className="ml-6 hidden items-center gap-6 md:flex">
-            {NAV.map((n) => (
-              <a
-                key={n.href}
-                href={n.href}
-                className="text-[14px] text-subtle transition-colors hover:text-fg"
-              >
-                {n.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="ml-auto flex items-center gap-2.5">
-            <Link
-              href="/agent-governance-demo"
-              className="hidden rounded-lg border border-hairline/15 bg-surface px-3.5 py-2 text-[13px] font-medium text-muted transition-colors hover:border-hairline/25 sm:inline-flex"
-            >
-              Live demo
-            </Link>
-            <a
-              href={CAL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-[13px] font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
-            >
-              Book a demo
-            </a>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-5 sm:px-8">
-        {/* ── 1. Hero ─────────────────────────────────────────── */}
-        <section className="py-16 sm:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-hairline/10 bg-surface px-3 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-subtle">
-              <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-              {SITE.tagline}
-            </span>
-
-            <h1 className="mt-6 text-balance text-[40px] font-bold leading-[1.04] tracking-tight text-fg sm:text-[60px]">
-              Govern every action{" "}
-              <span className="text-subtle">your AI agents take.</span>
-            </h1>
-
-            <p className="mx-auto mt-5 max-w-2xl text-pretty text-[16px] leading-relaxed text-subtle sm:text-[17px]">
-              Security, compliance, and data teams get{" "}
-              <span className="font-medium text-fg">one control plane</span> to see, approve,
-              and audit every action AI takes on company systems — before it happens.
-            </p>
-
-            <div className="mt-8 flex flex-col items-center gap-4">
-              <div className="flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row">
+      <a className="ll-skip" href="#main-content">
+        Skip to content
+      </a>
+      <div className="ll-frame">
+        <LandingHeader bookingUrl={CAL_URL} />
+        <main id="main-content">
+          <section className="ll-hero" aria-labelledby="hero-title">
+            <div className="ll-hero-copy">
+              <span className="ll-eyebrow">
+                THE CONTROL LAYER FOR AI AGENTS
+              </span>
+              <h1 id="hero-title">
+                Let agents work.
+                <br />
+                Keep control.
+              </h1>
+              <p>
+                Build one-agent and multi-agent workflows, then control what
+                they can do in production. Set permissions, supervise every
+                execution, check outputs, and recover failed state.
+              </p>
+              <div className="ll-hero-actions">
                 <a
+                  className="ll-button"
                   href={CAL_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-5 py-3 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500 sm:w-auto"
                 >
-                  Book a demo <ArrowRight className="h-4 w-4" />
+                  Book a demo <ArrowUpRight size={16} />
                 </a>
-                <Link
-                  href="/agent-governance-demo"
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-hairline/15 bg-surface px-5 py-3 text-[15px] font-medium text-muted transition-colors hover:border-hairline/25 sm:w-auto"
-                >
-                  See the live demo
-                </Link>
-              </div>
-              <a
-                href="#join"
-                className="text-[13px] font-medium text-subtle transition-colors hover:text-fg"
-              >
-                or get launch updates →
-              </a>
-            </div>
-          </div>
-
-          <div className="mx-auto mt-14 max-w-4xl">
-            <DemoPlayer />
-            <p className="mt-3 text-center text-[12px] text-faint">
-              Watch a bulk export of regulated data get held and routed to a data steward for approval.
-            </p>
-          </div>
-
-          {/* five-second reinforcement */}
-          <div className="mx-auto mt-12 grid max-w-4xl grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
-            {PRINCIPLES.map((p) => (
-              <div key={p} className="flex items-start gap-2.5">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" strokeWidth={2.4} />
-                <span className="text-[15px] text-muted">{p}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* stat band — confident, true product guarantees */}
-          <div className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-8 sm:grid-cols-3">
-            {STATS.map((s) => (
-              <div key={s.n} className="relative pl-5">
-                <span className="absolute inset-y-1 left-0 w-px bg-indigo-500/40" />
-                <div className="text-[40px] font-bold leading-none tracking-tight text-fg">
-                  {s.n}
-                </div>
-                <div className="mt-2.5 text-[13px] font-semibold text-indigo-600">{s.label}</div>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-subtle">{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── 2. What business problem do we solve? ───────────── */}
-        <section id="problem" className="scroll-mt-20 border-t border-hairline/10 py-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="label mb-3">The problem</div>
-            <h2 className="text-balance text-[26px] font-semibold leading-tight tracking-tight text-fg sm:text-[30px]">
-              Your employees are using AI to do real work. Who makes sure it&apos;s safe?
-            </h2>
-            <p className="mt-4 text-[15px] leading-relaxed text-subtle">
-              AI assistants can now act inside your business — not just chat. They send
-              emails, change customer records, and open confidential files on your staff&apos;s
-              behalf. Most companies can&apos;t see it, approve it, or prove what happened.
-            </p>
-          </div>
-
-          {/* buyer questions */}
-          <ul className="mx-auto mt-10 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
-            {CUSTOMER_QUESTIONS.map((q) => (
-              <li
-                key={q}
-                className="flex items-start gap-2.5 rounded-lg border border-hairline/10 bg-surface px-4 py-3.5 text-[14px] text-muted"
-              >
-                <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600/80" />
-                {q}
-              </li>
-            ))}
-          </ul>
-
-          {/* before / after */}
-          <div className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-red-500/20 bg-red-50 p-4">
-              <div className="flex items-center gap-2 text-[13px] font-semibold text-red-700">
-                <ShieldX className="h-4 w-4" /> Without AI governance
-              </div>
-              <p className="mt-2 text-[13px] leading-relaxed text-subtle">
-                An analytics agent exports 3,000 student records to a dashboard. It runs
-                instantly — no data-steward sign-off, no record of what left or why.
-              </p>
-            </div>
-            <div className="rounded-xl border border-emerald-500/25 bg-emerald-50 p-4">
-              <div className="flex items-center gap-2 text-[13px] font-semibold text-emerald-700">
-                <FileCheck2 className="h-4 w-4" /> With AgentGovernance
-              </div>
-              <p className="mt-2 text-[13px] leading-relaxed text-subtle">
-                The export is held. Policy checked — it exceeds the limit for regulated
-                data. A data steward approves or denies, and a signed receipt is saved for audit.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Proof (real engine, honest grounding — no invented logos) ─ */}
-        <section className="scroll-mt-20 border-t border-hairline/10 py-20">
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <div>
-              <div className="label mb-3">Proof, not slideware</div>
-              <h2 className="text-balance text-[26px] font-semibold tracking-tight text-fg sm:text-[30px]">
-                Don&apos;t take our word for it — run the engine yourself.
-              </h2>
-              <p className="mt-4 text-[15px] leading-relaxed text-subtle">
-                The demo isn&apos;t a video mockup. It runs the same deterministic
-                policy engine we deploy — live in your browser. Push a discount above
-                policy, age a record until it&apos;s stale, size an export past the
-                limit, and watch the decision, the approval, and the signed receipt
-                happen in real time.
-              </p>
-              <div className="mt-6">
-                <Link
-                  href="/agent-governance-demo"
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2.5 text-[14px] font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
-                >
-                  Open the live demo <ArrowRight className="h-4 w-4" />
+                <Link className="ll-text-link" href="/control-plane">
+                  Explore the product tour <ArrowRight size={17} />
                 </Link>
               </div>
             </div>
-            <div className="grid gap-3">
-              {PROOF_POINTS.map((p) => (
-                <div key={p.title} className="card p-5">
-                  <div className="flex items-center gap-2.5">
-                    <Check className="h-4 w-4 shrink-0 text-indigo-600" strokeWidth={2.6} />
-                    <h3 className="text-[15px] font-semibold tracking-tight text-fg">
-                      {p.title}
-                    </h3>
-                  </div>
-                  <p className="mt-2 pl-[26px] text-[14px] leading-relaxed text-subtle">{p.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+            <ControlWave />
+          </section>
 
-        {/* ── 3. How it works ─────────────────────────────────── */}
-        <section id="how" className="scroll-mt-20 border-t border-hairline/10 py-20">
-          <div className="mb-10 max-w-2xl">
-            <div className="label mb-3">How it works</div>
-            <h2 className="text-balance text-[26px] font-semibold tracking-tight text-fg sm:text-[30px]">
-              Sits between your AI tools and your systems.
-            </h2>
-            <p className="mt-4 text-[15px] leading-relaxed text-subtle">
-              AgentGovernance watches the moment AI tries to act on email, CRM, finance, or
-              documents — and applies your rules before anything happens.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {STEPS.map((s) => (
-              <div key={s.n} className="card p-5">
-                <div className="text-[12px] font-semibold text-indigo-600">{s.n}</div>
-                <h3 className="mt-2 text-[16px] font-semibold tracking-tight text-fg">
-                  {s.title}
-                </h3>
-                <p className="mt-2 text-[14px] leading-relaxed text-subtle">{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── 4. Use cases ────────────────────────────────────── */}
-        <section id="use-cases" className="scroll-mt-20 border-t border-hairline/10 py-20">
-          <div className="mb-10 max-w-2xl">
-            <div className="label mb-3">Use cases</div>
-            <h2 className="text-balance text-[26px] font-semibold tracking-tight text-fg sm:text-[30px]">
-              Govern AI wherever it touches your systems.
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {USE_CASES.map((u) => {
-              const Icon = DEPT_ICON[u.dept] ?? Users;
-              return (
-                <div key={u.dept} className="card p-5">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-hairline/10 bg-surface">
-                      <Icon className="h-4 w-4 text-indigo-600" strokeWidth={1.9} />
-                    </span>
-                    <h3 className="text-[15px] font-semibold tracking-tight text-fg">
-                      {u.dept}
-                    </h3>
-                  </div>
-                  <p className="mt-3 text-[14px] leading-relaxed text-subtle">{u.body}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ── 5. Supported AI tools ───────────────────────────── */}
-        <section className="border-t border-hairline/10 py-20">
-          <div className="card mx-auto max-w-3xl p-8 text-center sm:p-10">
-            <div className="label mb-3">Supported AI tools</div>
-            <h2 className="text-balance text-[22px] font-semibold tracking-tight text-fg sm:text-[26px]">
-              {WHO_ITS_FOR.headline}
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-subtle">
-              {WHO_ITS_FOR.body}
-            </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              {WHO_ITS_FOR.tools.map((tool) => (
-                <span
-                  key={tool}
-                  className="rounded-full border border-hairline/10 bg-surface px-3.5 py-1.5 text-[13px] text-muted"
-                >
-                  {tool}
+          <div className="ll-layer-strip" aria-label="Three layers of control">
+            {layers.map(({ title, sub, icon: Icon }, i) => (
+              <a href="#controls" key={title}>
+                <span className="ll-layer-number">0{i + 1}</span>
+                <Icon size={29} strokeWidth={1.2} />
+                <span>
+                  <strong>{title}</strong>
+                  <small>{sub}</small>
                 </span>
-              ))}
-              <span className="rounded-full border border-hairline/10 px-3.5 py-1.5 text-[13px] text-faint">
-                and more
+                <ArrowUpRight size={16} className="ll-layer-arrow" />
+              </a>
+            ))}
+          </div>
+
+          <section
+            id="controls"
+            className="ll-section"
+            aria-labelledby="controls-title"
+          >
+            <div className="ll-section-heading">
+              <span className="ll-eyebrow">THREE POINTS OF CONTROL</span>
+              <h2 id="controls-title">
+                Control actions,
+                <br />
+                execution, and outputs.
+              </h2>
+              <p>
+                Decide what may happen, follow the work, and inspect the result.
+              </p>
+            </div>
+            <ControlExplorer />
+          </section>
+
+          <section
+            id="how-it-works"
+            className="ll-identity-section ll-section"
+            aria-labelledby="identity-title"
+          >
+            <div className="ll-feature-copy">
+              <span className="ll-eyebrow">START WITH IDENTITY & ACCESS</span>
+              <h2 id="identity-title">
+                Every agent needs
+                <br />a job description.
+              </h2>
+              <p>
+                An owner. A role. A clear set of permissions. Give agents access
+                to the tools and models they need, with limits that follow the
+                work.
+              </p>
+              <ul className="ll-check-list">
+                <li>
+                  <Check size={16} /> Assign an accountable owner and role
+                </li>
+                <li>
+                  <Check size={16} /> Choose permitted tools and model tiers
+                </li>
+                <li>
+                  <Check size={16} /> Set budgets and scope delegated work
+                </li>
+              </ul>
+              <Link className="ll-text-link" href="/control-plane/agents">
+                Explore agent identities <ArrowUpRight size={16} />
+              </Link>
+            </div>
+            <IdentityDiagram />
+          </section>
+
+          <section
+            className="ll-lifecycle ll-section"
+            aria-labelledby="lifecycle-title"
+          >
+            <div className="ll-section-heading">
+              <span className="ll-eyebrow">HOW THE CONTROL LAYER FITS</span>
+              <h2 id="lifecycle-title">
+                Between your agents
+                <br />
+                and the systems they use.
+              </h2>
+            </div>
+            <div className="ll-system-flow">
+              <div className="ll-system-node">
+                <Bot size={30} strokeWidth={1.2} />
+                <h3>Your agents</h3>
+                <p>
+                  One agent or a team
+                  <br />
+                  working together
+                </p>
+              </div>
+              <ArrowRight className="ll-flow-arrow" size={23} strokeWidth={1} />
+              <div className="ll-system-boundary">
+                <div>
+                  <LoopMark />
+                  <strong>LoopLabs</strong>
+                  <span className="ll-micro">CONTROL LAYER</span>
+                </div>
+                <ul>
+                  <li>
+                    <Check size={14} /> Check permissions
+                  </li>
+                  <li>
+                    <Check size={14} /> Apply action policies
+                  </li>
+                  <li>
+                    <Check size={14} /> Hold for approval
+                  </li>
+                  <li>
+                    <Check size={14} /> Inspect outputs
+                  </li>
+                </ul>
+              </div>
+              <ArrowRight className="ll-flow-arrow" size={23} strokeWidth={1} />
+              <div className="ll-system-node">
+                <FileCheck2 size={30} strokeWidth={1.2} />
+                <h3>Your systems</h3>
+                <p>
+                  Tools, records,
+                  <br />
+                  and approved results
+                </p>
+              </div>
+            </div>
+            <div className="ll-flow-footnote">
+              <GitBranch size={15} />
+              <span>
+                Connect identity, model access, actions, and outcomes in the
+                same execution record.
               </span>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ── 6. Security & Compliance ────────────────────────── */}
-        <section id="security" className="scroll-mt-20 border-t border-hairline/10 py-20">
-          <div className="mb-10 max-w-2xl">
-            <div className="label mb-3">Security &amp; compliance</div>
-            <h2 className="text-balance text-[26px] font-semibold tracking-tight text-fg sm:text-[30px]">
-              AI security, approvals, and audit — built for how you operate.
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="card p-5">
-                <h3 className="text-[15px] font-semibold tracking-tight text-fg">
-                  {f.title}
-                </h3>
-                <p className="mt-2 text-[14px] leading-relaxed text-subtle">{f.body}</p>
+          <section
+            id="recovery"
+            className="ll-recovery-section ll-section"
+            aria-labelledby="recovery-title"
+          >
+            <RecoveryDiagram />
+            <div className="ll-feature-copy">
+              <span className="ll-eyebrow">WHEN A RUN GOES WRONG</span>
+              <h2 id="recovery-title">
+                Stop the agent.
+                <br />
+                Review the change.
+                <br />
+                Recover the state.
+              </h2>
+              <p>
+                Blocking the next action is only part of the job. See what
+                already changed, review a recovery plan, and restore affected
+                records where it is safe to do so.
+              </p>
+              <p className="ll-small-copy">
+                Version checks prevent recovery from overwriting newer work.
+                Irreversible actions stay with a person.
+              </p>
+              <Link
+                className="ll-text-link"
+                href="/control-plane/reconciliation"
+              >
+                Try the recovery workflow <ArrowUpRight size={16} />
+              </Link>
+            </div>
+          </section>
+
+          <section
+            className="ll-scenarios ll-section"
+            aria-labelledby="scenarios-title"
+          >
+            <div className="ll-section-heading ll-heading-row">
+              <div>
+                <span className="ll-eyebrow">SEE THE DECISIONS</span>
+                <h2 id="scenarios-title">
+                  See the controls
+                  <br />
+                  on a real task.
+                </h2>
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── 7. FAQ ──────────────────────────────────────────── */}
-        <section id="faq" className="scroll-mt-20 border-t border-hairline/10 py-20">
-          <div className="mb-8 text-center">
-            <div className="label mb-3">FAQ</div>
-            <h2 className="text-[26px] font-semibold tracking-tight text-fg sm:text-[30px]">
-              Questions, answered.
-            </h2>
-          </div>
-          <Faq />
-        </section>
-
-        {/* ── 8. Join waitlist ────────────────────────────────── */}
-        <section className="border-t border-hairline/10 py-20">
-          <div className="card relative overflow-hidden p-8 text-center sm:p-12">
-            <div className="pointer-events-none absolute right-0 top-0 h-px w-1/2 bg-gradient-to-l from-indigo-500/40 to-transparent" />
-            <h2 className="mx-auto max-w-2xl text-balance text-[26px] font-semibold leading-tight tracking-tight text-fg sm:text-[32px]">
-              Ready to govern what your AI can do?
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-[15px] text-subtle">
-              Book a 20-minute walkthrough with the founder — see the control plane run
-              against your governance scenarios. Or get launch updates as we onboard teams.
+              <Link className="ll-text-link" href="/control-plane">
+                Explore the product tour <ArrowUpRight size={16} />
+              </Link>
+            </div>
+            <div className="ll-scenario-grid">
+              <Link href="/control-plane/approvals">
+                <span className="ll-scenario-icon">
+                  <CircleApproval />
+                </span>
+                <span className="ll-eyebrow">ACTION / HOLD</span>
+                <h3>
+                  A discount beyond
+                  <br />
+                  the agent&apos;s authority.
+                </h3>
+                <p>The email waits for approval before it can be sent.</p>
+                <span className="ll-scenario-link">
+                  Review the request <ArrowUpRight size={17} />
+                </span>
+              </Link>
+              <Link href="/control-plane/outputs">
+                <span className="ll-scenario-icon">
+                  <FileCheck2 size={42} strokeWidth={1} />
+                </span>
+                <span className="ll-eyebrow">OUTPUT / REDACT</span>
+                <h3>
+                  Private data in
+                  <br />a customer summary.
+                </h3>
+                <p>
+                  The output check removes an email address from the result.
+                </p>
+                <span className="ll-scenario-link">
+                  Inspect the output <ArrowUpRight size={17} />
+                </span>
+              </Link>
+              <Link href="/control-plane/reconciliation">
+                <span className="ll-scenario-icon">
+                  <Undo2 size={42} strokeWidth={1} />
+                </span>
+                <span className="ll-eyebrow">RECOVERY / RESTORE</span>
+                <h3>
+                  A record changed
+                  <br />
+                  outside the plan.
+                </h3>
+                <p>
+                  The agent is isolated while you review the affected state.
+                </p>
+                <span className="ll-scenario-link">
+                  Review the recovery <ArrowUpRight size={17} />
+                </span>
+              </Link>
+            </div>
+            <p className="ll-sandbox-note">
+              The product tour uses sample data. Model calls, external actions, and
+              recovery are simulated.
             </p>
-            <div className="mt-7 flex flex-col items-center gap-5">
+          </section>
+
+          <section
+            id="faq"
+            className="ll-faq ll-section"
+            aria-labelledby="faq-title"
+          >
+            <div>
+              <span className="ll-eyebrow">A FEW DETAILS</span>
+              <h2 id="faq-title">Good questions.</h2>
               <a
+                className="ll-text-link"
                 href={CAL_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-5 py-3 text-[15px] font-semibold text-white shadow-sm transition-colors hover:bg-indigo-500"
               >
-                Book a demo <ArrowRight className="h-4 w-4" />
+                Talk through your use case <ArrowUpRight size={16} />
               </a>
-              <div className="flex w-full max-w-md items-center gap-3">
-                <span className="h-px flex-1 bg-hairline/10" />
-                <span className="text-[12px] text-faint">or get launch updates</span>
-                <span className="h-px flex-1 bg-hairline/10" />
-              </div>
-              <WaitlistForm id="join" />
             </div>
-          </div>
-        </section>
-      </main>
-
-      {/* ── Footer ──────────────────────────────────────────── */}
-      <footer className="border-t border-hairline/10">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-5 py-12 sm:grid-cols-4 sm:px-8">
-          <div className="col-span-2 sm:col-span-1">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md border border-hairline/15 bg-surface">
-                <Mark className="h-4 w-4" />
-              </span>
-              <span className="text-[15px] font-semibold tracking-tight text-fg">
-                AgentGovernance
-              </span>
+            <div className="ll-faq-list">
+              {FAQ.map(({ q, a }) => (
+                <details key={q}>
+                  <summary>
+                    {q}
+                    <Plus size={18} />
+                  </summary>
+                  <p>{a}</p>
+                </details>
+              ))}
             </div>
-            <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-faint">
-              The control layer between business AI tools and your company systems.
-            </p>
-          </div>
+          </section>
 
-          <div>
-            <div className="label mb-3">Product</div>
-            <ul className="space-y-2 text-[13px] text-subtle">
-              <li><Link href="/agent-governance-demo" className="hover:text-fg">Live demo</Link></li>
-              <li><a href="#how" className="hover:text-fg">How it works</a></li>
-              <li><a href="#use-cases" className="hover:text-fg">Use cases</a></li>
-              <li><a href="#security" className="hover:text-fg">Security &amp; compliance</a></li>
-            </ul>
-          </div>
+          <section id="demo" className="ll-closing ll-section">
+            <div>
+              <span className="ll-eyebrow">SEE LOOPLABS IN ACTION</span>
+              <h2>
+                Bring a workflow.
+                <br />
+                We&apos;ll walk through
+                <br />
+                the controls.
+              </h2>
+            </div>
+            <div className="ll-closing-action">
+              <ShieldCheck size={48} strokeWidth={0.9} />
+              <p>
+                See where an action is allowed, where work pauses, and how
+                recovery happens.
+              </p>
+              <a
+                className="ll-button"
+                href={CAL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Book a demo <ArrowUpRight size={16} />
+              </a>
+              <Link className="ll-text-link" href="/control-plane">
+                Or explore the product tour <ArrowRight size={16} />
+              </Link>
+            </div>
+          </section>
+        </main>
 
-          <div>
-            <div className="label mb-3">Company</div>
-            <ul className="space-y-2 text-[13px] text-subtle">
-              <li><a href="#join" className="hover:text-fg">Waitlist</a></li>
-              <li><a href="#faq" className="hover:text-fg">FAQ</a></li>
-              <li><span className="text-faint">AI governance for enterprise teams</span></li>
-            </ul>
+        <footer className="ll-footer">
+          <div className="ll-footer-top">
+            <div>
+              <Link className="ll-wordmark" href="/">
+                <LoopMark />
+                <span>LoopLabs</span>
+              </Link>
+              <p>
+                The control layer for agent
+                <br />
+                actions, execution, and outputs.
+              </p>
+            </div>
+            <nav aria-label="Footer controls">
+              <span className="ll-eyebrow">CONTROLS</span>
+              <Link href="/control-plane/policies">Action controls</Link>
+              <Link href="/control-plane/runs">Execution controls</Link>
+              <Link href="/control-plane/outputs">Output controls</Link>
+              <Link href="/control-plane/reconciliation">Recovery</Link>
+            </nav>
+            <nav aria-label="Footer platform">
+              <span className="ll-eyebrow">PLATFORM</span>
+              <Link href="/control-plane/agents">Agent identities</Link>
+              <Link href="/control-plane/gateway">Model gateway</Link>
+              <Link href="/control-plane/approvals">Approvals</Link>
+              <Link href="/control-plane/audit">Audit trail</Link>
+            </nav>
+            <nav aria-label="Footer resources">
+              <span className="ll-eyebrow">RESOURCES</span>
+              <Link href="/guides">Guides</Link>
+              <Link href="/blog">Blog</Link>
+              <Link href="/agent-governance-demo">Action control example</Link>
+              <a href={CAL_URL} target="_blank" rel="noopener noreferrer">
+                Talk to the founder <ArrowUpRight size={12} />
+              </a>
+            </nav>
           </div>
-
-          <div>
-            <div className="label mb-3">Connect</div>
-            <ul className="space-y-2 text-[13px] text-subtle">
-              <li>
-                <a href="https://x.com/rnagulapalle" target="_blank" rel="noopener noreferrer" className="hover:text-fg">
-                  @rnagulapalle
-                </a>
-              </li>
-            </ul>
+          <div className="ll-footer-bottom">
+            <span>© 2026 LoopLabs</span>
+            <span>looplabs.run</span>
+            <a
+              href="https://x.com/rnagulapalle"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Follow the build <ArrowUpRight size={13} />
+            </a>
           </div>
-        </div>
-        <div className="border-t border-hairline/10">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 text-[11px] text-faint sm:px-8">
-            <span>© 2026 AgentGovernance</span>
-            <span>Demo uses sample data · your policies in production</span>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
+  );
+}
+
+function CircleApproval() {
+  return (
+    <svg
+      width="42"
+      height="42"
+      viewBox="0 0 42 42"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="21" cy="21" r="17" stroke="currentColor" />
+      <path d="M17 14v14m8-14v14" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
   );
 }

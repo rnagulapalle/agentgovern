@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SITE } from "@/lib/site";
+import { MarketingFooter, MarketingHeader, marketingPrimaryButton, marketingSecondaryButton, marketingTextLink } from "@/components/marketing/chrome";
 
 /** Render simple markdown: ## headings, paragraphs, [text](url), **bold** */
 export function NewsMarkdownBody({ body }: { body: string }) {
@@ -13,7 +13,7 @@ export function NewsMarkdownBody({ body }: { body: string }) {
 
         if (trimmed.startsWith("## ")) {
           return (
-            <h2 key={i} className="pt-2 text-[20px] font-semibold tracking-tight text-fg">
+            <h2 key={i} className="pt-2 text-[20px] font-medium tracking-[-0.025em] text-fg">
               {inlineFormat(trimmed.slice(3))}
             </h2>
           );
@@ -21,7 +21,7 @@ export function NewsMarkdownBody({ body }: { body: string }) {
 
         if (trimmed.startsWith("### ")) {
           return (
-            <h3 key={i} className="pt-1 text-[17px] font-semibold text-fg">
+            <h3 key={i} className="pt-1 text-[17px] font-medium text-fg">
               {inlineFormat(trimmed.slice(4))}
             </h3>
           );
@@ -73,7 +73,7 @@ function inlineFormat(text: string): React.ReactNode {
             <a
               key={m.index}
               href={href}
-              className="font-medium text-indigo-600 hover:text-indigo-700"
+              className={marketingTextLink}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -82,7 +82,7 @@ function inlineFormat(text: string): React.ReactNode {
           );
         } else {
           parts.push(
-            <Link key={m.index} href={href} className="font-medium text-indigo-600 hover:text-indigo-700">
+            <Link key={m.index} href={href} className={marketingTextLink}>
               {label}
             </Link>
           );
@@ -98,7 +98,7 @@ function inlineFormat(text: string): React.ReactNode {
 
 export function NewsCategoryBadge({ category }: { category: string }) {
   const labels: Record<string, string> = {
-    governance: "AI governance",
+    governance: "Agent controls",
     privacy: "Privacy",
     regulatory: "Regulatory",
   };
@@ -125,30 +125,16 @@ export function NewsArticleShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="theme-light min-h-screen bg-bg">
-      <header className="sticky top-0 z-40 border-b border-hairline/10 bg-bg/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-3xl items-center gap-2 px-5 sm:px-8">
-          <Link href="/" className="text-[14px] font-semibold text-fg">
-            Agent<span className="text-subtle">Governance</span>
-          </Link>
-          <Link href="/news" className="ml-4 text-[13px] text-subtle hover:text-fg">
-            News
-          </Link>
-          <Link
-            href="/agent-governance-demo"
-            className="ml-auto rounded-lg bg-indigo-600 px-3 py-1.5 text-[12px] font-semibold text-white shadow-sm hover:bg-indigo-500"
-          >
-            Demo
-          </Link>
-        </div>
-      </header>
+    <div className="marketing-surface theme-light">
+      <div className="marketing-frame">
+      <MarketingHeader section="Blog" />
 
-      <main className="mx-auto max-w-3xl px-5 pb-20 pt-12 sm:px-8">
+      <main className="marketing-main">
         <div className="flex flex-wrap items-center gap-3">
           <NewsCategoryBadge category={category} />
           <time className="text-[12px] text-faint">{published}</time>
         </div>
-        <h1 className="mt-4 text-balance text-[30px] font-bold leading-[1.12] tracking-tight text-fg sm:text-[38px]">
+        <h1 className="mt-4 text-balance text-[34px] font-medium leading-[1.08] tracking-[-0.045em] text-fg sm:text-[44px]">
           {title}
         </h1>
         <p className="mt-4 text-[16px] leading-relaxed text-subtle">{description}</p>
@@ -158,34 +144,33 @@ export function NewsArticleShell({
         {relatedGuide && (
           <div className="card mt-12 p-6">
             <p className="label mb-2">Related guide</p>
-            <Link href={relatedGuide} className="text-[15px] font-medium text-indigo-600 hover:text-indigo-700">
+            <Link href={relatedGuide} className={`text-[15px] ${marketingTextLink}`}>
               {relatedGuide.replace(/^\//, "").replace(/-/g, " ")} →
             </Link>
           </div>
         )}
 
         <div className="card mt-8 p-6 text-center">
-          <p className="text-[15px] font-medium text-fg">See approval workflows in the demo</p>
+          <p className="text-[15px] font-medium text-fg">See the controls in the interactive product tour</p>
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Link
-              href="/agent-governance-demo"
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-[14px] font-semibold text-white shadow-sm hover:bg-indigo-500"
+              href="/control-plane"
+              className={marketingPrimaryButton}
             >
-              Live demo
+              Explore the product tour
             </Link>
             <Link
-              href="/#join"
-              className="rounded-lg border border-hairline/15 bg-surface px-4 py-2 text-[14px] font-medium text-muted hover:border-hairline/25"
+              href="/#demo"
+              className={marketingSecondaryButton}
             >
-              Join waitlist
+              Book a demo
             </Link>
           </div>
         </div>
       </main>
 
-      <footer className="border-t border-hairline/10 py-8 text-center text-[12px] text-faint">
-        © 2026 {SITE.name}
-      </footer>
+      <MarketingFooter />
+      </div>
     </div>
   );
 }

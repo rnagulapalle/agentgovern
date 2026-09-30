@@ -113,7 +113,7 @@ export default function ManufacturingAiGovernancePage() {
             ]}
           />
           <p>
-            These are business rules your ops team already understands. AgentGovernance
+            These are business rules your ops team already understands. LoopLabs
             enforces them when Copilot or ChatGPT tries to act — not when someone
             remembers the policy.
           </p>

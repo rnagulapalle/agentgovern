@@ -89,7 +89,7 @@ export default function PriorAuthAgentWithoutAuditTrailPage() {
           </p>
         </SeoSection>
 
-        <SeoSection title="What AgentGovernance demonstrates">
+        <SeoSection title="What LoopLabs demonstrates">
           <p>
             The{" "}
             <Link href="/agent-governance-demo" className="text-indigo-300 hover:text-indigo-200">

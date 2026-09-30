@@ -51,7 +51,7 @@ export function Sidebar() {
         <Mark />
         <div className="leading-none">
           <div className="text-[14px] font-semibold tracking-tight text-white">
-            Agent<span className="text-white/55">Governance</span>
+            Loop<span className="text-white/55">Labs</span>
           </div>
           <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.18em] text-white/30">
             Control Plane

@@ -39,7 +39,7 @@ export function FinalCTA({
             <span className="text-indigo-300">proof</span>.
           </h2>
           <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-white/45">
-            AI agents are moving from chat to action. AgentGovernance is the control
+            AI agents are moving from chat to action. LoopLabs is the control
             plane that gives every agent a verifiable identity, scoped authority,
             human approvals, and a replayable audit trail.
           </p>
