@@ -32,6 +32,10 @@ export const metadata: Metadata = {
 const CAL_URL = "https://cal.com/rajnagulapalle";
 const FAQ = [
   {
+    q: "What if we do not have any agents today?",
+    a: "That is a good place to start. Bring us a frequent process your team already runs, such as accounts payable, customer operations, or CRM updates. We can map the work with you, build the agent workflow, and add the right approvals and controls before it reaches production.",
+  },
+  {
     q: "What does LoopLabs control?",
     a: "Three things: the actions an agent is allowed to take, the work it performs during a run, and the outputs it returns. Agent identities, permissions, model access, and approval rules support those controls in one workspace.",
   },
@@ -50,6 +54,33 @@ const FAQ = [
   {
     q: "What can I try today?",
     a: "The interactive product tour includes agent onboarding, workflow controls, approvals, execution traces, output checks, and recovery previews. It uses sample data saved in your browser and does not change external systems. Book a demo to map LoopLabs to one of your production workflows.",
+  },
+];
+
+const workflowExamples = [
+  {
+    number: "01",
+    label: "FINANCE",
+    title: "Accounts payable",
+    body: "Capture invoices, check vendor and amount details, route exceptions, and prepare approved entries for posting.",
+  },
+  {
+    number: "02",
+    label: "CUSTOMER OPERATIONS",
+    title: "Service requests",
+    body: "Classify requests, prepare a response, pause higher-risk actions for approval, and update the system of record.",
+  },
+  {
+    number: "03",
+    label: "REVENUE OPERATIONS",
+    title: "Account follow-up",
+    body: "Research an account, keep CRM records current, prepare follow-up, and enforce discount authority.",
+  },
+  {
+    number: "04",
+    label: "BUILT FOR YOUR TEAM",
+    title: "Your workflow",
+    body: "Map the process your team already runs, connect its systems, and decide where people approve or recover work.",
   },
 ];
 
@@ -166,7 +197,10 @@ export default function LandingPage() {
 
           <div className="ll-layer-strip" aria-label="Three layers of control">
             {layers.map(({ title, sub, icon: Icon }, i) => (
-              <a href="#controls" key={title}>
+              <a
+                href={i === 0 ? "#automation" : i === 2 ? "#recovery" : "#controls"}
+                key={title}
+              >
                 <span className="ll-layer-number">0{i + 1}</span>
                 <Icon size={29} strokeWidth={1.2} />
                 <span>
@@ -177,6 +211,49 @@ export default function LandingPage() {
               </a>
             ))}
           </div>
+
+          <section
+            id="automation"
+            className="ll-automation ll-section"
+            aria-labelledby="automation-title"
+          >
+            <div className="ll-automation-intro">
+              <div>
+                <span className="ll-eyebrow">WORKFLOW AUTOMATION</span>
+                <h2 id="automation-title">
+                  Start with work
+                  <br />
+                  your team already does.
+                </h2>
+              </div>
+              <div className="ll-automation-summary">
+                <p>
+                  You do not need agents in production to start. We can build
+                  the workflow with you, beginning with a frequent process and
+                  adapting the agents, tools, approvals, and recovery steps to
+                  the way your team works.
+                </p>
+                <a
+                  className="ll-text-link"
+                  href={CAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Bring us a workflow <ArrowUpRight size={16} />
+                </a>
+              </div>
+            </div>
+            <div className="ll-workflow-grid">
+              {workflowExamples.map((workflow) => (
+                <article key={workflow.number}>
+                  <span className="ll-workflow-number">{workflow.number}</span>
+                  <span className="ll-eyebrow">{workflow.label}</span>
+                  <h3>{workflow.title}</h3>
+                  <p>{workflow.body}</p>
+                </article>
+              ))}
+            </div>
+          </section>
 
           <section
             id="controls"
@@ -476,8 +553,9 @@ export default function LandingPage() {
                 actions, execution, and outputs.
               </p>
             </div>
-            <nav aria-label="Footer controls">
-              <span className="ll-eyebrow">CONTROLS</span>
+            <nav aria-label="Footer solutions">
+              <span className="ll-eyebrow">SOLUTIONS</span>
+              <Link href="#automation">Workflow automation</Link>
               <Link href="/control-plane/policies">Action controls</Link>
               <Link href="/control-plane/runs">Execution controls</Link>
               <Link href="/control-plane/outputs">Output controls</Link>

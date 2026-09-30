@@ -29,15 +29,28 @@ import {
 import { LoopMark } from "@/components/brand/loop-mark";
 
 const navigation = [
-  { href: "#controls", label: "Controls" },
   { href: "#how-it-works", label: "How it works" },
   { href: "#recovery", label: "Recovery" },
   { href: "/guides", label: "Guides" },
   { href: "/blog", label: "Blog" },
 ];
 
+const solutions = [
+  {
+    href: "#automation",
+    label: "Workflow automation",
+    description: "Turn a repeatable process into an agent workflow.",
+  },
+  {
+    href: "#controls",
+    label: "Agent controls",
+    description: "Set permissions, approvals, output checks, and recovery.",
+  },
+];
+
 export function LandingHeader({ bookingUrl }: { bookingUrl: string }) {
   const [open, setOpen] = useState(false);
+  const [solutionsOpen, setSolutionsOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
   return (
     <header
@@ -45,6 +58,7 @@ export function LandingHeader({ bookingUrl }: { bookingUrl: string }) {
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           setOpen(false);
+          setSolutionsOpen(false);
           toggle.current?.focus();
         }
       }}
@@ -54,6 +68,35 @@ export function LandingHeader({ bookingUrl }: { bookingUrl: string }) {
         <span>LoopLabs</span>
       </Link>
       <nav className="ll-desktop-nav" aria-label="Main navigation">
+        <div className="ll-solutions-menu">
+          <button
+            className="ll-solutions-trigger"
+            type="button"
+            aria-expanded={solutionsOpen}
+            aria-controls="landing-solutions"
+            onClick={() => setSolutionsOpen((value) => !value)}
+          >
+            Solutions <ArrowDown size={13} />
+          </button>
+          {solutionsOpen && (
+            <div id="landing-solutions" className="ll-solutions-popover">
+              <span className="ll-eyebrow">SOLUTIONS</span>
+              {solutions.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setSolutionsOpen(false)}
+                >
+                  <span>
+                    <strong>{item.label}</strong>
+                    <small>{item.description}</small>
+                  </span>
+                  <ArrowUpRight size={15} />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
         {navigation.map((item) => (
           <Link key={item.href} href={item.href}>
             {item.label}
@@ -87,6 +130,21 @@ export function LandingHeader({ bookingUrl }: { bookingUrl: string }) {
           className="ll-mobile-nav"
           aria-label="Mobile navigation"
         >
+          <span className="ll-mobile-group-title">Solutions</span>
+          {solutions.map((item) => (
+            <Link
+              className="ll-mobile-solution"
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+            >
+              <span>
+                <strong>{item.label}</strong>
+                <small>{item.description}</small>
+              </span>
+              <ArrowUpRight size={16} />
+            </Link>
+          ))}
           {navigation.map((item) => (
             <Link
               key={item.href}

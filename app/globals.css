@@ -300,6 +300,59 @@ textarea {
 .marketing-text-link:hover {
   color: #8a7b67;
 }
+.marketing-solutions-menu { position: relative; }
+.marketing-solutions-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: #44403c;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.marketing-solutions-trigger svg { transition: transform 0.2s; }
+.marketing-solutions-trigger[aria-expanded="true"] svg { transform: rotate(180deg); }
+.marketing-solutions-popover {
+  position: absolute;
+  top: calc(100% + 23px);
+  left: -24px;
+  width: 380px;
+  padding: 11px 20px 15px;
+  border: 1px solid #d6d3d1;
+  background: #fafaf9;
+  box-shadow: 0 24px 45px -30px rgb(28 25 23 / 0.45);
+}
+.marketing-solutions-popover > span {
+  display: block;
+  padding: 9px 3px 10px;
+  color: #78716c;
+  font-family: var(--brand-font-mono);
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.marketing-desktop-nav .marketing-solutions-popover a {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 3px;
+  border-top: 1px solid #e7e5e4;
+  white-space: normal;
+}
+.marketing-solutions-popover strong,
+.marketing-solutions-popover small { display: block; }
+.marketing-solutions-popover strong { font-size: 15px; font-weight: 550; }
+.marketing-solutions-popover small {
+  margin-top: 3px;
+  color: #78716c;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.marketing-solutions-popover a > svg { flex-shrink: 0; margin-top: 2px; }
 .marketing-nav-cta,
 .marketing-primary-button,
 .marketing-secondary-button {
@@ -440,6 +493,21 @@ textarea {
     color: #1c1917;
     font-size: 14px;
   }
+  .marketing-mobile-group-title {
+    padding: 15px 28px 6px;
+    color: #78716c;
+    font-family: var(--brand-font-mono);
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  .marketing-mobile-nav .marketing-mobile-solution {
+    min-height: 65px;
+  }
+  .marketing-mobile-solution strong,
+  .marketing-mobile-solution small { display: block; }
+  .marketing-mobile-solution strong { font-size: 14px; font-weight: 550; }
+  .marketing-mobile-solution small { margin-top: 3px; color: #78716c; font-size: 10px; }
   .marketing-footer-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 600px) {

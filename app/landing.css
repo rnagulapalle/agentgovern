@@ -111,6 +111,65 @@
 .ll-desktop-nav a:hover {
   color: #8a7b67;
 }
+.ll-solutions-menu {
+  position: relative;
+}
+.ll-solutions-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ll-solutions-trigger svg {
+  transition: transform 0.2s;
+}
+.ll-solutions-trigger[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.ll-solutions-popover {
+  position: absolute;
+  top: calc(100% + 23px);
+  left: -24px;
+  width: 380px;
+  padding: 11px 20px 15px;
+  border: 1px solid var(--ll-line);
+  background: #fafaf9;
+  box-shadow: 0 24px 45px -30px rgb(28 25 23 / 0.45);
+}
+.ll-solutions-popover > .ll-eyebrow {
+  padding: 9px 3px 10px;
+}
+.ll-desktop-nav .ll-solutions-popover a {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 3px;
+  border-top: 1px solid #e7e5e4;
+  white-space: normal;
+}
+.ll-solutions-popover strong,
+.ll-solutions-popover small {
+  display: block;
+}
+.ll-solutions-popover strong {
+  font-size: 15px;
+  font-weight: 550;
+}
+.ll-solutions-popover small {
+  margin-top: 3px;
+  color: #78716c;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.ll-solutions-popover a > svg {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
 .ll-button {
   display: inline-flex;
   align-items: center;
@@ -466,6 +525,65 @@
   margin-top: 23px;
   color: #57534e;
   font-size: 16px;
+}
+.ll-automation {
+  border-bottom: 1px solid var(--ll-line);
+  background: #eeeee9;
+}
+.ll-automation-intro {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 80px;
+  padding: 88px 40px 58px;
+}
+.ll-automation-intro h2 {
+  margin-top: 24px;
+}
+.ll-automation-summary {
+  align-self: end;
+  padding-bottom: 5px;
+}
+.ll-automation-summary p {
+  max-width: 465px;
+  color: #57534e;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.ll-automation-summary .ll-text-link {
+  margin-top: 27px;
+}
+.ll-workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--ll-line);
+  background: #fafaf9;
+}
+.ll-workflow-grid article {
+  position: relative;
+  min-height: 286px;
+  padding: 35px 30px 30px;
+}
+.ll-workflow-grid article + article {
+  border-left: 1px solid var(--ll-line);
+}
+.ll-workflow-number {
+  position: absolute;
+  top: 12px;
+  right: 13px;
+  color: #a8a29e;
+  font-family: var(--brand-font-mono);
+  font-size: 9px;
+}
+.ll-workflow-grid h3 {
+  margin: 70px 0 14px;
+  font-size: 25px;
+  letter-spacing: -0.045em;
+}
+.ll-workflow-grid p {
+  max-width: 260px;
+  color: #57534e;
+  font-size: 13px;
+  line-height: 1.6;
 }
 .ll-controls-grid {
   display: grid;
@@ -1372,6 +1490,12 @@
   .ll-desktop-nav a {
     font-size: 12px;
   }
+  .ll-solutions-trigger {
+    font-size: 12px;
+  }
+  .ll-workflow-grid article {
+    padding-inline: 23px;
+  }
   .ll-hero-copy {
     padding-left: 28px;
   }
@@ -1454,6 +1578,43 @@
     justify-content: space-between;
     padding: 15px 0;
     border-bottom: 1px solid #e7e5e4;
+  }
+  .ll-mobile-group-title {
+    padding: 10px 0 6px;
+    color: #78716c;
+    font-family: var(--brand-font-mono);
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  .ll-mobile-nav .ll-mobile-solution {
+    padding-block: 13px;
+  }
+  .ll-mobile-solution strong,
+  .ll-mobile-solution small {
+    display: block;
+  }
+  .ll-mobile-solution strong {
+    font-size: 14px;
+    font-weight: 550;
+  }
+  .ll-mobile-solution small {
+    margin-top: 3px;
+    color: #78716c;
+    font-size: 10px;
+  }
+  .ll-automation-intro {
+    gap: 45px;
+    padding-inline: 28px;
+  }
+  .ll-workflow-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ll-workflow-grid article:nth-child(3) {
+    border-left: 0;
+  }
+  .ll-workflow-grid article:nth-child(n + 3) {
+    border-top: 1px solid var(--ll-line);
   }
   .ll-hero {
     min-height: 525px;
@@ -1725,6 +1886,40 @@
     margin-top: 18px;
     font-size: 13px;
     line-height: 1.6;
+  }
+  .ll-automation-intro {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 56px 22px 39px;
+  }
+  .ll-automation-intro h2 {
+    margin-top: 19px;
+  }
+  .ll-automation-summary {
+    padding-bottom: 0;
+  }
+  .ll-automation-summary p {
+    font-size: 13px;
+  }
+  .ll-automation-summary .ll-text-link {
+    margin-top: 20px;
+    font-size: 12px;
+  }
+  .ll-workflow-grid {
+    grid-template-columns: 1fr;
+  }
+  .ll-workflow-grid article {
+    min-height: 220px;
+    padding: 29px 24px;
+  }
+  .ll-workflow-grid article + article,
+  .ll-workflow-grid article:nth-child(n + 3) {
+    border-left: 0;
+    border-top: 1px solid var(--ll-line);
+  }
+  .ll-workflow-grid h3 {
+    margin-top: 44px;
+    font-size: 24px;
   }
   .ll-control-tab {
     min-height: 168px;
