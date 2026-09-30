@@ -127,6 +127,9 @@ Saved insights:
 - Product tour sections
 - Proof interactions
 - Calls to action
+- Referring sites
+- Visitor geography
+- Device mix
 
 ## Quality checks
 
@@ -134,4 +137,3 @@ Saved insights:
 - The production build passes for all 57 generated routes.
 - 41 sitemap/product pages and 44 internal links were requested locally with no errors.
 - Test events were observed in the LoopLabs PostHog project through the first-party proxy.
-
