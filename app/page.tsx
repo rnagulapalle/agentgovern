@@ -86,7 +86,7 @@ const workflowExamples = [
 
 const layers = [
   {
-    title: "Build workflows",
+    title: "Automate workflows",
     sub: "Agents, models, tools, and handoffs",
     icon: GitBranch,
   },
