@@ -38,7 +38,7 @@ Add Pratibha as a co-maker when her Product Hunt username is available.
 
 ## First maker comment
 
-Hi Product Hunt — I’m Raj, co-founder of LoopLabs.
+Hi Product Hunt — we’re Raj and Pratibha, co-founders of LoopLabs.
 
 Teams are moving from agents that answer questions to agents that send messages, update records, call tools, and delegate work. The hard part is no longer only getting an agent to complete a task. It is knowing what the agent is allowed to do, seeing what happened across the full run, and recovering when production state changes in the wrong way.
 
