@@ -127,6 +127,11 @@ function JsonLd() {
         "@id": `${SITE.url}/#org`,
         name: SITE.name,
         url: SITE.url,
+        email: SITE.email,
+        founder: [
+          { "@type": "Person", name: "Raj Nagulapalle" },
+          { "@type": "Person", name: "Pratibha Sharma" },
+        ],
       },
       {
         "@type": "WebSite",
@@ -579,6 +584,7 @@ export default function LandingPage() {
               <span className="ll-eyebrow">RESOURCES</span>
               <Link href="/guides">Guides</Link>
               <Link href="/blog">Blog</Link>
+              <Link href="/about">About</Link>
               <Link href="/agent-governance-demo">Action control example</Link>
               <a href={CAL_URL} target="_blank" rel="noopener noreferrer">
                 Talk to the founder <ArrowUpRight size={12} />

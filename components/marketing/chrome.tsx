@@ -120,6 +120,7 @@ export function MarketingFooter() {
           <strong>RESOURCES</strong>
           <Link href="/guides">Guides</Link>
           <Link href="/blog">Blog</Link>
+          <Link href="/about">About</Link>
           <Link href="/feed.xml">RSS feed</Link>
         </nav>
         <nav aria-label="Contact">

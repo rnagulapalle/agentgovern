@@ -70,3 +70,23 @@ Copy this block for each material experiment or weekly synthesis.
 - **Next week's primary outcome:**
 - **Next week's asset, distribution path, and conversion experiment:**
 ```
+
+## Experiments
+
+### 2026-10-01 — Founder identity and claim-transparency surface
+
+- **Period:** September 30–October 1, 2026
+- **Segment/persona:** Security, compliance, and operations buyers evaluating a new agent-control product
+- **Pain or job:** Verify who is behind the product, what the current demo proves, and which behaviors remain simulated
+- **Channel/query:** Organic search and answer-engine entity/credibility checks
+- **Asset/URL:** `https://looplabs.run/about`
+- **Hypothesis:** A named-founder About page with explicit product-stage and publishing standards will make the company easier to verify and reduce ambiguity when a buyer or answer engine evaluates product claims.
+- **Evidence observed:** Search Console still had no processed performance baseline at the prior check. The PostHog API returned HTTP 503 during this run, and the locked laptop prevented browser dashboard inspection, so there is no traffic or conversion conclusion. Current practitioner discussion continues to ask for agent identity, initiating human, policy version, approval identity, and external result in one audit record ([r/GRC, September 29](https://www.reddit.com/r/grc/comments/1wt40x8/how_are_you_auditing_actions_performed_by_ai/)); SAP describes human oversight and an audit trail for agent actions in its enterprise control model ([SAP Joule Agents Compliance Brief](https://www.sap.com/documents/2026/06/526001c1-567f-0010-bca6-c68f7e60039b.html)).
+- **Sample size:** Two external evidence sources; no usable site-performance sample
+- **Result:** Added a uniform `/about` page naming Raj Nagulapalle and Pratibha Sharma, documenting early-access scope, demo limitations, publishing standards, and founder contact. Added organization/founder structured data, internal footer links, and sitemap registration. Production build generated 58 routes successfully.
+- **What worked:** The existing claim audit supplied exact, defensible language for demonstrated and simulated behavior.
+- **What failed or remains unclear:** No evidence yet that founder attribution changes discovery or conversion. Analytics access was unavailable during the run.
+- **Learning:** Entity and trust foundations were incomplete even though technical crawl foundations were present. Credibility work must remain explicit and demo-backed; it cannot be inferred from product UI alone.
+- **Confidence:** medium
+- **Decision:** improve
+- **Next experiment:** Submit and inspect `/about`, then measure whether launch and organic visitors use the About-to-tour or About-to-founder paths. Strengthen the audit-record proof next if current practitioner language persists.

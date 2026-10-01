@@ -51,6 +51,7 @@ export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
 /** Paths included in sitemap.xml (SEO tools + core product surfaces). */
 export const AGENTGOVERN_SITEMAP_PATHS: string[] = [
   "/",
+  "/about",
   "/control-plane",
   ...AGENTGOVERN_SEO_TOOLS.map((t) => t.href),
 ];
