@@ -303,17 +303,23 @@ export function ControlWave() {
         </g>
         <g className="ll-wave-caption">
           <rect
-            x="292"
+            x="270"
             y="98"
-            width="133"
+            width="176"
             height="26"
             rx="13"
             fill="#f5f5f4"
             stroke="#a8a29e"
             strokeWidth=".7"
           />
-          <circle cx="306" cy="111" r="2.4" fill="#73745e" />
-          <text x="316" y="115" fill="#57534e" fontSize="10">
+          <circle cx="287" cy="111" r="2.4" fill="#73745e" />
+          <text
+            x="366"
+            y="115"
+            fill="#57534e"
+            fontSize="10"
+            textAnchor="middle"
+          >
             Authority → action → effect
           </text>
           <text
