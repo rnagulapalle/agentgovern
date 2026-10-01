@@ -162,8 +162,8 @@
 }
 .ll-solutions-popover small {
   margin-top: 3px;
-  color: #78716c;
-  font-size: 11px;
+  color: #57534e;
+  font-size: 12px;
   line-height: 1.45;
 }
 .ll-solutions-popover a > svg {
@@ -219,10 +219,10 @@
 .ll-eyebrow {
   display: block;
   font-family: var(--brand-font-mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 1.5px;
-  color: #78716c;
+  color: #57534e;
   line-height: 1.5;
 }
 .ll-hero h1 {
@@ -288,7 +288,7 @@
 .ll-wave-zone-label {
   fill: #78716c;
   font-family: var(--brand-font-mono);
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 1.5px;
 }
 .ll-wave-line {
@@ -353,7 +353,7 @@
 .ll-wave-blocked-label text {
   fill: #626752;
   font-family: var(--brand-font-mono);
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.8px;
 }
 .ll-wave-decision {
@@ -397,7 +397,7 @@
 .ll-reconcile-label text {
   fill: #855c47;
   font-family: var(--brand-font-mono);
-  font-size: 7px;
+  font-size: 12px;
   letter-spacing: 0.65px;
 }
 .ll-wave-paused * {
@@ -418,7 +418,7 @@
 }
 .ll-animation-toggle:hover {
   opacity: 1;
-  border-color: #78716c;
+  border-color: #57534e;
 }
 @keyframes ll-wave-breathe {
   0% {
@@ -529,7 +529,7 @@
   left: 11px;
   top: 9px;
   font-family: var(--brand-font-mono);
-  font-size: 9px;
+  font-size: 12px;
   color: #a8a29e;
 }
 .ll-layer-strip strong {
@@ -542,7 +542,7 @@
   display: block;
   margin-top: 2px;
   font-size: 12px;
-  color: #78716c;
+  color: #57534e;
   letter-spacing: -0.01em;
 }
 .ll-layer-arrow {
@@ -615,7 +615,7 @@
   right: 13px;
   color: #a8a29e;
   font-family: var(--brand-font-mono);
-  font-size: 9px;
+  font-size: 12px;
 }
 .ll-workflow-grid h3 {
   margin: 70px 0 14px;
@@ -692,10 +692,10 @@
 }
 .ll-tab-label {
   font-family: var(--brand-font-mono);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.7px;
   text-transform: uppercase;
-  color: #78716c;
+  color: #57534e;
 }
 .ll-control-tab strong {
   font-size: 23px;
@@ -754,8 +754,8 @@
   padding: 0 17px;
   border-bottom: 1px solid #e7e5e4;
   gap: 12px;
-  font-size: 10px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
 }
 .ll-preview-bar > span:first-child {
   display: flex;
@@ -807,8 +807,8 @@
 }
 .ll-preview-heading div > span {
   display: block;
-  font-size: 10px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
   margin-top: 2px;
 }
 .ll-status {
@@ -817,7 +817,7 @@
   padding: 4px 7px;
   background: #e9ebe3;
   color: #596147;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -828,9 +828,9 @@
 }
 .ll-micro {
   font-family: var(--brand-font-mono);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.8px;
-  color: #78716c;
+  color: #57534e;
 }
 .ll-request {
   border: 1px solid #dedcd7;
@@ -850,8 +850,8 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 10px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
 }
 .ll-request b {
   font-size: 17px;
@@ -863,7 +863,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 0;
-  font-size: 11px;
+  font-size: 12px;
   border-bottom: 1px solid #e7e5e4;
 }
 .ll-check-row > svg {
@@ -871,8 +871,8 @@
 }
 .ll-check-row span:last-child {
   margin-left: auto;
-  font-size: 10px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
 }
 .ll-check-held > svg,
 .ll-check-held span:last-child {
@@ -882,8 +882,8 @@
   display: flex;
   align-items: flex-start;
   gap: 7px;
-  font-size: 10px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
   margin-top: 16px;
 }
 .ll-preview-note svg {
@@ -895,8 +895,8 @@
   align-items: center;
   gap: 12px;
   margin-top: 22px;
-  font-size: 10px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
 }
 .ll-stage-footer a {
   display: inline-flex;
@@ -949,13 +949,13 @@
   font-weight: 500;
 }
 .ll-execution-list p {
-  font-size: 10px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
   margin-top: 2px;
 }
 .ll-execution-list > div > span:last-child {
-  font-size: 9px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
   margin-left: auto;
 }
 .ll-output-block {
@@ -977,7 +977,7 @@
   border-color: #d8ddcd;
 }
 .ll-output-clean code {
-  font-size: 10px;
+  font-size: 12px;
   color: #5b674b;
 }
 .ll-output-arrow {
@@ -986,8 +986,8 @@
   justify-content: center;
   gap: 7px;
   margin: 11px 0;
-  color: #78716c;
-  font-size: 9px;
+  color: #57534e;
+  font-size: 12px;
 }
 .ll-integrity {
   padding: 88px 40px 80px;
@@ -1051,15 +1051,15 @@
   cursor: pointer;
 }
 .ll-integrity-pause:hover {
-  border-color: #78716c;
+  border-color: #57534e;
 }
 .ll-sample-badge {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #78716c;
+  color: #57534e;
   font-family: var(--brand-font-mono);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.45px;
   text-transform: uppercase;
 }
@@ -1101,8 +1101,8 @@
 }
 .ll-integrity-metrics small {
   margin-top: 3px;
-  color: #78716c;
-  font-size: 10px;
+  color: #57534e;
+  font-size: 14px;
 }
 .ll-integrity-metrics svg {
   position: absolute;
@@ -1132,10 +1132,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 0 22px;
+  padding: 12px 22px;
   border-top: 1px solid #d6d3d1;
-  color: #78716c;
-  font-size: 10px;
+  color: #57534e;
+  font-size: 14px;
 }
 .ll-integrity-story figcaption a {
   display: inline-flex;
@@ -1160,14 +1160,14 @@
 }
 .ll-dashboard-head > div:first-child span {
   margin-top: 3px;
-  color: #78716c;
-  font-size: 10px;
+  color: #57534e;
+  font-size: 14px;
 }
 .ll-interventions-panel .ll-dashboard-head > a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
+  font-size: 14px;
 }
 .ll-intervention-list {
   display: grid;
@@ -1180,12 +1180,12 @@
   grid-template-columns: minmax(145px, 1fr) minmax(70px, 1.3fr) 24px;
   align-items: center;
   gap: 11px;
-  min-height: 34px;
+  min-height: 46px;
   border-top: 1px solid #eceae5;
-  font-size: 10px;
+  font-size: 14px;
 }
 .ll-intervention-list > div > i {
-  height: 4px;
+  height: 6px;
   background: #e7e5e4;
 }
 .ll-intervention-list > div > i > b {
@@ -1196,15 +1196,16 @@
 .ll-intervention-list > div > strong {
   text-align: right;
   font-family: var(--brand-font-mono);
-  font-size: 9px;
+  font-size: 14px;
   font-weight: 500;
 }
 .ll-integrity-disclosure {
+  margin: 0;
   padding: 13px 22px;
   border-top: 1px solid #d6d3d1;
   background: #f0efeb;
-  color: #78716c;
-  font-size: 9px;
+  color: #57534e;
+  font-size: 14px;
   line-height: 1.5;
 }
 .ll-identity-section,
@@ -1231,7 +1232,7 @@
 .ll-feature-copy > .ll-small-copy {
   font-size: 13px;
   margin-top: 18px;
-  color: #78716c;
+  color: #57534e;
 }
 .ll-feature-copy > .ll-text-link {
   margin-top: 30px;
@@ -1288,8 +1289,8 @@
   letter-spacing: -0.04em;
 }
 .ll-agent-pass > p {
-  font-size: 11px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
   margin: 5px 0 21px;
 }
 .ll-agent-pass dl {
@@ -1302,10 +1303,10 @@
   gap: 12px;
   padding: 11px 0;
   border-top: 1px solid #e7e5e4;
-  font-size: 11px;
+  font-size: 12px;
 }
 .ll-agent-pass dt {
-  color: #78716c;
+  color: #57534e;
 }
 .ll-agent-pass dd {
   margin: 0;
@@ -1332,7 +1333,7 @@
   border: 1px solid #cdcec2;
   background: #f5f5ef;
   padding: 12px 7px;
-  font-size: 10px;
+  font-size: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1343,8 +1344,8 @@
 }
 .ll-diagram-caption {
   margin-top: 26px;
-  font-size: 10px;
-  color: #78716c;
+  font-size: 12px;
+  color: #57534e;
   text-align: center;
 }
 .ll-lifecycle {
@@ -1372,7 +1373,7 @@
   letter-spacing: -0.035em;
 }
 .ll-system-node p {
-  color: #78716c;
+  color: #57534e;
   font-size: 13px;
   margin-top: 9px;
 }
@@ -1405,7 +1406,7 @@
 .ll-system-boundary .ll-micro {
   width: 100%;
   padding-left: 35px;
-  font-size: 8px;
+  font-size: 12px;
 }
 .ll-system-boundary ul {
   list-style: none;
@@ -1431,7 +1432,7 @@
   gap: 9px;
   padding: 20px 40px;
   border-top: 1px solid #e7e5e4;
-  color: #78716c;
+  color: #57534e;
   font-size: 12px;
 }
 .ll-flow-footnote svg {
@@ -1480,7 +1481,7 @@
 }
 .ll-record-version {
   font-family: var(--brand-font-mono);
-  font-size: 9px;
+  font-size: 12px;
   color: #8a8275;
   letter-spacing: 0;
 }
@@ -1493,7 +1494,7 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
-  font-size: 11px;
+  font-size: 12px;
   color: #8a8275;
   padding: 27px 0;
 }
@@ -1516,7 +1517,7 @@
 }
 .ll-recovery-restored div > span {
   color: #747a66;
-  font-size: 10px;
+  font-size: 12px;
   display: block;
   margin-top: 4px;
 }
@@ -1524,9 +1525,9 @@
   margin-left: auto;
 }
 .ll-recovery-diagram > p {
-  font-size: 10px;
+  font-size: 12px;
   text-align: center;
-  color: #78716c;
+  color: #57534e;
   margin: 23px 10px 0;
 }
 .ll-heading-row {
@@ -1578,7 +1579,7 @@
   box-shadow: 0 0 0 18px var(--ll-paper);
 }
 .ll-scenario-grid .ll-eyebrow {
-  font-size: 9px;
+  font-size: 12px;
 }
 .ll-scenario-grid h3 {
   margin: 18px 0 13px;
@@ -1587,7 +1588,7 @@
   letter-spacing: -0.045em;
 }
 .ll-scenario-grid p {
-  color: #78716c;
+  color: #57534e;
   font-size: 13px;
   line-height: 1.6;
   max-width: 280px;
@@ -1603,8 +1604,8 @@
 }
 .ll-sandbox-note {
   padding: 18px 40px;
-  color: #78716c;
-  font-size: 11px;
+  color: #57534e;
+  font-size: 12px;
   border-bottom: 1px solid var(--ll-line);
 }
 .ll-faq {
@@ -1697,7 +1698,7 @@
 .ll-footer-top p {
   font-size: 12px;
   line-height: 1.6;
-  color: #78716c;
+  color: #57534e;
   margin-top: 20px;
 }
 .ll-footer nav {
@@ -1709,7 +1710,7 @@
 }
 .ll-footer nav > .ll-eyebrow {
   margin-bottom: 9px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .ll-footer nav a {
   display: inline-flex;
@@ -1727,8 +1728,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  color: #78716c;
-  font-size: 10px;
+  color: #57534e;
+  font-size: 12px;
 }
 .ll-footer-bottom a {
   display: inline-flex;
@@ -1851,9 +1852,9 @@
   }
   .ll-mobile-group-title {
     padding: 10px 0 6px;
-    color: #78716c;
+    color: #57534e;
     font-family: var(--brand-font-mono);
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 1.2px;
     text-transform: uppercase;
   }
@@ -1870,8 +1871,8 @@
   }
   .ll-mobile-solution small {
     margin-top: 3px;
-    color: #78716c;
-    font-size: 10px;
+    color: #57534e;
+    font-size: 12px;
   }
   .ll-automation-intro {
     gap: 45px;
@@ -1916,7 +1917,7 @@
     font-size: 17px;
   }
   .ll-layer-strip small {
-    font-size: 10px;
+    font-size: 12px;
   }
   .ll-layer-strip > a > svg:not(.ll-layer-arrow) {
     width: 23px;
@@ -1993,7 +1994,7 @@
     gap: 7px;
   }
   .ll-agent-pass-top > .ll-micro {
-    font-size: 8px;
+    font-size: 12px;
     letter-spacing: 0.2px;
   }
   .ll-agent-pass-top > svg {
@@ -2066,7 +2067,7 @@
   .ll-nav-cta {
     min-height: 36px;
     padding: 8px 11px;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 18px;
   }
   .ll-menu-toggle {
@@ -2086,7 +2087,7 @@
     padding: 49px 22px 0;
   }
   .ll-eyebrow {
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 1.1px;
   }
   .ll-hero h1 {
@@ -2113,7 +2114,7 @@
     gap: 15px;
   }
   .ll-hero-actions .ll-text-link {
-    font-size: 11px;
+    font-size: 12px;
     gap: 7px;
   }
   .ll-wave {
@@ -2147,14 +2148,14 @@
     font-size: 20px;
   }
   .ll-layer-strip small {
-    font-size: 11px;
+    font-size: 12px;
   }
   .ll-layer-strip > a > svg:not(.ll-layer-arrow) {
     width: 27px;
   }
   .ll-layer-number {
     left: 10px;
-    font-size: 8px;
+    font-size: 12px;
   }
   .ll-layer-arrow {
     top: 38px;
@@ -2226,7 +2227,7 @@
     width: 20px;
   }
   .ll-tab-label {
-    font-size: 9px;
+    font-size: 12px;
   }
   .ll-control-tab strong {
     font-size: 20px;
@@ -2259,7 +2260,7 @@
     font-size: 12px;
   }
   .ll-preview-heading .ll-status {
-    font-size: 8px;
+    font-size: 12px;
     padding-inline: 5px;
   }
   .ll-preview-icon {
@@ -2301,10 +2302,10 @@
     font-size: 31px;
   }
   .ll-integrity-metrics span {
-    font-size: 11px;
+    font-size: 12px;
   }
   .ll-integrity-metrics small {
-    font-size: 9px;
+    font-size: 14px;
   }
   .ll-interventions-panel {
     padding: 22px 17px;
@@ -2321,12 +2322,12 @@
     align-items: flex-end;
   }
   .ll-intervention-list > div {
-    grid-template-columns: minmax(125px, 1.4fr) minmax(45px, 0.7fr) 22px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(45px, 0.7fr) 28px;
     gap: 8px;
-    font-size: 9px;
+    font-size: 14px;
   }
   .ll-stage-footer {
-    font-size: 9px;
+    font-size: 12px;
     gap: 5px;
   }
   .ll-stage-footer a {
@@ -2336,10 +2337,10 @@
     font-size: 13px;
   }
   .ll-check-row {
-    font-size: 10px;
+    font-size: 12px;
   }
   .ll-check-row span:last-child {
-    font-size: 9px;
+    font-size: 12px;
   }
   .ll-identity-section,
   .ll-recovery-section {
@@ -2398,7 +2399,7 @@
   .ll-flow-footnote {
     padding: 17px 22px;
     align-items: flex-start;
-    font-size: 10px;
+    font-size: 12px;
   }
   .ll-flow-footnote svg {
     margin-top: 2px;
@@ -2415,7 +2416,7 @@
     flex-wrap: nowrap;
   }
   .ll-recovery-top .ll-micro {
-    font-size: 8px;
+    font-size: 12px;
   }
   .ll-recovery-record {
     padding: 21px;
@@ -2451,7 +2452,7 @@
   }
   .ll-sandbox-note {
     padding: 17px 22px;
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.6;
   }
   .ll-faq {
@@ -2500,12 +2501,12 @@
     grid-column: 1 / -1;
   }
   .ll-footer nav {
-    font-size: 11px;
+    font-size: 12px;
   }
   .ll-footer-bottom {
     padding: 20px 25px;
     flex-wrap: wrap;
-    font-size: 9px;
+    font-size: 12px;
     gap: 16px;
   }
   .ll-footer-bottom > span:nth-child(2) {
@@ -2540,3 +2541,15 @@
     background: url("/landing/execution-integrity-poster.png") center / cover no-repeat;
   }
 }
+
+/* Keep the animation's meaning readable independently of raster text. */
+.ll-integrity-transcript {
+  border-top: 1px solid #d6d3d1;
+  padding: 16px 22px;
+  color: #44403c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.ll-integrity-transcript summary { cursor: pointer; font-weight: 550; }
+.ll-integrity-transcript ol { margin: 12px 0 0; padding-left: 22px; }
+.ll-integrity-transcript li + li { margin-top: 10px; }

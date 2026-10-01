@@ -203,6 +203,15 @@ export function ExecutionIntegrityDashboard() {
             Explore this run <ArrowUpRight size={13} />
           </Link>
         </figcaption>
+        <details className="ll-integrity-transcript">
+          <summary>Read the execution story</summary>
+          <ol>
+            <li><strong>Propose and verify.</strong> The Vendor Ops agent requests a supplier bank-detail update. The illustrative run checks its identity, role, and delegated authority.</li>
+            <li><strong>Hold for approval.</strong> The supplier banking policy requires a named approver before the ERP write proceeds.</li>
+            <li><strong>Contain uncertainty.</strong> The write is sent with an action ID, but the response is lost. The sample run blocks a blind retry.</li>
+            <li><strong>Reconcile before retry.</strong> The story checks the represented ERP record and its version, confirms the change already exists, and prevents a duplicate retry.</li>
+          </ol>
+        </details>
       </figure>
 
       <div className="ll-interventions-panel">
