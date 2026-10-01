@@ -21,7 +21,7 @@ echo "▸ Invariants (shipped work must not be silently reverted)"
 need "homepage control-layer positioning" "Control actions," app/page.tsx
 need "Book-a-demo CTA (Cal)"       "cal.com/rajnagulapalle" app/page.tsx
 need "Geist font"                  "GeistSans"              app/layout.tsx
-need "workflow positioning"        "Build workflows. Control actions. Recover execution." lib/site.ts
+need "workflow positioning"        "Control consequential agent actions. Reconcile uncertain outcomes." lib/site.ts
 need "product-tour language"       "Explore the product tour" app/page.tsx
 need "content feed"                "application/rss+xml" app/layout.tsx
 need "light theme · SEO shell"     "theme-light"           components/seo/SeoPageShell.tsx

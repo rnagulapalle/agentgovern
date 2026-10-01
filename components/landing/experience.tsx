@@ -38,8 +38,8 @@ const navigation = [
 const solutions = [
   {
     href: "#automation",
-    label: "Workflow automation",
-    description: "Turn a repeatable process into an agent workflow.",
+    label: "Governed workflow launch",
+    description: "Put one bounded agent workflow into production.",
   },
   {
     href: "#controls",
@@ -174,7 +174,7 @@ export function ControlWave() {
         viewBox="0 0 660 550"
         fill="none"
         role="img"
-        aria-label="An uneven stream of agent activity becomes orderly as it passes through a control boundary."
+        aria-label="Agent actions pass through a control boundary while an uncertain external outcome loops back for reconciliation before retry."
       >
         <defs>
           <linearGradient
@@ -195,7 +195,7 @@ export function ControlWave() {
         <rect x="35" y="153" width="275" height="244" rx="4" className="ll-wave-zone ll-wave-zone-in" />
         <rect x="407" y="153" width="218" height="244" rx="4" className="ll-wave-zone ll-wave-zone-out" />
         <text x="54" y="178" className="ll-wave-zone-label">AGENT ACTIONS</text>
-        <text x="429" y="178" className="ll-wave-zone-label">APPROVED EXECUTION</text>
+        <text x="429" y="178" className="ll-wave-zone-label">EXTERNAL EFFECT</text>
         <g stroke="url(#wave-fade)" opacity=".42">
           {Array.from({ length: 104 }, (_, i) => {
             const x = 14 + i * 6.2;
@@ -289,6 +289,18 @@ export function ControlWave() {
           <rect x="252" y="387" width="106" height="23" rx="3" />
           <text x="266" y="402">1 ACTION HELD</text>
         </g>
+        <path
+          className="ll-reconcile-path"
+          d="M586 356 C620 408 555 443 466 432 C410 425 389 399 377 362"
+        />
+        <g className="ll-reconcile-packet">
+          <circle cx="0" cy="0" r="6" />
+          <circle cx="0" cy="0" r="11" className="ll-packet-ring" />
+        </g>
+        <g className="ll-reconcile-label">
+          <rect x="444" y="405" width="146" height="23" rx="3" />
+          <text x="456" y="420">RECONCILE BEFORE RETRY</text>
+        </g>
         <g className="ll-wave-caption">
           <rect
             x="292"
@@ -302,7 +314,7 @@ export function ControlWave() {
           />
           <circle cx="306" cy="111" r="2.4" fill="#73745e" />
           <text x="316" y="115" fill="#57534e" fontSize="10">
-            Every action checked
+            Authority → action → effect
           </text>
           <text
             x="358"
@@ -312,7 +324,7 @@ export function ControlWave() {
             fontSize="9"
             letterSpacing="2"
           >
-            LIVE CONTROL BOUNDARY
+            CONTROL + RECOVERY BOUNDARY
           </text>
         </g>
       </svg>

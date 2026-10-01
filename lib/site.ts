@@ -1,15 +1,15 @@
 /**
  * Single source of truth for marketing copy + SEO.
- * Positioning: the control layer for agent actions, execution, and outputs.
+ * Positioning: the control and recovery layer for agent-run workflows.
  * Business language first; explain technical terms through concrete actions.
  */
 export const SITE = {
   name: "LoopLabs",
   url: "https://looplabs.run",
-  title: "LoopLabs — Build agent workflows. Keep control.",
-  tagline: "Build workflows. Control actions. Recover execution.",
+  title: "LoopLabs — Put agent workflows into production without losing control.",
+  tagline: "Control consequential agent actions. Reconcile uncertain outcomes.",
   description:
-    "Design agent workflows and add controls before production. Set permissions, supervise execution, check outputs, approve risky actions, and recover affected state.",
+    "The control and recovery layer for agent-run workflows. Verify authority, control consequential actions, preserve execution evidence, and reconcile uncertain outcomes before retry.",
   email: "founders@looplabs.run",
 };
 

@@ -37,7 +37,7 @@ const FAQ = [
   },
   {
     q: "What does LoopLabs control?",
-    a: "Three things: the actions an agent is allowed to take, the work it performs during a run, and the outputs it returns. Agent identities, permissions, model access, and approval rules support those controls in one workspace.",
+    a: "LoopLabs controls consequential actions across a workflow: who has authority, which tools and records an agent may use, when work must wait for approval, what evidence is recorded, and whether retry is safe after an uncertain result.",
   },
   {
     q: "What is the difference between an action and an execution?",
@@ -46,6 +46,10 @@ const FAQ = [
   {
     q: "What happens when an agent goes off course?",
     a: "Suspend the agent, stop pending work, and review the affected records. The recovery workflow compares the current record with the reviewed state before restoring permitted fields as a new version. Changes that cannot be reversed, such as an email already sent, need manual handling.",
+  },
+  {
+    q: "What if an action times out and we do not know whether it worked?",
+    a: "Do not retry it blindly. The recovery path checks the external system and the current record version first. It can then confirm the result, permit a safe retry, prepare a compensating change, or send the decision to a person. The current tour demonstrates this pattern with sample browser data; production connectors are part of an early-access implementation.",
   },
   {
     q: "How does the model gateway fit in?",
@@ -60,34 +64,34 @@ const FAQ = [
 const workflowExamples = [
   {
     number: "01",
-    label: "FINANCE",
-    title: "Accounts payable",
-    body: "Capture invoices, check vendor and amount details, route exceptions, and prepare approved entries for posting.",
+    label: "REVENUE OPERATIONS",
+    title: "Renewal and account change",
+    body: "Gather account state, enforce discount authority, approve customer communication, and verify the CRM result before retry.",
   },
   {
     number: "02",
     label: "CUSTOMER OPERATIONS",
-    title: "Service requests",
-    body: "Classify requests, prepare a response, pause higher-risk actions for approval, and update the system of record.",
+    title: "Service recovery and credits",
+    body: "Prepare a response or credit, hold higher-risk actions, and record what happened across support, billing, and CRM.",
   },
   {
     number: "03",
-    label: "REVENUE OPERATIONS",
-    title: "Account follow-up",
-    body: "Research an account, keep CRM records current, prepare follow-up, and enforce discount authority.",
+    label: "FINANCE OPERATIONS",
+    title: "Supplier and invoice exceptions",
+    body: "Verify vendor data, preserve separation of duties, route approval, and reconcile ERP state after an uncertain write.",
   },
   {
     number: "04",
-    label: "BUILT FOR YOUR TEAM",
-    title: "Your workflow",
-    body: "Map the process your team already runs, connect its systems, and decide where people approve or recover work.",
+    label: "ALREADY AUTOMATING",
+    title: "Your existing workflow",
+    body: "Keep your orchestrator. Add a control boundary where agents cross systems, take consequential action, or need recovery.",
   },
 ];
 
 const layers = [
   {
-    title: "Automate workflows",
-    sub: "Agents, models, tools, and handoffs",
+    title: "Launch one workflow",
+    sub: "A bounded process with a real owner",
     icon: GitBranch,
   },
   {
@@ -96,8 +100,8 @@ const layers = [
     icon: SlidersHorizontal,
   },
   {
-    title: "Recover execution",
-    sub: "Stop, inspect, and reconcile state",
+    title: "Reconcile outcomes",
+    sub: "Verify effects before retry",
     icon: Undo2,
   },
 ];
@@ -171,18 +175,19 @@ export default function LandingPage() {
           <section className="ll-hero" aria-labelledby="hero-title">
             <div className="ll-hero-copy">
               <span className="ll-eyebrow">
-                THE CONTROL LAYER FOR AI AGENTS
+                CONTROL + RECOVERY FOR AGENT-RUN WORKFLOWS
               </span>
               <h1 id="hero-title">
-                Let agents work.
+                Put agent workflows
+                <br />
+                into production.
                 <br />
                 Keep control.
               </h1>
               <p>
-                Map one-agent and multi-agent workflows, then control what
-                they can do before production systems accept the change. Set
-                permissions, supervise execution, check outputs, and recover
-                affected state.
+                Verify delegated authority, control consequential actions,
+                preserve execution evidence, and reconcile uncertain outcomes
+                before an unsafe retry.
               </p>
               <div className="ll-hero-actions">
                 <a
@@ -191,7 +196,7 @@ export default function LandingPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Book a demo <ArrowUpRight size={16} />
+                  Bring us one workflow <ArrowUpRight size={16} />
                 </a>
                 <Link className="ll-text-link" href="/control-plane">
                   Explore the product tour <ArrowRight size={17} />
@@ -225,24 +230,24 @@ export default function LandingPage() {
           >
             <div className="ll-automation-intro">
               <div>
-                <span className="ll-eyebrow">WORKFLOW AUTOMATION</span>
+                <span className="ll-eyebrow">ONE WORKFLOW TO START</span>
                 <h2 id="automation-title">
-                  Start with work
+                  Bring us one
                   <br />
-                  your team already does.
+                  consequential workflow.
                 </h2>
               </div>
               <div className="ll-automation-summary">
                 <p>
-                  You do not need agents in production to start. We can build
-                  the workflow with you, beginning with a frequent process and
-                  adapting the agents, tools, approvals, and recovery steps to
-                  the way your team works.
+                  Start with a process that writes to a business system, sends
+                  an external message, changes a commercial term, or creates a
+                  costly duplicate when the outcome is unclear. We map its
+                  owners, authority, approvals, effects, and recovery path.
                 </p>
                 <p className="ll-small-copy">
-                  Early access is guided implementation. The product tour shows
-                  a prepared workflow and its controls; it is not a drag-and-drop
-                  workflow builder.
+                  No workflow yet? Early access includes guided implementation
+                  of one bounded workflow. Already using n8n or another runtime?
+                  Keep it and add LoopLabs around the consequential actions.
                 </p>
                 <a
                   className="ll-text-link"
@@ -250,7 +255,7 @@ export default function LandingPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Bring us a workflow <ArrowUpRight size={16} />
+                  Bring us one workflow <ArrowUpRight size={16} />
                 </a>
               </div>
             </div>
@@ -324,11 +329,11 @@ export default function LandingPage() {
             aria-labelledby="lifecycle-title"
           >
             <div className="ll-section-heading">
-              <span className="ll-eyebrow">HOW THE CONTROL LAYER FITS</span>
+              <span className="ll-eyebrow">THE CROSS-SYSTEM CONTROL BOUNDARY</span>
               <h2 id="lifecycle-title">
-                Between your agents
+                One execution record
                 <br />
-                and the systems they use.
+                across agents and systems.
               </h2>
             </div>
             <div className="ll-system-flow">
@@ -350,35 +355,35 @@ export default function LandingPage() {
                 </div>
                 <ul>
                   <li>
-                    <Check size={14} /> Check permissions
+                    <Check size={14} /> Verify delegated authority
                   </li>
                   <li>
-                    <Check size={14} /> Apply action policies
+                    <Check size={14} /> Control the proposed action
                   </li>
                   <li>
-                    <Check size={14} /> Hold for approval
+                    <Check size={14} /> Hold for named approval
                   </li>
                   <li>
-                    <Check size={14} /> Inspect outputs
+                    <Check size={14} /> Record and reconcile the result
                   </li>
                 </ul>
               </div>
               <ArrowRight className="ll-flow-arrow" size={23} strokeWidth={1} />
               <div className="ll-system-node">
                 <FileCheck2 size={30} strokeWidth={1.2} />
-                <h3>Your systems</h3>
+                <h3>Business systems</h3>
                 <p>
-                  Tools, records,
+                  CRM, billing, email,
                   <br />
-                  and approved results
+                  support, and ERP
                 </p>
               </div>
             </div>
             <div className="ll-flow-footnote">
               <GitBranch size={15} />
               <span>
-                Connect identity, model access, actions, and outcomes in the
-                same execution record.
+                Connect the initiating human, agent authority, policy version,
+                action request, external effect, and recovery decision.
               </span>
             </div>
           </section>
@@ -390,22 +395,23 @@ export default function LandingPage() {
           >
             <RecoveryDiagram />
             <div className="ll-feature-copy">
-              <span className="ll-eyebrow">WHEN A RUN GOES WRONG</span>
+              <span className="ll-eyebrow">WHEN THE OUTCOME IS UNCERTAIN</span>
               <h2 id="recovery-title">
-                Stop the agent.
+                Do not retry
                 <br />
-                Review the change.
+                an unknown outcome.
                 <br />
-                Recover the state.
+                Reconcile it first.
               </h2>
               <p>
-                Blocking the next action is only part of the job. See what
-                already changed, review a recovery plan, and restore affected
-                records where it is safe to do so.
+                A timeout does not prove that an action failed. Check the
+                external system, compare the current record version, and then
+                confirm, retry, compensate, or send the decision to a person.
               </p>
               <p className="ll-small-copy">
-                Version checks prevent recovery from overwriting newer work.
-                Irreversible actions stay with a person.
+                The product tour demonstrates version-aware recovery over
+                sample state. Production connectors are configured during
+                early access.
               </p>
               <Link
                 className="ll-text-link"
@@ -471,12 +477,12 @@ export default function LandingPage() {
                 </span>
                 <span className="ll-eyebrow">RECOVERY / RESTORE</span>
                 <h3>
-                  A record changed
+                  An action timed out
                   <br />
-                  outside the plan.
+                  after the external write.
                 </h3>
                 <p>
-                  The agent is isolated while you review the affected state.
+                  LoopLabs checks the external state before permitting a retry.
                 </p>
                 <span className="ll-scenario-link">
                   Review the recovery <ArrowUpRight size={17} />
@@ -524,18 +530,18 @@ export default function LandingPage() {
             <div>
               <span className="ll-eyebrow">SEE LOOPLABS IN ACTION</span>
               <h2>
-                Bring a workflow.
+                Bring one workflow.
                 <br />
-                We&apos;ll walk through
+                We&apos;ll map its authority,
                 <br />
-                the controls.
+                actions, and recovery path.
               </h2>
             </div>
             <div className="ll-closing-action">
               <ShieldCheck size={48} strokeWidth={0.9} />
               <p>
-                See where an action is allowed, where work pauses, and how
-                recovery happens.
+                See where an action is allowed, what evidence is preserved,
+                and how an uncertain outcome is reconciled.
               </p>
               <a
                 className="ll-button"
@@ -543,7 +549,7 @@ export default function LandingPage() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Book a demo <ArrowUpRight size={16} />
+                Bring us one workflow <ArrowUpRight size={16} />
               </a>
               <Link className="ll-text-link" href="/control-plane">
                 Or explore the product tour <ArrowRight size={16} />
