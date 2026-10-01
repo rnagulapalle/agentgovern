@@ -566,14 +566,14 @@ export default function LandingPage() {
                 <span>LoopLabs</span>
               </Link>
               <p>
-                The control layer for agent
+                The control and recovery layer
                 <br />
-                actions, execution, and outputs.
+                for agent-run workflows.
               </p>
             </div>
             <nav aria-label="Footer solutions">
               <span className="ll-eyebrow">SOLUTIONS</span>
-              <Link href="#automation">Workflow automation</Link>
+              <Link href="#automation">Governed workflow launch</Link>
               <Link href="/control-plane/policies">Action controls</Link>
               <Link href="/control-plane/runs">Execution controls</Link>
               <Link href="/control-plane/outputs">Output controls</Link>

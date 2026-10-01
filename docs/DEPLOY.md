@@ -17,6 +17,23 @@ Browser → Cloudflare HTTPS → Lightsail nginx HTTPS → Next.js container
 - New public address: `https://looplabs.run`
 - Legacy address: `https://agentgovern.ai`
 
+### AgentGovern review environment — October 1, 2026
+
+`https://agentgovern.ai` temporarily serves an isolated LoopLabs landing-page
+review container. It does not replace the `looplabs.run` production container.
+The preview response carries `X-Robots-Tag: noindex, nofollow`; canonical
+metadata continues to point to `looplabs.run`.
+
+- Preview container: `looplabs-agentgovern-preview`
+- Preview image: recorded in `/home/ubuntu/.looplabs-preview-release`
+- Production image: recorded in `/home/ubuntu/agent-trust-demo/.deployed-image`
+- Live nginx backup: recorded in `/home/ubuntu/.looplabs-preview-nginx-backup`
+
+The repository nginx configuration remains the intended final production
+configuration, where AgentGovern redirects to LoopLabs. The review route is a
+reversible server-side override and must be removed after the landing-page
+decision.
+
 ### Rollout status — September 30, 2026
 
 The LoopLabs landing page, interactive product tour, logo, social image, blog, and
