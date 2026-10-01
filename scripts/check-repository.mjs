@@ -37,6 +37,7 @@ console.log("Shipped invariants");
 const invariants = [
   ["homepage positioning", "app/page.tsx", "Control actions,"],
   ["demo disclosure", "app/page.tsx", "uses sample browser data"],
+  ["analytics sample disclosure", "app/page.tsx", "Illustrative sample data"],
   ["workflow positioning", "lib/site.ts", "Control consequential agent actions. Reconcile uncertain outcomes."],
   ["shared font", "app/layout.tsx", "GeistSans"],
   ["content feed", "app/layout.tsx", "application/rss+xml"],

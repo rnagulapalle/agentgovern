@@ -106,6 +106,51 @@ const layers = [
   },
 ];
 
+const integrityMetrics = [
+  {
+    value: "1,284",
+    label: "Actions evaluated",
+    note: "Across prepared workflows",
+    href: "/control-plane/runs",
+  },
+  {
+    value: "96",
+    label: "Held for approval",
+    note: "Stopped before execution",
+    href: "/control-plane/approvals",
+  },
+  {
+    value: "31",
+    label: "Blocked before effect",
+    note: "Policy prevented the action",
+    href: "/control-plane/policies",
+  },
+  {
+    value: "04",
+    label: "Need reconciliation",
+    note: "Verify state before retry",
+    href: "/control-plane/reconciliation",
+  },
+];
+
+const integrityBars = [
+  [58, 7, 3, 1],
+  [68, 9, 2, 2],
+  [62, 5, 4, 1],
+  [76, 7, 3, 1],
+  [72, 9, 2, 2],
+  [84, 6, 2, 1],
+  [78, 8, 3, 1],
+];
+
+const interventionReasons = [
+  ["Discount exceeded authority", "42", "42%"],
+  ["Source record was stale", "24", "24%"],
+  ["Tool permission missing", "18", "18%"],
+  ["Sensitive output detected", "11", "11%"],
+  ["Conflicting or duplicate write", "07", "7%"],
+];
+
 function JsonLd() {
   const schema = {
     "@context": "https://schema.org",
@@ -288,6 +333,152 @@ export default function LandingPage() {
               </p>
             </div>
             <ControlExplorer />
+          </section>
+
+          <section
+            id="execution-integrity"
+            className="ll-integrity ll-section"
+            aria-labelledby="integrity-title"
+          >
+            <div className="ll-integrity-intro">
+              <div>
+                <span className="ll-eyebrow">EXECUTION INTEGRITY</span>
+                <h2 id="integrity-title">
+                  Know what agents changed.
+                  <br />
+                  Know what needs attention.
+                </h2>
+              </div>
+              <p>
+                Connect every consequential action to an agent, accountable
+                owner, policy, business system, and observed outcome. See what
+                was allowed, held, blocked, or left uncertain—and reconcile
+                state before retrying.
+              </p>
+            </div>
+
+            <div className="ll-integrity-dashboard">
+              <div className="ll-integrity-toolbar">
+                <div>
+                  <LoopMark />
+                  <span>Execution integrity</span>
+                </div>
+                <span className="ll-sample-badge">
+                  <i /> Illustrative sample data · Last 7 days
+                </span>
+              </div>
+
+              <div className="ll-integrity-metrics">
+                {integrityMetrics.map((metric) => (
+                  <Link href={metric.href} key={metric.label}>
+                    <strong>{metric.value}</strong>
+                    <span>{metric.label}</span>
+                    <small>{metric.note}</small>
+                    <ArrowUpRight size={14} />
+                  </Link>
+                ))}
+              </div>
+
+              <div className="ll-integrity-main">
+                <div className="ll-outcome-panel">
+                  <div className="ll-dashboard-head">
+                    <div>
+                      <strong>Action outcomes</strong>
+                      <span>Daily decisions across prepared workflows</span>
+                    </div>
+                    <div className="ll-outcome-legend" aria-label="Chart legend">
+                      <span><i className="verified" /> Verified</span>
+                      <span><i className="held" /> Held</span>
+                      <span><i className="blocked" /> Blocked</span>
+                      <span><i className="uncertain" /> Uncertain</span>
+                    </div>
+                  </div>
+                  <div
+                    className="ll-outcome-chart"
+                    role="img"
+                    aria-label="Illustrative seven-day chart of verified, held, blocked, and uncertain action outcomes"
+                  >
+                    <div className="ll-chart-grid" aria-hidden="true">
+                      <i /><i /><i /><i />
+                    </div>
+                    <div className="ll-chart-bars" aria-hidden="true">
+                      {integrityBars.map((bars, day) => (
+                        <div key={day}>
+                          {bars.map((height, index) => (
+                            <i
+                              key={index}
+                              className={[
+                                "verified",
+                                "held",
+                                "blocked",
+                                "uncertain",
+                              ][index]}
+                              style={{ height: `${height}%` }}
+                            />
+                          ))}
+                          <span>{["M", "T", "W", "T", "F", "S", "S"][day]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <aside className="ll-attention-panel" aria-labelledby="attention-title">
+                  <div className="ll-dashboard-head">
+                    <div>
+                      <strong id="attention-title">Needs attention</strong>
+                      <span>Uncertain outcomes awaiting a decision</span>
+                    </div>
+                    <span className="ll-attention-count">04</span>
+                  </div>
+                  <div className="ll-incident-card">
+                    <div>
+                      <span className="ll-eyebrow">ERP WRITE · OUTCOME UNCERTAIN</span>
+                      <span className="ll-status ll-status-hold">Review required</span>
+                    </div>
+                    <h3>Supplier bank details may already be updated.</h3>
+                    <dl>
+                      <div><dt>Workflow</dt><dd>Supplier onboarding</dd></div>
+                      <div><dt>Owner</dt><dd>Maya Chen · Finance</dd></div>
+                      <div><dt>Observed</dt><dd>Response lost after write</dd></div>
+                    </dl>
+                    <Link href="/control-plane/reconciliation">
+                      Review recovery <ArrowUpRight size={14} />
+                    </Link>
+                  </div>
+                  <p>
+                    Verify the current record before confirming, retrying, or
+                    preparing a compensating change.
+                  </p>
+                </aside>
+              </div>
+
+              <div className="ll-interventions-panel">
+                <div className="ll-dashboard-head">
+                  <div>
+                    <strong>Where control intervened</strong>
+                    <span>Why an action did not continue automatically</span>
+                  </div>
+                  <Link href="/control-plane/audit">
+                    Inspect decisions <ArrowUpRight size={13} />
+                  </Link>
+                </div>
+                <div className="ll-intervention-list">
+                  {interventionReasons.map(([reason, count, width]) => (
+                    <div key={reason}>
+                      <span>{reason}</span>
+                      <i><b style={{ width }} /></i>
+                      <strong>{count}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="ll-integrity-disclosure">
+                This dashboard is an illustrative product view. The current
+                tour uses deterministic sample data stored in your browser; it
+                does not report activity from connected production systems.
+              </p>
+            </div>
           </section>
 
           <section
