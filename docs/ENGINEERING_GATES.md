@@ -7,7 +7,7 @@ The safety system assumes a contributor may be new to the product and may use an
 | Point | Enforcement | Purpose |
 | --- | --- | --- |
 | Agent/editor opens project | `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor and Copilot instructions | Establish product truth, invariants, and workflow |
-| Local development | `pnpm quality` | Check repository policy, lint, types, adversarial tests, coverage, and build |
+| Local development | `pnpm quality` | Check repository policy, lint, types, adversarial tests, coverage, production build, and rendered internal links |
 | Git push | optional versioned pre-push hook | Give fast feedback before CI |
 | Pull request / main push | GitHub Actions `quality-gates` | Run the clean-room gate independently of the developer's machine |
 | Production deploy | `scripts/release-gate.sh` from `deploy.sh` | Require clean, pushed `main`, then rerun the complete gate |

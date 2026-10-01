@@ -13,6 +13,7 @@ run "Lint" pnpm lint
 run "TypeScript" pnpm typecheck
 run "Adversarial tests and coverage" pnpm test:coverage
 run "Production build" pnpm build
+run "Rendered internal links" pnpm check:links
 run "Diff hygiene" git diff --check
 
 printf '\n✓ All quality gates passed.\n'
