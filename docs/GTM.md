@@ -1,6 +1,8 @@
 # LoopLabs — GTM / SEO / PR
 
 > **Current operating plan:** [`docs/SEO_AEO_GTM_8_WEEK_PLAN.md`](SEO_AEO_GTM_8_WEEK_PLAN.md). Use its weekly goals, fixed AEO benchmark, and Friday scorecard for all LoopLabs discovery work through November 24, 2026.
+>
+> **Persistent learning memory:** [`docs/research/gtm-learning-log.md`](research/gtm-learning-log.md). Every scheduled research, content, distribution, and conversion run must read prior evidence and append observed results, lessons, confidence, and its next experiment.
 
 **Product:** LoopLabs — AI governance between business AI tools and company systems\
 **Domain:** https://looplabs.run\
