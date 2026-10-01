@@ -1,12 +1,14 @@
 # LoopLabs — GTM / SEO / PR
 
+> **Current operating plan:** [`docs/SEO_AEO_GTM_8_WEEK_PLAN.md`](SEO_AEO_GTM_8_WEEK_PLAN.md). Use its weekly goals, fixed AEO benchmark, and Friday scorecard for all LoopLabs discovery work through November 24, 2026.
+
 **Product:** LoopLabs — AI governance between business AI tools and company systems\
 **Domain:** https://looplabs.run\
 **Repo:** `~/agent-trust-demo`\
 **Demo UI:** LoopLabs Control Plane at `/control-plane` (original scenarios at `/agent-governance-demo`)\
 **Twitter:** Not configured for the new brand
 
-## Positioning (Mar 2026)
+## Positioning (Sep 2026)
 
 **ICP:** SMB/traditional organizations (50–1,000 employees) rolling out Copilot, ChatGPT Enterprise, Gemini, Agentforce — not AI-native builders.
 

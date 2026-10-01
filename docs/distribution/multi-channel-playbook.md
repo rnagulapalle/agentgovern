@@ -1,11 +1,11 @@
-# AgentGovernance — Multi-Channel Distribution Playbook
+# LoopLabs — Multi-Channel Distribution Playbook
 
-**Goal:** Every governance/privacy news item earns **backlinks to agentgovern.ai** and accelerates indexing of guides + news.
+**Goal:** Every governance/privacy news item earns **backlinks to looplabs.run** and accelerates indexing of guides + news.
 
 **Golden rule:** **Publish local first.** Syndicate outward. Every external post links **home**.
 
 ```
-content/news/*.md  →  agentgovern.ai/news/[slug]   ← CANONICAL (source of truth)
+content/news/*.md  →  looplabs.run/news/[slug]   ← CANONICAL (source of truth)
         ↓
    Dev.to (canonical → local URL)
    LinkedIn (link → local URL)
@@ -33,7 +33,7 @@ content/news/*.md  →  agentgovern.ai/news/[slug]   ← CANONICAL (source of tr
 | Day | Channel | Action |
 |-----|---------|--------|
 | **Mon** | Local | Ship or update `content/news/[slug].md` → deploy → GSC URL Inspection |
-| **Tue** | Dev.to | Syndicate adapted version; **canonical = `https://agentgovern.ai/news/[slug]`** |
+| **Tue** | Dev.to | Syndicate adapted version; **canonical = `https://looplabs.run/news/[slug]`** |
 | **Tue** | LinkedIn | Founder post (3–5 short paragraphs) → link local news URL |
 | **Tue–Wed** | X | Thread (5–7 posts) → final post links local news URL |
 | **Fri** | GSC | Check impressions on news URL + related guide |
@@ -48,7 +48,7 @@ Alternate Tuesdays: Dev.to **incident post** (existing `docs/devto/week-NN`) can
 □ Draft in content/news/[YYYY-MM]-[slug].md
 □ Frontmatter: title, description, published, category, tags, relatedGuide
 □ npm run build (verify /news and /news/[slug])
-□ Deploy agentgovern.ai
+□ Deploy looplabs.run
 □ Add /news/[slug] to sitemap (auto via listNewsSlugs)
 □ GSC → URL Inspection → Request indexing
 □ IndexNow ping (when live)
@@ -63,7 +63,7 @@ Create folder: `docs/distribution/out/[slug]/`
 
 | File | Purpose |
 |------|---------|
-| `devto.md` | Shorter Dev.to version; frontmatter `canonical_url: https://agentgovern.ai/news/[slug]` |
+| `devto.md` | Shorter Dev.to version; frontmatter `canonical_url: https://looplabs.run/news/[slug]` |
 | `linkedin.md` | 3–5 paragraphs + bullet checklist + link |
 | `x-thread.md` | 5–7 tweets; tweet 1 = hook; last = link |
 | `backlinks.md` | Track where posted + URLs for ledger |
@@ -73,7 +73,7 @@ Create folder: `docs/distribution/out/[slug]/`
 ## Dev.to syndication rules
 
 - **canonical_url** in frontmatter → **always** the local news URL for news pieces
-- First paragraph: "Originally published on [agentgovern.ai](url)"
+- First paragraph: "Originally published on [looplabs.run](url)"
 - End with link to related **guide** + demo (internal link equity)
 - Tags: `ai`, `security`, `privacy`, `microsoft` (pick 4)
 - Do **not** set Dev.to as canonical when local version exists
@@ -91,7 +91,7 @@ Create folder: `docs/distribution/out/[slug]/`
 
 ---
 
-## X (@agentgovern) rules
+## X / social rules
 
 - Thread format for news (5–7 posts)
 - Post 1: the news hook in one sentence
@@ -114,8 +114,8 @@ Create folder: `docs/distribution/out/[slug]/`
 
 **Secondary (monthly targets):**
 
-- AlternativeTo profile → agentgovern.ai
-- Product Hunt launch → agentgovern.ai/news + demo
+- AlternativeTo profile → looplabs.run
+- Product Hunt launch → looplabs.run/news + demo
 - Founder posts on FetchSandbox/rawreply Dev.to → one contextual link when AI + compliance intersect
 - Reddit reply-first → link **guide** or **news** only when directly helpful (no spam)
 

@@ -1,4 +1,4 @@
-# AgentGovernance — Industry Narrow Post Matrix
+# LoopLabs — Industry Narrow Post Matrix
 
 > **Rule:** One post = **one industry** + **one failure mode** + **one action type**.  
 > No broad "AI agent governance" essays. Every post cites research before draft.
@@ -155,7 +155,7 @@ action_type: "<verb noun>"
 research:
   - docs/research/2026-06-agent-governance-reddit.md#signal-N
   - <external URL with date accessed>
-canonical: https://agentgovern.ai/blog/<slug>
+canonical: https://looplabs.run/blog/<slug>
 ---
 
 <Hook: the incident in 2 sentences — no thought leadership preamble>
@@ -169,7 +169,7 @@ canonical: https://agentgovern.ai/blog/<slug>
 ## What we built in the demo
 <Specific control plane screen>
 
-CTA: /agent-governance-demo or waitlist
+CTA: /control-plane or waitlist
 ```
 
 ---
@@ -192,5 +192,5 @@ CTA: /agent-governance-demo or waitlist
 | Mon | Scan r/AI_Agents, r/devops, r/sales — add signals to reddit research doc |
 | Tue | Pick 1 industry row; complete Research Gate; draft |
 | Wed | Build SEO page or Dev.to post; ledger update |
-| Thu | GSC check agentgovern.ai (after property live) |
+| Thu | GSC check looplabs.run (after property live) |
 | Fri | Mark measured; note which industry query moved |
