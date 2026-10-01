@@ -70,10 +70,10 @@ export default function EducationAiGovernancePage() {
       >
         <SeoSection title="The incident superintendents fear">
           <p>
-            An administrator asks Copilot to &ldquo;email parents about tomorrow's
+            An administrator asks Copilot to &ldquo;email parents about tomorrow&apos;s
             schedule change for the basketball team.&rdquo; The draft pulls a roster
             with student names, includes an IEP accommodation note from a shared folder,
-            and cc's a listserv that includes community partners not authorized for
+            and cc&apos;s a listserv that includes community partners not authorized for
             student data.
           </p>
           <p>

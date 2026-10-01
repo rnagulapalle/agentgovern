@@ -24,7 +24,6 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Undo2,
-  X,
 } from "lucide-react";
 import { useControl } from "./provider";
 import { BrandMark, Modal } from "./ui";

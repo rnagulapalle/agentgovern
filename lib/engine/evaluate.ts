@@ -1,7 +1,7 @@
 /**
  * The Execution Policy Engine core.
  *
- * evaluate(request, context) → decision + immutable receipt.
+ * evaluate(request, context) → decision + deterministic demo receipt.
  *
  * Deterministic and pure: same inputs always produce the same output (no Date.now,
  * no randomness — `now` is supplied via context). The agent never executes a tool
@@ -48,6 +48,33 @@ export function evaluate(
 ): EvaluationResult {
   const { agent, now } = context;
   const checks: PolicyCheck[] = [];
+
+  // The identity in the signed context must own the submitted request. This
+  // prevents a caller from borrowing another agent's capability contract.
+  if (request.agentId !== agent.id) {
+    checks.push({
+      id: "identity",
+      label: "Agent identity",
+      status: "fail",
+      detail: "Request agent does not match the evaluated identity.",
+      policyId: "POL-IDENTITY-001",
+      severity: "high",
+    });
+  }
+
+  if (
+    !Number.isFinite(new Date(now).getTime()) ||
+    !Number.isFinite(new Date(request.at).getTime())
+  ) {
+    checks.push({
+      id: "request-time",
+      label: "Request timestamp",
+      status: "fail",
+      detail: "Request or evaluation timestamp is invalid.",
+      policyId: "POL-INPUT-VALIDATION-001",
+      severity: "high",
+    });
+  }
 
   const capability = getCapability(agent, request.capability);
 
@@ -117,7 +144,7 @@ export function evaluate(
   }
 
   // 4. Required evidence completeness (target, diff).
-  if (capability?.requiresTarget && !request.target) {
+  if (capability?.requiresTarget && !request.target?.trim()) {
     checks.push({
       id: "evidence.target",
       label: "Intended target",
@@ -141,8 +168,17 @@ export function evaluate(
   // 5. Discount authority (delegated cap).
   let permittingRule: string | null = capability ? "CAP-REGISTRY" : null;
   const discount = Number(request.params.discountPct);
-  if (capability?.maxDiscountPct != null && Number.isFinite(discount)) {
-    if (discount > capability.maxDiscountPct) {
+  if (capability?.maxDiscountPct != null) {
+    if (!Number.isFinite(discount) || discount < 0 || discount > 100) {
+      checks.push({
+        id: "discount",
+        label: "Discount authority",
+        status: "fail",
+        detail: "Discount must be a finite percentage between 0 and 100.",
+        policyId: "POL-INPUT-VALIDATION-001",
+        severity: "high",
+      });
+    } else if (discount > capability.maxDiscountPct) {
       checks.push({
         id: "discount",
         label: "Discount authority",
@@ -167,6 +203,16 @@ export function evaluate(
 
   // 6. Spend / blast-radius.
   const cost = request.estCostUsd ?? 0;
+  if (!Number.isFinite(cost) || cost < 0) {
+    checks.push({
+      id: "cost",
+      label: "Estimated cost",
+      status: "fail",
+      detail: "Estimated cost must be a finite non-negative number.",
+      policyId: "POL-INPUT-VALIDATION-001",
+      severity: "high",
+    });
+  }
   if (capability?.maxSpendUsd != null && cost > capability.maxSpendUsd) {
     checks.push({
       id: "spend",
@@ -208,7 +254,7 @@ export function evaluate(
   if (status === "fail") risk += 25;
   risk = Math.max(0, Math.min(100, risk));
 
-  // ── Evidence + immutable receipt ────────────────────────────────────────
+  // ── Evidence + deterministic demo receipt ──────────────────────────────
   const evidence: ReceiptEvidence = {
     sourceRecordId: request.sourceRecord?.id ?? null,
     sourceSystem: request.sourceRecord?.system ?? null,

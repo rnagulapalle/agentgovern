@@ -42,7 +42,6 @@ import {
   ROLE_TIERS,
   ROLE_TOOLS,
   ROLES,
-  type Agent,
   type Incident,
   type Run,
   type Section,

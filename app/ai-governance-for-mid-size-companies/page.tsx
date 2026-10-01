@@ -84,7 +84,7 @@ export default function MidSizeAiGovernancePage() {
             it?&rdquo;
           </p>
           <p>
-            If the honest answer is &ldquo;we're not sure,&rdquo; you are not alone.
+            If the honest answer is &ldquo;we&apos;re not sure,&rdquo; you are not alone.
             Microsoft&apos;s own guidance for smaller tenants focuses on permissions
             cleanup and Purview labels — important, but incomplete once AI starts{" "}
             <em>acting</em> across email, CRM, ERP, and payment tools.

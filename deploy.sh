@@ -16,7 +16,7 @@ SSH_KEY="${LIGHTSAIL_KEY:-$HOME/work/aws/LightsailDefaultKey-us-west-2.pem}"
 SSH_ARGS=(-i "$SSH_KEY" -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ConnectTimeout=20)
 printf -v RSYNC_SSH '%q ' ssh "${SSH_ARGS[@]}"
 
-bash "$REPO_DIR/scripts/preflight.sh"
+bash "$REPO_DIR/scripts/release-gate.sh"
 STAGE="/home/ubuntu/releases/$RELEASE"
 BACKUP="/home/ubuntu/deploy-backups/$RELEASE"
 printf -v PREPARE 'bash -s -- %q %q %q %q' "$APP_DIR" "$STAGE" "$BACKUP" "$RELEASE"

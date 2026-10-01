@@ -7,7 +7,7 @@ interface ForwardableEmailMessage {
 const RAJ = "raj.jsp@gmail.com";
 const PRATIBHA = "pratibha.er@gmail.com";
 
-export default {
+const emailRouter = {
   async email(message: ForwardableEmailMessage): Promise<void> {
     const localPart = message.to.toLowerCase().split("@")[0];
     const headers = new Headers({
@@ -34,3 +34,5 @@ export default {
     message.setReject("Unknown LoopLabs recipient");
   },
 };
+
+export default emailRouter;

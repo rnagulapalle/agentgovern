@@ -5,7 +5,7 @@
  *  - The model proposes (ActionRequest). The engine decides (evaluate()).
  *  - Policy lives outside the agent; evaluation is deterministic.
  *  - No external action without evidence; missing evidence is a hard block.
- *  - Approval is independent from reasoning. Receipts are immutable.
+ *  - Approval is independent from reasoning. Demo receipts are deterministic.
  */
 
 export type CapabilityId =

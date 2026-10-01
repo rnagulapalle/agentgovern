@@ -20,7 +20,6 @@ import {
   Download,
   Bell,
   FileText,
-  type LucideIcon,
 } from "lucide-react";
 import type { AgentIdentity, ActionRequest } from "./engine";
 import { SDR_AGENT_17, ANALYTICS_AGENT_09 } from "./engine";
@@ -291,7 +290,7 @@ const DISCOUNT_SCENARIO: Scenario = {
   },
   receipt: {
     file: "receipt · act_9281.json",
-    seq: "seq 9281 · immutable",
+    seq: "seq 9281 · demo record",
     agentName: "SDR-Agent-17",
     owner: "Raj Nagulapalle",
     tool: "Gmail",
@@ -487,7 +486,7 @@ const STALE_CRM_SCENARIO: Scenario = {
   },
   receipt: {
     file: "receipt · act_6120.json",
-    seq: "seq 6120 · immutable",
+    seq: "seq 6120 · demo record",
     agentName: "SDR-Agent-17",
     owner: "Raj Nagulapalle",
     tool: "Gmail",
@@ -700,7 +699,7 @@ const FERPA_EXPORT_SCENARIO: Scenario = {
   },
   receipt: {
     file: "receipt · act_4402.json",
-    seq: "seq 4402 · immutable",
+    seq: "seq 4402 · demo record",
     agentName: "Analytics-Agent-09",
     owner: "Priya Raman",
     tool: "Databricks → Tableau",

@@ -47,6 +47,12 @@ describe("unified control plane", () => {
     expect(next.runs[0].status).toBe("blocked");
     expect(next.agents[2].spent).toBe(s.agents[2].spent);
   });
+  it("treats a repeated action id as an idempotent replay", () => {
+    const once = simulate(fresh());
+    const twice = simulate(once);
+    expect(twice).toBe(once);
+    expect(twice.runs.filter((run) => run.id === "run_test_1")).toHaveLength(1);
+  });
   it("suspends descendants and invalidates pending delegated work", () => {
     const s = controlReducer(fresh(), {
       ...stamp,

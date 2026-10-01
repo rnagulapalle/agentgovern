@@ -50,7 +50,7 @@ const SECTIONS = [
     rows: [
       { label: "Receipt retention", value: "7 years", kind: "text" },
       { label: "Receipt checksum", value: "Deterministic demo only", kind: "text" },
-      { label: "Immutable ledger", value: true, kind: "toggle" },
+      { label: "Browser-local demo log", value: true, kind: "toggle" },
     ],
   },
 ];

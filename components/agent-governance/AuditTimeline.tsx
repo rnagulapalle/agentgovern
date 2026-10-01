@@ -35,7 +35,7 @@ export function AuditTimeline({
         <ListTree className="h-4 w-4 text-white/25" />
         <p className="text-[13px] font-medium text-white/55">Audit trail empty</p>
         <p className="max-w-xs text-[12px] text-white/35">
-          Every step is recorded to an immutable log the moment the agent runs.
+          Every demo step is recorded in this browser-local activity log.
         </p>
       </div>
     );
@@ -103,7 +103,7 @@ export function AuditTimeline({
           Audit timeline
         </h3>
         <span className="chip font-mono border-emerald-500/20 bg-emerald-500/[0.07] text-emerald-300">
-          immutable
+          demo log
         </span>
       </div>
 

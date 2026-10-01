@@ -697,6 +697,9 @@ export function controlReducer(
       action.status === "paused" ? "Paused" : "Active",
     );
   } else if (action.type === "simulate") {
+    // The action id is the idempotency key for a simulated run. Replays must
+    // not duplicate side effects, approvals, output records, or spend.
+    if (s.runs.some((run) => run.id === `run_${action.id}`)) return state;
     const a = agent(action.agentId);
     if (
       !a ||

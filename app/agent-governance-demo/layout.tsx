@@ -4,10 +4,6 @@ import { redirect } from "next/navigation";
 // route's SEO (incl. a self-canonical) is set here on the server layout —
 // otherwise it inherits the root layout's canonical "/" and Google folds the
 // demo into the homepage instead of indexing it.
-export default function DemoLayout({
-  children: _children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DemoLayout() {
   redirect("/control-plane");
 }

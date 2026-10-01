@@ -97,4 +97,21 @@ describe("execution policy engine", () => {
     expect(r.decision).toBe("block");
     expect(r.checks.find((c) => c.id === "blast-radius")?.status).toBe("fail");
   });
+
+  it("BLOCKS a request that borrows another agent identity", () => {
+    const r = evaluate(emailReq({ agentId: "another-agent" }), ctx);
+    expect(r.decision).toBe("block");
+    expect(r.checks.find((c) => c.id === "identity")?.status).toBe("fail");
+  });
+
+  it.each([
+    ["blank target", { target: "   " }],
+    ["invalid discount", { params: { discountPct: Number.NaN } }],
+    ["negative cost", { estCostUsd: -1 }],
+    ["invalid timestamp", { at: "not-a-date" }],
+  ])("BLOCKS malformed input: %s", (_label, override) => {
+    expect(evaluate(emailReq(override as Partial<ActionRequest>), ctx).decision).toBe(
+      "block",
+    );
+  });
 });

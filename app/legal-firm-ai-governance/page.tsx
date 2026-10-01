@@ -72,7 +72,7 @@ export default function LegalFirmAiGovernancePage() {
           <p>
             An associate asks ChatGPT Enterprise to &ldquo;draft a status update to the
             client and opposing counsel.&rdquo; The model pulls language from internal
-            strategy notes. The draft cc's the wrong party. It ships before a partner
+            strategy notes. The draft cc&apos;s the wrong party. It ships before a partner
             reviews tone, privilege, or settlement posture.
           </p>
           <p>
