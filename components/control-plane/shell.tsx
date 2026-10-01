@@ -123,7 +123,11 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
         />
       )}
       <aside className={`cp-sidebar ${menu ? "is-open" : ""}`}>
-        <Link href="/control-plane" className="cp-brand">
+        <Link
+          href="/"
+          className="cp-brand"
+          aria-label="Back to LoopLabs homepage"
+        >
           <BrandMark />
           <span>
             LoopLabs

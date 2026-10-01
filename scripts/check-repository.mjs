@@ -42,6 +42,11 @@ const invariants = [
   ["content feed", "app/layout.tsx", "application/rss+xml"],
   ["SEO shell", "components/seo/SeoPageShell.tsx", "theme-light"],
   ["claim audit", "docs/LOOPLABS_CLAIM_AND_FUNNEL_AUDIT.md", "Demonstrated in the prototype"],
+  [
+    "control-plane logo returns home",
+    "components/control-plane/shell.tsx",
+    'aria-label="Back to LoopLabs homepage"',
+  ],
 ];
 for (const [name, file, expected] of invariants) {
   try {
