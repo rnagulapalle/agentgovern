@@ -39,6 +39,10 @@ The largest messaging risk was the phrase “build workflows.” Today, early-ac
 4. Changed recovery language from “failed state” to “affected state,” because not every failure is reversible.
 5. Removed misleading `ed25519` and production labels from the legacy demo. Its hash is now described as a deterministic demo checksum.
 6. Added PostHog events for acquisition, tour entry, meaningful product actions, recovery, audit export, and founder-conversation intent.
+7. Added an execution-integrity analytics concept to the isolated AgentGovern
+   review environment. It shows illustrative sample metrics for evaluated,
+   held, blocked, and uncertain actions, links the attention queue to the
+   recovery tour, and visibly states that it is not production telemetry.
 
 ## Investor view
 

@@ -989,6 +989,224 @@
   color: #78716c;
   font-size: 9px;
 }
+.ll-integrity {
+  padding: 88px 40px 80px;
+  border-block: 1px solid var(--ll-line);
+  background: #ecece7;
+}
+.ll-integrity-intro {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 80px;
+  align-items: end;
+  margin-bottom: 52px;
+}
+.ll-integrity-intro h2 {
+  margin-top: 24px;
+  max-width: 840px;
+}
+.ll-integrity-intro > p {
+  max-width: 455px;
+  color: #57534e;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.ll-integrity-dashboard {
+  border: 1px solid #c8c6bf;
+  background: #fafaf9;
+  box-shadow: 0 22px 48px -42px #44403c;
+}
+.ll-integrity-toolbar {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 19px;
+  border-bottom: 1px solid #d6d3d1;
+}
+.ll-integrity-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 550;
+}
+.ll-integrity-toolbar svg {
+  width: 20px;
+  color: #858571;
+}
+.ll-integrity-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ll-integrity-pause {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d6d3d1;
+  background: #f5f5f4;
+  cursor: pointer;
+}
+.ll-integrity-pause:hover {
+  border-color: #78716c;
+}
+.ll-sample-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #78716c;
+  font-family: var(--brand-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.45px;
+  text-transform: uppercase;
+}
+.ll-sample-badge i {
+  width: 6px;
+  height: 6px;
+  background: #a58863;
+  border-radius: 50%;
+}
+.ll-integrity-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid #d6d3d1;
+}
+.ll-integrity-metrics > a {
+  min-height: 154px;
+  padding: 23px 23px 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.2s;
+}
+.ll-integrity-metrics > a + a {
+  border-left: 1px solid #d6d3d1;
+}
+.ll-integrity-metrics > a:hover {
+  background: #f0f0eb;
+}
+.ll-integrity-metrics strong {
+  font-size: clamp(29px, 3vw, 42px);
+  line-height: 1;
+  font-weight: 520;
+  letter-spacing: -0.06em;
+}
+.ll-integrity-metrics span {
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 550;
+}
+.ll-integrity-metrics small {
+  margin-top: 3px;
+  color: #78716c;
+  font-size: 10px;
+}
+.ll-integrity-metrics svg {
+  position: absolute;
+  right: 13px;
+  top: 13px;
+  color: #a8a29e;
+}
+.ll-interventions-panel {
+  padding: 25px 23px;
+}
+.ll-integrity-story {
+  margin: 0;
+  overflow: hidden;
+  border-bottom: 1px solid #d6d3d1;
+  background: #f8f7f3;
+}
+.ll-integrity-story video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 15 / 7;
+  object-fit: cover;
+  background: url("/landing/execution-integrity-poster.png") center / cover no-repeat;
+}
+.ll-integrity-story figcaption {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 22px;
+  border-top: 1px solid #d6d3d1;
+  color: #78716c;
+  font-size: 10px;
+}
+.ll-integrity-story figcaption a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #292524;
+  font-weight: 550;
+}
+.ll-dashboard-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.ll-dashboard-head > div:first-child strong,
+.ll-dashboard-head > div:first-child span {
+  display: block;
+}
+.ll-dashboard-head > div:first-child strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.ll-dashboard-head > div:first-child span {
+  margin-top: 3px;
+  color: #78716c;
+  font-size: 10px;
+}
+.ll-interventions-panel .ll-dashboard-head > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+}
+.ll-intervention-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 38px;
+  margin-top: 18px;
+}
+.ll-intervention-list > div {
+  display: grid;
+  grid-template-columns: minmax(145px, 1fr) minmax(70px, 1.3fr) 24px;
+  align-items: center;
+  gap: 11px;
+  min-height: 34px;
+  border-top: 1px solid #eceae5;
+  font-size: 10px;
+}
+.ll-intervention-list > div > i {
+  height: 4px;
+  background: #e7e5e4;
+}
+.ll-intervention-list > div > i > b {
+  display: block;
+  height: 100%;
+  background: #888b73;
+}
+.ll-intervention-list > div > strong {
+  text-align: right;
+  font-family: var(--brand-font-mono);
+  font-size: 9px;
+  font-weight: 500;
+}
+.ll-integrity-disclosure {
+  padding: 13px 22px;
+  border-top: 1px solid #d6d3d1;
+  background: #f0efeb;
+  color: #78716c;
+  font-size: 9px;
+  line-height: 1.5;
+}
 .ll-identity-section,
 .ll-recovery-section {
   display: grid;
@@ -1565,6 +1783,15 @@
     flex-direction: column;
     align-items: flex-start;
   }
+  .ll-integrity-intro {
+    gap: 45px;
+  }
+  .ll-intervention-list {
+    gap: 0 22px;
+  }
+  .ll-intervention-list > div {
+    grid-template-columns: minmax(125px, 1fr) minmax(55px, 0.8fr) 22px;
+  }
   .ll-feature-copy {
     padding-inline: 30px;
   }
@@ -1715,6 +1942,28 @@
   }
   .ll-preview-window {
     max-width: 520px;
+  }
+  .ll-integrity {
+    padding-inline: 28px;
+  }
+  .ll-integrity-intro {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  .ll-integrity-intro > p {
+    max-width: 620px;
+  }
+  .ll-integrity-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ll-integrity-metrics > a:nth-child(3) {
+    border-left: 0;
+  }
+  .ll-integrity-metrics > a:nth-child(n + 3) {
+    border-top: 1px solid #d6d3d1;
+  }
+  .ll-intervention-list {
+    grid-template-columns: 1fr;
   }
   .ll-stage-footer {
     width: 100%;
@@ -2017,6 +2266,65 @@
     width: 31px;
     height: 34px;
   }
+  .ll-integrity {
+    padding: 56px 0 50px;
+  }
+  .ll-integrity-intro {
+    padding-inline: 22px;
+    margin-bottom: 34px;
+  }
+  .ll-integrity-intro h2 {
+    margin-top: 19px;
+  }
+  .ll-integrity-intro > p {
+    font-size: 13px;
+  }
+  .ll-integrity-dashboard {
+    border-inline: 0;
+  }
+  .ll-integrity-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    min-height: 75px;
+  }
+  .ll-integrity-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .ll-integrity-metrics > a {
+    min-height: 142px;
+    padding: 20px 16px;
+  }
+  .ll-integrity-metrics strong {
+    font-size: 31px;
+  }
+  .ll-integrity-metrics span {
+    font-size: 11px;
+  }
+  .ll-integrity-metrics small {
+    font-size: 9px;
+  }
+  .ll-interventions-panel {
+    padding: 22px 17px;
+  }
+  .ll-integrity-story figcaption {
+    min-height: 60px;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 17px;
+  }
+  .ll-interventions-panel .ll-dashboard-head {
+    align-items: flex-end;
+  }
+  .ll-intervention-list > div {
+    grid-template-columns: minmax(125px, 1.4fr) minmax(45px, 0.7fr) 22px;
+    gap: 8px;
+    font-size: 9px;
+  }
   .ll-stage-footer {
     font-size: 9px;
     gap: 5px;
@@ -2218,7 +2526,17 @@
   html:has(.ll-landing) {
     scroll-behavior: auto;
   }
-  .ll-animation-toggle {
+  .ll-animation-toggle,
+  .ll-integrity-pause {
     display: none;
+  }
+  .ll-integrity-story video {
+    display: none;
+  }
+  .ll-integrity-story::before {
+    content: "";
+    display: block;
+    aspect-ratio: 15 / 7;
+    background: url("/landing/execution-integrity-poster.png") center / cover no-repeat;
   }
 }

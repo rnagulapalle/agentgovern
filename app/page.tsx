@@ -21,6 +21,7 @@ import {
   RecoveryDiagram,
 } from "@/components/landing/experience";
 import { LoopMark } from "@/components/brand/loop-mark";
+import { ExecutionIntegrityDashboard } from "@/components/landing/execution-integrity";
 import "./landing.css";
 
 export const metadata: Metadata = {
@@ -288,6 +289,31 @@ export default function LandingPage() {
               </p>
             </div>
             <ControlExplorer />
+          </section>
+
+          <section
+            id="execution-integrity"
+            className="ll-integrity ll-section"
+            aria-labelledby="integrity-title"
+          >
+            <div className="ll-integrity-intro">
+              <div>
+                <span className="ll-eyebrow">EXECUTION INTEGRITY</span>
+                <h2 id="integrity-title">
+                  Know what agents changed.
+                  <br />
+                  Know what needs attention.
+                </h2>
+              </div>
+              <p>
+                Connect every consequential action to an agent, accountable
+                owner, policy, business system, and observed outcome. See what
+                was allowed, held, blocked, or left uncertain—and reconcile
+                state before retrying.
+              </p>
+            </div>
+
+            <ExecutionIntegrityDashboard />
           </section>
 
           <section
