@@ -2,7 +2,7 @@
   --cp-bg: #f5f5f4;
   --cp-paper: #fafaf9;
   --cp-ink: #1c1917;
-  --cp-muted: #78716c;
+  --cp-muted: var(--ui-muted);
   --cp-line: #dedbd5;
   --cp-green: #62724f;
   --cp-rust: #a14f38;
@@ -10,7 +10,7 @@
   background: var(--cp-bg);
   color: var(--cp-ink);
   font-family: var(--brand-font-sans);
-  font-size: 14px;
+  font-size: var(--text-detail);
   font-weight: 400;
   letter-spacing: -0.02em;
   min-height: 100vh;
@@ -66,7 +66,7 @@
 }
 .cp-app .cp-mono {
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   letter-spacing: -0.025em;
 }
 .cp-push {
@@ -99,7 +99,7 @@
 .cp-mark {
   width: 29px;
   height: 29px;
-  color: #827b64;
+  color: #6d6754;
 }
 .cp-mark-small {
   width: 17px;
@@ -133,9 +133,9 @@
   display: block;
   font-family: var(--font-geist-mono), monospace;
   letter-spacing: 1.05px;
-  font-size: 9px;
+  font-size: var(--text-label);
   font-weight: 400;
-  color: #918a80;
+  color: #6f6961;
   margin-top: 3px;
 }
 .cp-workspace {
@@ -153,33 +153,33 @@
   display: grid;
   place-items: center;
   background: #e5e3d8;
-  font-size: 14px;
+  font-size: var(--text-detail);
   color: #676354;
 }
 .cp-workspace strong {
-  font-size: 13px;
+  font-size: var(--text-detail);
   font-weight: 550;
   display: block;
 }
 .cp-workspace small {
   display: block;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: var(--cp-muted);
   margin-top: 2px;
 }
 .cp-workspace > svg {
   margin-left: auto;
-  color: #8f8a7f;
+  color: #6e6960;
 }
 .cp-nav-group {
   margin-bottom: 23px;
 }
 .cp-nav-label {
   padding-left: 10px;
-  color: #8b857a;
+  color: #6f6a61;
   font-family: var(--font-geist-mono), monospace;
   letter-spacing: 1.1px;
-  font-size: 10px;
+  font-size: var(--text-label);
   margin-bottom: 9px;
 }
 .cp-nav-item {
@@ -190,7 +190,7 @@
   color: #726e65 !important;
   padding: 10px 10px;
   min-height: 37px;
-  font-size: 13px;
+  font-size: var(--text-detail);
   margin-bottom: 3px;
   text-align: left;
   border: 1px solid transparent;
@@ -217,12 +217,12 @@
 .cp-nav-count {
   border: 1px solid #d9d0bb;
   background: #ece5d5;
-  color: #8a7343;
+  color: #78643a;
   height: 18px;
   min-width: 19px;
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: var(--text-label);
 }
 .cp-nav-alert {
   width: 5px;
@@ -253,13 +253,13 @@
   gap: 7px;
 }
 .cp-enforcement strong {
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 500;
 }
 .cp-enforcement p {
-  font-size: 11px;
+  font-size: var(--text-label);
   margin-top: 6px;
-  color: #8b887d;
+  color: #6a6860;
 }
 .cp-live-dot {
   display: inline-block;
@@ -285,8 +285,8 @@
 .cp-enforcement > span {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
-  color: #979486;
+  font-size: var(--text-label);
+  color: #69685d;
   font-family: var(--font-geist-mono), monospace;
   letter-spacing: 0.7px;
 }
@@ -299,19 +299,19 @@
   gap: 9px;
 }
 .cp-sidebar-user strong {
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 550;
   display: block;
 }
 .cp-sidebar-user small {
   display: block;
-  font-size: 10px;
-  color: #8b857b;
+  font-size: var(--text-label);
+  color: #6f6a62;
   margin-top: 3px;
 }
 .cp-sidebar-user > svg {
   margin-left: auto;
-  color: #8c857a;
+  color: #706a61;
 }
 .cp-user-avatar {
   width: 29px;
@@ -320,7 +320,7 @@
   place-items: center;
   border: 1px solid #d6d1c5;
   background: #e9e3d8;
-  font-size: 11px;
+  font-size: var(--text-label);
   color: #6b604d;
   letter-spacing: -0.3px;
 }
@@ -347,15 +347,15 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 12px;
-  color: #8a857c;
+  font-size: var(--text-label);
+  color: #6e6a63;
 }
 .cp-breadcrumb strong {
   color: #575249;
   font-weight: 450;
 }
 .cp-breadcrumb svg {
-  color: #b4aea2;
+  color: #6e6b63;
 }
 .cp-topbar-right {
   display: flex;
@@ -368,8 +368,8 @@
   align-items: center;
   gap: 5px;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 11px;
-  color: #7a7b66;
+  font-size: var(--text-label);
+  color: #6b6c59;
 }
 .cp-environment i {
   width: 5px;
@@ -381,8 +381,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #8a847a;
-  font-size: 12px !important;
+  color: #6e6961;
+  font-size: var(--text-label) !important;
 }
 .cp-search-trigger kbd {
   display: flex;
@@ -391,7 +391,7 @@
   padding: 2px 5px;
   border: 1px solid #dedad2;
   margin-left: 18px;
-  font-size: 11px;
+  font-size: var(--text-label);
 }
 .cp-notifications {
   position: relative;
@@ -421,8 +421,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  color: #969085;
-  font-size: 11px;
+  color: #6e6960;
+  font-size: var(--text-label);
 }
 .cp-app-footer > span {
   display: flex;
@@ -431,19 +431,19 @@
 }
 .cp-eyebrow {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 10px;
+  font-size: var(--text-label);
   letter-spacing: 1.2px;
   line-height: 1.6;
-  color: #8a8478;
+  color: #6e6960;
   display: flex;
   align-items: center;
   gap: 6px;
   font-weight: 400;
 }
 .cp-tiny-cross {
-  font-size: 15px;
+  font-size: var(--text-body);
   line-height: 1;
-  color: #918d77;
+  color: #6a6757;
   margin-right: 2px;
 }
 .cp-overview-heading {
@@ -461,8 +461,8 @@
   line-height: 1.15;
 }
 .cp-overview-heading p {
-  color: #827b70;
-  font-size: 13px;
+  color: #6d675d;
+  font-size: var(--text-detail);
   margin-top: 8px;
   letter-spacing: -0.2px;
 }
@@ -471,12 +471,12 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 36px;
+  min-height: var(--control-height);
   border: 1px solid #d3cfc5;
   padding: 8px 13px;
   color: #4b463c;
   background: #fafaf8;
-  font-size: 12px !important;
+  font-size: var(--text-detail) !important;
   font-weight: 450;
   line-height: 1.4;
   white-space: nowrap;
@@ -501,9 +501,9 @@
   border-color: #494b38;
 }
 .cp-button-small {
-  min-height: 29px;
+  min-height: var(--control-height);
   padding: 6px 10px;
-  font-size: 11px !important;
+  font-size: var(--text-detail) !important;
 }
 .cp-button-danger {
   background: #faf1ed;
@@ -520,7 +520,7 @@
   justify-content: center;
   width: 29px;
   height: 29px;
-  color: #827a6e;
+  color: #6d665c;
   flex-shrink: 0;
 }
 .cp-icon-button:hover {
@@ -532,7 +532,7 @@
   align-items: center;
   gap: 7px;
   color: #696151;
-  font-size: 12px !important;
+  font-size: var(--text-label) !important;
   font-weight: 450;
   white-space: nowrap;
 }
@@ -563,18 +563,18 @@
   margin-top: 10px;
 }
 .cp-welcome h2 > span {
-  color: #8a887a;
+  color: #69685d;
 }
 .cp-welcome p {
-  color: #817c6f;
-  font-size: 12px;
+  color: #6c685c;
+  font-size: var(--text-label);
   line-height: 1.65;
   margin-top: 12px;
 }
 .cp-welcome .cp-text-button {
   margin-top: 16px;
   color: #575b41;
-  font-size: 11px !important;
+  font-size: var(--text-label) !important;
 }
 .cp-signal-art {
   width: 48%;
@@ -606,11 +606,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  color: #777064;
-  font-size: 12px;
+  color: #6d665c;
+  font-size: var(--text-label);
 }
 .cp-stat > div:first-child svg {
-  color: #a29a8c;
+  color: #6d675d;
 }
 .cp-stat > strong {
   display: block;
@@ -628,8 +628,8 @@
   gap: 7px;
 }
 .cp-stat-bottom small {
-  font-size: 10px;
-  color: #97907f;
+  font-size: var(--text-label);
+  color: #6e695c;
 }
 .cp-sparkbars {
   display: flex;
@@ -658,13 +658,13 @@
   border-bottom: 1px solid #e5e2db;
 }
 .cp-panel-head h2 {
-  font-size: 14px;
+  font-size: var(--text-detail);
   font-weight: 550;
   letter-spacing: -0.3px;
 }
 .cp-panel-head p {
-  font-size: 11px;
-  color: #9c9487;
+  font-size: var(--text-label);
+  color: #6e685e;
   margin-top: 4px;
 }
 .cp-graph-scroll {
@@ -688,18 +688,18 @@
 .cp-graph-node-icon {
   display: flex;
   justify-content: center;
-  color: #89866e;
+  color: #6e6b58;
   margin-bottom: 10px;
 }
 .cp-graph-node strong {
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 500;
   display: block;
 }
 .cp-graph-node > span {
   display: block;
-  font-size: 10px;
-  color: #939080;
+  font-size: var(--text-label);
+  color: #6c695d;
   margin-top: 5px;
 }
 .cp-graph-node > small {
@@ -707,10 +707,10 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  font-size: 8px;
+  font-size: var(--text-label);
   font-family: var(--font-geist-mono), monospace;
   letter-spacing: 0.3px;
-  color: #8d9175;
+  color: #676a55;
   margin-top: 12px;
   border-top: 1px solid #e4e3d8;
   padding-top: 9px;
@@ -764,19 +764,19 @@
   background: #fdfdfa;
 }
 .cp-graph-workers strong {
-  font-size: 11px;
+  font-size: var(--text-label);
   font-weight: 500;
   display: block;
 }
 .cp-graph-workers small {
   display: block;
-  font-size: 9px;
-  color: #9c9384;
+  font-size: var(--text-label);
+  color: #6e675c;
   margin-top: 2px;
 }
 .cp-graph-workers > div > svg {
   margin-left: auto;
-  color: #8c9776;
+  color: #666e56;
 }
 .cp-worker-icon {
   width: 26px;
@@ -790,8 +790,8 @@
   justify-content: center;
   gap: 4px;
   margin-top: 10px;
-  font-size: 6.8px;
-  color: #96917e;
+  font-size: var(--text-label);
+  color: #6e6a5c;
 }
 .cp-graph-arrow {
   min-width: 43px;
@@ -799,14 +799,14 @@
   flex: 1;
   max-width: 80px;
   margin-bottom: 20px;
-  color: #bab7a6;
+  color: #69675c;
 }
 .cp-graph-arrow span {
-  font-size: 8px;
+  font-size: var(--text-label);
   font-family: var(--font-geist-mono), monospace;
   letter-spacing: 1px;
   display: block;
-  color: #a5a18e;
+  color: #69675b;
 }
 .cp-graph-arrow svg {
   margin: 5px auto;
@@ -818,21 +818,21 @@
   flex-shrink: 0;
   text-align: center;
   padding: 14px 10px;
-  color: #717b57;
+  color: #626c4b;
 }
 .cp-graph-gate > svg {
   margin: 0 auto 7px;
 }
 .cp-graph-gate > strong {
   display: block;
-  font-size: 13px;
+  font-size: var(--text-detail);
   font-weight: 500;
   color: #555e3e;
 }
 .cp-graph-gate > span {
   display: block;
-  font-size: 10px;
-  color: #8f957c;
+  font-size: var(--text-label);
+  color: #646957;
   margin-top: 3px;
 }
 .cp-graph-gate > div {
@@ -844,7 +844,7 @@
 .cp-graph-gate > div > span {
   border: 1px solid #d6dac8;
   padding: 3px 5px;
-  font-size: 8px;
+  font-size: var(--text-label);
 }
 .cp-graph-destinations {
   width: 150px;
@@ -857,19 +857,19 @@
   gap: 9px;
   padding: 12px 10px;
   margin: 7px 0;
-  font-size: 11px;
+  font-size: var(--text-label);
 }
 .cp-graph-destinations > div svg {
-  color: #8d8778;
+  color: #6c675c;
 }
 .cp-graph-destinations > small {
   display: flex;
   align-items: center;
   gap: 4px;
   justify-content: center;
-  font-size: 8px;
+  font-size: var(--text-label);
   font-family: var(--font-geist-mono), monospace;
-  color: #939381;
+  color: #6c6c5e;
   margin-top: 10px;
 }
 .cp-graph-footer {
@@ -884,14 +884,14 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #8a8878;
-  font-size: 10px;
+  color: #69685c;
+  font-size: var(--text-label);
 }
 .cp-graph-footer > span:last-child {
   margin-left: auto;
-  font-size: 8px;
+  font-size: var(--text-label);
   letter-spacing: 0.5px;
-  color: #a6a18e;
+  color: #6a675b;
 }
 .cp-overview-bottom {
   display: grid;
@@ -906,15 +906,15 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .cp-table th {
   padding: 12px 20px;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: var(--text-label);
   letter-spacing: 0.8px;
   font-weight: 400;
-  color: #958c7f;
+  color: #6e665c;
   background: #f6f6f1;
   white-space: nowrap;
 }
@@ -932,11 +932,11 @@
   padding-right: 14px;
 }
 .cp-table .cp-mono {
-  font-size: 10px;
+  font-size: var(--text-label);
 }
 .cp-run-table.is-compact th {
   padding: 10px 14px;
-  font-size: 8px;
+  font-size: var(--text-label);
 }
 .cp-run-table.is-compact td {
   padding: 13px 14px;
@@ -945,17 +945,17 @@
   padding: 5px;
 }
 .cp-run-table.is-compact .cp-entity strong {
-  font-size: 11px;
+  font-size: var(--text-label);
 }
 .cp-run-table.is-compact .cp-entity small {
-  font-size: 9px;
+  font-size: var(--text-label);
 }
 .cp-run-table.is-compact .cp-status {
-  font-size: 9px;
+  font-size: var(--text-label);
   padding: 4px 6px;
 }
 .cp-run-table.is-compact .cp-subtle {
-  font-size: 10px;
+  font-size: var(--text-label);
 }
 .cp-run-table.is-compact .cp-run-icon {
   width: 24px;
@@ -976,13 +976,13 @@ button.cp-entity:hover strong {
 .cp-entity strong {
   display: block;
   font-weight: 500;
-  font-size: 13px;
+  font-size: var(--text-detail);
   white-space: nowrap;
 }
 .cp-entity small {
   display: block;
-  font-size: 10px;
-  color: #a19889;
+  font-size: var(--text-label);
+  color: #716a60;
   margin-top: 4px;
 }
 .cp-run-icon {
@@ -991,7 +991,7 @@ button.cp-entity:hover strong {
   width: 31px;
   height: 32px;
   border: 1px solid #e2ddd2;
-  color: #8d856d;
+  color: #716a57;
   background: #f1f0e7;
   flex-shrink: 0;
 }
@@ -1002,8 +1002,8 @@ button.cp-entity:hover strong {
   padding: 5px 7px;
   border: 1px solid #dedbd1;
   background: #f1f0e9;
-  color: #8b8475;
-  font-size: 10px;
+  color: #6f695d;
+  font-size: var(--text-label);
   line-height: 1;
   white-space: nowrap;
   font-weight: 400;
@@ -1022,7 +1022,7 @@ button.cp-entity:hover strong {
 .cp-status-reconciled,
 .cp-status-allowed,
 .cp-status-registered {
-  color: #718055;
+  color: #627049;
   border-color: #d9dfc8;
   background: #edf0e4;
 }
@@ -1031,7 +1031,7 @@ button.cp-entity:hover strong {
 .cp-status-held,
 .cp-status-open,
 .cp-status-redacted {
-  color: #9c8148;
+  color: #7d6739;
   border-color: #e4d8b9;
   background: #f5efdf;
 }
@@ -1039,12 +1039,12 @@ button.cp-entity:hover strong {
 .cp-status-blocked,
 .cp-status-rejected,
 .cp-status-conflict {
-  color: #a0654d;
+  color: #925c46;
   border-color: #e2cbbb;
   background: #f3e9df;
 }
 .cp-status-planned {
-  color: #778663;
+  color: #5f6b4f;
   border-color: #d4d9c9;
   background: #f1f2e8;
 }
@@ -1055,8 +1055,8 @@ button.cp-entity:hover strong {
   height: 19px;
   border: 1px solid #d9d2c5;
   background: #efede3;
-  color: #89816e;
-  font-size: 11px;
+  color: #6e6758;
+  font-size: var(--text-label);
 }
 .cp-attention-item {
   display: flex;
@@ -1079,36 +1079,36 @@ button.cp-entity:hover strong {
   flex-shrink: 0;
   border: 1px solid #e1d8c2;
   background: #efeadb;
-  color: #9e8b60;
+  color: #786a48;
 }
 .cp-attention-icon.rust {
   background: #f0e7dd;
   border-color: #ddcdbd;
-  color: #a27958;
+  color: #826045;
 }
 .cp-attention-item > span:nth-child(2) {
   flex: 1;
   min-width: 0;
 }
 .cp-attention-item .cp-eyebrow {
-  font-size: 8px;
+  font-size: var(--text-label);
   letter-spacing: 0.8px;
-  color: #a2947c;
+  color: #726857;
 }
 .cp-attention-item strong {
   display: block;
-  font-size: 11px;
+  font-size: var(--text-label);
   font-weight: 500;
   margin-top: 6px;
 }
 .cp-attention-item small {
   display: block;
-  font-size: 10px;
-  color: #a39782;
+  font-size: var(--text-label);
+  color: #73695b;
   margin-top: 5px;
 }
 .cp-attention-item > svg {
-  color: #aba08b;
+  color: #6e6658;
   margin-top: 14px;
 }
 .cp-attention-note {
@@ -1116,8 +1116,8 @@ button.cp-entity:hover strong {
   align-items: center;
   gap: 9px;
   padding: 15px 20px;
-  color: #9a957f;
-  font-size: 10px;
+  color: #6c6958;
+  font-size: var(--text-label);
   line-height: 1.6;
   background: #f6f6ef;
 }
@@ -1136,8 +1136,8 @@ button.cp-entity:hover strong {
   margin-top: 9px;
 }
 .cp-page-title p {
-  color: #8b8273;
-  font-size: 13px;
+  color: #6f685c;
+  font-size: var(--text-detail);
   line-height: 1.65;
   margin-top: 10px;
   max-width: 590px;
@@ -1151,7 +1151,7 @@ button.cp-entity:hover strong {
   flex-shrink: 0;
   display: inline-grid;
   place-items: center;
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 450;
   border: 1px solid rgba(83, 74, 49, 0.07);
   letter-spacing: -0.2px;
@@ -1159,41 +1159,41 @@ button.cp-entity:hover strong {
 .cp-avatar.is-small {
   height: 27px;
   width: 27px;
-  font-size: 10px;
+  font-size: var(--text-label);
 }
 .cp-sand {
   background: #eae4d4;
-  color: #948564;
+  color: #776a50;
 }
 .cp-sage,
 .sage {
   background: #e7eadb;
-  color: #84916d;
+  color: #646f53;
 }
 .cp-lavender,
 .lavender {
   background: #e8e5ef;
-  color: #9990a8;
+  color: #6b6476;
 }
 .cp-blue {
   background: #e2e9eb;
-  color: #7b9298;
+  color: #5a6b6f;
 }
 .cp-rose {
   background: #ede2df;
-  color: #a5827a;
+  color: #7e635d;
 }
 .cp-peach {
   background: #efe5d9;
-  color: #ae9573;
+  color: #75644c;
 }
 .cp-inline-metrics {
   display: flex;
   gap: 25px;
   align-items: center;
   padding: 0 0 23px;
-  font-size: 12px;
-  color: #918878;
+  font-size: var(--text-label);
+  color: #6f685c;
 }
 .cp-inline-metrics > span {
   display: flex;
@@ -1220,7 +1220,7 @@ button.cp-entity:hover strong {
   display: flex;
   gap: 9px;
   align-items: center;
-  color: #a19888;
+  color: #716a5f;
   flex: 1;
 }
 .cp-filter-input input,
@@ -1231,33 +1231,33 @@ button.cp-entity:hover strong {
   color: #4b463c;
   width: 100%;
   min-width: 0;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .cp-filter-input input::placeholder,
 .cp-search-input input::placeholder {
-  color: #aaa08e;
+  color: #6e665b;
 }
 .cp-table-toolbar select {
   border: 1px solid #dcd5c8;
-  color: #8a7e69;
+  color: #736958;
   background: #fafaf7;
   padding: 7px 23px 7px 9px;
-  font-size: 11px;
+  font-size: var(--text-label);
 }
 .cp-table-count {
-  color: #a09683;
-  font-size: 11px;
+  color: #70695c;
+  font-size: var(--text-label);
   white-space: nowrap;
 }
 .cp-cell-primary {
   display: block;
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 450;
 }
 .cp-cell-secondary {
   display: block;
-  font-size: 10px;
-  color: #a59a85;
+  font-size: var(--text-label);
+  color: #6e6758;
   margin-top: 5px;
   line-height: 1.5;
   max-width: 490px;
@@ -1266,16 +1266,16 @@ button.cp-entity:hover strong {
   display: inline-flex;
   border: 1px solid #e1ddd2;
   padding: 5px 8px;
-  font-size: 10px;
-  color: #928772;
+  font-size: var(--text-label);
+  color: #706757;
   background: #f5f3ec;
 }
 .cp-model-cell {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  color: #8a816c;
+  font-size: var(--text-label);
+  color: #6e6756;
 }
 .cp-note {
   display: flex;
@@ -1285,13 +1285,13 @@ button.cp-entity:hover strong {
   padding: 15px 17px;
   margin-top: 21px;
   background: #efefe7;
-  color: #89836e;
-  font-size: 12px;
+  color: #6e6958;
+  font-size: var(--text-label);
   line-height: 1.7;
 }
 .cp-note > svg {
   margin-top: 2px;
-  color: #939478;
+  color: #676854;
 }
 .cp-note strong {
   font-weight: 500;
@@ -1307,8 +1307,8 @@ button.cp-entity:hover strong {
 }
 .cp-avatar-stack small {
   margin-left: 13px;
-  font-size: 10px;
-  color: #9c947f;
+  font-size: var(--text-label);
+  color: #6e6858;
   white-space: nowrap;
 }
 .cp-tabs {
@@ -1323,8 +1323,8 @@ button.cp-entity:hover strong {
   gap: 7px;
   align-items: center;
   padding: 12px 0;
-  font-size: 12px;
-  color: #9b917c;
+  font-size: var(--text-label);
+  color: #726a5b;
   white-space: nowrap;
   border-bottom: 2px solid transparent;
 }
@@ -1334,10 +1334,10 @@ button.cp-entity:hover strong {
 }
 .cp-tabs button span {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: var(--text-label);
   border: 1px solid #d8d6c5;
   padding: 2px 5px;
-  color: #8b8c6b;
+  color: #6a6b51;
   background: #eeeee3;
 }
 .cp-policy-grid {
@@ -1368,21 +1368,21 @@ button.cp-entity:hover strong {
   display: grid;
   place-items: center;
   background: #f0efe4;
-  color: #939278;
+  color: #6c6b58;
 }
 .cp-policy-card > .cp-eyebrow {
-  font-size: 8px;
+  font-size: var(--text-label);
   margin-bottom: 7px;
 }
 .cp-policy-card h2 {
-  font-size: 15px;
+  font-size: var(--text-body);
   font-weight: 450;
   letter-spacing: -0.5px;
 }
 .cp-policy-card p {
   margin-top: 10px;
-  font-size: 12px;
-  color: #928975;
+  font-size: var(--text-label);
+  color: #706959;
   line-height: 1.7;
   min-height: 51px;
 }
@@ -1394,16 +1394,16 @@ button.cp-entity:hover strong {
   padding-top: 17px;
   margin-top: 22px;
   border-top: 1px solid #e4e0d3;
-  color: #979179;
+  color: #6e6a58;
 }
 .cp-policy-card footer .cp-mono {
-  font-size: 9px;
+  font-size: var(--text-label);
 }
 .cp-policy-card footer > span:last-child {
   display: flex;
   align-items: center;
   gap: 13px;
-  font-size: 10px;
+  font-size: var(--text-label);
 }
 .cp-approval-list {
   display: grid;
@@ -1424,19 +1424,19 @@ button.cp-entity:hover strong {
   padding: 28px 24px;
 }
 .cp-approval-main h2 {
-  font-size: 20px;
+  font-size: var(--text-subheading);
   font-weight: 450;
   letter-spacing: -0.6px;
   margin-top: 9px;
 }
 .cp-approval-main p {
   margin-top: 10px;
-  font-size: 13px;
-  color: #8d826e;
+  font-size: var(--text-detail);
+  color: #716858;
   line-height: 1.7;
 }
 .cp-approval-main p strong {
-  color: #807351;
+  color: #756949;
   font-weight: 500;
 }
 .cp-proposal-target {
@@ -1444,8 +1444,8 @@ button.cp-entity:hover strong {
   align-items: center;
   gap: 7px;
   margin-top: 18px;
-  color: #9d937c;
-  font-size: 11px;
+  color: #6e6757;
+  font-size: var(--text-label);
 }
 .cp-proposal-numbers {
   display: flex;
@@ -1457,10 +1457,10 @@ button.cp-entity:hover strong {
   text-align: center;
 }
 .cp-proposal-numbers > div:first-child {
-  color: #ac8851;
+  color: #7e633a;
 }
 .cp-proposal-numbers > div:last-child {
-  color: #9d9b81;
+  color: #696856;
 }
 .cp-proposal-numbers strong {
   font-size: 37px;
@@ -1472,8 +1472,8 @@ button.cp-entity:hover strong {
   font-size: 18px;
 }
 .cp-proposal-numbers span {
-  font-size: 11px;
-  color: #a59a82;
+  font-size: var(--text-label);
+  color: #6e6757;
 }
 .cp-approval-item > footer {
   border-top: 1px solid #e5dfd1;
@@ -1488,8 +1488,8 @@ button.cp-entity:hover strong {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  color: #9a8d73;
+  font-size: var(--text-label);
+  color: #716754;
 }
 .cp-outline-label {
   display: inline-flex;
@@ -1497,9 +1497,9 @@ button.cp-entity:hover strong {
   gap: 7px;
   padding: 6px 8px;
   border: 1px solid #dcd6c7;
-  color: #9c917b;
+  color: #736a5a;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 9px;
+  font-size: var(--text-label);
   letter-spacing: 0.3px;
   white-space: nowrap;
 }
@@ -1518,7 +1518,7 @@ button.cp-entity:hover strong {
   border: 1px dashed #b3b89d;
   display: grid;
   place-items: center;
-  color: #8c9576;
+  color: #666e56;
 }
 .cp-gateway-banner h2 {
   font-size: 18px;
@@ -1530,8 +1530,8 @@ button.cp-entity:hover strong {
   flex-wrap: wrap;
   align-items: center;
   gap: 7px;
-  color: #979a7f;
-  font-size: 11px;
+  color: #696c58;
+  font-size: var(--text-label);
   margin-top: 8px;
 }
 .cp-gateway-banner > .cp-text-button {
@@ -1555,8 +1555,8 @@ button.cp-entity:hover strong {
 }
 .cp-model-number {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 12px;
-  color: #b5ad97;
+  font-size: var(--text-label);
+  color: #6f6a5c;
 }
 .cp-provider-mark {
   height: 52px;
@@ -1567,7 +1567,7 @@ button.cp-entity:hover strong {
 .cp-amazon {
   font-size: 36px;
   position: relative;
-  color: #96895e;
+  color: #736947;
   line-height: 1;
   font-weight: 650;
 }
@@ -1576,28 +1576,28 @@ button.cp-entity:hover strong {
   font-size: 26px;
   bottom: -13px;
   left: -1px;
-  color: #bda06d;
+  color: #796645;
 }
 .cp-meta {
   font-size: 54px;
   line-height: 1;
-  color: #8e9da1;
+  color: #5f696c;
 }
 .cp-mistral {
   font-family: var(--brand-font-mono);
   font-size: 34px;
   font-weight: 900;
-  color: #b39164;
+  color: #7e6545;
   letter-spacing: -4px;
 }
 .cp-model-card h2 {
   font-weight: 450;
-  font-size: 20px;
+  font-size: var(--text-subheading);
   letter-spacing: -0.7px;
 }
 .cp-model-card > p {
-  font-size: 11px;
-  color: #9f947f;
+  font-size: var(--text-label);
+  color: #6f6858;
   margin-top: 8px;
 }
 .cp-model-roles {
@@ -1608,10 +1608,10 @@ button.cp-entity:hover strong {
   min-height: 25px;
 }
 .cp-model-roles > span {
-  font-size: 9px;
+  font-size: var(--text-label);
   border: 1px solid #e0dacb;
   padding: 5px 7px;
-  color: #978a71;
+  color: #736956;
 }
 .cp-model-card footer {
   display: flex;
@@ -1620,35 +1620,35 @@ button.cp-entity:hover strong {
   margin-top: 24px;
   border-top: 1px solid #e6e1d4;
   padding-top: 14px;
-  font-size: 10px;
-  color: #a1957c;
+  font-size: var(--text-label);
+  color: #716957;
 }
 .cp-model-card footer > span:last-child {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #98a07d;
+  color: #656b54;
 }
 .cp-budget-total {
-  font-size: 16px;
+  font-size: var(--text-body);
   font-weight: 450;
   letter-spacing: -0.6px;
 }
 .cp-budget-total small {
-  font-size: 11px;
-  color: #a79a7d;
+  font-size: var(--text-label);
+  color: #706754;
   letter-spacing: -0.2px;
 }
 .cp-budget-usage {
   width: 170px;
 }
 .cp-budget-usage > span {
-  font-size: 11px;
+  font-size: var(--text-label);
   font-variant-numeric: tabular-nums;
 }
 .cp-budget-usage small {
-  font-size: 10px;
-  color: #aca087;
+  font-size: var(--text-label);
+  color: #6e6656;
 }
 .cp-budget-usage > div {
   background: #e9e8dc;
@@ -1670,8 +1670,8 @@ button.cp-entity:hover strong {
   padding: 23px;
 }
 .cp-output-playground > label {
-  font-size: 12px;
-  color: #958974;
+  font-size: var(--text-label);
+  color: #736958;
   display: block;
   margin-bottom: 9px;
 }
@@ -1683,7 +1683,7 @@ button.cp-entity:hover strong {
   resize: vertical;
   min-height: 130px;
   background: #f7f7f0;
-  font-size: 14px;
+  font-size: var(--text-detail);
   line-height: 1.8;
 }
 .cp-preset-row {
@@ -1692,22 +1692,22 @@ button.cp-entity:hover strong {
   align-items: center;
   flex-wrap: wrap;
   margin: 13px 0 22px;
-  color: #a4967a;
-  font-size: 10px;
+  color: #736955;
+  font-size: var(--text-label);
 }
 .cp-preset-row button {
   padding: 5px 7px;
   background: #f0eee2;
   border: 1px solid #e1dac6;
-  font-size: 10px;
-  color: #968566;
+  font-size: var(--text-label);
+  color: #73654d;
 }
 .cp-preset-row button:hover {
   background: #e6e4d4;
 }
 .cp-fineprint {
-  font-size: 11px;
-  color: #a0957d;
+  font-size: var(--text-label);
+  color: #706958;
   line-height: 1.7;
 }
 .cp-output-playground > .cp-fineprint {
@@ -1725,15 +1725,15 @@ button.cp-entity:hover strong {
 }
 .cp-output-principles svg {
   margin-top: 3px;
-  color: #9c9c7f;
+  color: #696954;
 }
 .cp-output-principles h3 {
-  font-size: 14px;
+  font-size: var(--text-detail);
   font-weight: 450;
 }
 .cp-output-principles p {
-  font-size: 12px;
-  color: #9a8e72;
+  font-size: var(--text-label);
+  color: #716853;
   line-height: 1.7;
   margin-top: 7px;
 }
@@ -1754,13 +1754,13 @@ button.cp-entity:hover strong {
 }
 .cp-output-row strong {
   display: block;
-  font-size: 13px;
+  font-size: var(--text-detail);
   font-weight: 450;
 }
 .cp-output-row small {
   display: block;
-  color: #a6987b;
-  font-size: 10px;
+  color: #746a56;
+  font-size: var(--text-label);
   margin-top: 5px;
 }
 .cp-output-row .cp-status {
@@ -1771,19 +1771,19 @@ button.cp-entity:hover strong {
   border: 1px solid #e3dfcd;
   padding: 15px;
   margin: 16px 0 11px;
-  color: #817a63;
+  color: #716b57;
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 12px;
+  font-size: var(--text-label);
   line-height: 1.8;
 }
 .cp-output-row > p {
   display: flex;
   gap: 5px;
   align-items: center;
-  color: #9b9b7b;
-  font-size: 10px;
+  color: #686852;
+  font-size: var(--text-label);
 }
 .cp-recovery-steps {
   display: grid;
@@ -1797,17 +1797,17 @@ button.cp-entity:hover strong {
   gap: 12px;
   align-items: center;
   padding: 20px;
-  color: #8a846a;
-  font-size: 12px;
+  color: #6e6954;
+  font-size: var(--text-label);
 }
 .cp-recovery-steps > div > span {
-  color: #b4ad8c;
-  font-size: 12px;
+  color: #6e6a55;
+  font-size: var(--text-label);
   font-family: var(--font-geist-mono), monospace;
 }
 .cp-recovery-steps svg {
   margin-left: auto;
-  color: #c0baa2;
+  color: #6c695b;
 }
 .cp-recovery-description {
   display: flex;
@@ -1816,8 +1816,8 @@ button.cp-entity:hover strong {
   padding: 24px;
 }
 .cp-recovery-description p {
-  font-size: 13px;
-  color: #9a8c70;
+  font-size: var(--text-detail);
+  color: #716651;
   line-height: 1.8;
   max-width: 720px;
 }
@@ -1828,17 +1828,17 @@ button.cp-entity:hover strong {
 }
 .cp-diff-table td {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .cp-diff-table td:first-child {
   font-family: var(--brand-font-sans);
 }
 .cp-diff-table td:last-child {
-  color: #969d7c;
+  color: #646953;
 }
 .cp-diff-chip {
-  font-size: 9px;
-  color: #aa8a65;
+  font-size: var(--text-label);
+  color: #7d6448;
   background: #f2eadb;
   border: 1px solid #e4d6be;
   padding: 4px 6px;
@@ -1853,8 +1853,8 @@ button.cp-entity:hover strong {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
-  color: #8d9470;
+  font-size: var(--text-label);
+  color: #676d51;
 }
 .cp-recovery-plan > div .cp-outline-label {
   margin-left: auto;
@@ -1863,16 +1863,16 @@ button.cp-entity:hover strong {
   font-weight: 450;
 }
 .cp-recovery-plan pre {
-  font-size: 12px;
-  color: #888768;
+  font-size: var(--text-label);
+  color: #6d6c53;
   line-height: 1.9;
   padding: 14px 0;
   white-space: pre-wrap;
   word-break: break-word;
 }
 .cp-recovery-plan p {
-  font-size: 11px;
-  color: #a1a082;
+  font-size: var(--text-label);
+  color: #6c6b57;
 }
 .cp-recovery-footer {
   display: flex;
@@ -1887,8 +1887,8 @@ button.cp-entity:hover strong {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
-  color: #a09272;
+  font-size: var(--text-label);
+  color: #70664f;
 }
 .cp-settings-panel {
   margin-bottom: 23px;
@@ -1908,16 +1908,16 @@ button.cp-entity:hover strong {
   border-bottom: 0;
 }
 .cp-integration-row > svg {
-  color: #a2a17b;
+  color: #6d6c52;
 }
 .cp-integration-row strong {
   font-weight: 450;
-  font-size: 14px;
+  font-size: var(--text-detail);
   display: block;
 }
 .cp-integration-row small {
-  color: #a99b7c;
-  font-size: 12px;
+  color: #726853;
+  font-size: var(--text-label);
   display: block;
   margin-top: 6px;
 }
@@ -1926,8 +1926,8 @@ button.cp-entity:hover strong {
 }
 .cp-settings-copy {
   padding: 22px;
-  color: #9e9275;
-  font-size: 13px;
+  color: #6e6651;
+  font-size: var(--text-detail);
 }
 .cp-empty {
   text-align: center;
@@ -1941,7 +1941,7 @@ button.cp-entity:hover strong {
   background: #edeee1;
   border: 1px solid #d9ddc3;
   margin: 0 auto 18px;
-  color: #9ca67a;
+  color: #646a4d;
 }
 .cp-empty h3 {
   font-size: 18px;
@@ -1951,8 +1951,8 @@ button.cp-entity:hover strong {
 .cp-empty p {
   margin: 9px auto 0;
   max-width: 380px;
-  color: #a29372;
-  font-size: 12px;
+  color: #72674f;
+  font-size: var(--text-label);
   line-height: 1.8;
 }
 .cp-loading {
@@ -1961,8 +1961,8 @@ button.cp-entity:hover strong {
   align-items: center;
   justify-content: center;
   min-height: 60vh;
-  font-size: 14px;
-  color: #8f896e;
+  font-size: var(--text-detail);
+  color: #6e6954;
 }
 .cp-modal-overlay {
   position: fixed;
@@ -2002,8 +2002,8 @@ button.cp-entity:hover strong {
   margin: -6px -9px 0 0;
 }
 .cp-modal-heading .cp-eyebrow {
-  font-size: 8px;
-  color: #aea486;
+  font-size: var(--text-label);
+  color: #706955;
 }
 .cp-modal-heading h2 {
   font-size: 25px;
@@ -2013,8 +2013,8 @@ button.cp-entity:hover strong {
   margin-top: 11px;
 }
 .cp-modal-heading p {
-  font-size: 12px;
-  color: #9c9073;
+  font-size: var(--text-label);
+  color: #736954;
   line-height: 1.8;
   margin-top: 9px;
 }
@@ -2022,9 +2022,9 @@ button.cp-entity:hover strong {
   padding: 25px 29px 29px;
 }
 .cp-modal-description {
-  font-size: 14px;
+  font-size: var(--text-detail);
   line-height: 1.9;
-  color: #8b7d60;
+  color: #746950;
   margin-bottom: 23px !important;
 }
 .cp-modal-footer {
@@ -2061,8 +2061,8 @@ button.cp-entity:hover strong {
   display: flex;
   flex-direction: column;
   gap: 9px;
-  font-size: 12px;
-  color: #8f8062;
+  font-size: var(--text-label);
+  color: #73664e;
 }
 .cp-form-grid input:not([type="range"]),
 .cp-form-grid select {
@@ -2070,13 +2070,13 @@ button.cp-entity:hover strong {
   border: 1px solid #d7cfb9;
   padding: 10px 11px;
   color: #564c37;
-  font-size: 13px;
+  font-size: var(--text-detail);
   border-radius: 0;
   background: #fdfcf6;
   min-height: 39px;
 }
 .cp-form-grid input::placeholder {
-  color: #b7aa89;
+  color: #716954;
 }
 .cp-form-grid input[type="range"] {
   width: 100%;
@@ -2086,7 +2086,7 @@ button.cp-entity:hover strong {
 .cp-form-grid label > strong {
   font-size: 22px;
   font-weight: 400;
-  color: #8d8c64;
+  color: #6c6b4c;
 }
 .cp-permissions {
   border: 0;
@@ -2094,12 +2094,12 @@ button.cp-entity:hover strong {
   margin-top: 24px;
 }
 .cp-permissions legend {
-  font-size: 13px;
-  color: #7e7155;
+  font-size: var(--text-detail);
+  color: #73674d;
 }
 .cp-permissions p {
-  font-size: 11px;
-  color: #aea080;
+  font-size: var(--text-label);
+  color: #706651;
   margin: 5px 0 13px;
 }
 .cp-permissions > div {
@@ -2111,11 +2111,11 @@ button.cp-entity:hover strong {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: var(--text-label);
   border: 1px solid #dfd7c1;
   padding: 10px;
   background: #f4f2e8;
-  color: #9b8e6d;
+  color: #72684f;
 }
 .cp-permissions input {
   accent-color: #8c9770;
@@ -2130,18 +2130,18 @@ button.cp-entity:hover strong {
   border: 1px solid #ddd8c3;
   background: #eeefe3;
   margin-bottom: 23px;
-  color: #969b75;
+  color: #696d51;
 }
 .cp-simulation-task strong {
   display: block;
-  font-size: 13px;
-  color: #747554;
+  font-size: var(--text-detail);
+  color: #6a6b4c;
   font-weight: 450;
 }
 .cp-simulation-task small {
   display: block;
-  font-size: 10px;
-  color: #a3a184;
+  font-size: var(--text-label);
+  color: #6e6c58;
   margin-top: 6px;
 }
 .cp-detail-hero {
@@ -2153,17 +2153,17 @@ button.cp-entity:hover strong {
 .cp-detail-hero .cp-avatar {
   width: 43px;
   height: 43px;
-  font-size: 14px;
+  font-size: var(--text-detail);
 }
 .cp-detail-hero strong {
   display: block;
-  font-size: 14px;
+  font-size: var(--text-detail);
   font-weight: 450;
 }
 .cp-detail-hero small {
   display: block;
-  font-size: 11px;
-  color: #a99a79;
+  font-size: var(--text-label);
+  color: #726750;
   margin-top: 5px;
 }
 .cp-detail-hero > .cp-status {
@@ -2179,10 +2179,10 @@ button.cp-entity:hover strong {
   gap: 15px;
   padding: 13px 0;
   border-bottom: 1px solid #e6dfcb;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .cp-detail-list dt {
-  color: #a89a78;
+  color: #716750;
 }
 .cp-detail-list dd {
   margin: 0;
@@ -2193,10 +2193,10 @@ button.cp-entity:hover strong {
   color: var(--cp-rust);
 }
 .cp-detail-heading {
-  font-size: 13px;
+  font-size: var(--text-detail);
   font-weight: 500;
   margin: 25px 0 15px !important;
-  color: #857951;
+  color: #746a46;
 }
 .cp-granted-tools {
   display: flex;
@@ -2210,8 +2210,8 @@ button.cp-entity:hover strong {
   padding: 7px 10px;
   border: 1px solid #d9ddc5;
   background: #eff1e3;
-  font-size: 11px;
-  color: #8b9870;
+  font-size: var(--text-label);
+  color: #656f51;
 }
 .cp-detail-runs {
   border: 1px solid #e0d9c3;
@@ -2227,8 +2227,8 @@ button.cp-entity:hover strong {
   padding: 14px 9px;
   border-bottom: 1px solid #e0d9c3;
   text-align: left;
-  color: #a0997c;
-  font-size: 11px;
+  color: #706b57;
+  font-size: var(--text-label);
 }
 .cp-detail-runs > button:hover {
   background: #efeee1;
@@ -2238,15 +2238,15 @@ button.cp-entity:hover strong {
 }
 .cp-detail-runs .cp-status {
   margin-left: auto;
-  font-size: 9px;
+  font-size: var(--text-label);
 }
 .cp-run-detail-summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 15px;
-  color: #a49571;
-  font-size: 11px;
+  color: #73694e;
+  font-size: var(--text-label);
 }
 .cp-timeline {
   list-style: none;
@@ -2275,24 +2275,24 @@ button.cp-entity:hover strong {
   place-items: center;
   border: 1px solid #ded7bd;
   background: #f2f0e1;
-  color: #b2a781;
-  font-size: 11px;
+  color: #736b52;
+  font-size: var(--text-label);
   z-index: 1;
 }
 .cp-step-passed .cp-step-symbol {
   border-color: #ccd5af;
   background: #ebf0dc;
-  color: #8e9d68;
+  color: #636e48;
 }
 .cp-step-blocked .cp-step-symbol {
   border-color: #dfc8ad;
   background: #f5e8d9;
-  color: #b78e65;
+  color: #816345;
 }
 .cp-step-held .cp-step-symbol {
   border-color: #e4d5a5;
   background: #f4eed5;
-  color: #b4a05b;
+  color: #736639;
 }
 .cp-timeline li > div {
   padding-top: 3px;
@@ -2302,23 +2302,23 @@ button.cp-entity:hover strong {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #afa37b;
-  font-size: 10px;
+  color: #71694e;
+  font-size: var(--text-label);
 }
 .cp-step-meta > span:last-child {
   font-family: var(--font-geist-mono), monospace;
-  font-size: 8px;
+  font-size: var(--text-label);
   letter-spacing: 0.6px;
 }
 .cp-timeline h4 {
   margin-top: 8px;
   font-weight: 450;
-  font-size: 14px;
+  font-size: var(--text-detail);
   letter-spacing: -0.2px;
 }
 .cp-timeline p {
-  font-size: 12px;
-  color: #aa9a72;
+  font-size: var(--text-label);
+  color: #73674b;
   line-height: 1.8;
   margin-top: 7px;
 }
@@ -2329,24 +2329,24 @@ button.cp-entity:hover strong {
   display: flex;
   align-items: center;
   gap: 11px;
-  color: #b09a5f;
-  font-size: 12px;
+  color: #76673f;
+  font-size: var(--text-label);
   line-height: 1.7;
   margin-top: 17px;
 }
 .cp-warning strong {
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 500;
-  color: #958146;
+  color: #786737;
 }
 .cp-warning p {
-  font-size: 11px;
-  color: #b7a576;
+  font-size: var(--text-label);
+  color: #76694a;
   margin-top: 4px;
 }
 .cp-warning .cp-text-button {
   margin-left: auto;
-  color: #9d8647;
+  color: #786635;
 }
 .cp-search-input {
   padding: 13px;
@@ -2354,7 +2354,7 @@ button.cp-entity:hover strong {
   background: #fdfcf6;
 }
 .cp-search-input input {
-  font-size: 14px;
+  font-size: var(--text-detail);
 }
 .cp-search-results {
   margin-top: 18px;
@@ -2365,7 +2365,7 @@ button.cp-entity:hover strong {
   align-items: center;
   padding: 13px 8px;
   border-bottom: 1px solid #e3dcc5;
-  color: #a39b7a;
+  color: #6e6851;
 }
 .cp-search-results > a:hover {
   background: #f0eedf;
@@ -2374,21 +2374,21 @@ button.cp-entity:hover strong {
   flex: 1;
 }
 .cp-search-results strong {
-  font-size: 13px;
+  font-size: var(--text-detail);
   font-weight: 450;
   display: block;
   color: #766849;
 }
 .cp-search-results small {
   display: block;
-  font-size: 11px;
-  color: #aa9a73;
+  font-size: var(--text-label);
+  color: #73674c;
   margin-top: 5px;
 }
 .cp-search-results > p {
   padding: 15px 0;
-  color: #a49670;
-  font-size: 13px;
+  color: #73694d;
+  font-size: var(--text-detail);
 }
 .cp-guide > div {
   display: flex;
@@ -2397,17 +2397,17 @@ button.cp-entity:hover strong {
 }
 .cp-guide > div > span {
   font-family: var(--font-geist-mono), monospace;
-  color: #b9b48b;
-  font-size: 14px;
+  color: #6d6950;
+  font-size: var(--text-detail);
   padding-top: 2px;
 }
 .cp-guide h3 {
-  font-size: 14px;
+  font-size: var(--text-detail);
   font-weight: 450;
 }
 .cp-guide p {
-  font-size: 12px;
-  color: #a5946c;
+  font-size: var(--text-label);
+  color: #73684a;
   line-height: 1.9;
   margin-top: 8px;
 }
@@ -2427,11 +2427,11 @@ button.cp-entity:hover strong {
   max-width: calc(100vw - 32px);
   width: max-content;
   box-shadow: 0 4px 20px #26221a18;
-  font-size: 13px;
+  font-size: var(--text-detail);
   animation: cp-fade 0.2s ease-out;
 }
 .cp-toast > svg {
-  color: #b4bf8d;
+  color: #646c4e;
 }
 .cp-mobile-menu,
 .cp-mobile-scrim {
@@ -2485,7 +2485,7 @@ button.cp-entity:hover strong {
     padding-right: 12px;
   }
   .cp-brand {
-    font-size: 16px;
+    font-size: var(--text-body);
     gap: 6px;
   }
   .cp-brand .cp-mark {
@@ -2563,13 +2563,13 @@ button.cp-entity:hover strong {
     padding-right: 10px;
   }
   .cp-brand {
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .cp-brand-sub {
-    font-size: 8px;
+    font-size: var(--text-label);
   }
   .cp-nav-item {
-    font-size: 12px;
+    font-size: var(--text-label);
     gap: 8px;
   }
   .cp-workspace {
@@ -2577,10 +2577,10 @@ button.cp-entity:hover strong {
     padding: 8px;
   }
   .cp-workspace strong {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-workspace small {
-    font-size: 10px;
+    font-size: var(--text-label);
   }
   .cp-topbar {
     padding: 0 20px;
@@ -2620,13 +2620,13 @@ button.cp-entity:hover strong {
     font-size: 30px;
   }
   .cp-stat-bottom small {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-sparkbars {
     display: flex;
   }
   .cp-stat > div:first-child {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-inline-metrics {
     flex-wrap: wrap;
@@ -2712,17 +2712,17 @@ button.cp-entity:hover strong {
     font-size: 17px;
   }
   .cp-brand-sub {
-    font-size: 9px;
+    font-size: var(--text-label);
   }
   .cp-nav-item {
-    font-size: 14px;
+    font-size: var(--text-detail);
     min-height: 39px;
   }
   .cp-workspace strong {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-workspace small {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-mobile-menu {
     display: inline-flex;
@@ -2740,7 +2740,7 @@ button.cp-entity:hover strong {
     padding: 0 15px;
   }
   .cp-breadcrumb {
-    font-size: 12px;
+    font-size: var(--text-label);
     gap: 7px;
   }
   .cp-breadcrumb > span {
@@ -2766,16 +2766,16 @@ button.cp-entity:hover strong {
     letter-spacing: -1.1px;
   }
   .cp-overview-heading .cp-eyebrow {
-    font-size: 8px;
+    font-size: var(--text-label);
     letter-spacing: 0.7px;
   }
   .cp-overview-heading > .cp-button {
     padding: 8px 10px;
-    font-size: 11px !important;
+    font-size: var(--text-detail) !important;
     margin-top: 5px;
   }
   .cp-overview-heading p {
-    font-size: 12px;
+    font-size: var(--text-label);
     line-height: 1.5;
     max-width: 220px;
   }
@@ -2787,7 +2787,7 @@ button.cp-entity:hover strong {
     font-size: 26px;
   }
   .cp-welcome p {
-    font-size: 12px;
+    font-size: var(--text-label);
     max-width: 260px;
   }
   .cp-welcome .cp-signal-art {
@@ -2796,7 +2796,7 @@ button.cp-entity:hover strong {
     opacity: 0.28;
   }
   .cp-welcome > .cp-eyebrow {
-    font-size: 9px;
+    font-size: var(--text-label);
   }
   .cp-stats {
     margin-top: 16px;
@@ -2805,13 +2805,13 @@ button.cp-entity:hover strong {
     padding: 16px;
   }
   .cp-stat > div:first-child {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-stat > strong {
     margin: 15px 0 10px;
   }
   .cp-stat-bottom small {
-    font-size: 9px;
+    font-size: var(--text-label);
   }
   .cp-sparkbars {
     gap: 1px;
@@ -2824,14 +2824,14 @@ button.cp-entity:hover strong {
     gap: 10px;
   }
   .cp-panel-head h2 {
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .cp-panel-head p {
-    font-size: 10px;
+    font-size: var(--text-label);
     line-height: 1.5;
   }
   .cp-panel-head .cp-button-small {
-    font-size: 10px !important;
+    font-size: var(--text-detail) !important;
     padding: 5px 8px;
   }
   .cp-graph-footer {
@@ -2840,7 +2840,7 @@ button.cp-entity:hover strong {
     gap: 10px;
   }
   .cp-graph-footer > span {
-    font-size: 9px;
+    font-size: var(--text-label);
   }
   .cp-graph-footer > span:last-child {
     display: none;
@@ -2858,13 +2858,13 @@ button.cp-entity:hover strong {
     padding: 20px;
   }
   .cp-attention-item strong {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-attention-item small {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-attention-item .cp-eyebrow {
-    font-size: 9px;
+    font-size: var(--text-label);
   }
   .cp-page-title {
     display: block;
@@ -2875,7 +2875,7 @@ button.cp-entity:hover strong {
     letter-spacing: -1.2px;
   }
   .cp-page-title p {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-title-actions {
     margin-top: 19px;
@@ -2884,7 +2884,7 @@ button.cp-entity:hover strong {
     margin: 0 18px;
     padding: 19px 0;
     flex-wrap: wrap;
-    font-size: 10px;
+    font-size: var(--text-label);
     gap: 10px;
   }
   .cp-table-toolbar {
@@ -2895,19 +2895,19 @@ button.cp-entity:hover strong {
     display: none;
   }
   .cp-filter-input input {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .cp-table:not(.cp-diff-table) {
     min-width: 600px;
   }
   .cp-table th {
-    font-size: 10px;
+    font-size: var(--text-label);
   }
   .cp-table td {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-inline-metrics {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-policy-grid {
     grid-template-columns: 1fr;
@@ -2916,20 +2916,20 @@ button.cp-entity:hover strong {
     font-size: 19px;
   }
   .cp-policy-card p {
-    font-size: 14px;
+    font-size: var(--text-detail);
     min-height: auto;
   }
   .cp-policy-card > .cp-eyebrow {
-    font-size: 10px;
+    font-size: var(--text-label);
   }
   .cp-policy-card footer .cp-mono {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-tabs {
     gap: 22px;
   }
   .cp-tabs button {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-approval-main {
     flex-direction: column;
@@ -2961,18 +2961,18 @@ button.cp-entity:hover strong {
     font-size: 17px;
   }
   .cp-gateway-banner p {
-    font-size: 11px;
+    font-size: var(--text-label);
     line-height: 1.6;
   }
   .cp-model-card h2 {
     font-size: 19px;
   }
   .cp-budget-total {
-    font-size: 14px;
+    font-size: var(--text-detail);
     white-space: nowrap;
   }
   .cp-budget-total small {
-    font-size: 10px;
+    font-size: var(--text-label);
     display: block;
     margin-top: 3px;
   }
@@ -2984,7 +2984,7 @@ button.cp-entity:hover strong {
     padding: 19px 0;
   }
   .cp-output-principles p {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-output-playground {
     padding: 18px;
@@ -2996,25 +2996,25 @@ button.cp-entity:hover strong {
     padding: 18px;
   }
   .cp-output-row pre {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-output-row small {
-    font-size: 9px;
+    font-size: var(--text-label);
   }
   .cp-recovery-steps > div {
-    font-size: 11px;
+    font-size: var(--text-label);
     padding: 14px 10px;
     gap: 7px;
   }
   .cp-recovery-steps > div > span {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-recovery-description {
     padding: 18px;
     align-items: flex-start;
   }
   .cp-recovery-description p {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .cp-diff-table {
     min-width: 500px;
@@ -3031,16 +3031,16 @@ button.cp-entity:hover strong {
     margin-left: 32px;
   }
   .cp-integration-row strong {
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .cp-integration-row small {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-settings-panel .cp-panel-head {
     flex-wrap: wrap;
   }
   .cp-note {
-    font-size: 12px;
+    font-size: var(--text-label);
     padding: 14px;
   }
   .cp-modal-overlay {
@@ -3056,7 +3056,7 @@ button.cp-entity:hover strong {
     font-size: 25px;
   }
   .cp-modal-heading p {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-modal-body {
     padding: 22px 21px;
@@ -3069,34 +3069,34 @@ button.cp-entity:hover strong {
     gap: 18px;
   }
   .cp-form-grid label {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-form-grid input:not([type="range"]),
   .cp-form-grid select {
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .cp-permissions label {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .cp-run-detail-summary {
     gap: 9px;
     flex-wrap: wrap;
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-detail-list > div {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-step-meta {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-timeline h4 {
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .cp-timeline p {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .cp-step-meta > span:last-child {
-    font-size: 9px;
+    font-size: var(--text-label);
   }
   .cp-detail-runs > button {
     flex-wrap: wrap;
@@ -3104,26 +3104,26 @@ button.cp-entity:hover strong {
   .cp-toast {
     left: 50%;
     bottom: 15px;
-    font-size: 13px;
+    font-size: var(--text-detail);
     padding: 13px 16px;
   }
   .cp-outline-label {
-    font-size: 10px;
+    font-size: var(--text-label);
   }
   .cp-status {
-    font-size: 11px;
+    font-size: var(--text-label);
   }
   .cp-modal .cp-button {
-    font-size: 13px !important;
+    font-size: var(--text-detail) !important;
   }
 }
 /* Keep the reference's quiet palette without sacrificing reading contrast. */
 .cp-workspace strong {
-  font-size: 11px;
+  font-size: var(--text-label);
   white-space: nowrap;
 }
 .cp-workspace small {
-  font-size: 10px;
+  font-size: var(--text-label);
   white-space: nowrap;
 }
 .cp-workspace-icon {
@@ -3149,7 +3149,7 @@ button.cp-entity:hover strong {
 .cp-integration-row small,
 .cp-guide p,
 .cp-modal-description {
-  color: #787165;
+  color: #6e675c;
 }
 .cp-eyebrow,
 .cp-stat-bottom small,
@@ -3173,7 +3173,7 @@ button.cp-entity:hover strong {
 .cp-table-count,
 .cp-detail-runs > button,
 .cp-run-detail-summary {
-  color: #78715f;
+  color: #6e6757;
 }
 .cp-status-active,
 .cp-status-passed,
@@ -3190,7 +3190,7 @@ button.cp-entity:hover strong {
 .cp-status-held,
 .cp-status-open,
 .cp-status-redacted {
-  color: #856827;
+  color: #7f6325;
 }
 .cp-status-contained,
 .cp-status-blocked,
@@ -3202,7 +3202,7 @@ button.cp-entity:hover strong {
 .cp-outline-label,
 .cp-role-chip,
 .cp-model-cell {
-  color: #7c715a;
+  color: #726752;
 }
 .cp-control-graph {
   min-width: 895px;
@@ -3299,7 +3299,7 @@ button.cp-entity:hover strong {
 .cp-tour-map-head p,
 .cp-tour-scope {
   color: var(--cp-muted);
-  font-size: 13px;
+  font-size: var(--text-detail);
   line-height: 1.55;
 }
 
@@ -3324,17 +3324,17 @@ button.cp-entity:hover strong {
   display: block;
   margin-bottom: 27px;
   color: var(--cp-faint);
-  font: 10px/1 var(--font-geist-mono), monospace;
+  font: var(--text-label)/1 var(--brand-font-mono);
   letter-spacing: .12em;
 }
 .cp-tour-map-steps strong,
 .cp-tour-map-steps small { display: block; }
-.cp-tour-map-steps strong { font-size: 14px; }
+.cp-tour-map-steps strong { font-size: var(--text-detail); }
 .cp-tour-map-steps small {
   max-width: 210px;
   margin-top: 7px;
   color: var(--cp-muted);
-  font-size: 12px;
+  font-size: var(--text-label);
   line-height: 1.45;
 }
 .cp-tour-map-steps svg { position: absolute; top: 20px; right: 20px; }
@@ -3389,8 +3389,8 @@ button.cp-entity:hover strong {
 .cp-workflow-path-intro p,
 .cp-workflow-library-head p {
   margin-top: 12px;
-  color: #787165;
-  font-size: 12px;
+  color: #6e675c;
+  font-size: var(--text-label);
   line-height: 1.65;
 }
 .cp-workflow-path {
@@ -3401,19 +3401,19 @@ button.cp-entity:hover strong {
 .cp-workflow-path > span,
 .cp-workflow-onboarding-steps > div > span {
   font-family: var(--font-geist-mono), monospace;
-  color: #96917b;
-  font-size: 10px;
+  color: #6e6a5a;
+  font-size: var(--text-label);
   letter-spacing: 0.7px;
 }
 .cp-workflow-path strong {
   display: block;
-  font-size: 14px;
+  font-size: var(--text-detail);
   font-weight: 520;
 }
 .cp-workflow-path p {
   margin-top: 9px;
-  color: #787165;
-  font-size: 11px;
+  color: #6e675c;
+  font-size: var(--text-label);
   line-height: 1.65;
 }
 .cp-workflow-onboarding {
@@ -3436,13 +3436,13 @@ button.cp-entity:hover strong {
 .cp-workflow-onboarding-steps strong {
   display: block;
   margin-top: 17px;
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 520;
 }
 .cp-workflow-onboarding-steps p {
   margin-top: 8px;
-  color: #787165;
-  font-size: 10px;
+  color: #6e675c;
+  font-size: var(--text-label);
   line-height: 1.65;
 }
 .cp-workflow-library {
@@ -3494,8 +3494,8 @@ button.cp-entity:hover strong {
 .cp-workflow-card > p {
   margin-top: 10px;
   min-height: 58px;
-  color: #787165;
-  font-size: 11px;
+  color: #6e675c;
+  font-size: var(--text-label);
   line-height: 1.65;
 }
 .cp-workflow-card dl {
@@ -3507,11 +3507,11 @@ button.cp-entity:hover strong {
   gap: 12px;
   padding: 10px 0;
   border-top: 1px solid #e5e2db;
-  font-size: 10px;
+  font-size: var(--text-label);
   line-height: 1.45;
 }
 .cp-workflow-card dt {
-  color: #918b7f;
+  color: #6f6a60;
 }
 .cp-workflow-card dd {
   margin: 0;
@@ -3542,11 +3542,11 @@ button.cp-entity:hover strong {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: var(--text-label);
   color: #5d594e;
 }
 .cp-workflow-fit li svg {
-  color: #6f7d55;
+  color: #606e49;
 }
 
 @media (max-width: 1100px) {
@@ -3611,3 +3611,5 @@ button.cp-entity:hover strong {
     grid-template-columns: 1fr;
   }
 }
+
+.cp-app p { font-size: var(--text-detail); }

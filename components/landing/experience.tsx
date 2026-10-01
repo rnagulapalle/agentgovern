@@ -18,150 +18,17 @@ import {
   Fingerprint,
   GitBranch,
   LockKeyhole,
-  Menu,
   Pause,
   Play,
   ShieldCheck,
   SlidersHorizontal,
   Undo2,
-  X,
 } from "lucide-react";
+import { MarketingHeader } from "@/components/marketing/chrome";
 import { LoopMark } from "@/components/brand/loop-mark";
 
-const navigation = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#recovery", label: "Recovery" },
-  { href: "/guides", label: "Guides" },
-  { href: "/blog", label: "Blog" },
-];
-
-const solutions = [
-  {
-    href: "#automation",
-    label: "Governed workflow launch",
-    description: "Put one bounded agent workflow into production.",
-  },
-  {
-    href: "#controls",
-    label: "Agent controls",
-    description: "Set permissions, approvals, output checks, and recovery.",
-  },
-];
-
 export function LandingHeader({ bookingUrl }: { bookingUrl: string }) {
-  const [open, setOpen] = useState(false);
-  const [solutionsOpen, setSolutionsOpen] = useState(false);
-  const toggle = useRef<HTMLButtonElement>(null);
-  return (
-    <header
-      className="ll-header"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") {
-          setOpen(false);
-          setSolutionsOpen(false);
-          toggle.current?.focus();
-        }
-      }}
-    >
-      <Link className="ll-wordmark" href="/" aria-label="LoopLabs home">
-        <LoopMark />
-        <span>LoopLabs</span>
-      </Link>
-      <nav className="ll-desktop-nav" aria-label="Main navigation">
-        <div className="ll-solutions-menu">
-          <button
-            className="ll-solutions-trigger"
-            type="button"
-            aria-expanded={solutionsOpen}
-            aria-controls="landing-solutions"
-            onClick={() => setSolutionsOpen((value) => !value)}
-          >
-            Solutions <ArrowDown size={13} />
-          </button>
-          {solutionsOpen && (
-            <div id="landing-solutions" className="ll-solutions-popover">
-              <span className="ll-eyebrow">SOLUTIONS</span>
-              {solutions.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setSolutionsOpen(false)}
-                >
-                  <span>
-                    <strong>{item.label}</strong>
-                    <small>{item.description}</small>
-                  </span>
-                  <ArrowUpRight size={15} />
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-        {navigation.map((item) => (
-          <Link key={item.href} href={item.href}>
-            {item.label}
-          </Link>
-        ))}
-        <Link href="/control-plane">
-          Product tour <ArrowUpRight size={14} />
-        </Link>
-      </nav>
-      <a
-        className="ll-button ll-nav-cta"
-        href={bookingUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Book a demo
-      </a>
-      <button
-        ref={toggle}
-        className="ll-menu-toggle"
-        aria-expanded={open}
-        aria-controls="landing-navigation"
-        aria-label={open ? "Close navigation" : "Open navigation"}
-        onClick={() => setOpen(!open)}
-      >
-        {open ? <X /> : <Menu />}
-      </button>
-      {open && (
-        <nav
-          id="landing-navigation"
-          className="ll-mobile-nav"
-          aria-label="Mobile navigation"
-        >
-          <span className="ll-mobile-group-title">Solutions</span>
-          {solutions.map((item) => (
-            <Link
-              className="ll-mobile-solution"
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-            >
-              <span>
-                <strong>{item.label}</strong>
-                <small>{item.description}</small>
-              </span>
-              <ArrowUpRight size={16} />
-            </Link>
-          ))}
-          {navigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-            >
-              {item.label}
-              <ArrowUpRight size={16} />
-            </Link>
-          ))}
-          <Link href="/control-plane" onClick={() => setOpen(false)}>
-            Product tour <ArrowUpRight size={16} />
-          </Link>
-        </nav>
-      )}
-    </header>
-  );
+  return <MarketingHeader bookingUrl={bookingUrl} />;
 }
 
 export function ControlWave() {
@@ -286,7 +153,7 @@ export function ControlWave() {
           <text x="327" y="342">POLICY CHECK</text>
         </g>
         <g className="ll-wave-blocked-label">
-          <rect x="252" y="387" width="106" height="23" rx="3" />
+          <rect x="252" y="387" width="130" height="23" rx="3" />
           <text x="266" y="402">1 ACTION HELD</text>
         </g>
         <path
@@ -298,26 +165,26 @@ export function ControlWave() {
           <circle cx="0" cy="0" r="11" className="ll-packet-ring" />
         </g>
         <g className="ll-reconcile-label">
-          <rect x="444" y="405" width="146" height="23" rx="3" />
+          <rect x="444" y="405" width="178" height="23" rx="3" />
           <text x="456" y="420">RECONCILE BEFORE RETRY</text>
         </g>
         <g className="ll-wave-caption">
           <rect
-            x="270"
+            x="248"
             y="98"
-            width="176"
+            width="220"
             height="26"
             rx="13"
             fill="#f5f5f4"
             stroke="#a8a29e"
             strokeWidth=".7"
           />
-          <circle cx="287" cy="111" r="2.4" fill="#73745e" />
+          <circle cx="265" cy="111" r="2.4" fill="#73745e" />
           <text
             x="366"
             y="115"
             fill="#57534e"
-            fontSize="10"
+            fontSize="12"
             textAnchor="middle"
           >
             Authority → action → effect
@@ -325,9 +192,9 @@ export function ControlWave() {
           <text
             x="358"
             y="451"
-            fill="#78716c"
+            fill="#57534e"
             textAnchor="middle"
-            fontSize="9"
+            fontSize="12"
             letterSpacing="2"
           >
             CONTROL + RECOVERY BOUNDARY

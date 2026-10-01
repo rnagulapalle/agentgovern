@@ -53,7 +53,7 @@ export default function GuidesPage() {
               href={t.href}
               className="card block p-4 transition-colors hover:border-hairline/20"
             >
-              <span className="text-[15px] font-medium text-fg">{t.label}</span>
+              <span className="text-[16px] font-medium text-fg">{t.label}</span>
             </Link>
           ))}
         </div>

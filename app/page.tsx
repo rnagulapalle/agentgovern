@@ -21,6 +21,7 @@ import {
   RecoveryDiagram,
 } from "@/components/landing/experience";
 import { LoopMark } from "@/components/brand/loop-mark";
+import { MarketingFooter } from "@/components/marketing/chrome";
 import { ExecutionIntegrityDashboard } from "@/components/landing/execution-integrity";
 import "./landing.css";
 
@@ -584,57 +585,7 @@ export default function LandingPage() {
           </section>
         </main>
 
-        <footer className="ll-footer">
-          <div className="ll-footer-top">
-            <div>
-              <Link className="ll-wordmark" href="/">
-                <LoopMark />
-                <span>LoopLabs</span>
-              </Link>
-              <p>
-                The control and recovery layer
-                <br />
-                for agent-run workflows.
-              </p>
-            </div>
-            <nav aria-label="Footer solutions">
-              <span className="ll-eyebrow">SOLUTIONS</span>
-              <Link href="#automation">Governed workflow launch</Link>
-              <Link href="/control-plane/policies">Action controls</Link>
-              <Link href="/control-plane/runs">Execution controls</Link>
-              <Link href="/control-plane/outputs">Output controls</Link>
-              <Link href="/control-plane/reconciliation">Recovery</Link>
-            </nav>
-            <nav aria-label="Footer platform">
-              <span className="ll-eyebrow">PLATFORM</span>
-              <Link href="/control-plane/agents">Agent identities</Link>
-              <Link href="/control-plane/gateway">Model gateway</Link>
-              <Link href="/control-plane/approvals">Approvals</Link>
-              <Link href="/control-plane/audit">Audit trail</Link>
-            </nav>
-            <nav aria-label="Footer resources">
-              <span className="ll-eyebrow">RESOURCES</span>
-              <Link href="/guides">Guides</Link>
-              <Link href="/blog">Blog</Link>
-              <Link href="/about">About</Link>
-              <Link href="/agent-governance-demo">Action control example</Link>
-              <a href={CAL_URL} target="_blank" rel="noopener noreferrer">
-                Talk to the founder <ArrowUpRight size={12} />
-              </a>
-            </nav>
-          </div>
-          <div className="ll-footer-bottom">
-            <span>© 2026 LoopLabs</span>
-            <span>looplabs.run</span>
-            <a
-              href="https://x.com/rnagulapalle"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Follow the build <ArrowUpRight size={13} />
-            </a>
-          </div>
-        </footer>
+        <MarketingFooter />
       </div>
     </div>
   );

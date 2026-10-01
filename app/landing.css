@@ -4,7 +4,7 @@
   --ll-paper: #f5f5f4;
   --ll-ink: #1c1917;
   --ll-line: #d6d3d1;
-  --ll-muted: #78716c;
+  --ll-muted: var(--ui-muted);
   --ll-accent: #918775;
   color-scheme: light;
   color: var(--ll-ink);
@@ -12,7 +12,7 @@
   background-image: radial-gradient(#d6d3d1 0.65px, transparent 0.65px);
   background-size: 5px 5px;
   font-family: var(--brand-font-sans);
-  font-size: 15px;
+  font-size: var(--text-body);
   line-height: 1.5;
   letter-spacing: -0.02em;
   min-height: 100vh;
@@ -105,7 +105,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--text-detail);
   white-space: nowrap;
 }
 .ll-desktop-nav a:hover {
@@ -121,7 +121,7 @@
   padding: 8px 0;
   border: 0;
   background: transparent;
-  font-size: 13px;
+  font-size: var(--text-detail);
   cursor: pointer;
 }
 .ll-solutions-trigger svg {
@@ -157,13 +157,13 @@
   display: block;
 }
 .ll-solutions-popover strong {
-  font-size: 15px;
+  font-size: var(--text-body);
   font-weight: 550;
 }
 .ll-solutions-popover small {
   margin-top: 3px;
   color: #57534e;
-  font-size: 12px;
+  font-size: var(--text-label);
   line-height: 1.45;
 }
 .ll-solutions-popover a > svg {
@@ -180,7 +180,7 @@
   border: 1px solid var(--ll-ink);
   background: var(--ll-ink);
   color: #fafafa;
-  font-size: 14px;
+  font-size: var(--text-detail);
   font-weight: 450;
   line-height: 20px;
   transition:
@@ -219,7 +219,7 @@
 .ll-eyebrow {
   display: block;
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 400;
   letter-spacing: 1.5px;
   color: #57534e;
@@ -233,7 +233,7 @@
   max-width: 690px;
 }
 .ll-hero-copy > p {
-  font-size: 16px;
+  font-size: var(--text-body);
   line-height: 1.5;
   max-width: 410px;
   letter-spacing: -0.025em;
@@ -250,7 +250,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  font-size: 14px;
+  font-size: var(--text-detail);
   line-height: 1.5;
 }
 .ll-text-link svg {
@@ -288,7 +288,7 @@
 .ll-wave-zone-label {
   fill: #78716c;
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   letter-spacing: 1.5px;
 }
 .ll-wave-line {
@@ -353,7 +353,7 @@
 .ll-wave-blocked-label text {
   fill: #626752;
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   letter-spacing: 0.8px;
 }
 .ll-wave-decision {
@@ -397,7 +397,7 @@
 .ll-reconcile-label text {
   fill: #855c47;
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   letter-spacing: 0.65px;
 }
 .ll-wave-paused * {
@@ -529,7 +529,7 @@
   left: 11px;
   top: 9px;
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #a8a29e;
 }
 .ll-layer-strip strong {
@@ -541,7 +541,7 @@
 .ll-layer-strip small {
   display: block;
   margin-top: 2px;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
   letter-spacing: -0.01em;
 }
@@ -567,7 +567,7 @@
 .ll-section-heading p {
   margin-top: 23px;
   color: #57534e;
-  font-size: 16px;
+  font-size: var(--text-body);
 }
 .ll-automation {
   border-bottom: 1px solid var(--ll-line);
@@ -589,7 +589,7 @@
 .ll-automation-summary p {
   max-width: 465px;
   color: #57534e;
-  font-size: 16px;
+  font-size: var(--text-body);
   line-height: 1.6;
 }
 .ll-automation-summary .ll-text-link {
@@ -615,7 +615,7 @@
   right: 13px;
   color: #a8a29e;
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-workflow-grid h3 {
   margin: 70px 0 14px;
@@ -625,7 +625,7 @@
 .ll-workflow-grid p {
   max-width: 260px;
   color: #57534e;
-  font-size: 13px;
+  font-size: var(--text-detail);
   line-height: 1.6;
 }
 .ll-controls-grid {
@@ -692,7 +692,7 @@
 }
 .ll-tab-label {
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   letter-spacing: 0.7px;
   text-transform: uppercase;
   color: #57534e;
@@ -705,7 +705,7 @@
   margin: 9px 0 11px;
 }
 .ll-tab-body {
-  font-size: 14px;
+  font-size: var(--text-detail);
   color: #57534e;
   line-height: 1.5;
   max-width: 400px;
@@ -754,14 +754,14 @@
   padding: 0 17px;
   border-bottom: 1px solid #e7e5e4;
   gap: 12px;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
 }
 .ll-preview-bar > span:first-child {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #292524;
   font-weight: 550;
 }
@@ -802,12 +802,12 @@
 }
 .ll-preview-heading strong {
   display: block;
-  font-size: 13px;
+  font-size: var(--text-detail);
   font-weight: 550;
 }
 .ll-preview-heading div > span {
   display: block;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
   margin-top: 2px;
 }
@@ -817,7 +817,7 @@
   padding: 4px 7px;
   background: #e9ebe3;
   color: #596147;
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 500;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -828,7 +828,7 @@
 }
 .ll-micro {
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   letter-spacing: 0.8px;
   color: #57534e;
 }
@@ -838,7 +838,7 @@
   margin-bottom: 14px;
 }
 .ll-request p {
-  font-size: 14px;
+  font-size: var(--text-detail);
   margin: 8px 0 13px;
   letter-spacing: -0.035em;
 }
@@ -850,7 +850,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
 }
 .ll-request b {
@@ -863,7 +863,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 0;
-  font-size: 12px;
+  font-size: var(--text-label);
   border-bottom: 1px solid #e7e5e4;
 }
 .ll-check-row > svg {
@@ -871,7 +871,7 @@
 }
 .ll-check-row span:last-child {
   margin-left: auto;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
 }
 .ll-check-held > svg,
@@ -882,7 +882,7 @@
   display: flex;
   align-items: flex-start;
   gap: 7px;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
   margin-top: 16px;
 }
@@ -895,7 +895,7 @@
   align-items: center;
   gap: 12px;
   margin-top: 22px;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
 }
 .ll-stage-footer a {
@@ -945,16 +945,16 @@
 }
 .ll-execution-list strong {
   display: block;
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 500;
 }
 .ll-execution-list p {
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
   margin-top: 2px;
 }
 .ll-execution-list > div > span:last-child {
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
   margin-left: auto;
 }
@@ -964,7 +964,7 @@
 }
 .ll-output-block p {
   margin-top: 10px;
-  font-size: 13px;
+  font-size: var(--text-detail);
   line-height: 1.8;
 }
 .ll-output-block mark {
@@ -977,7 +977,7 @@
   border-color: #d8ddcd;
 }
 .ll-output-clean code {
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #5b674b;
 }
 .ll-output-arrow {
@@ -987,7 +987,7 @@
   gap: 7px;
   margin: 11px 0;
   color: #57534e;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-integrity {
   padding: 88px 40px 80px;
@@ -1008,7 +1008,7 @@
 .ll-integrity-intro > p {
   max-width: 455px;
   color: #57534e;
-  font-size: 16px;
+  font-size: var(--text-body);
   line-height: 1.6;
 }
 .ll-integrity-dashboard {
@@ -1029,7 +1029,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 13px;
+  font-size: var(--text-detail);
   font-weight: 550;
 }
 .ll-integrity-toolbar svg {
@@ -1059,7 +1059,7 @@
   gap: 7px;
   color: #57534e;
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   letter-spacing: 0.45px;
   text-transform: uppercase;
 }
@@ -1096,13 +1096,13 @@
 }
 .ll-integrity-metrics span {
   margin-top: 14px;
-  font-size: 13px;
+  font-size: var(--text-detail);
   font-weight: 550;
 }
 .ll-integrity-metrics small {
   margin-top: 3px;
   color: #57534e;
-  font-size: 14px;
+  font-size: var(--text-detail);
 }
 .ll-integrity-metrics svg {
   position: absolute;
@@ -1135,7 +1135,7 @@
   padding: 12px 22px;
   border-top: 1px solid #d6d3d1;
   color: #57534e;
-  font-size: 14px;
+  font-size: var(--text-detail);
 }
 .ll-integrity-story figcaption a {
   display: inline-flex;
@@ -1155,19 +1155,19 @@
   display: block;
 }
 .ll-dashboard-head > div:first-child strong {
-  font-size: 13px;
+  font-size: var(--text-detail);
   font-weight: 600;
 }
 .ll-dashboard-head > div:first-child span {
   margin-top: 3px;
   color: #57534e;
-  font-size: 14px;
+  font-size: var(--text-detail);
 }
 .ll-interventions-panel .ll-dashboard-head > a {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: var(--text-detail);
 }
 .ll-intervention-list {
   display: grid;
@@ -1182,7 +1182,7 @@
   gap: 11px;
   min-height: 46px;
   border-top: 1px solid #eceae5;
-  font-size: 14px;
+  font-size: var(--text-detail);
 }
 .ll-intervention-list > div > i {
   height: 6px;
@@ -1196,7 +1196,7 @@
 .ll-intervention-list > div > strong {
   text-align: right;
   font-family: var(--brand-font-mono);
-  font-size: 14px;
+  font-size: var(--text-detail);
   font-weight: 500;
 }
 .ll-integrity-disclosure {
@@ -1205,7 +1205,7 @@
   border-top: 1px solid #d6d3d1;
   background: #f0efeb;
   color: #57534e;
-  font-size: 14px;
+  font-size: var(--text-detail);
   line-height: 1.5;
 }
 .ll-identity-section,
@@ -1225,12 +1225,12 @@
 }
 .ll-feature-copy > p {
   color: #57534e;
-  font-size: 16px;
+  font-size: var(--text-body);
   line-height: 1.6;
   max-width: 440px;
 }
 .ll-feature-copy > .ll-small-copy {
-  font-size: 13px;
+  font-size: var(--text-detail);
   margin-top: 18px;
   color: #57534e;
 }
@@ -1248,7 +1248,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 13px;
+  font-size: var(--text-detail);
   color: #57534e;
 }
 .ll-check-list svg {
@@ -1289,7 +1289,7 @@
   letter-spacing: -0.04em;
 }
 .ll-agent-pass > p {
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
   margin: 5px 0 21px;
 }
@@ -1303,7 +1303,7 @@
   gap: 12px;
   padding: 11px 0;
   border-top: 1px solid #e7e5e4;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-agent-pass dt {
   color: #57534e;
@@ -1333,7 +1333,7 @@
   border: 1px solid #cdcec2;
   background: #f5f5ef;
   padding: 12px 7px;
-  font-size: 12px;
+  font-size: var(--text-label);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1344,7 +1344,7 @@
 }
 .ll-diagram-caption {
   margin-top: 26px;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
   text-align: center;
 }
@@ -1374,7 +1374,7 @@
 }
 .ll-system-node p {
   color: #57534e;
-  font-size: 13px;
+  font-size: var(--text-detail);
   margin-top: 9px;
 }
 .ll-flow-arrow {
@@ -1399,14 +1399,14 @@
   color: #7e8069;
 }
 .ll-system-boundary strong {
-  font-size: 20px;
+  font-size: var(--text-subheading);
   font-weight: 500;
   letter-spacing: -0.8px;
 }
 .ll-system-boundary .ll-micro {
   width: 100%;
   padding-left: 35px;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-system-boundary ul {
   list-style: none;
@@ -1419,7 +1419,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #57534e;
 }
 .ll-system-boundary li svg {
@@ -1433,7 +1433,7 @@
   padding: 20px 40px;
   border-top: 1px solid #e7e5e4;
   color: #57534e;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-flow-footnote svg {
   flex-shrink: 0;
@@ -1481,7 +1481,7 @@
 }
 .ll-record-version {
   font-family: var(--brand-font-mono);
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #8a8275;
   letter-spacing: 0;
 }
@@ -1494,7 +1494,7 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
-  font-size: 12px;
+  font-size: var(--text-label);
   color: #8a8275;
   padding: 27px 0;
 }
@@ -1511,13 +1511,13 @@
   flex-shrink: 0;
 }
 .ll-recovery-restored strong {
-  font-size: 16px;
+  font-size: var(--text-body);
   display: block;
   font-weight: 500;
 }
 .ll-recovery-restored div > span {
   color: #747a66;
-  font-size: 12px;
+  font-size: var(--text-label);
   display: block;
   margin-top: 4px;
 }
@@ -1525,7 +1525,7 @@
   margin-left: auto;
 }
 .ll-recovery-diagram > p {
-  font-size: 12px;
+  font-size: var(--text-label);
   text-align: center;
   color: #57534e;
   margin: 23px 10px 0;
@@ -1579,7 +1579,7 @@
   box-shadow: 0 0 0 18px var(--ll-paper);
 }
 .ll-scenario-grid .ll-eyebrow {
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-scenario-grid h3 {
   margin: 18px 0 13px;
@@ -1589,7 +1589,7 @@
 }
 .ll-scenario-grid p {
   color: #57534e;
-  font-size: 13px;
+  font-size: var(--text-detail);
   line-height: 1.6;
   max-width: 280px;
 }
@@ -1600,12 +1600,12 @@
   gap: 20px;
   padding-top: 28px;
   margin-top: auto;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-sandbox-note {
   padding: 18px 40px;
   color: #57534e;
-  font-size: 12px;
+  font-size: var(--text-label);
   border-bottom: 1px solid var(--ll-line);
 }
 .ll-faq {
@@ -1632,7 +1632,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  font-size: 16px;
+  font-size: var(--text-body);
   cursor: pointer;
   letter-spacing: -0.03em;
 }
@@ -1650,7 +1650,7 @@
 .ll-faq details > p {
   padding: 0 33px 25px 0;
   color: #57534e;
-  font-size: 14px;
+  font-size: var(--text-detail);
   line-height: 1.7;
 }
 .ll-closing {
@@ -1687,7 +1687,7 @@
   display: flex;
   width: max-content;
   margin-top: 19px;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-footer-top {
   padding: 61px 40px 70px;
@@ -1696,7 +1696,7 @@
   gap: 50px;
 }
 .ll-footer-top p {
-  font-size: 12px;
+  font-size: var(--text-label);
   line-height: 1.6;
   color: #57534e;
   margin-top: 20px;
@@ -1706,11 +1706,11 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-footer nav > .ll-eyebrow {
   margin-bottom: 9px;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-footer nav a {
   display: inline-flex;
@@ -1729,7 +1729,7 @@
   justify-content: space-between;
   gap: 20px;
   color: #57534e;
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .ll-footer-bottom a {
   display: inline-flex;
@@ -1750,10 +1750,10 @@
     gap: 18px;
   }
   .ll-desktop-nav a {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-solutions-trigger {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-workflow-grid article {
     padding-inline: 23px;
@@ -1765,7 +1765,7 @@
     gap: 17px;
   }
   .ll-hero-actions .ll-text-link {
-    font-size: 12px;
+    font-size: var(--text-label);
     gap: 9px;
   }
   .ll-layer-strip strong {
@@ -1808,7 +1808,7 @@
     padding-inline: 25px;
   }
   .ll-scenario-grid h3 {
-    font-size: 24px;
+    font-size: var(--text-section);
   }
   .ll-footer-top {
     gap: 30px;
@@ -1854,7 +1854,7 @@
     padding: 10px 0 6px;
     color: #57534e;
     font-family: var(--brand-font-mono);
-    font-size: 12px;
+    font-size: var(--text-label);
     letter-spacing: 1.2px;
     text-transform: uppercase;
   }
@@ -1866,13 +1866,13 @@
     display: block;
   }
   .ll-mobile-solution strong {
-    font-size: 14px;
+    font-size: var(--text-detail);
     font-weight: 550;
   }
   .ll-mobile-solution small {
     margin-top: 3px;
     color: #57534e;
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-automation-intro {
     gap: 45px;
@@ -1897,7 +1897,7 @@
     font-size: 55px;
   }
   .ll-hero-copy > p {
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .ll-hero-actions {
     flex-direction: column;
@@ -1917,7 +1917,7 @@
     font-size: 17px;
   }
   .ll-layer-strip small {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-layer-strip > a > svg:not(.ll-layer-arrow) {
     width: 23px;
@@ -1982,7 +1982,7 @@
     font-size: 35px;
   }
   .ll-feature-copy > p {
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .ll-identity-diagram {
     padding: 60px 22px;
@@ -1994,7 +1994,7 @@
     gap: 7px;
   }
   .ll-agent-pass-top > .ll-micro {
-    font-size: 12px;
+    font-size: var(--text-label);
     letter-spacing: 0.2px;
   }
   .ll-agent-pass-top > svg {
@@ -2038,7 +2038,7 @@
     font-size: 42px;
   }
   .ll-closing-action > p {
-    font-size: 15px;
+    font-size: var(--text-body);
   }
   .ll-footer-top {
     grid-template-columns: repeat(3, 1fr);
@@ -2058,7 +2058,7 @@
     gap: 12px;
   }
   .ll-wordmark {
-    font-size: 20px;
+    font-size: var(--text-subheading);
     gap: 6px;
   }
   .ll-wordmark > svg {
@@ -2067,7 +2067,7 @@
   .ll-nav-cta {
     min-height: 36px;
     padding: 8px 11px;
-    font-size: 12px;
+    font-size: var(--text-label);
     line-height: 18px;
   }
   .ll-menu-toggle {
@@ -2087,7 +2087,7 @@
     padding: 49px 22px 0;
   }
   .ll-eyebrow {
-    font-size: 12px;
+    font-size: var(--text-label);
     letter-spacing: 1.1px;
   }
   .ll-hero h1 {
@@ -2097,7 +2097,7 @@
   }
   .ll-hero-copy > p {
     max-width: 390px;
-    font-size: 14px;
+    font-size: var(--text-detail);
     line-height: 1.6;
   }
   .ll-hero-actions {
@@ -2110,11 +2110,11 @@
   .ll-hero-actions .ll-button {
     min-height: 45px;
     padding: 11px 15px;
-    font-size: 12px;
+    font-size: var(--text-label);
     gap: 15px;
   }
   .ll-hero-actions .ll-text-link {
-    font-size: 12px;
+    font-size: var(--text-label);
     gap: 7px;
   }
   .ll-wave {
@@ -2145,17 +2145,17 @@
     border-top: 1px solid var(--ll-line);
   }
   .ll-layer-strip strong {
-    font-size: 20px;
+    font-size: var(--text-subheading);
   }
   .ll-layer-strip small {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-layer-strip > a > svg:not(.ll-layer-arrow) {
     width: 27px;
   }
   .ll-layer-number {
     left: 10px;
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-layer-arrow {
     top: 38px;
@@ -2177,7 +2177,7 @@
   }
   .ll-section-heading p {
     margin-top: 18px;
-    font-size: 13px;
+    font-size: var(--text-detail);
     line-height: 1.6;
   }
   .ll-automation-intro {
@@ -2192,11 +2192,11 @@
     padding-bottom: 0;
   }
   .ll-automation-summary p {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .ll-automation-summary .ll-text-link {
     margin-top: 20px;
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-workflow-grid {
     grid-template-columns: 1fr;
@@ -2212,7 +2212,7 @@
   }
   .ll-workflow-grid h3 {
     margin-top: 44px;
-    font-size: 24px;
+    font-size: var(--text-section);
   }
   .ll-control-tab {
     min-height: 168px;
@@ -2227,16 +2227,16 @@
     width: 20px;
   }
   .ll-tab-label {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-control-tab strong {
-    font-size: 20px;
+    font-size: var(--text-subheading);
     line-height: 1.18;
     margin: 8px 0 10px;
     max-width: 240px;
   }
   .ll-tab-body {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-tab-arrow {
     right: 10px;
@@ -2257,10 +2257,10 @@
     gap: 8px;
   }
   .ll-preview-heading strong {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-preview-heading .ll-status {
-    font-size: 12px;
+    font-size: var(--text-label);
     padding-inline: 5px;
   }
   .ll-preview-icon {
@@ -2278,7 +2278,7 @@
     margin-top: 19px;
   }
   .ll-integrity-intro > p {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .ll-integrity-dashboard {
     border-inline: 0;
@@ -2302,10 +2302,10 @@
     font-size: 31px;
   }
   .ll-integrity-metrics span {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-integrity-metrics small {
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .ll-interventions-panel {
     padding: 22px 17px;
@@ -2324,23 +2324,23 @@
   .ll-intervention-list > div {
     grid-template-columns: minmax(0, 1.4fr) minmax(45px, 0.7fr) 28px;
     gap: 8px;
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .ll-stage-footer {
-    font-size: 12px;
+    font-size: var(--text-label);
     gap: 5px;
   }
   .ll-stage-footer a {
     gap: 3px;
   }
   .ll-request p {
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .ll-check-row {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-check-row span:last-child {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-identity-section,
   .ll-recovery-section {
@@ -2353,16 +2353,16 @@
     margin: 21px 0;
   }
   .ll-feature-copy > p {
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .ll-check-list {
     gap: 11px;
   }
   .ll-check-list li {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-feature-copy > .ll-text-link {
-    font-size: 12px;
+    font-size: var(--text-label);
     margin-top: 25px;
   }
   .ll-identity-diagram {
@@ -2385,7 +2385,7 @@
     margin-bottom: 12px;
   }
   .ll-system-node p {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-flow-arrow {
     transform: rotate(90deg);
@@ -2399,7 +2399,7 @@
   .ll-flow-footnote {
     padding: 17px 22px;
     align-items: flex-start;
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-flow-footnote svg {
     margin-top: 2px;
@@ -2416,7 +2416,7 @@
     flex-wrap: nowrap;
   }
   .ll-recovery-top .ll-micro {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-recovery-record {
     padding: 21px;
@@ -2429,7 +2429,7 @@
     flex-direction: column;
   }
   .ll-heading-row .ll-text-link {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-scenario-grid {
     grid-template-columns: 1fr;
@@ -2452,7 +2452,7 @@
   }
   .ll-sandbox-note {
     padding: 17px 22px;
-    font-size: 12px;
+    font-size: var(--text-label);
     line-height: 1.6;
   }
   .ll-faq {
@@ -2463,16 +2463,16 @@
     margin: 18px 0 22px;
   }
   .ll-faq > div > .ll-text-link {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-faq summary {
-    font-size: 15px;
+    font-size: var(--text-body);
     padding-block: 21px;
     gap: 14px;
   }
   .ll-faq details > p {
     padding-right: 10px;
-    font-size: 13px;
+    font-size: var(--text-detail);
   }
   .ll-closing {
     grid-template-columns: 1fr;
@@ -2489,7 +2489,7 @@
     display: none;
   }
   .ll-closing-action > p {
-    font-size: 14px;
+    font-size: var(--text-detail);
     max-width: 270px;
   }
   .ll-footer-top {
@@ -2501,12 +2501,12 @@
     grid-column: 1 / -1;
   }
   .ll-footer nav {
-    font-size: 12px;
+    font-size: var(--text-label);
   }
   .ll-footer-bottom {
     padding: 20px 25px;
     flex-wrap: wrap;
-    font-size: 12px;
+    font-size: var(--text-label);
     gap: 16px;
   }
   .ll-footer-bottom > span:nth-child(2) {
@@ -2547,7 +2547,7 @@
   border-top: 1px solid #d6d3d1;
   padding: 16px 22px;
   color: #44403c;
-  font-size: 14px;
+  font-size: var(--text-detail);
   line-height: 1.6;
 }
 .ll-integrity-transcript summary { cursor: pointer; font-weight: 550; }
