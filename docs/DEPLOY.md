@@ -35,6 +35,11 @@ configuration, where AgentGovern redirects to LoopLabs. The live review route
 is a reversible server-side override and must be removed after the design
 decision. The saved nginx backup restores the redirect.
 
+The active review image is
+`looplabs-web:looplabs-preview-workflow-library-20261001`. It adds the guided
+workflow library at `/control-plane/workflows`; the LoopLabs production
+container remains unchanged pending review.
+
 ### Landing promotion — October 1, 2026
 
 The execution-integrity landing page was promoted in image
