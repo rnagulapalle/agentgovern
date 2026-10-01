@@ -26,6 +26,29 @@ Start with teams operating a real agent workflow that changes a system of record
 
 Use RevOps and customer operations as the provisional proof wedge. The shipped renewal scenario already supports delegated discount authority, CRM freshness, external-send approval, run termination, output checks, and sample-state recovery. Change the wedge when buyer interviews, qualified conversations, search behavior, or product engagement produce stronger evidence elsewhere.
 
+## Service-led entry without becoming an automation agency
+
+LoopLabs should support two customer starting points:
+
+1. **No workflow exists:** offer a bounded early-access launch program that selects, designs, and implements one governed agent workflow. Use the right execution substrate, including n8n when appropriate, and design ownership, permissions, approval, evidence, and recovery into the workflow from the start.
+2. **A workflow already exists:** map its agents, tools, actions, authority, failure states, and external effects, then add the control and reconciliation boundary that the existing architecture lacks.
+
+Both paths must lead to the LoopLabs control plane. Do not sell open-ended workflow development or compete on the number of connectors and canvas features.
+
+Recommended language:
+
+> Put your first governed agent workflow into production.
+
+> No workflow yet? We help design and build one. Already running agents? We add action controls, approvals, evidence, and recovery.
+
+Recommended CTA: **Bring us one workflow.**
+
+## n8n competitive boundary
+
+n8n is a serious competitor, implementation ecosystem, and possible substrate. It now markets workflow-local RBAC, human approval, input and output guardrails, evaluations, logging, self-hosting, and production governance. Its expert directory includes partners that analyze processes and build production-grade agentic workflows. LoopLabs cannot differentiate with “we build secure workflows” alone.
+
+The strongest LoopLabs cases span multiple agents, runtimes, teams, or systems; require separation of duties outside the builder; or can leave an uncertain external effect that must be reconciled before retry. If a customer's complete workflow lives in n8n and n8n's native controls satisfy the requirement, LoopLabs should use or complement n8n rather than force replacement.
+
 ## Market evidence reviewed
 
 - [Microsoft: Why an enterprise needs Agent 365](https://learn.microsoft.com/en-us/microsoft-agent-365/guidance/why-agent-365-for-enterprise)
@@ -35,6 +58,8 @@ Use RevOps and customer operations as the provisional proof wedge. The shipped r
 - [Google Cloud: Agent identity, gateway, governance, and runtime defense](https://cloud.google.com/blog/products/identity-security/whats-new-in-iam-security-governance-and-runtime-defense)
 - [Runlayer](https://www.runlayer.com/)
 - [Agent Identity](https://www.agent-identity.dev/)
+- [n8n: AI agent governance](https://blog.n8n.io/ai-agent-governance/)
+- [n8n service partner directory](https://experts.n8n.io/)
 
 ## What changes operationally
 

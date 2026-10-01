@@ -73,6 +73,24 @@ Copy this block for each material experiment or weekly synthesis.
 
 ## Experiments
 
+### 2026-10-01 — Workflow-building entry point versus n8n
+
+- **Period:** October 1, 2026
+- **Segment/persona:** Companies interested in agents but lacking a production workflow, plus teams with an existing n8n or custom workflow
+- **Pain or job:** Move one business process into production without separating workflow implementation from permissions, approvals, evidence, and recovery
+- **Channel/query:** Homepage positioning, founder sales motion, and design-partner offer
+- **Asset/URL:** `docs/research/2026-10-01-looplabs-market-positioning.md`
+- **Hypothesis:** LoopLabs can serve customers before they have an agent workflow if workflow implementation is a bounded entry into the control plane rather than an open-ended automation service.
+- **Evidence observed:** n8n currently offers deterministic and agentic workflow building, RBAC, human approval, input and output guardrails, evaluations, execution history, log streaming, self-hosting, and an expert directory whose partners provide process analysis and production workflow implementation. n8n explicitly argues that governance can live in the execution workflow without a separate control plane.
+- **Sample size:** n8n's current enterprise, governance, and expert-partner surfaces; LoopLabs claim audit
+- **Result:** Defined two entry paths: build one governed workflow with the customer when none exists, or add action control and reconciliation to an existing workflow. Both must lead to the LoopLabs control plane. Defined the strongest differentiation as cross-runtime authority, separation of duties, shared state, and reconciliation before retry after an uncertain effect.
+- **What worked:** Treating n8n as both a substrate and competitor produces a more honest offer than claiming a generic workflow-building advantage.
+- **What failed or remains unclear:** LoopLabs has not yet proven that customers will pay separately for an independent control and recovery layer. The current tour does not connect to n8n or another live runtime.
+- **Learning:** “We build workflows” is valuable as a service-led entry, but weak as a category. The service must be productized around one bounded consequential workflow and create durable control-plane adoption.
+- **Confidence:** medium
+- **Decision:** improve
+- **Next experiment:** Offer five “Bring us one workflow” control clinics and test whether prospects ask primarily for implementation, approvals and authority, or uncertain-outcome recovery. Select one workflow for a live n8n-or-custom integration slice.
+
 ### 2026-10-01 — Control-plane category and wedge review
 
 - **Period:** October 1, 2026
