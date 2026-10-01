@@ -62,6 +62,11 @@ const invariants = [
     "components/control-plane/shell.tsx",
     'aria-label="Back to LoopLabs homepage"',
   ],
+  [
+    "guided workflow launch disclosure",
+    "components/control-plane/screens.tsx",
+    "self-service workflow building are product direction",
+  ],
 ];
 for (const [name, file, expected] of invariants) {
   try {

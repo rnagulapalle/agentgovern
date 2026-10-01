@@ -23,6 +23,7 @@ The largest messaging risk was the phrase “build workflows.” Today, early-ac
 | Audit every decision | State changes add browser-local audit events and the visitor can export JSON | Demonstrated locally; no durable or append-only backend |
 | Control model access and spend | The UI models tiers, role entitlements, budgets, and route metadata | Represented; no live model gateway request in the tour |
 | Build one-agent and multi-agent workflows | The tour shows a prepared multi-agent renewal topology and onboarding/configuration | Partly represented; no self-serve workflow builder |
+| Choose a narrow workflow and understand its onboarding requirements | The workflow library shows prepared personal, real-estate, RevOps, customer-operations, and finance examples with triggers, systems, control points, monitoring needs, and a five-step launch path | Demonstrated as product guidance; live connectors and self-service building remain product direction |
 | Sit between agents and production systems | The architecture and decision boundary are shown | Product direction; no production connector or credential broker in the tour |
 | Work across Copilot, ChatGPT, Gemini, Agentforce, and custom agents | The control model is provider-neutral | Product direction; each provider still needs an integration |
 | Produce signed receipts and immutable evidence | The legacy demo produced a deterministic browser checksum | Not demonstrated. Copy and labels were corrected; production requires real cryptographic signing and durable storage |
@@ -43,6 +44,10 @@ The largest messaging risk was the phrase “build workflows.” Today, early-ac
    review environment. It shows illustrative sample metrics for evaluated,
    held, blocked, and uncertain actions, links the attention queue to the
    recovery tour, and visibly states that it is not production telemetry.
+8. Added a workflow library to the product tour. It separates personal teaching
+   examples from the enterprise ICP, provides connect-existing and guided-launch
+   paths, and makes the current prepared-demo versus future self-service boundary
+   explicit.
 
 ## Investor view
 

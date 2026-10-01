@@ -101,6 +101,7 @@ export function ControlScreen({
   return (
     <>
       {section === "overview" && <Overview open={setInspect} />}
+      {section === "workflows" && <WorkflowLibrary />}
       {section === "agents" && <Agents open={setInspect} />}
       {section === "runs" && <Runs open={setInspect} />}
       {section === "policies" && <Policies open={setInspect} />}
@@ -175,13 +176,10 @@ function Overview({ open }: { open: Open }) {
           <h1>Agent control overview</h1>
           <p>Review agents, running work, approvals, and recovery.</p>
         </div>
-        <button
-          className="cp-button cp-button-dark"
-          onClick={() => open({ kind: "onboard" })}
-        >
+        <Link className="cp-button cp-button-dark" href="/control-plane/workflows">
           <Plus size={16} />
-          Onboard agent
-        </button>
+          Choose a workflow
+        </Link>
       </div>
       <div className="cp-welcome">
         <div>
@@ -400,6 +398,212 @@ function Overview({ open }: { open: Open }) {
           </div>
         </section>
       </div>
+    </>
+  );
+}
+
+const workflowTemplates = [
+  {
+    audience: "PERSONAL · READ FIRST",
+    title: "Daily operations brief",
+    description:
+      "Collect calendar, inbox, and task changes into one morning brief. Keep every source read-only until the summary is trusted.",
+    flow: "Schedule → gather → prioritize → deliver",
+    systems: "Calendar · Email · Tasks",
+    control: "No external sends or writes",
+    monitor: "Delivery · source failures · items needing review",
+    level: "Starter",
+    href: "/control-plane/runs",
+  },
+  {
+    audience: "REAL ESTATE · LEAD OPERATIONS",
+    title: "Qualify and respond to a new lead",
+    description:
+      "Validate an inbound lead, match basic criteria, draft a reply, and require approval before the first customer message is sent.",
+    flow: "Lead → qualify → draft → approve → send → log",
+    systems: "Form · Email · CRM",
+    control: "Approve first contact and CRM write",
+    monitor: "New leads · response time · held sends · failed writes",
+    level: "Team",
+    href: "/control-plane/approvals",
+  },
+  {
+    audience: "REAL ESTATE · LISTING OPERATIONS",
+    title: "Publish an approved listing update",
+    description:
+      "Check the source record, prepare a listing change, obtain owner approval, publish once, and verify every destination before retrying.",
+    flow: "Record → compare → approve → publish → verify",
+    systems: "CRM · Listing data · Website",
+    control: "Block stale, conflicting, or duplicate updates",
+    monitor: "Published · stale · conflicting · outcome unknown",
+    level: "Advanced",
+    href: "/control-plane/reconciliation",
+  },
+  {
+    audience: "REVENUE OPERATIONS",
+    title: "Renewal and account change",
+    description:
+      "Prepare a renewal, enforce discount authority, approve customer communication, and confirm the CRM state after the action.",
+    flow: "Research → price → approve → send → update → verify",
+    systems: "CRM · Email · Billing",
+    control: "Hold discounts beyond delegated authority",
+    monitor: "Runs · approvals · account drift · spend",
+    level: "Advanced",
+    href: "/control-plane/runs",
+  },
+  {
+    audience: "CUSTOMER OPERATIONS",
+    title: "Service recovery and credit",
+    description:
+      "Review the customer history, propose a remedy, hold larger credits for approval, and ensure billing and CRM agree.",
+    flow: "Case → investigate → propose → approve → credit → reconcile",
+    systems: "Support · Billing · CRM",
+    control: "Limit credit amount and external communication",
+    monitor: "Open cases · held credits · mismatched records",
+    level: "Advanced",
+    href: "/control-plane/outputs",
+  },
+  {
+    audience: "FINANCE & PROCUREMENT",
+    title: "Supplier onboarding exception",
+    description:
+      "Verify submitted records, separate bank-detail approval from data entry, create the supplier once, and check ERP state after a timeout.",
+    flow: "Intake → verify → risk → approve → create → reconcile",
+    systems: "Intake · Verification · ERP",
+    control: "Named approver for bank and payment changes",
+    monitor: "Exceptions · approvals · duplicate risk · uncertain writes",
+    level: "Advanced",
+    href: "/control-plane/reconciliation",
+  },
+] as const;
+
+function WorkflowLibrary() {
+  return (
+    <>
+      <PageTitle
+        eyebrow="WORKFLOW LAUNCHPAD · PREPARED USE CASES"
+        title="Start with one narrow job."
+        description="Choose a repeatable workflow with a clear owner, trigger, business effect, and recovery path. LoopLabs adds control around the consequential steps."
+        action={
+          <a
+            className="cp-button cp-button-dark"
+            href="https://cal.com/rajnagulapalle"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => track("demo_booking_clicked", { source: "workflow_library" })}
+          >
+            Bring us a workflow <ArrowUpRight size={14} />
+          </a>
+        }
+      />
+
+      <section className="cp-workflow-paths" aria-labelledby="workflow-path-title">
+        <div className="cp-workflow-path-intro">
+          <span className="cp-eyebrow">TWO WAYS TO START</span>
+          <h2 id="workflow-path-title">Keep the runtime you have—or launch one with us.</h2>
+          <p>
+            The current tour uses prepared sample workflows. Live connectors and
+            self-service workflow building are product direction; early-access
+            setup is guided by the LoopLabs team.
+          </p>
+        </div>
+        <div className="cp-workflow-path">
+          <span>01</span>
+          <div>
+            <strong>Connect an existing flow</strong>
+            <p>Bring n8n, Zapier, custom code, or another runtime. Map the actions that need approval, evidence, or recovery.</p>
+          </div>
+        </div>
+        <div className="cp-workflow-path">
+          <span>02</span>
+          <div>
+            <strong>Launch one governed flow</strong>
+            <p>No workflow yet? Define one bounded job with us, then choose the simplest suitable execution runtime.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="cp-workflow-onboarding" aria-labelledby="workflow-onboarding-title">
+        <PanelHead
+          title="A clear path from idea to monitored run"
+          sub="Start read-only, prove the decisions, then add one consequential action"
+        />
+        <div className="cp-workflow-onboarding-steps">
+          {[
+            ["01", "Define the job", "Name the trigger, owner, successful outcome, and action that changes a system."],
+            ["02", "Connect minimum access", "Choose the few tools and records required. Begin with read access wherever possible."],
+            ["03", "Set authority", "Decide what can run automatically, what waits for a named approver, and what is blocked."],
+            ["04", "Test the failure paths", "Exercise stale data, missing permission, rejected approval, timeout, and duplicate retry."],
+            ["05", "Monitor daily", "Watch completed runs, held actions, failures, uncertain effects, cost, and recovery decisions."],
+          ].map(([number, title, copy]) => (
+            <div key={number}>
+              <span>{number}</span>
+              <strong>{title}</strong>
+              <p>{copy}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="cp-workflow-library" aria-labelledby="workflow-library-title">
+        <div className="cp-workflow-library-head">
+          <div>
+            <span className="cp-eyebrow">USE-CASE LIBRARY</span>
+            <h2 id="workflow-library-title">From a personal brief to cross-system operations.</h2>
+          </div>
+          <p>Prepared examples explain the control model. Enterprise workflows with costly writes, sends, payments, or retries are the primary LoopLabs fit.</p>
+        </div>
+        <div className="cp-workflow-cards">
+          {workflowTemplates.map((workflow) => (
+            <article className="cp-workflow-card" key={workflow.title}>
+              <header>
+                <span className="cp-eyebrow">{workflow.audience}</span>
+                <span className="cp-outline-label">{workflow.level}</span>
+              </header>
+              <h3>{workflow.title}</h3>
+              <p>{workflow.description}</p>
+              <dl>
+                <div>
+                  <dt>Flow</dt>
+                  <dd>{workflow.flow}</dd>
+                </div>
+                <div>
+                  <dt>Systems</dt>
+                  <dd>{workflow.systems}</dd>
+                </div>
+                <div>
+                  <dt>Control point</dt>
+                  <dd>{workflow.control}</dd>
+                </div>
+                <div>
+                  <dt>Daily view</dt>
+                  <dd>{workflow.monitor}</dd>
+                </div>
+              </dl>
+              <footer>
+                <Link className="cp-text-button" href={workflow.href}>
+                  Explore prepared example <ArrowUpRight size={14} />
+                </Link>
+              </footer>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="cp-workflow-fit">
+        <div>
+          <span className="cp-eyebrow">A GOOD FIRST WORKFLOW</span>
+          <h2>Bounded, repeatable, and costly when it goes wrong.</h2>
+        </div>
+        <ul>
+          <li><Check size={14} /> Has one accountable owner</li>
+          <li><Check size={14} /> Runs often enough to learn from</li>
+          <li><Check size={14} /> Touches two or more tools</li>
+          <li><Check size={14} /> Contains a write, send, payment, or deletion</li>
+          <li><Check size={14} /> Has an approval or authority boundary</li>
+          <li><Check size={14} /> Can leave an uncertain external outcome</li>
+        </ul>
+      </section>
     </>
   );
 }
