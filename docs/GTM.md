@@ -10,13 +10,15 @@
 **Demo UI:** LoopLabs Control Plane at `/control-plane` (original scenarios at `/agent-governance-demo`)\
 **Twitter:** Not configured for the new brand
 
-## Positioning (Sep 2026)
+## Positioning (Oct 2026)
 
-**ICP:** SMB/traditional organizations (50–1,000 employees) rolling out Copilot, ChatGPT Enterprise, Gemini, Agentforce — not AI-native builders.
+**Provisional design-partner ICP:** Applied-AI, agent-platform, automation, security-engineering, RevOps, and customer-operations teams in mid-market organizations that already have an agent workflow changing a system of record.
 
-**Trigger:** Employees use AI to access company systems and take real business actions (email, CRM, finance, documents).
+**Trigger:** A multi-agent or multi-tool workflow can send, write, pay, delete, delegate, or expose output, and the team needs to control the action or recover from an uncertain outcome.
 
-**Message:** Control layer with AI visibility, human approval, access control, and audit trails.
+**Message:** Build an agent workflow with LoopLabs' guided help, control consequential actions before and during execution, and reconcile affected state when an outcome is uncertain.
+
+**Category and wedge:** Use “agent control plane” for category comprehension. Lead with execution integrity and recovery for consequential multi-agent workflows. Do not market a self-serve workflow builder until one is shipped.
 
 **Voice:** Vanta / Okta / Microsoft Security / Drata — business and compliance language first.
 
@@ -30,12 +32,16 @@ policy engine, execution engine, orchestration, infrastructure, Rego, OPA, LLM f
 
 AI governance, AI security, AI approvals, AI access control, AI audit trail, AI compliance, AI risk management, human approval, business policies, enterprise AI controls
 
-## Mandatory before any content
+## Mandatory before any material asset
 
-1. Read **`~/.cursor/skills/agentgovern-gtm/SKILL.md`** — Research Gate protocol
-2. Pick a row from **`docs/research/industry-narrow-post-matrix.md`**
-3. Read **`docs/research/2026-06-agent-governance-reddit.md`** for customer signals
-4. Update **`/Users/raj/promo/content/gtm-content-ledger.md`**
+1. Read **`~/.codex/skills/looplabs-growth-operator/SKILL.md`** for current positioning and route to its decision gate.
+2. Check **`docs/LOOPLABS_CLAIM_AND_FUNNEL_AUDIT.md`** and the shipped product surface that will support the claim.
+3. Use current buyer, search, community, product, or primary-source evidence to score the candidate. Do not draft when buyer pain, product proof, or conversion fit is weak.
+4. Check the ledger and variation registry for overlap, then update **`/Users/raj/promo/content/gtm-content-ledger.md`** as the asset advances.
+
+For an industry failure-mode SEO page, also choose or add a researched row in **`docs/research/industry-narrow-post-matrix.md`** and inspect the relevant signals in **`docs/research/2026-06-agent-governance-reddit.md`**. Those files are inputs for that asset type, not a mandatory source for every PR, launch, research, or conversion task.
+
+The older Cursor portfolio and AgentGovern skills are historical inputs. Reuse their research, duplicate-prevention, canonical, ledger, and measurement disciplines; do not inherit stale branding, product facts, audiences, or publishing quotas.
 
 ## One post rule
 

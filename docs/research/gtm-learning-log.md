@@ -73,6 +73,24 @@ Copy this block for each material experiment or weekly synthesis.
 
 ## Experiments
 
+### 2026-10-01 — Control-plane category and wedge review
+
+- **Period:** October 1, 2026
+- **Segment/persona:** Applied-AI, agent-platform, automation, security-engineering, RevOps, and customer-operations teams operating agent workflows that mutate systems of record
+- **Pain or job:** Control consequential agent actions and avoid unsafe retries when a multi-agent workflow leaves an external outcome uncertain
+- **Channel/query:** Category positioning, SEO/AEO strategy, founder narrative, and design-partner targeting
+- **Asset/URL:** `docs/research/2026-10-01-looplabs-market-positioning.md`
+- **Hypothesis:** “Agent control plane” helps buyers understand the category, while execution integrity and recovery around consequential multi-agent workflows gives LoopLabs a more defensible wedge than generic identity, inventory, observability, or policy messaging.
+- **Evidence observed:** Microsoft Agent 365 publicly positions a cross-platform control plane around registry, identity, observability, governance, security, and lifecycle management. AWS AgentCore Policy enforces deterministic agent-to-tool rules and now describes temporal controls for action order, prerequisites, data freshness, and human approval. Google Cloud describes Agent Identity and Agent Gateway for identity-aware agent-to-agent and agent-to-tool enforcement. Runlayer covers enablement, governed access, runtime security, observability, and spend. Agent Identity covers per-agent identity, secrets, communication channels, endpoints, permissions, and audit logs. The LoopLabs claim audit shows that its current prototype most clearly demonstrates a closed loop across delegated authority, action decisions, approval or containment, execution supervision, output checks, receipts, and version-aware sample-state reconciliation.
+- **Sample size:** Five current product/category sources plus the shipped LoopLabs prototype and claim audit
+- **Result:** Kept “agent control plane” as the category term. Changed the provisional wedge to execution integrity and recovery for consequential multi-agent workflows. Changed the initial customer hypothesis from broad traditional organizations adopting chat assistants to teams already operating an agent workflow that changes a system of record. Kept RevOps/customer operations as the first proof wedge because it has the closest current demo match. Clarified that workflow building is founder-led early-access implementation, not a shipped self-serve builder.
+- **What worked:** Comparing current primary-source product language against the claim-to-proof matrix exposed where the category has commoditized and where LoopLabs has a more specific story.
+- **What failed or remains unclear:** This is a strategic inference, not validated demand. No design-partner interview, qualified conversation, or meaningful funnel sample yet proves the chosen buyer or wedge.
+- **Learning:** Category language and differentiation should be separated. LoopLabs can use “control plane” to be understood while testing a narrower action-to-recovery promise. The next evidence must come from buyer conversations and behavior, not more positioning copy.
+- **Confidence:** medium
+- **Decision:** improve
+- **Next experiment:** Use Product Hunt and five targeted design-partner conversations to test whether buyers respond more strongly to action authorization, multi-agent run control, or uncertain-outcome reconciliation; measure which proof state they enter and which problem they describe in their own words.
+
 ### 2026-10-01 — Founder identity and claim-transparency surface
 
 - **Period:** September 30–October 1, 2026
