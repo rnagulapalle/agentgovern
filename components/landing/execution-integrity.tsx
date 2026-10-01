@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Pause, Play } from "lucide-react";
 import { LoopMark } from "@/components/brand/loop-mark";
 
@@ -28,40 +28,15 @@ const metricDefinitions = [
   },
 ];
 
-const outcomeDefinitions = [
-  { key: "verified", label: "Verified" },
-  { key: "held", label: "Held" },
-  { key: "blocked", label: "Blocked" },
-  { key: "uncertain", label: "Uncertain" },
-] as const;
-
 const frames = [
   {
     metrics: [1284, 96, 31, 4],
-    outcomes: {
-      verified: [112, 138, 126, 151, 144, 167, 158],
-      held: [8, 13, 10, 15, 17, 11, 22],
-      blocked: [3, 5, 4, 7, 3, 2, 7],
-      uncertain: [1, 0, 1, 0, 1, 0, 1],
-    },
   },
   {
     metrics: [1291, 97, 31, 4],
-    outcomes: {
-      verified: [118, 134, 129, 149, 153, 162, 164],
-      held: [9, 12, 11, 14, 18, 12, 21],
-      blocked: [4, 5, 3, 7, 4, 2, 6],
-      uncertain: [1, 0, 1, 1, 0, 0, 1],
-    },
   },
   {
     metrics: [1298, 99, 32, 4],
-    outcomes: {
-      verified: [121, 140, 132, 155, 148, 169, 162],
-      held: [10, 13, 12, 16, 17, 13, 18],
-      blocked: [4, 6, 4, 7, 3, 2, 6],
-      uncertain: [1, 0, 1, 0, 1, 0, 1],
-    },
   },
 ];
 
@@ -79,6 +54,7 @@ function prefersReducedMotion() {
 
 export function ExecutionIntegrityDashboard() {
   const root = useRef<HTMLDivElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
   const [entered, setEntered] = useState(false);
   const [visible, setVisible] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -149,19 +125,17 @@ export function ExecutionIntegrityDashboard() {
     return () => window.clearInterval(timer);
   }, [entered, visible, paused]);
 
-  const outcomeRows = useMemo(
-    () =>
-      outcomeDefinitions.map((outcome) => {
-        const values = frames[frame].outcomes[outcome.key];
-        return {
-          ...outcome,
-          values,
-          total: values.reduce((sum, value) => sum + value, 0),
-          max: Math.max(...values),
-        };
-      }),
-    [frame],
-  );
+  useEffect(() => {
+    const playback = video.current;
+    if (!playback) return;
+    if (paused || !visible || reduced.current) {
+      playback.pause();
+      return;
+    }
+    void playback.play().catch(() => {
+      // The poster remains visible if the browser declines autoplay.
+    });
+  }, [paused, visible]);
 
   return (
     <div className="ll-integrity-dashboard" ref={root}>
@@ -177,7 +151,7 @@ export function ExecutionIntegrityDashboard() {
           <button
             type="button"
             className="ll-integrity-pause"
-            aria-label={paused ? "Play analytics animation" : "Pause analytics animation"}
+            aria-label={paused ? "Play execution story" : "Pause execution story"}
             aria-pressed={paused}
             onClick={() => setPaused((current) => !current)}
           >
@@ -201,82 +175,35 @@ export function ExecutionIntegrityDashboard() {
         ))}
       </div>
 
-      <div className="ll-integrity-main">
-        <div className="ll-outcome-panel">
-          <div className="ll-dashboard-head">
-            <div>
-              <strong>Action outcomes</strong>
-              <span>Each status uses its own scale so low-volume risk stays visible</span>
-            </div>
-            <div className="ll-stream-state">
-              <i className={paused ? "is-paused" : ""} />
-              {paused ? "Paused" : "Sample stream"}
-            </div>
-          </div>
-          <div
-            className={`ll-outcome-trends ${entered ? "is-entered" : ""}`}
-            role="img"
-            aria-label="Illustrative seven-day trends for verified, held, blocked, and uncertain action outcomes. Each outcome uses its own scale."
-          >
-            {outcomeRows.map((outcome) => (
-              <div className="ll-trend-row" key={outcome.key}>
-                <div className="ll-trend-label">
-                  <i className={outcome.key} />
-                  <span>{outcome.label}</span>
-                  <strong>{outcome.total.toLocaleString("en-US")}</strong>
-                </div>
-                <div className="ll-trend-bars" aria-hidden="true">
-                  {outcome.values.map((value, index) => (
-                    <span key={index}>
-                      <i
-                        className={outcome.key}
-                        style={{
-                          height: entered
-                            ? `${Math.max(14, (value / outcome.max) * 100)}%`
-                            : "0%",
-                        }}
-                      />
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <div className="ll-trend-days" aria-hidden="true">
-              <span>M</span><span>T</span><span>W</span><span>T</span>
-              <span>F</span><span>S</span><span>S</span>
-            </div>
-          </div>
-        </div>
-
-        <aside className="ll-attention-panel" aria-labelledby="attention-title">
-          <div className="ll-dashboard-head">
-            <div>
-              <strong id="attention-title">Needs attention</strong>
-              <span>Uncertain outcomes awaiting a decision</span>
-            </div>
-            <span className="ll-attention-count">04</span>
-          </div>
-          <div className="ll-incident-card">
-            <div>
-              <span className="ll-eyebrow">ERP WRITE · OUTCOME UNCERTAIN</span>
-              <span className="ll-status ll-status-hold">Review required</span>
-            </div>
-            <h3>Supplier bank details may already be updated.</h3>
-            <dl>
-              <div><dt>Workflow</dt><dd>Supplier onboarding</dd></div>
-              <div><dt>Owner</dt><dd>Maya Chen · Finance</dd></div>
-              <div><dt>Observed</dt><dd>Response lost after write</dd></div>
-            </dl>
-            <Link href="/control-plane/reconciliation">
-              Review recovery <ArrowUpRight size={14} />
-            </Link>
-          </div>
-          <p>
-            Verify the current record before confirming, retrying, or preparing
-            a compensating change.
-          </p>
-        </aside>
-      </div>
+      <figure className="ll-integrity-story">
+        <video
+          ref={video}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/landing/execution-integrity-poster.png"
+          aria-label="Illustrative supplier onboarding workflow. A proposed ERP write passes identity and authority checks, waits for named approval, becomes uncertain after a lost response, and is reconciled before LoopLabs prevents a duplicate retry."
+        >
+          <source src="/landing/execution-integrity.webm" type="video/webm" />
+          <track
+            kind="captions"
+            src="data:text/vtt,WEBVTT%0A%0A"
+            srcLang="en"
+            label="English"
+          />
+        </video>
+        <figcaption>
+          <span>
+            Follow one action from delegated authority through observed effect
+            and recovery.
+          </span>
+          <Link href="/control-plane/reconciliation">
+            Explore this run <ArrowUpRight size={13} />
+          </Link>
+        </figcaption>
+      </figure>
 
       <div className="ll-interventions-panel">
         <div className="ll-dashboard-head">

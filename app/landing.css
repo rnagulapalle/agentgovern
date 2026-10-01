@@ -1110,19 +1110,39 @@
   top: 13px;
   color: #a8a29e;
 }
-.ll-integrity-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.75fr);
-  border-bottom: 1px solid #d6d3d1;
-}
-.ll-outcome-panel,
-.ll-attention-panel,
 .ll-interventions-panel {
   padding: 25px 23px;
 }
-.ll-attention-panel {
-  border-left: 1px solid #d6d3d1;
-  background: #f6f6f2;
+.ll-integrity-story {
+  margin: 0;
+  overflow: hidden;
+  border-bottom: 1px solid #d6d3d1;
+  background: #f8f7f3;
+}
+.ll-integrity-story video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 15 / 7;
+  object-fit: cover;
+  background: url("/landing/execution-integrity-poster.png") center / cover no-repeat;
+}
+.ll-integrity-story figcaption {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 22px;
+  border-top: 1px solid #d6d3d1;
+  color: #78716c;
+  font-size: 10px;
+}
+.ll-integrity-story figcaption a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #292524;
+  font-weight: 550;
 }
 .ll-dashboard-head {
   display: flex;
@@ -1142,171 +1162,6 @@
   margin-top: 3px;
   color: #78716c;
   font-size: 10px;
-}
-.ll-stream-state {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #78716c;
-  font-family: var(--brand-font-mono);
-  font-size: 8px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-.ll-stream-state i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #7f8b67;
-  box-shadow: 0 0 0 3px rgb(127 139 103 / 0.12);
-  animation: ll-stream-pulse 1.8s ease-in-out infinite;
-}
-.ll-stream-state i.is-paused {
-  animation: none;
-  background: #a8a29e;
-  box-shadow: none;
-}
-@keyframes ll-stream-pulse {
-  50% { box-shadow: 0 0 0 6px rgb(127 139 103 / 0); }
-}
-.ll-outcome-trends {
-  margin-top: 22px;
-  border-top: 1px solid #e7e5e4;
-}
-.ll-trend-row {
-  min-height: 67px;
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr);
-  align-items: stretch;
-  gap: 18px;
-  border-bottom: 1px solid #e7e5e4;
-}
-.ll-trend-label {
-  display: grid;
-  grid-template-columns: 7px 1fr;
-  grid-template-rows: auto auto;
-  align-content: center;
-  column-gap: 8px;
-}
-.ll-trend-label > i {
-  grid-row: 1 / 3;
-  align-self: center;
-  width: 7px;
-  height: 7px;
-}
-.ll-trend-label > span {
-  color: #57534e;
-  font-size: 10px;
-}
-.ll-trend-label > strong {
-  margin-top: 1px;
-  font-family: var(--brand-font-mono);
-  font-size: 10px;
-  font-weight: 550;
-}
-.ll-trend-bars {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  align-items: end;
-  gap: clamp(8px, 1.6vw, 18px);
-  padding: 9px 10px 0;
-  background-image: linear-gradient(to bottom, transparent 49%, #efede8 50%, transparent 51%);
-}
-.ll-trend-bars > span {
-  height: 48px;
-  display: flex;
-  align-items: end;
-}
-.ll-trend-bars i {
-  display: block;
-  width: 100%;
-  min-height: 3px;
-  transition: height 0.85s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.ll-trend-days {
-  display: grid;
-  grid-template-columns: 120px repeat(7, 1fr);
-  gap: clamp(8px, 1.6vw, 18px);
-  padding: 7px 10px 0 0;
-  color: #a8a29e;
-  font-family: var(--brand-font-mono);
-  font-size: 8px;
-  text-align: center;
-}
-.ll-trend-days::before { content: ""; }
-.ll-trend-label .verified,
-.ll-trend-bars .verified { background: #788665; }
-.ll-trend-label .held,
-.ll-trend-bars .held { background: #b48a4e; }
-.ll-trend-label .blocked,
-.ll-trend-bars .blocked { background: #a75e49; }
-.ll-trend-label .uncertain,
-.ll-trend-bars .uncertain { background: #3f3c38; }
-.ll-attention-count {
-  min-width: 31px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  background: #eee1d6;
-  color: #8d5f4e;
-  font-family: var(--brand-font-mono);
-  font-size: 10px;
-}
-.ll-incident-card {
-  margin-top: 25px;
-  padding: 17px;
-  border: 1px solid #d8d2c9;
-  background: #fafaf9;
-}
-.ll-incident-card > div:first-child {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.ll-incident-card .ll-eyebrow {
-  color: #8c624e;
-  font-size: 8px;
-}
-.ll-incident-card h3 {
-  margin: 18px 0;
-  font-size: 19px;
-  line-height: 1.24;
-  letter-spacing: -0.04em;
-}
-.ll-incident-card dl {
-  margin: 0;
-}
-.ll-incident-card dl > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 8px 0;
-  border-top: 1px solid #e7e5e4;
-  font-size: 10px;
-}
-.ll-incident-card dt { color: #78716c; }
-.ll-incident-card dd {
-  margin: 0;
-  text-align: right;
-}
-.ll-incident-card > a {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 16px;
-  padding: 10px 11px;
-  background: #252421;
-  color: white;
-  font-size: 10px;
-}
-.ll-attention-panel > p {
-  margin-top: 15px;
-  color: #78716c;
-  font-size: 10px;
-  line-height: 1.5;
 }
 .ll-interventions-panel .ll-dashboard-head > a {
   display: inline-flex;
@@ -2107,13 +1962,6 @@
   .ll-integrity-metrics > a:nth-child(n + 3) {
     border-top: 1px solid #d6d3d1;
   }
-  .ll-integrity-main {
-    grid-template-columns: 1fr;
-  }
-  .ll-attention-panel {
-    border-left: 0;
-    border-top: 1px solid #d6d3d1;
-  }
   .ll-intervention-list {
     grid-template-columns: 1fr;
   }
@@ -2458,30 +2306,16 @@
   .ll-integrity-metrics small {
     font-size: 9px;
   }
-  .ll-outcome-panel,
-  .ll-attention-panel,
   .ll-interventions-panel {
     padding: 22px 17px;
   }
-  .ll-outcome-panel .ll-dashboard-head {
-    flex-direction: column;
-  }
-  .ll-trend-row {
-    grid-template-columns: 78px minmax(0, 1fr);
-    gap: 8px;
-  }
-  .ll-trend-bars {
-    gap: 5px;
-    padding-inline: 4px;
-  }
-  .ll-trend-days {
-    grid-template-columns: 78px repeat(7, 1fr);
-    gap: 5px;
-    padding-right: 4px;
-  }
-  .ll-incident-card > div:first-child {
+  .ll-integrity-story figcaption {
+    min-height: 60px;
     align-items: flex-start;
     flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 17px;
   }
   .ll-interventions-panel .ll-dashboard-head {
     align-items: flex-end;
@@ -2695,5 +2529,14 @@
   .ll-animation-toggle,
   .ll-integrity-pause {
     display: none;
+  }
+  .ll-integrity-story video {
+    display: none;
+  }
+  .ll-integrity-story::before {
+    content: "";
+    display: block;
+    aspect-ratio: 15 / 7;
+    background: url("/landing/execution-integrity-poster.png") center / cover no-repeat;
   }
 }

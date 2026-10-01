@@ -45,7 +45,12 @@ const invariants = [
   [
     "analytics motion control",
     "components/landing/execution-integrity.tsx",
-    "Pause analytics animation",
+    "Pause execution story",
+  ],
+  [
+    "analytics product story",
+    "components/landing/execution-integrity.tsx",
+    "/landing/execution-integrity.webm",
   ],
   ["workflow positioning", "lib/site.ts", "Control consequential agent actions. Reconcile uncertain outcomes."],
   ["shared font", "app/layout.tsx", "GeistSans"],
