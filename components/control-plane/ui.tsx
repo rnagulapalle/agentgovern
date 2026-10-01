@@ -307,14 +307,14 @@ export function SignalArt() {
       <rect
         x="348"
         y="44"
-        width="117"
+        width="150"
         height="22"
         rx="11"
         fill="#f5f5f4"
         stroke="#d6d3d1"
       />
       <circle cx="360" cy="55" r="2.5" fill="#71805c" />
-      <text x="369" y="59" fontSize="9" fill="#78716c" fontFamily="var(--font-geist-mono)">
+      <text x="369" y="59" fontSize="12" fill="#57534e" fontFamily="var(--font-geist-mono)">
         POLICY ENFORCED
       </text>
     </svg>

@@ -13,7 +13,7 @@ export function NewsMarkdownBody({ body }: { body: string }) {
 
         if (trimmed.startsWith("## ")) {
           return (
-            <h2 key={i} className="pt-2 text-[20px] font-medium tracking-[-0.025em] text-fg">
+            <h2 key={i} className="pt-2 text-[24px] font-medium tracking-[-0.025em] text-fg">
               {inlineFormat(trimmed.slice(3))}
             </h2>
           );
@@ -21,7 +21,7 @@ export function NewsMarkdownBody({ body }: { body: string }) {
 
         if (trimmed.startsWith("### ")) {
           return (
-            <h3 key={i} className="pt-1 text-[17px] font-medium text-fg">
+            <h3 key={i} className="pt-1 text-[20px] font-medium text-fg">
               {inlineFormat(trimmed.slice(4))}
             </h3>
           );
@@ -30,7 +30,7 @@ export function NewsMarkdownBody({ body }: { body: string }) {
         if (trimmed.startsWith("- ")) {
           const items = trimmed.split("\n").filter((l) => l.startsWith("- "));
           return (
-            <ul key={i} className="list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-subtle marker:text-faint">
+            <ul key={i} className="list-disc space-y-2 pl-5 text-[16px] leading-relaxed text-subtle marker:text-faint">
               {items.map((item, j) => (
                 <li key={j}>{inlineFormat(item.slice(2))}</li>
               ))}
@@ -39,7 +39,7 @@ export function NewsMarkdownBody({ body }: { body: string }) {
         }
 
         return (
-          <p key={i} className="text-[15px] leading-relaxed text-subtle">
+          <p key={i} className="text-[16px] leading-relaxed text-subtle">
             {inlineFormat(trimmed)}
           </p>
         );
@@ -103,7 +103,7 @@ export function NewsCategoryBadge({ category }: { category: string }) {
     regulatory: "Regulatory",
   };
   return (
-    <span className="rounded-full border border-indigo-500/20 bg-indigo-50 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-indigo-700">
+    <span className="rounded-full border border-indigo-500/20 bg-indigo-50 px-2.5 py-0.5 text-[12px] font-medium uppercase tracking-wide text-indigo-700">
       {labels[category] ?? category}
     </span>
   );
@@ -134,7 +134,7 @@ export function NewsArticleShell({
           <NewsCategoryBadge category={category} />
           <time className="text-[12px] text-faint">{published}</time>
         </div>
-        <h1 className="mt-4 text-balance text-[34px] font-medium leading-[1.08] tracking-[-0.045em] text-fg sm:text-[44px]">
+        <h1 className="marketing-page-title">
           {title}
         </h1>
         <p className="mt-4 text-[16px] leading-relaxed text-subtle">{description}</p>
@@ -144,14 +144,14 @@ export function NewsArticleShell({
         {relatedGuide && (
           <div className="card mt-12 p-6">
             <p className="label mb-2">Related guide</p>
-            <Link href={relatedGuide} className={`text-[15px] ${marketingTextLink}`}>
+            <Link href={relatedGuide} className={`text-[16px] ${marketingTextLink}`}>
               {relatedGuide.replace(/^\//, "").replace(/-/g, " ")} →
             </Link>
           </div>
         )}
 
         <div className="card mt-8 p-6 text-center">
-          <p className="text-[15px] font-medium text-fg">See the controls in the interactive product tour</p>
+          <p className="text-[16px] font-medium text-fg">See the controls in the interactive product tour</p>
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Link
               href="/control-plane"

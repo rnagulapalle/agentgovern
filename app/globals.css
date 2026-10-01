@@ -19,7 +19,7 @@
   --fg: 28 25 23;
   --muted: 68 64 60;
   --subtle: 87 83 78;
-  --faint: 120 113 108;
+  --faint: 87 83 78;
   --hairline: 41 37 36;
 }
 
@@ -107,17 +107,17 @@ textarea {
 
   /* Micro uppercase label */
   .label {
-    @apply font-mono text-[10px] uppercase tracking-[0.12em];
+    @apply font-mono text-[12px] uppercase tracking-[0.12em];
     color: rgb(var(--faint));
   }
 
   /* Small status chip */
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium leading-none;
+    @apply inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[12px] font-medium leading-none;
   }
 
   .kbd {
-    @apply rounded border border-white/[0.08] bg-white/[0.03] px-1.5 py-0.5 font-mono text-[10px] text-white/40;
+    @apply rounded border border-white/[0.08] bg-white/[0.03] px-1.5 py-0.5 font-mono text-[12px] text-white/40;
   }
 
   /* macOS window traffic lights */
@@ -275,9 +275,9 @@ textarea {
 .marketing-section {
   border-left: 1px solid #d6d3d1;
   padding-left: 17px;
-  color: #78716c;
+  color: var(--ui-muted);
   font-family: var(--brand-font-mono);
-  font-size: 10px;
+  font-size: var(--text-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -292,7 +292,7 @@ textarea {
   align-items: center;
   gap: 6px;
   color: #44403c;
-  font-size: 13px;
+  font-size: var(--text-detail);
   white-space: nowrap;
 }
 .marketing-desktop-nav a:hover,
@@ -310,7 +310,7 @@ textarea {
   background: transparent;
   color: #44403c;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--text-detail);
   cursor: pointer;
 }
 .marketing-solutions-trigger svg { transition: transform 0.2s; }
@@ -328,9 +328,9 @@ textarea {
 .marketing-solutions-popover > span {
   display: block;
   padding: 9px 3px 10px;
-  color: #78716c;
+  color: var(--ui-muted);
   font-family: var(--brand-font-mono);
-  font-size: 9px;
+  font-size: var(--text-label);
   letter-spacing: 1.2px;
   text-transform: uppercase;
 }
@@ -345,11 +345,11 @@ textarea {
 }
 .marketing-solutions-popover strong,
 .marketing-solutions-popover small { display: block; }
-.marketing-solutions-popover strong { font-size: 15px; font-weight: 550; }
+.marketing-solutions-popover strong { font-size: var(--text-body); font-weight: 550; }
 .marketing-solutions-popover small {
   margin-top: 3px;
-  color: #78716c;
-  font-size: 11px;
+  color: var(--ui-muted);
+  font-size: var(--text-label);
   line-height: 1.45;
 }
 .marketing-solutions-popover a > svg { flex-shrink: 0; margin-top: 2px; }
@@ -363,7 +363,7 @@ textarea {
   gap: 8px;
   padding: 14px 20px;
   border: 1px solid #1c1917;
-  font-size: 14px;
+  font-size: var(--text-detail);
   font-weight: 450;
   line-height: 20px;
   transition: color 0.2s, background 0.2s;
@@ -423,15 +423,15 @@ textarea {
 }
 .marketing-footer-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 1.7fr) repeat(3, minmax(130px, 1fr));
-  gap: 50px;
+  grid-template-columns: minmax(260px, 1.7fr) repeat(4, minmax(120px, 1fr));
+  gap: 28px;
   padding: 60px 40px;
 }
 .marketing-footer-grid > div > p {
   max-width: 340px;
   margin-top: 18px;
   color: #57534e;
-  font-size: 13px;
+  font-size: var(--text-detail);
   line-height: 1.6;
 }
 .marketing-footer nav {
@@ -439,13 +439,13 @@ textarea {
   align-content: start;
   gap: 10px;
   color: #57534e;
-  font-size: 13px;
+  font-size: var(--text-detail);
 }
 .marketing-footer nav strong {
   margin-bottom: 5px;
-  color: #78716c;
+  color: var(--ui-muted);
   font-family: var(--brand-font-mono);
-  font-size: 10px;
+  font-size: var(--text-label);
   font-weight: 400;
   letter-spacing: 0.12em;
 }
@@ -454,8 +454,8 @@ textarea {
   justify-content: space-between;
   padding: 19px 40px;
   border-top: 1px solid #d6d3d1;
-  color: #78716c;
-  font-size: 11px;
+  color: var(--ui-muted);
+  font-size: var(--text-label);
 }
 
 @media (max-width: 1100px) {
@@ -491,13 +491,13 @@ textarea {
     padding: 0 28px;
     border-bottom: 1px solid #e7e5e4;
     color: #1c1917;
-    font-size: 14px;
+    font-size: var(--text-detail);
   }
   .marketing-mobile-group-title {
     padding: 15px 28px 6px;
-    color: #78716c;
+    color: var(--ui-muted);
     font-family: var(--brand-font-mono);
-    font-size: 9px;
+    font-size: var(--text-label);
     letter-spacing: 1.2px;
     text-transform: uppercase;
   }
@@ -506,21 +506,48 @@ textarea {
   }
   .marketing-mobile-solution strong,
   .marketing-mobile-solution small { display: block; }
-  .marketing-mobile-solution strong { font-size: 14px; font-weight: 550; }
-  .marketing-mobile-solution small { margin-top: 3px; color: #78716c; font-size: 10px; }
+  .marketing-mobile-solution strong { font-size: var(--text-detail); font-weight: 550; }
+  .marketing-mobile-solution small { margin-top: 3px; color: var(--ui-muted); font-size: var(--text-label); }
   .marketing-footer-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 600px) {
   .marketing-surface { padding: 0; }
   .marketing-frame { border-inline: 0; }
-  .marketing-header { height: 80px; padding: 0 20px; }
-  .marketing-wordmark { font-size: 20px; }
+  .marketing-header { height: 80px; padding: 0 20px; gap: 10px; }
+  .marketing-wordmark { font-size: var(--text-subheading); }
   .marketing-wordmark > svg { width: 26px; height: 28px; }
-  .marketing-nav-cta { display: none; }
-  .marketing-menu-toggle { margin-left: auto; }
+  .marketing-nav-cta { min-height: 40px; padding: 9px 12px; margin-left: auto; font-size: var(--text-label); }
+  .marketing-menu-toggle { margin-left: 0; }
   .marketing-mobile-nav { top: 79px; }
   .marketing-main { padding: 58px 20px 80px; }
   .marketing-page-title { font-size: 42px; }
   .marketing-footer-grid { grid-template-columns: 1fr; padding: 48px 20px; }
   .marketing-footer-bottom { padding-inline: 20px; }
+}
+
+/* One reading scale and palette shared by marketing and product surfaces. */
+:root {
+  --text-label: 12px;
+  --text-detail: 14px;
+  --text-body: 16px;
+  --text-subheading: 20px;
+  --text-section: 24px;
+  --ui-paper: #f5f5f4;
+  --ui-surface: #fafaf9;
+  --ui-ink: #1c1917;
+  --ui-muted: #57534e;
+  --ui-line: #d6d3d1;
+  --control-height: 44px;
+}
+.marketing-main { font-size: var(--text-body); line-height: 1.65; }
+.marketing-surface :is(a, button, summary, input, select, textarea):focus-visible {
+  outline: 2px solid #78745b;
+  outline-offset: 4px;
+}
+
+.marketing-header { font-size: var(--text-detail); }
+.marketing-section { display: none; }
+@media (max-width: 360px) {
+  .marketing-nav-cta { display: none; }
+  .marketing-menu-toggle { margin-left: auto; }
 }

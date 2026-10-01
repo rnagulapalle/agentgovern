@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowDown, ArrowUpRight, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { LoopMark } from "@/components/brand/loop-mark";
 import { SITE } from "@/lib/site";
 
@@ -16,8 +16,8 @@ const NAV = [
 const SOLUTIONS = [
   {
     href: "/#automation",
-    label: "Workflow automation",
-    description: "Turn a repeatable process into an agent workflow.",
+    label: "Governed workflow launch",
+    description: "Put one bounded agent workflow into production.",
   },
   {
     href: "/#controls",
@@ -26,12 +26,19 @@ const SOLUTIONS = [
   },
 ];
 
-export function MarketingHeader({ section }: { section?: string }) {
+export function MarketingHeader({ section, bookingUrl = CAL_URL }: { section?: string; bookingUrl?: string }) {
+  const toggle = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [solutionsOpen, setSolutionsOpen] = useState(false);
 
   return (
-    <header className="marketing-header">
+    <header className="marketing-header" onKeyDown={(event) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        setSolutionsOpen(false);
+        toggle.current?.focus();
+      }
+    }}>
       <Link href="/" className="marketing-wordmark" aria-label="LoopLabs home">
         <LoopMark />
         <span>LoopLabs</span>
@@ -65,10 +72,11 @@ export function MarketingHeader({ section }: { section?: string }) {
         ))}
         <Link href="/control-plane">Product tour <ArrowUpRight size={14} /></Link>
       </nav>
-      <a className="marketing-nav-cta" href={CAL_URL} target="_blank" rel="noopener noreferrer">
+      <a className="marketing-nav-cta" href={bookingUrl} target="_blank" rel="noopener noreferrer">
         Book a demo
       </a>
       <button
+        ref={toggle}
         className="marketing-menu-toggle"
         aria-expanded={open}
         aria-controls="marketing-navigation"
@@ -106,15 +114,22 @@ export function MarketingFooter() {
       <div className="marketing-footer-grid">
         <div>
           <Link href="/" className="marketing-wordmark"><LoopMark /><span>LoopLabs</span></Link>
-          <p>Build agent workflows. Control actions and execution. Recover when a run changes the wrong state.</p>
+          <p>The control and recovery layer for agent-run workflows.</p>
         </div>
         <nav aria-label="Solutions">
           <strong>SOLUTIONS</strong>
-          <Link href="/#automation">Workflow automation</Link>
+          <Link href="/#automation">Governed workflow launch</Link>
           <Link href="/control-plane/policies">Action controls</Link>
           <Link href="/control-plane/runs">Execution controls</Link>
           <Link href="/control-plane/outputs">Output controls</Link>
           <Link href="/control-plane/reconciliation">Recovery</Link>
+        </nav>
+        <nav aria-label="Platform">
+          <strong>PLATFORM</strong>
+          <Link href="/control-plane/agents">Agent identities</Link>
+          <Link href="/control-plane/gateway">Model gateway</Link>
+          <Link href="/control-plane/approvals">Approvals</Link>
+          <Link href="/control-plane/audit">Audit trail</Link>
         </nav>
         <nav aria-label="Resources">
           <strong>RESOURCES</strong>

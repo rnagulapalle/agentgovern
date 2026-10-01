@@ -72,7 +72,7 @@ export default function AboutPage() {
           <section className="mt-14 grid gap-px border border-hairline/10 bg-hairline/10 md:grid-cols-2" aria-labelledby="founders-title">
             <div className="bg-panel p-7 md:col-span-2">
               <p className="label">FOUNDERS</p>
-              <h2 id="founders-title" className="mt-3 text-[27px] font-medium tracking-[-0.035em] text-fg">
+              <h2 id="founders-title" className="mt-3 text-[24px] font-medium tracking-[-0.035em] text-fg">
                 Built with customers, one workflow at a time
               </h2>
             </div>
@@ -86,10 +86,10 @@ export default function AboutPage() {
 
           <section className="mt-14 max-w-3xl" aria-labelledby="stage-title">
             <p className="label">CURRENT PRODUCT STAGE</p>
-            <h2 id="stage-title" className="mt-3 text-[27px] font-medium tracking-[-0.035em] text-fg">
+            <h2 id="stage-title" className="mt-3 text-[24px] font-medium tracking-[-0.035em] text-fg">
               Early access with guided implementation
             </h2>
-            <div className="mt-5 space-y-4 text-[15px] leading-relaxed text-subtle">
+            <div className="mt-5 space-y-4 text-[16px] leading-relaxed text-subtle">
               <p>
                 The interactive tour demonstrates agent onboarding, scoped access,
                 deterministic allow, hold, and block decisions, human approvals,
@@ -110,10 +110,10 @@ export default function AboutPage() {
 
           <section className="mt-14 max-w-3xl border-t border-hairline/10 pt-12" aria-labelledby="publishing-title">
             <p className="label">HOW WE PUBLISH</p>
-            <h2 id="publishing-title" className="mt-3 text-[27px] font-medium tracking-[-0.035em] text-fg">
+            <h2 id="publishing-title" className="mt-3 text-[24px] font-medium tracking-[-0.035em] text-fg">
               Product claims should be inspectable
             </h2>
-            <ul className="mt-5 list-disc space-y-3 pl-5 text-[15px] leading-relaxed text-subtle marker:text-faint">
+            <ul className="mt-5 list-disc space-y-3 pl-5 text-[16px] leading-relaxed text-subtle marker:text-faint">
               <li>We connect product claims to a visible demo state or tested behavior.</li>
               <li>We label simulated behavior and current limitations directly.</li>
               <li>We prefer primary sources and first-hand evidence in technical guidance.</li>
@@ -127,7 +127,7 @@ export default function AboutPage() {
             <h2 id="contact-title" className="mt-3 text-[24px] font-medium tracking-[-0.03em] text-fg">
               Bring us one workflow that matters
             </h2>
-            <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-subtle">
+            <p className="mt-3 max-w-2xl text-[16px] leading-relaxed text-subtle">
               We will map the agents, people, systems, approvals, failure states,
               and recovery boundary with you.
             </p>

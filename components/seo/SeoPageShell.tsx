@@ -50,7 +50,7 @@ export function SeoPageShell({
             {stats.map((s) => (
               <div key={s.label} className="card px-3 py-3 text-center">
                 <div className="text-[18px] font-semibold text-fg">{s.value}</div>
-                <div className="mt-0.5 text-[11px] text-faint">{s.label}</div>
+                <div className="mt-0.5 text-[12px] text-faint">{s.label}</div>
               </div>
             ))}
           </div>
@@ -75,11 +75,11 @@ export function SeoPageShell({
 
         {faq && faq.length > 0 && (
           <section className="mt-16 border-t border-hairline/10 pt-12">
-            <h2 className="text-[22px] font-medium tracking-[-0.03em] text-fg">Common questions</h2>
+            <h2 className="text-[24px] font-medium tracking-[-0.03em] text-fg">Common questions</h2>
             <dl className="mt-6 space-y-6">
               {faq.map((item) => (
                 <div key={item.q}>
-                  <dt className="text-[15px] font-medium text-fg">{item.q}</dt>
+                  <dt className="text-[16px] font-medium text-fg">{item.q}</dt>
                   <dd className="mt-2 text-[14px] leading-relaxed text-subtle">{item.a}</dd>
                 </div>
               ))}
@@ -88,7 +88,7 @@ export function SeoPageShell({
         )}
 
         <section className="card mt-16 p-8 text-center">
-          <h2 className="text-[22px] font-medium tracking-[-0.03em] text-fg">
+          <h2 className="text-[24px] font-medium tracking-[-0.03em] text-fg">
             Build the workflow. Keep authority over what runs.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-[14px] leading-relaxed text-subtle">
@@ -120,7 +120,7 @@ export function SeoPageShell({
               <li key={t.href}>
                 <Link
                   href={t.href}
-                  className="text-[13px] text-subtle transition-colors hover:text-fg"
+                  className="text-[14px] text-subtle transition-colors hover:text-fg"
                 >
                   {t.label}
                 </Link>
@@ -144,8 +144,8 @@ export function SeoSection({
 }) {
   return (
     <section>
-      <h2 className="text-[20px] font-medium tracking-[-0.025em] text-fg">{title}</h2>
-      <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-subtle">{children}</div>
+      <h2 className="text-[24px] font-medium tracking-[-0.025em] text-fg">{title}</h2>
+      <div className="mt-4 space-y-4 text-[16px] leading-relaxed text-subtle">{children}</div>
     </section>
   );
 }
@@ -169,7 +169,7 @@ export function SeoCards({
           }`}
         >
           <p className="text-[14px] font-medium text-fg">{item.title}</p>
-          <p className="mt-2 text-[13px] leading-relaxed text-subtle">{item.body}</p>
+          <p className="mt-2 text-[14px] leading-relaxed text-subtle">{item.body}</p>
         </div>
       ))}
     </div>
@@ -178,7 +178,7 @@ export function SeoCards({
 
 export function SeoList({ items }: { items: string[] }) {
   return (
-    <ul className="mt-3 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-subtle marker:text-faint">
+    <ul className="mt-3 list-disc space-y-2 pl-5 text-[16px] leading-relaxed text-subtle marker:text-faint">
       {items.map((item) => (
         <li key={item}>{item}</li>
       ))}
