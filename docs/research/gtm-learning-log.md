@@ -73,6 +73,24 @@ Copy this block for each material experiment or weekly synthesis.
 
 ## Experiments
 
+### 2026-10-01 — Five-year market and initial ICP pressure test
+
+- **Period:** October 1, 2026
+- **Segment/persona:** Automation and applied-AI owners at 500–5,000 employee B2B companies moving cross-system RevOps or customer-operations agents into production
+- **Pain or job:** Let an agent take a consequential action while preserving delegated authority, execution evidence, and a safe response to a duplicate, stale, partial, or uncertain external effect
+- **Channel/query:** Company thesis, design-partner qualification, founder narrative, and product roadmap
+- **Asset/URL:** `docs/research/2026-10-01-looplabs-five-year-thesis-and-icp.md`
+- **Hypothesis:** A vendor-neutral execution-integrity and recovery layer can retain value as builders, identity, inventory, policy, approvals, and observability become native platform features.
+- **Evidence observed:** Current platform roadmaps from ServiceNow, SAP, Microsoft, cloud vendors, and n8n show rapid bundling of generic control-plane capabilities. Gartner forecasts movement from assistive AI toward delegated, outcome-oriented workflow execution and specialized domain agents. NIST, the EU AI Act, and financial regulators emphasize identity, authorization, logging, human oversight, audit, and resilience. Current finance, retail, and supply-chain evidence points to agents taking actions across increasingly complex business workflows. The remaining cross-platform gap is proving and recovering the external business effect after authorization.
+- **Sample size:** Current cross-industry platform, standards, regulatory, and vertical research plus the LoopLabs claim-to-proof audit; no qualified customer interviews yet
+- **Result:** Narrowed the first ICP to a named company size, buyer, function, workflow shape, action type, and buying trigger. Ranked RevOps/customer operations first, finance operations/AP second, and procurement/supplier operations as the next expansion. Defined five mandatory qualification conditions and documented why highly regulated verticals should follow rather than lead.
+- **What worked:** Comparing future platform ownership with action-level failure modes separated commoditizing governance features from a potentially durable recovery boundary.
+- **What failed or remains unclear:** The thesis is still market inference. LoopLabs has not yet sat in a real execution path, prevented a duplicate effect, reconciled an unknown outcome, or shown that a customer will buy this separately from its workflow or system-of-record vendor.
+- **Learning:** The durable company is not a general agent control dashboard. It is the independent execution record and recovery coordinator for workflows whose business effects cross platform boundaries. The first customer should have a bounded, reversible, API-accessible action and a production deadline, rather than the highest theoretical regulatory pain.
+- **Confidence:** medium
+- **Decision:** improve
+- **Next experiment:** Recruit five qualified control-clinic conversations using the five-condition screen. Select one design partner for a live CRM action with server-side policy, an idempotency key, a durable receipt, an external-state check, and recovery before retry.
+
 ### 2026-10-01 — Workflow-building entry point versus n8n
 
 - **Period:** October 1, 2026

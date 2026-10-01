@@ -26,6 +26,8 @@ Start with teams operating a real agent workflow that changes a system of record
 
 Use RevOps and customer operations as the provisional proof wedge. The shipped renewal scenario already supports delegated discount authority, CRM freshness, external-send approval, run termination, output checks, and sample-state recovery. Change the wedge when buyer interviews, qualified conversations, search behavior, or product engagement produce stronger evidence elsewhere.
 
+The five-year market thesis and qualification rule are recorded in [2026-10-01-looplabs-five-year-thesis-and-icp.md](2026-10-01-looplabs-five-year-thesis-and-icp.md). The first ICP is deliberately narrower than a general mid-market buyer: the automation or applied-AI owner at a 500–5,000 employee B2B company putting a cross-system RevOps or customer-operations workflow into production, where an agent takes a consequential and potentially uncertain action.
+
 ## Service-led entry without becoming an automation agency
 
 LoopLabs should support two customer starting points:
