@@ -11,6 +11,7 @@ export type RunStatus =
   | "blocked";
 export type Section =
   | "overview"
+  | "workflows"
   | "agents"
   | "runs"
   | "policies"

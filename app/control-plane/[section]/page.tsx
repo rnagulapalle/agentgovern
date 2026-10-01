@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { ControlScreen } from "@/components/control-plane/screens";
 import type { Section } from "@/lib/control-plane/model";
 const sections = [
+  "workflows",
   "agents",
   "runs",
   "policies",

@@ -33,6 +33,7 @@ const groups = [
     name: "WORKSPACE",
     items: [
       { key: "overview", label: "Overview", icon: LayoutGrid },
+      { key: "workflows", label: "Workflow library", icon: BookOpen },
       { key: "agents", label: "Agent directory", icon: Bot },
       { key: "gateway", label: "Model gateway", icon: Network },
     ],
