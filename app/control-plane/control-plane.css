@@ -100,6 +100,7 @@
   top: 16px;
 }
 .cp-mark {
+  flex-shrink: 0;
   width: 29px;
   height: 29px;
   color: #6d6754;
@@ -133,6 +134,8 @@
   letter-spacing: -0.9px;
 }
 .cp-brand-sub {
+  white-space: normal;
+  line-height: 1.5;
   display: block;
   font-family: var(--font-geist-mono), monospace;
   letter-spacing: 1.05px;
@@ -3122,11 +3125,11 @@ button.cp-entity:hover strong {
 /* Keep the reference's quiet palette without sacrificing reading contrast. */
 .cp-workspace strong {
   font-size: var(--text-label);
-  white-space: nowrap;
+  white-space: normal;
 }
 .cp-workspace small {
   font-size: var(--text-label);
-  white-space: nowrap;
+  white-space: normal;
 }
 .cp-workspace-icon {
   flex-shrink: 0;
@@ -3628,4 +3631,8 @@ button.cp-entity:hover strong {
   .cp-overview-heading > div { width: 100%; }
   .cp-overview-heading > .cp-button { margin-top: 0; }
   .cp-tour-map-steps strong { font-size: var(--text-body); }
+}
+
+@media (max-width: 400px) {
+  .cp-topbar .cp-environment { display: none; }
 }
