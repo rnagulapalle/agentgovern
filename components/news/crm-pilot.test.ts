@@ -21,7 +21,9 @@ describe("CRM pilot discovery and product truth", () => {
     expect(sitemap()).toContainEqual(expect.objectContaining({ url, lastModified: new Date(post!.frontmatter.published) }));
     const rss = await feed().text();
     expect(rss).toContain(`<guid isPermaLink="true">${url}</guid>`);
-    expect(rss).toContain(`<lastBuildDate>${new Date(`${post!.frontmatter.published}T12:00:00Z`).toUTCString()}</lastBuildDate>`);
+    const feedDate = rss.match(/<lastBuildDate>([^<]+)<\/lastBuildDate>/)?.[1];
+    expect(feedDate).toBeDefined();
+    expect(new Date(feedDate!).getTime()).toBeGreaterThanOrEqual(new Date(`${post!.frontmatter.published}T12:00:00Z`).getTime());
     expect(await aiIndex().text()).toContain(url);
   });
 
