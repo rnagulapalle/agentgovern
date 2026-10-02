@@ -54,3 +54,5 @@ Review agent access when the owner changes, the workflow expands, a new model or
 The goal is to make authority visible, bounded, and recoverable before automation reaches production scale.
 
 [Explore the LoopLabs product tour](/control-plane/agents) to see agent identities, roles, permissions, approvals, and recovery together.
+
+For a concrete starting point, read [what an AI CRM workflow pilot involves](/blog/2026-10-02-ai-crm-workflow-pilot): one record update, a named owner, and agreed tests for approval and uncertain outcomes.
