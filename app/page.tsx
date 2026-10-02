@@ -581,6 +581,9 @@ export default function LandingPage() {
               <Link className="ll-text-link" href="/control-plane">
                 Or explore the product tour <ArrowRight size={16} />
               </Link>
+              <Link className="ll-text-link" href="/blog/2026-10-02-ai-crm-workflow-pilot">
+                What a CRM workflow pilot involves <ArrowRight size={16} />
+              </Link>
             </div>
           </section>
         </main>
