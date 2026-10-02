@@ -144,3 +144,21 @@ Copy this block for each material experiment or weekly synthesis.
 - **Confidence:** medium
 - **Decision:** improve
 - **Next experiment:** Submit and inspect `/about`, then measure whether launch and organic visitors use the About-to-tour or About-to-founder paths. Strengthen the audit-record proof next if current practitioner language persists.
+
+### 2026-10-02 — First Friday baseline and launch claim correction
+
+- **Period:** Web analytics September 25–October 2 UTC; saved funnels September 2–October 2 UTC; observed October 2 at the scheduled 01:31 PDT run
+- **Segment/persona:** RevOps/customer-operations operators evaluating one consequential agent workflow; segment remains unvalidated
+- **Pain or job:** Understand action control and recovery proof without mistaking a prepared prototype for a production workflow builder
+- **Channel/query:** Google discovery, PostHog proof funnel, Product Hunt draft
+- **Asset/URL:** `docs/research/2026-10-02-friday-growth-baseline.md`; `https://www.producthunt.com/posts/looplabs/edit`
+- **Hypothesis:** Trustworthy launch claims and a clean visit-to-proof baseline are prerequisites to deciding which content or conversion change will help.
+- **Evidence observed:** Authenticated Chrome DOM access worked despite native Mac lock. Search Console reported zero clicks/impressions, indexing data processing, and sitemap Success with 33 discovered pages. PostHog showed 42 unfiltered web visitors; the test-filtered saved proof funnel showed 33 entrants → 3 CTA/tour starts → 1 simulation interaction → 0 recovery interactions. The separate conversation funnel showed 5 tour starts and zero subsequent booking clicks. The draft was unscheduled, its video field empty, and Raj was the only maker shown. Existing copy claimed production action control and workflow building beyond current proof. Convey's vendor case studies emphasize bounded taught recurring processes; Stripe documents connector-specific idempotency limits.
+- **Sample size:** 42 unfiltered visitors and 33 saved-funnel entrants; no qualified buyer interviews, completed meeting evidence, or AEO benchmark
+- **Result:** Saved and reloaded corrected prototype-specific Product Hunt copy and a source-tagged canonical-domain link. Recorded baseline, event-definition limitations, launch gaps, and the next proof experiment. No new SEO page or site deployment.
+- **What worked:** Existing authenticated Chrome sessions provided aggregate analytics without requiring native unlock. Reviewing event definitions exposed that recovery events measure submitted interactions before validation, not successful state restoration.
+- **What failed or remains unclear:** Founder/QA traffic is incompletely excluded. Sample size cannot establish a conversion cause or ICP fit. Google visibility and AEO citations are not yet measurable. Launch video, Pratibha attribution, gallery claim review, and scheduling remain incomplete.
+- **Learning:** Separate acquisition, entry, accepted proof outcomes, and buyer intent. A funnel name must not become a success claim. External launch copy can drift after an owned-site claim audit and needs its own proof check.
+- **Confidence:** high for observed counts and saved draft; low for market demand or conversion causality
+- **Decision:** improve
+- **Next experiment:** Follow through on the existing uploaded YouTube video and launch draft; observe five target operators using one CRM proof path. Add validated outcome instrumentation before treating recovery interaction counts as successful activation. Use `analytics_debug=1` for all future automated production QA.
