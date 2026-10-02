@@ -48,6 +48,17 @@ const interventionReasons = [
   ["Conflicting or duplicate write", "07", "7%"],
 ];
 
+const mobileStorySteps = [
+  { title: "Proposed", message: "Vendor Ops agent requests a supplier bank-detail update.", effect: "No change made", retry: "Not needed" },
+  { title: "Authority verified", message: "The sample run verifies the agent’s identity, role, and delegated authority.", effect: "No change made", retry: "Not needed" },
+  { title: "Held for approval", message: "Supplier banking policy requires a named approver before the write.", effect: "No change made", retry: "Held" },
+  { title: "Approved", message: "Maya Chen approves the reviewed request in this illustrative workflow.", effect: "No change made", retry: "Not needed" },
+  { title: "Write in flight", message: "The story represents an ERP write with action ID LL-2407-A1.", effect: "Awaiting response", retry: "Blocked" },
+  { title: "Outcome uncertain", message: "The response is lost after the write. A blind retry is blocked.", effect: "May already exist", retry: "Blocked" },
+  { title: "Reconcile", message: "The story checks the represented ERP record and its current version.", effect: "Being verified", retry: "Blocked" },
+  { title: "Resolved", message: "The sample change already exists. No duplicate retry is issued.", effect: "Change confirmed", retry: "Duplicate prevented" },
+];
+
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -59,10 +70,29 @@ export function ExecutionIntegrityDashboard() {
   const [visible, setVisible] = useState(false);
   const [paused, setPaused] = useState(false);
   const [frame, setFrame] = useState(0);
+  const [mobile, setMobile] = useState(false);
+  const [storyStep, setStoryStep] = useState(0);
   // Keep useful values in the server-rendered page, then count into the
   // current sample once the dashboard enters the viewport.
   const [displayMetrics, setDisplayMetrics] = useState([1204, 83, 24, 2]);
   const reduced = useRef(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 600px)");
+    const update = () => setMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (!mobile || !visible || paused || reduced.current) return;
+    const timer = window.setInterval(
+      () => setStoryStep((current) => (current + 1) % mobileStorySteps.length),
+      4500,
+    );
+    return () => window.clearInterval(timer);
+  }, [mobile, visible, paused]);
 
   useEffect(() => {
     reduced.current = prefersReducedMotion();
@@ -128,14 +158,16 @@ export function ExecutionIntegrityDashboard() {
   useEffect(() => {
     const playback = video.current;
     if (!playback) return;
-    if (paused || !visible || reduced.current) {
+    if (mobile || paused || !visible || reduced.current) {
       playback.pause();
       return;
     }
     void playback.play().catch(() => {
       // The poster remains visible if the browser declines autoplay.
     });
-  }, [paused, visible]);
+  }, [mobile, paused, visible]);
+
+  const story = mobileStorySteps[storyStep];
 
   return (
     <div className="ll-integrity-dashboard" ref={root}>
@@ -176,9 +208,32 @@ export function ExecutionIntegrityDashboard() {
       </div>
 
       <figure className="ll-integrity-story">
+        <div className="ll-mobile-story" role="group" aria-label="Illustrative execution story">
+          <p className="ll-mobile-story-label">Illustrative workflow · Supplier onboarding</p>
+          <h3>One action. Every decision attached.</h3>
+          <div className="ll-mobile-story-progress" aria-hidden="true">
+            {mobileStorySteps.map((step, index) => <i key={step.title} className={index <= storyStep ? "is-complete" : undefined} />)}
+          </div>
+          <div className="ll-mobile-story-decision">
+            <span>Step {storyStep + 1} of {mobileStorySteps.length}</span>
+            <h4>{story.title}</h4>
+            <p>{story.message}</p>
+          </div>
+          <dl>
+            <div><dt>Agent</dt><dd>Vendor Ops agent</dd></div>
+            <div><dt>Owner</dt><dd>Finance operations</dd></div>
+            <div><dt>External effect</dt><dd>{story.effect}</dd></div>
+            <div><dt>Retry</dt><dd>{story.retry}</dd></div>
+          </dl>
+          <div className="ll-mobile-story-controls">
+            <button type="button" onClick={() => { setPaused(true); setStoryStep((current) => (current + mobileStorySteps.length - 1) % mobileStorySteps.length); }}>Previous step</button>
+            <button type="button" onClick={() => { setPaused(true); setStoryStep((current) => (current + 1) % mobileStorySteps.length); }}>Next step</button>
+          </div>
+          <p className="ll-mobile-story-label">Sample data · No connected production systems</p>
+        </div>
         <video
           ref={video}
-          autoPlay
+          autoPlay={!mobile}
           muted
           loop
           playsInline

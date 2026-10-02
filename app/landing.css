@@ -1126,6 +1126,7 @@
   object-fit: cover;
   background: url("/landing/execution-integrity-poster.png") center / cover no-repeat;
 }
+.ll-mobile-story { display: none; }
 .ll-integrity-story figcaption {
   min-height: 46px;
   display: flex;
@@ -2553,3 +2554,31 @@
 .ll-integrity-transcript summary { cursor: pointer; font-weight: 550; }
 .ll-integrity-transcript ol { margin: 12px 0 0; padding-left: 22px; }
 .ll-integrity-transcript li + li { margin-top: 10px; }
+
+/* Reflow the story on phones instead of shrinking text baked into video. */
+@media (max-width: 600px) {
+  .ll-integrity-story video,
+  .ll-integrity-story::before { display: none; }
+  .ll-mobile-story { display: block; padding: 24px 20px; background: #fafaf9; }
+  .ll-mobile-story-label { margin: 0; font-size: var(--text-label); color: #57534e; line-height: 1.5; }
+  .ll-mobile-story h3 { margin: 16px 0 22px; font-size: 24px; line-height: 1.2; letter-spacing: -0.04em; font-weight: 550; }
+  .ll-mobile-story-progress { display: flex; gap: 5px; margin-bottom: 22px; }
+  .ll-mobile-story-progress i { height: 4px; flex: 1; background: #deddd7; }
+  .ll-mobile-story-progress .is-complete { background: #7f8b67; }
+  .ll-mobile-story-decision { border: 1px solid #d6d3d1; padding: 18px; min-height: 210px; background: #f5f5f0; }
+  .ll-mobile-story-decision > span { font-size: var(--text-label); color: #57534e; }
+  .ll-mobile-story h4 { margin: 8px 0 12px; font-size: 24px; line-height: 1.2; font-weight: 550; }
+  .ll-mobile-story-decision p { margin: 0; font-size: var(--text-body); line-height: 1.5; }
+  .ll-mobile-story dl { margin: 20px 0; font-size: var(--text-detail); line-height: 1.5; }
+  .ll-mobile-story dl > div { display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid #d6d3d1; }
+  .ll-mobile-story dt { color: #57534e; }
+  .ll-mobile-story dd { margin: 0; text-align: right; }
+  .ll-mobile-story-controls { display: flex; gap: 12px; margin: 0 0 20px; }
+  .ll-mobile-story-controls button { flex: 1; min-height: 44px; padding: 10px; border: 1px solid #c8c6bf; background: #fff; font-size: var(--text-detail); cursor: pointer; }
+  .ll-integrity-pause { width: 44px; height: 44px; flex-shrink: 0; }
+  .ll-integrity-metrics span { font-size: var(--text-detail); }
+  .ll-interventions-panel .ll-dashboard-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .ll-intervention-list > div { min-height: 66px; }
+  .ll-intervention-list > div > i { height: 8px; }
+  .ll-integrity-transcript { padding-inline: 20px; }
+}

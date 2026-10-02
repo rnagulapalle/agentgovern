@@ -547,6 +547,22 @@ textarea {
 
 .marketing-header { font-size: var(--text-detail); }
 .marketing-section { display: none; }
+/* Phone readers need the same scale on landing, articles, and product pages. */
+@media (max-width: 600px) {
+  :root {
+    --text-label: 14px;
+    --text-detail: 16px;
+    --text-body: 18px;
+    --text-subheading: 22px;
+  }
+  .marketing-surface .label,
+  .marketing-surface [class~="text-[12px]"] { font-size: var(--text-label); }
+  .marketing-surface [class~="text-[14px]"],
+  .marketing-surface .text-sm { font-size: var(--text-detail); }
+  .marketing-surface [class~="text-[16px]"],
+  .marketing-surface [class~="text-[17px]"],
+  .marketing-surface .text-base { font-size: var(--text-body); }
+}
 @media (max-width: 360px) {
   .marketing-nav-cta { display: none; }
   .marketing-menu-toggle { margin-left: auto; }
