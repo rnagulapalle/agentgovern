@@ -133,6 +133,7 @@ export function ControlShell({
       )}
       <aside className={`cp-sidebar ${menu ? "is-open" : ""}`}>
         <Link
+          prefetch={false}
           href="/"
           className="cp-brand"
           aria-label="Back to LoopLabs homepage"
@@ -144,6 +145,7 @@ export function ControlShell({
           </span>
         </Link>
         <Link
+          prefetch={false}
           href={durable ? "/control-plane" : "/control-plane/settings"}
           className="cp-workspace"
         >
@@ -164,6 +166,7 @@ export function ControlShell({
               <div className="cp-nav-label">{group.name}</div>
               {group.items.map((item) => (
                 <Link
+                  prefetch={false}
                   key={item.key}
                   href={
                     item.key === "overview"
@@ -204,6 +207,7 @@ export function ControlShell({
             </span>
           </div>
           <Link
+            prefetch={false}
             href="/control-plane/settings"
             className={`cp-nav-item ${section === "settings" ? "is-active" : ""}`}
           >
@@ -215,7 +219,7 @@ export function ControlShell({
             Quick guide
             <ArrowUpRight size={13} className="cp-push" />
           </button>
-          <Link href="/" className="cp-sidebar-user">
+          <Link prefetch={false} href="/" className="cp-sidebar-user">
             <span className="cp-user-avatar">
               {member.name
                 .split(" ")
@@ -264,6 +268,7 @@ export function ControlShell({
               </button>
             )}
             <Link
+              prefetch={false}
               className="cp-notifications"
               href={durable ? "/control-plane" : "/control-plane/approvals"}
               aria-label={
@@ -327,6 +332,7 @@ export function ControlShell({
             {results.length ? (
               results.map((r, i) => (
                 <Link
+                  prefetch={false}
                   key={i}
                   href={r.href}
                   onClick={() => {
@@ -360,12 +366,12 @@ export function ControlShell({
                   [
                     "01",
                     "Register an agent",
-                    "Assign an invited owner, a discount role, the approved sample connector and an action allowance.",
+                    "Assign an invited owner, one supported connector and a lifetime request allowance. Each agent receives only its allowed action.",
                   ],
                   [
                     "02",
                     "Set the rules",
-                    "Open Actions and choose discounts or refunds. Set automatic and hard limits; requests above the automatic limit need a named approver.",
+                    "Choose discounts, refunds, CRM updates or messages. Discounts and refunds have amount rules. CRM and messages require approval from another named member.",
                   ],
                   [
                     "03",

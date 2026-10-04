@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { workspaceJson } from "@/lib/workspace/response";
 import { useEffect, useState } from "react";
 import type { Snapshot } from "@/lib/durable/contracts";
 import type { RefundSnapshot } from "@/lib/refunds/contracts";
@@ -18,7 +19,7 @@ export function WorkspaceOverview() {
       fetch("/api/durable/connectors", { cache: "no-store" }),
     ])
       .then(async (rs) => {
-        const values = await Promise.all(rs.map((r) => r.json()));
+        const values = await Promise.all(rs.map((r) => workspaceJson(r)));
         if (rs.some((r) => !r.ok))
           throw new Error(values.find((v) => v.error)?.error);
         setData({
@@ -112,7 +113,7 @@ export function WorkspaceOverview() {
               <span className="cp-eyebrow">{n}</span>
               <h3>{title}</h3>
               <p>{body}</p>
-              <Link className="cp-button" href={href}>
+              <Link prefetch={false} className="cp-button" href={href}>
                 {label} →
               </Link>
             </article>
@@ -133,7 +134,11 @@ export function WorkspaceOverview() {
           examples with browser-local data. They are labeled separately in the
           navigation.
         </p>
-        <Link className="cp-button" href="/control-plane/workflows">
+        <Link
+          prefetch={false}
+          className="cp-button"
+          href="/control-plane/workflows"
+        >
           Review workflow requirements →
         </Link>
       </section>
@@ -143,7 +148,11 @@ export function WorkspaceOverview() {
           See which failure scenarios were actually checked and which production
           requirements remain open.
         </p>
-        <Link className="cp-button" href="/control-plane/verification">
+        <Link
+          prefetch={false}
+          className="cp-button"
+          href="/control-plane/verification"
+        >
           Review verified behavior →
         </Link>
       </section>
