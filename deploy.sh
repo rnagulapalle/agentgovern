@@ -45,6 +45,7 @@ REMOTE
 rsync -az \
   --exclude node_modules --exclude .next --exclude .git --exclude '.env*' \
   --exclude nginx/certs --exclude certbot --exclude '*.tsbuildinfo' --exclude .DS_Store \
+  --exclude .local --exclude coverage \
   -e "$RSYNC_SSH" "$REPO_DIR/" "$SERVER:$STAGE/"
 
 printf -v DEPLOY 'bash -s -- %q %q %q %q %q' "$APP_DIR" "$STAGE" "$BACKUP" "$RELEASE" "$HEALTH_HOST"
@@ -76,18 +77,42 @@ sudo env LOOPLABS_IMAGE="$image" docker compose build web
 cd "$app"
 web=$(sudo docker compose ps -q web)
 network=$(sudo docker inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{end}}' "$web")
+# Forward only runtime credentials; never migration/owner credentials.
+python3 - "$app/.env" "$backup/candidate-runtime.env" <<'PYENV'
+import sys
+from pathlib import Path
+allowed = {"LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN"}
+source = Path(sys.argv[1])
+values = [line for line in source.read_text().splitlines() if line.split("=", 1)[0] in allowed] if source.exists() else []
+target = Path(sys.argv[2]); target.touch(mode=0o600); target.write_text("\n".join(values) + "\n")
+PYENV
 sudo docker run -d --name "$candidate" --network "$network" \
-  --memory=1024m --memory-swap=1280m "$image" >/dev/null
+  --env-file "$backup/candidate-runtime.env" --memory=1024m --memory-swap=1280m "$image" >/dev/null
 
 check_app() {
   sudo docker exec "$1" node -e '
     (async () => {
       let html;
-      for (const path of ["/", "/control-plane"]) {
+      for (const path of ["/", "/control-plane", "/control-plane/durable", "/control-plane/refunds"]) {
         const response = await fetch("http://127.0.0.1:3000" + path);
         const body = await response.text();
         if (response.status !== 200 || !body.includes("LoopLabs")) throw new Error("Page failed: " + path);
         if (path === "/") html = body;
+      }
+      if (process.env.LOOPLABS_REFUND_TWIN_URL) {
+        const { Pool } = require("pg");
+        const pool = new Pool({ connectionString: process.env.LOOPLABS_DATABASE_URL, connectionTimeoutMillis: 3000 });
+        try {
+          const result = await pool.query("SELECT version FROM ll_migrations ORDER BY version");
+          if (!result.rows.some(row => row.version === 2)) throw new Error("Refund schema missing");
+        } finally { await pool.end(); }
+        const evidence = await fetch(process.env.LOOPLABS_REFUND_TWIN_URL + "/v1/charges/ch_looplabs_refund_demo", {
+          headers: { Authorization: "Bearer " + process.env.LOOPLABS_REFUND_TWIN_TOKEN },
+          redirect: "error", signal: AbortSignal.timeout(3000)
+        });
+        if (!evidence.ok || (await evidence.json()).livemode !== false) throw new Error("Test provider unavailable");
+        const anonymous = await fetch("http://127.0.0.1:3000/api/durable/refunds");
+        if (anonymous.status !== 401) throw new Error("Refund API must deny anonymous access");
       }
       const asset = html.match(/src="([^\"]+\/_next\/static\/[^\"]+\.js[^\"]*)"/)
         || html.match(/src="(\/_next\/static\/[^\"]+\.js[^\"]*)"/);
@@ -108,7 +133,7 @@ done
 # Keep active TLS/nginx settings and secrets. Source is a reference copy;
 # the tested immutable image is what actually runs.
 rsync -a --exclude '.env*' --exclude nginx/nginx.conf --exclude nginx/certs \
-  --exclude certbot "$stage/" "$app/"
+  --exclude certbot --exclude .local --exclude coverage "$stage/" "$app/"
 sudo docker tag "$image" looplabs-web:latest
 activated=1
 sudo env LOOPLABS_IMAGE="$image" docker compose up -d --no-deps --no-build web

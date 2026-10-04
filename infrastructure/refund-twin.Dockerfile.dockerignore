@@ -1,0 +1,12 @@
+**
+!backend/
+!backend/app/
+!backend/app/**
+!backend/configs/
+!backend/configs/**
+!backend/specs/
+!backend/specs/**
+!scripts/
+!scripts/refund-twin.py
+**/__pycache__
+**/*.pyc

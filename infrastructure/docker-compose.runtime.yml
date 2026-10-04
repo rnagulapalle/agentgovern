@@ -1,0 +1,38 @@
+# Separate private proof infrastructure. Start before deploying the web release.
+# Run from the private runtime directory with fresh .local/postgres.env.
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    container_name: looplabs-proof-postgres
+    env_file: .local/postgres.env
+    restart: unless-stopped
+    volumes:
+      - proof-postgres:/var/lib/postgresql/data
+    networks:
+      default:
+        aliases: [looplabs-db]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U looplabs_owner -d looplabs_proof']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 512m
+  refund-twin:
+    image: looplabs-refund-twin:proof-v1
+    build:
+      context: .
+      dockerfile: infrastructure/refund-twin.Dockerfile
+    container_name: looplabs-refund-twin
+    restart: unless-stopped
+    volumes:
+      - ./.local/twin:/runtime/.local
+    networks:
+      default:
+        aliases: [refund-twin]
+    mem_limit: 384m
+networks:
+  default:
+    external: true
+    name: agent-trust-demo_default
+volumes:
+  proof-postgres:

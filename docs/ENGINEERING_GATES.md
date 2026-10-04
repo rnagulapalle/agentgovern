@@ -21,6 +21,14 @@ Coverage thresholds apply to the executable policy engine and control-plane stat
 
 ## Local setup
 
+The durable workspace also requires live PostgreSQL tests: actual worker SIGKILL
+before/after an effect, simultaneous action replay, tenant isolation, approval
+revocation/expiry, lease fencing, containment, and conflicting recovery writes.
+CI supplies PostgreSQL 17. Local contributors must set a dedicated
+`LOOPLABS_TEST_DATABASE_URL`; missing configuration fails rather than skips tests.
+Coverage includes the durable protocol, HTTP/auth boundary, transactions, and
+agent client. Runtime behavior is not certified by coverage alone.
+
 Install pinned dependencies with `pnpm install --frozen-lockfile`. To enable the versioned pre-push check in this clone, run:
 
 ```bash

@@ -2,6 +2,28 @@
 
 Date: 2026-09-30
 
+## October 3: separate durable foundation
+
+`/control-plane/durable` now demonstrates server-side enforcement for one
+controlled PostgreSQL test-record operation: scoped authentication, exact-payload
+approvals, persisted leases, unique effects, uncertain-outcome reconciliation,
+and contained version-safe compensation. Audit events persist with runtime write
+restrictions; they are not cryptographically signed. The original tour remains
+browser-local. No external CRM, restaurant, email, payment, model gateway,
+general workflow builder, or industry-grade availability claim is established.
+See `DURABLE_CONTROL_PLANE.md` for the contract, gaps, and stakeholder test guide.
+
+## October 3: FetchSandbox refund proof
+
+`/control-plane/refunds` uses persisted agent permissions, amount/budget checks,
+exact approvals, and a trusted HTTP adapter to a dedicated local FetchSandbox
+Stripe engine. The prepared payment and provider refunds are simulated; the
+LoopLabs state and HTTP boundary are real. A lost response after a twin write
+can be reconciled without a second refund. The refund-only fixture adds
+documented idempotency and balance behavior; full Stripe parity, live billing,
+model-driven reasoning, arbitrary customer onboarding, and production reliability
+are not established. See `REFUND_AGENT_PROOF.md`.
+
 ## Executive assessment
 
 LoopLabs has a clear and valuable product thesis: agent adoption becomes a production systems problem when agents can send, write, pay, delete, delegate, or expose output. The strongest product story is the closed control loop: identify the agent, evaluate a proposed action, supervise the execution, inspect the output, and recover affected state.

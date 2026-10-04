@@ -1,6 +1,22 @@
 # LoopLabs agent control plane
 
+## Server-backed foundation (October 3, 2026)
+
+The separate `/control-plane/durable` route now uses PostgreSQL-backed actions,
+authenticated access, exact-payload approvals, leases, effect lookup, and
+version-safe compensation for a controlled test-record connector. See
+[the durable architecture and testing guide](DURABLE_CONTROL_PLANE.md).
+The boundaries below describe the original browser-local tour; they do not
+establish external integrations or industry-grade reliability.
+
 The application lives at `/control-plane` in the existing Next.js / Tailwind project. The public website and original scenario demo remain available. The homepage now links to the unified workspace.
+
+## Refund agent proof
+
+`/control-plane/refunds` adds a separate persisted refund action state machine
+and scoped agent against a local FetchSandbox Stripe payment twin. No actual
+payment provider or model is called. See `REFUND_AGENT_PROOF.md` for its failure
+proofs, permission boundary, setup, and deliberate limits.
 
 ## Run locally
 
@@ -30,7 +46,7 @@ This is a local product sandbox, not a production enforcement service. There are
 
 The product is branded LoopLabs and its canonical URL is `https://looplabs.run`. The source, metadata, and deployment configuration use this domain; DNS and live deployment are separate operations. Existing demo routes and media filenames remain stable for compatibility.
 
-The existing Python gateway remains in `gateway-poc`. Its Cognito / Teleport authentication, LiteLLM routing, Postgres spend tracking, and S3 logging have not been copied into the browser or changed.
+Earlier architecture references mention a separate Python gateway proof of concept. `gateway-poc` is not present in this checkout and is not integrated with either workspace. Its implementation and operation are not established by this repository's checks.
 
 ## Production integration
 

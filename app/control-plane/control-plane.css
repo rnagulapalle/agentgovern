@@ -1,3 +1,36 @@
+.cp-refund-steps { display: flex; gap: 16px; flex-wrap: wrap; list-style: none; padding: 20px 0; font-size: 16px; }
+.cp-refund-steps li { display: flex; align-items: center; gap: 8px; }
+.cp-refund-steps b { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid #a8a29e; border-radius: 50%; }
+.cp-refunds .cp-panel { margin-bottom: 20px; }
+.cp-refunds .cp-durable-help { margin-top: 16px; }
+.cp-refunds .cp-durable-actions dt { font-size: 16px; }
+.cp-durable { display: grid; gap: 24px; }
+.cp-durable-scope, .cp-durable-message { padding: 20px; border: 1px solid #dedbd5; background: #f0f1e9; line-height: 1.6; }
+.cp-durable-message.is-error { background: #faeee8; color: #793d2e; }
+.cp-durable-scope p { margin-top: 8px !important; }
+.cp-durable-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+.cp-durable-card { padding: 24px; min-width: 0; }
+.cp-durable-card h2 { font-size: 21px; margin-bottom: 12px; }
+.cp-app .cp-durable p { font-size: var(--text-body); line-height: 1.6; margin-bottom: 12px; }
+.cp-durable-number { font-size: 44px; font-weight: 600; }
+.cp-durable-form { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; margin: 16px 0; }
+.cp-durable-form label { display: grid; gap: 8px; flex: 1; min-width: 180px; font-size: 16px; }
+.cp-durable-form input, .cp-durable-form select { background: #fff; border: 1px solid #b8b3aa; padding: 12px; min-height: 48px; width: 100%; color: #1c1917; }
+.cp-durable-help { color: #59564e; line-height: 1.6; overflow-wrap: anywhere; }
+.cp-durable-actions { display: grid; gap: 20px; }
+.cp-durable-actions article { border: 1px solid #dedbd5; padding: 20px; background: #fff; min-width: 0; }
+.cp-durable-action-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.cp-durable-action-head h3 { font-size: 20px; }
+.cp-durable-actions dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin: 16px 0; }
+.cp-durable-actions dt { color: #59564e; font-size: 14px; }
+.cp-durable-actions dd { margin: 4px 0 0; font-size: 16px; }
+.cp-durable-id { font-size: var(--text-label) !important; overflow-wrap: anywhere; font-family: var(--brand-font-mono); }
+.cp-durable-buttons { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.cp-durable details summary { cursor: pointer; padding: 8px 0; font-size: 16px; }
+.cp-durable-events { list-style: none; padding: 0; display: grid; gap: 12px; }
+.cp-durable-events li { display: grid; gap: 8px; border-bottom: 1px solid #dedbd5; padding: 12px 0; font-size: 16px; }
+@media(max-width: 1050px) { .cp-durable-grid { grid-template-columns: 1fr; } }
+@media(max-width: 640px) { .cp-durable-card { padding: 18px; } .cp-durable-actions dl { grid-template-columns: 1fr; } .cp-durable-actions article { padding: 16px; } .cp-durable-buttons .cp-button { width: 100%; min-height: 48px; } }
 .cp-app {
   --text-label: 14px;
   --text-detail: 16px;

@@ -8,6 +8,7 @@
 /out/
 /build
 /coverage/
+/.local/
 next-env.d.ts
 
 # production / build artifacts
