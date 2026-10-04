@@ -142,6 +142,20 @@ describe("Actual durable API routes", () => {
       (await logout(req({}, "operator", "https://evil.example"))).status,
     ).toBe(403);
   });
+  it("issues Secure sessions through the internal HTTP reverse proxy and rejects spoofed origins", async () => {
+    vi.stubEnv("LOOPLABS_DURABLE_ORIGIN", "https://looplabs.run");
+    try {
+      const proxy = (origin: string) => new NextRequest("http://0.0.0.0:3000/api/durable/session", {
+        method: "POST", headers: { origin, "content-type": "application/json", "x-forwarded-host": "evil.example" },
+        body: JSON.stringify({ token: tokens.operator }),
+      });
+      const result = await login(proxy("https://looplabs.run"));
+      expect(result.status).toBe(200);
+      expect(result.headers.get("set-cookie")).toContain("Secure");
+      expect(result.headers.get("set-cookie")).toContain("HttpOnly");
+      expect((await login(proxy("https://evil.example"))).status).toBe(403);
+    } finally { vi.unstubAllEnvs(); }
+  });
   it("holds a real agent proposal and requires exact-payload operator approval", async () => {
     const actionId = randomUUID();
     const result = await POST(

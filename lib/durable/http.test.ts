@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { body, credential, failure, sameOrigin } from "./http";
+import { body, browserOrigin, credential, failure, sameOrigin } from "./http";
 import { ControlError } from "./contracts";
 import { database } from "./database";
 
@@ -10,7 +10,22 @@ const request = (headers: Record<string, string> = {}, content = "{}") =>
     headers,
     body: content,
   });
+afterEach(() => vi.unstubAllEnvs());
 describe("Durable HTTP boundary", () => {
+  it("uses the configured public origin behind TLS proxies without trusting forwarded headers", () => {
+    vi.stubEnv("LOOPLABS_DURABLE_ORIGIN", "https://looplabs.run");
+    const proxy = (origin: string) => new NextRequest("http://0.0.0.0:3000/api/durable/session", {
+      headers: { origin, "x-forwarded-host": "evil.example", "x-forwarded-proto": "http" },
+    });
+    expect(browserOrigin(proxy("https://looplabs.run"))).toBe("https://looplabs.run");
+    expect(() => sameOrigin(proxy("https://looplabs.run"), true)).not.toThrow();
+    expect(() => sameOrigin(proxy("https://evil.example"), true)).toThrow("Same-origin");
+    expect(() => sameOrigin(proxy("http://0.0.0.0:3000"), true)).toThrow("Same-origin");
+    for (const bad of ["https://evil.example", "https://looplabs.run/path", "not-a-url"]) {
+      vi.stubEnv("LOOPLABS_DURABLE_ORIGIN", bad);
+      expect(() => browserOrigin(proxy("https://looplabs.run"))).toThrow("not configured correctly");
+    }
+  });
   it("accepts same-origin operations and bearer workers, but rejects cross-site cookie requests", () => {
     expect(() =>
       sameOrigin(request({ origin: "https://looplabs.run" })),

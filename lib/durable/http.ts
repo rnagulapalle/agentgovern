@@ -7,11 +7,19 @@ export function credential(request: NextRequest) {
     ? bearer.slice(7)
     : request.cookies.get(SESSION_COOKIE)?.value || "";
 }
+export function browserOrigin(request: NextRequest) {
+  const configured = process.env.LOOPLABS_DURABLE_ORIGIN;
+  if (!configured) return new URL(request.url).origin;
+  // Server-owned origin, never inferred from caller-controlled proxy headers.
+  if (!["https://looplabs.run", "https://agentgovern.ai"].includes(configured))
+    throw new ControlError(503, "Durable browser origin is not configured correctly.");
+  return configured;
+}
 export function sameOrigin(request: NextRequest, requireOrigin = false) {
   const origin = request.headers.get("origin");
   const bearer = request.headers.get("authorization")?.startsWith("Bearer ");
   if (
-    (origin && origin !== new URL(request.url).origin) ||
+    (origin && origin !== browserOrigin(request)) ||
     (!origin && (requireOrigin || !bearer))
   )
     throw new ControlError(
