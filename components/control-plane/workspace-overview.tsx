@@ -8,23 +8,33 @@ export function WorkspaceOverview() {
   const [data, setData] = useState<{
     discount: Snapshot;
     refund: RefundSnapshot;
+    connectors: { actions: { state: string }[] };
   } | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
     Promise.all([
       fetch("/api/durable", { cache: "no-store" }),
       fetch("/api/durable/refunds", { cache: "no-store" }),
+      fetch("/api/durable/connectors", { cache: "no-store" }),
     ])
       .then(async (rs) => {
         const values = await Promise.all(rs.map((r) => r.json()));
         if (rs.some((r) => !r.ok))
           throw new Error(values.find((v) => v.error)?.error);
-        setData({ discount: values[0], refund: values[1] });
+        setData({
+          discount: values[0],
+          refund: values[1],
+          connectors: values[2],
+        });
       })
       .catch((e) => setError(e.message));
   }, []);
   const actions = data
-    ? [...data.discount.actions, ...data.refund.actions]
+    ? [
+        ...data.discount.actions,
+        ...data.refund.actions,
+        ...data.connectors.actions,
+      ]
     : [];
   return (
     <div className="cp-durable">
@@ -113,8 +123,10 @@ export function WorkspaceOverview() {
         <h2>Connected scope</h2>
         <p>
           The discount workflow changes a sample record. The refund workflow
-          uses a simulated payment provider; no real money moves and no AI model
-          is called. These workflows use saved server state.
+          uses a simulated payment provider. CRM updates and customer messages
+          use private FetchSandbox twins. No real money moves, no email is
+          delivered and no AI model is called. These workflows use saved server
+          state.
         </p>
         <p>
           Model access, output checks and multi-step traces are prepared
@@ -123,6 +135,16 @@ export function WorkspaceOverview() {
         </p>
         <Link className="cp-button" href="/control-plane/workflows">
           Review workflow requirements →
+        </Link>
+      </section>
+      <section className="cp-panel cp-durable-card">
+        <h2>Understand the evidence</h2>
+        <p>
+          See which failure scenarios were actually checked and which production
+          requirements remain open.
+        </p>
+        <Link className="cp-button" href="/control-plane/verification">
+          Review verified behavior →
         </Link>
       </section>
     </div>

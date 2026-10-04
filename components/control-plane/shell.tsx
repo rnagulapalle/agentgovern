@@ -37,6 +37,7 @@ const groups = [
       { key: "agents", label: "Agents and boundaries", icon: Bot },
       { key: "connectors", label: "Connectors", icon: Database },
       { key: "actions", label: "Actions", icon: SlidersHorizontal },
+      { key: "verification", label: "Verification", icon: ShieldCheck },
       { key: "requests", label: "Sales requests", icon: BookOpen },
     ],
   },
@@ -68,6 +69,7 @@ export function ControlShell({
     "agents",
     "connectors",
     "requests",
+    "verification",
   ].includes(section);
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);

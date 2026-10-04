@@ -7,8 +7,8 @@ export interface AgentInput {
   id: string;
   name: string;
   owner: string;
-  role: "discount_agent";
-  connector: "discount_record";
+  role: "discount_agent" | "crm_agent" | "email_agent";
+  connector: "discount_record" | "crm_twin" | "email_twin";
   actionLimit: number;
 }
 export function parseAgent(v: Record<string, unknown>): AgentInput {
@@ -26,15 +26,20 @@ export function parseAgent(v: Record<string, unknown>): AgentInput {
     v.name.length > 120 ||
     typeof v.owner !== "string" ||
     v.owner.length > 254 ||
-    v.role !== "discount_agent" ||
-    v.connector !== "discount_record" ||
+    ![
+      ["discount_agent", "discount_record"],
+      ["crm_agent", "crm_twin"],
+      ["email_agent", "email_twin"],
+    ].some(
+      ([role, connector]) => v.role === role && v.connector === connector,
+    ) ||
     !Number.isInteger(v.actionLimit) ||
     (v.actionLimit as number) < 1 ||
     (v.actionLimit as number) > 1000
   )
     throw new ControlError(
       400,
-      "Choose a discount agent, supported connector, owner and action limit (1–1,000).",
+      "Choose a supported agent role and sample connector, owner and action limit (1–1,000).",
     );
   return {
     ...v,
@@ -80,12 +85,20 @@ export async function registerAgent(
         400,
         "Choose an active workspace member as owner.",
       );
-    if (
-      !(
-        await c.query("SELECT 1 FROM ll_records WHERE org_id=$1", [actor.orgId])
-      ).rows[0]
-    )
-      throw new ControlError(409, "The discount connector is unavailable.");
+    const connected =
+      p.connector === "discount_record"
+        ? await c.query("SELECT 1 FROM ll_records WHERE org_id=$1", [
+            actor.orgId,
+          ])
+        : await c.query(
+            "SELECT 1 FROM ll_connector_policies WHERE org_id=$1 AND connector=$2 AND active=true",
+            [actor.orgId, p.connector === "crm_twin" ? "crm" : "email"],
+          );
+    if (!connected.rows[0])
+      throw new ControlError(
+        409,
+        "The selected sample connector is unavailable.",
+      );
     if (
       (
         await c.query("SELECT 1 FROM ll_agents WHERE org_id=$1 AND id=$2", [
@@ -99,8 +112,19 @@ export async function registerAgent(
         "That agent ID already exists. Review its existing boundaries.",
       );
     await c.query(
-      "INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES($1,$2,ARRAY['proof.discount'],$3)",
-      [actor.orgId, p.id, p.actionLimit],
+      "INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES($1,$2,$3,$4)",
+      [
+        actor.orgId,
+        p.id,
+        [
+          p.connector === "discount_record"
+            ? "proof.discount"
+            : p.connector === "crm_twin"
+              ? "twin.crm"
+              : "twin.email",
+        ],
+        p.actionLimit,
+      ],
     );
     await c.query(
       "INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES($1,$2,$3,$4,$5,$6)",

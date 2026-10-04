@@ -81,7 +81,7 @@ network=$(sudo docker inspect --format '{{range $name, $_ := .NetworkSettings.Ne
 python3 - "$app/.env" "$backup/candidate-runtime.env" <<'PYENV'
 import sys
 from pathlib import Path
-allowed = {"LOOPLABS_DURABLE_ORIGIN", "LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN"}
+allowed = {"LOOPLABS_DURABLE_ORIGIN", "LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN", "LOOPLABS_CONNECTOR_TWIN_URL", "LOOPLABS_CONNECTOR_TWIN_TOKEN"}
 source = Path(sys.argv[1])
 values = [line for line in source.read_text().splitlines() if line.split("=", 1)[0] in allowed] if source.exists() else []
 target = Path(sys.argv[2]); target.touch(mode=0o600); target.write_text("\n".join(values) + "\n")
@@ -107,6 +107,7 @@ check_app() {
           const result = await pool.query("SELECT version FROM ll_migrations ORDER BY version");
           if (!result.rows.some(row => row.version === 2)) throw new Error("Refund schema missing");
           if (!result.rows.some(row => row.version === 3)) throw new Error("Workspace membership schema missing");
+          if (!result.rows.some(row => row.version === 4)) throw new Error("Connector action schema missing");
         } finally { await pool.end(); }
         const evidence = await fetch(process.env.LOOPLABS_REFUND_TWIN_URL + "/v1/charges/ch_looplabs_refund_demo", {
           headers: { Authorization: "Bearer " + process.env.LOOPLABS_REFUND_TWIN_TOKEN },
@@ -122,6 +123,13 @@ check_app() {
         if (invalidLogin.status !== 401) throw new Error("Browser origin or login boundary failed");
         const workspace = await fetch("http://127.0.0.1:3000/api/workspace/agents");
         if (workspace.status !== 401) throw new Error("Agent directory must deny anonymous access");
+        const connectorAccess = await fetch("http://127.0.0.1:3000/api/durable/connectors");
+        if (connectorAccess.status !== 401) throw new Error("Connector actions must deny anonymous access");
+        const connectorEvidence = await fetch(process.env.LOOPLABS_CONNECTOR_TWIN_URL + "/crm/crm/v3/objects/contacts/1001", {
+          headers: { Authorization: "Bearer " + process.env.LOOPLABS_CONNECTOR_TWIN_TOKEN },
+          redirect: "error", signal: AbortSignal.timeout(3000)
+        });
+        if (!connectorEvidence.ok || (await connectorEvidence.json()).id !== "1001") throw new Error("Sample CRM provider unavailable");
         const memberLogin = await fetch("http://127.0.0.1:3000/api/workspace/session", {
           method: "POST", headers: { "Content-Type": "application/json", Origin: process.env.LOOPLABS_DURABLE_ORIGIN },
           body: JSON.stringify({ email: "release-check@example.invalid", password: "release-check-invalid-password" })

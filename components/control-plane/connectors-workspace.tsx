@@ -6,12 +6,15 @@ export function ConnectorsWorkspace() {
   const [state, setState] = useState<{
     discount: boolean;
     refund: boolean;
+    crm: boolean;
+    email: boolean;
   } | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
     Promise.all([
       fetch("/api/durable", { cache: "no-store" }),
       fetch("/api/durable/refunds", { cache: "no-store" }),
+      fetch("/api/durable/connectors", { cache: "no-store" }),
     ])
       .then(async (rs) => {
         const data = await Promise.all(rs.map((r) => r.json()));
@@ -20,6 +23,14 @@ export function ConnectorsWorkspace() {
         setState({
           discount: Boolean(data[0].record),
           refund: data[1].provider.available,
+          crm: data[2].policies.some(
+            (p: { connector: string; active: boolean }) =>
+              p.connector === "crm" && p.active,
+          ),
+          email: data[2].policies.some(
+            (p: { connector: string; active: boolean }) =>
+              p.connector === "email" && p.active,
+          ),
         });
       })
       .catch((e) => setError(e.message));
@@ -29,7 +40,7 @@ export function ConnectorsWorkspace() {
       <PageTitle
         eyebrow="ALLOWED SYSTEMS"
         title="Connectors"
-        description="A connector defines where an agent may act. Only the approved sample connectors below are configured in this workspace."
+        description="A connector defines where an agent may act. These supported workflows use prepared sample systems; customer systems remain separate."
       />
       {error && (
         <p className="cp-durable-message is-error" role="alert">
@@ -90,6 +101,52 @@ export function ConnectorsWorkspace() {
           </p>
           <Link className="cp-button" href="/contact-sales">
             Discuss an integration →
+          </Link>
+        </section>
+      </div>
+      <div className="cp-durable-grid">
+        {(
+          [
+            [
+              "crm",
+              "Simulated CRM contact",
+              "Change one contact’s lifecycle stage. Exact approval and fixture version checks bound the write.",
+            ],
+            [
+              "email",
+              "Simulated customer messages",
+              "Send one fixed template to one sample recipient. Verify provider acceptance; no real email is delivered.",
+            ],
+          ] as const
+        ).map(([key, title, description]) => (
+          <section className="cp-panel cp-durable-card" key={key}>
+            <h2>{title}</h2>
+            <p>
+              <strong>
+                {state
+                  ? state[key]
+                    ? "Configured for new requests"
+                    : "Contained or not configured"
+                  : "Checking configuration…"}
+              </strong>
+            </p>
+            <p>{description}</p>
+            <Link
+              className="cp-button"
+              href={`/control-plane/actions?workflow=${key}`}
+            >
+              Explore this workflow →
+            </Link>
+          </section>
+        ))}
+        <section className="cp-panel cp-durable-card">
+          <h2>What has been verified?</h2>
+          <p>
+            Review recorded failure scenarios and the remaining production
+            requirements. A simulated contract is not a live integration.
+          </p>
+          <Link className="cp-button" href="/control-plane/verification">
+            Review verification →
           </Link>
         </section>
       </div>

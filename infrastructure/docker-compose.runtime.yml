@@ -30,6 +30,19 @@ services:
       default:
         aliases: [refund-twin]
     mem_limit: 384m
+  connector-twin:
+    image: looplabs-connector-twin:proof-v1
+    build:
+      context: .
+      dockerfile: infrastructure/connector-twin.Dockerfile
+    container_name: looplabs-connector-twin
+    restart: unless-stopped
+    volumes:
+      - ./.local/connectors:/runtime/.local
+    networks:
+      default:
+        aliases: [connector-twin]
+    mem_limit: 384m
 networks:
   default:
     external: true

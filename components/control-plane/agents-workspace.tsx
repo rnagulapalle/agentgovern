@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { PageTitle } from "./ui";
+import { agentPresentation } from "@/lib/workspace/presentation";
 interface Directory {
   agents: {
     id: string;
@@ -21,6 +22,7 @@ export function AgentsWorkspace() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [key, setKey] = useState("");
+  const [connector, setConnector] = useState("discount_record");
   const refresh = useCallback(async () => {
     const r = await fetch("/api/workspace/agents", { cache: "no-store" });
     const v = await r.json();
@@ -35,7 +37,7 @@ export function AgentsWorkspace() {
       <PageTitle
         eyebrow="AGENT IDENTITY"
         title="Agents and boundaries"
-        description="Give each agent a name, accountable owner, role and allowed action. New agents can use the connected sample discount record."
+        description="Give each agent an owner and one allowed action: sample discounts, simulated CRM updates or prepared customer messages."
       />
       {error && (
         <p role="alert" className="cp-durable-message is-error">
@@ -45,9 +47,9 @@ export function AgentsWorkspace() {
       <section className="cp-panel cp-durable-card">
         <h2>Onboard an agent</h2>
         <p>
-          Discount agents can request a change to the sample discount record.
-          Approval rules and action limits apply on the server. The prepared
-          refund agent has its own payment boundary.
+          Choose one supported connector. Rules and action limits apply on the
+          server. CRM and customer-message actions always require named
+          approval. The prepared refund agent has its own payment boundary.
         </p>
         <form
           className="cp-durable-form"
@@ -64,8 +66,13 @@ export function AgentsWorkspace() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   ...values,
-                  role: "discount_agent",
-                  connector: "discount_record",
+                  role:
+                    connector === "discount_record"
+                      ? "discount_agent"
+                      : connector === "crm_twin"
+                        ? "crm_agent"
+                        : "email_agent",
+                  connector,
                   actionLimit: Number(values.actionLimit),
                 }),
               });
@@ -117,14 +124,30 @@ export function AgentsWorkspace() {
           </label>
           <label>
             Role
-            <input value="Discount agent" readOnly />
+            <input
+              value={
+                connector === "discount_record"
+                  ? "Discount agent"
+                  : connector === "crm_twin"
+                    ? "CRM agent"
+                    : "Messaging agent"
+              }
+              readOnly
+            />
           </label>
           <label>
             Connector
-            <input value="Sample discount record" readOnly />
+            <select
+              value={connector}
+              onChange={(e) => setConnector(e.target.value)}
+            >
+              <option value="discount_record">Sample discount record</option>
+              <option value="crm_twin">Simulated CRM contact</option>
+              <option value="email_twin">Simulated customer messages</option>
+            </select>
           </label>
           <label>
-            Allocated actions
+            Lifetime requests
             <input
               type="number"
               name="actionLimit"
@@ -142,7 +165,7 @@ export function AgentsWorkspace() {
           <div className="cp-durable-scope" data-private>
             <strong>Private agent key — shown once</strong>
             <p>
-              This key can propose and read this agent’s discount actions. It
+              This key can propose and read this agent’s allowed actions. It
               cannot approve, execute or configure the workspace. Save it
               privately for a trusted agent runtime.
             </p>
@@ -181,34 +204,31 @@ export function AgentsWorkspace() {
               </div>
               <div>
                 <dt>Role</dt>
-                <dd>
-                  {a.role === "refund_agent" ||
-                  a.tools.includes("stripe.refund")
-                    ? "Refund agent"
-                    : "Discount agent"}
-                </dd>
+                <dd>{agentPresentation(a.tools).role}</dd>
               </div>
               <div>
                 <dt>Allowed action</dt>
-                <dd>
-                  {a.tools.includes("stripe.refund")
-                    ? "Refund the prepared payment"
-                    : "Update the sample discount"}
-                </dd>
+                <dd>{agentPresentation(a.tools).action}</dd>
               </div>
               <div>
-                <dt>Action allowance</dt>
+                <dt>
+                  {a.tools.includes("stripe.refund")
+                    ? "Refund boundary"
+                    : "Request allowance"}
+                </dt>
                 <dd>
-                  {a.reserved} / {a.action_limit} allocated actions
+                  {a.tools.includes("stripe.refund")
+                    ? "Amount and budget rules on the Refunds workflow"
+                    : `${a.reserved} / ${a.action_limit} lifetime requests`}
                 </dd>
               </div>
             </dl>
             <Link
               className="cp-button"
               href={
-                a.tools.includes("stripe.refund")
-                  ? "/control-plane/actions?workflow=refunds"
-                  : "/control-plane/actions?workflow=discounts"
+                agentPresentation(a.tools).workflow
+                  ? `/control-plane/actions?workflow=${agentPresentation(a.tools).workflow}`
+                  : "/control-plane/connectors"
               }
             >
               Review actions →

@@ -3,13 +3,14 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { DurableWorkspace } from "./durable-workspace";
 import { RefundWorkspace } from "./refund-workspace";
+import { ConnectorActionsWorkspace } from "./connector-actions-workspace";
+const workflowFrom = (v: string | null) =>
+  ["refunds", "crm", "email"].includes(v || "") ? v! : "discounts";
 export function ActionsWorkspace() {
   const q = useSearchParams();
-  const [workflow, setWorkflow] = useState(
-    q.get("workflow") === "refunds" ? "refunds" : "discounts",
-  );
+  const [workflow, setWorkflow] = useState(workflowFrom(q.get("workflow")));
   useEffect(() => {
-    setWorkflow(q.get("workflow") === "refunds" ? "refunds" : "discounts");
+    setWorkflow(workflowFrom(q.get("workflow")));
   }, [q]);
   return (
     <>
@@ -22,6 +23,8 @@ export function ActionsWorkspace() {
           >
             <option value="discounts">Discount changes</option>
             <option value="refunds">Refunds</option>
+            <option value="crm">CRM contact updates</option>
+            <option value="email">Customer messages</option>
           </select>
         </label>
         <p>
@@ -29,7 +32,13 @@ export function ActionsWorkspace() {
           and saved history.
         </p>
       </div>
-      {workflow === "refunds" ? <RefundWorkspace /> : <DurableWorkspace />}
+      {workflow === "crm" || workflow === "email" ? (
+        <ConnectorActionsWorkspace connector={workflow} />
+      ) : workflow === "refunds" ? (
+        <RefundWorkspace />
+      ) : (
+        <DurableWorkspace />
+      )}
     </>
   );
 }

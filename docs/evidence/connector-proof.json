@@ -1,0 +1,111 @@
+{
+  "at": "2026-10-04T17:46:36.225Z",
+  "scope": "Isolated PostgreSQL schema and private FetchSandbox HubSpot Contacts / Resend single-send fixtures. No live CRM, real email, model or money.",
+  "checks": [
+    {
+      "name": "crm: exact approval, execute and authoritative read-back",
+      "passed": true,
+      "detail": "Real LoopLabs service -> HTTP -> existing FetchSandbox engine -> persisted provider state."
+    },
+    {
+      "name": "crm: replay sends no second effect",
+      "passed": true,
+      "detail": "Compare provider effect journal before and after action replay."
+    },
+    {
+      "name": "crm: response lost after effect, reconcile without resend",
+      "passed": true,
+      "detail": "Twin writes and persists then delays response; 1.5s adapter timeout."
+    },
+    {
+      "name": "crm: restart preserves effect and prevents duplicate replay",
+      "passed": true,
+      "detail": "Restart the actual twin process; replay returns existing effect."
+    },
+    {
+      "name": "crm: later write produces conflict",
+      "passed": true,
+      "detail": "Distinct fixture record versions reveal intervening writes; live HubSpot CAS not claimed."
+    },
+    {
+      "name": "email: exact approval, execute and authoritative read-back",
+      "passed": true,
+      "detail": "Real LoopLabs service -> HTTP -> existing FetchSandbox engine -> persisted provider state."
+    },
+    {
+      "name": "email: replay sends no second effect",
+      "passed": true,
+      "detail": "Compare provider effect journal before and after action replay."
+    },
+    {
+      "name": "email: response lost after effect, reconcile without resend",
+      "passed": true,
+      "detail": "Twin writes and persists then delays response; 1.5s adapter timeout."
+    },
+    {
+      "name": "email: restart preserves effect and prevents duplicate replay",
+      "passed": true,
+      "detail": "Restart the actual twin process; replay returns existing effect."
+    },
+    {
+      "name": "provider rejects unauthorized requests",
+      "passed": true,
+      "detail": "No provider credential is given to agents."
+    },
+    {
+      "name": "provider rejects recipient and template escape",
+      "passed": true,
+      "detail": "Only the prepared sample recipient and exact message are allowed."
+    },
+    {
+      "name": "provider 401: retain uncertainty, never blind retry",
+      "passed": true,
+      "detail": "Actual HTTP rejection; absence is not proof that an arbitrary real provider cannot complete."
+    },
+    {
+      "name": "provider 429: retain uncertainty, never blind retry",
+      "passed": true,
+      "detail": "Actual HTTP rejection; absence is not proof that an arbitrary real provider cannot complete."
+    },
+    {
+      "name": "provider 500: retain uncertainty, never blind retry",
+      "passed": true,
+      "detail": "Actual HTTP rejection; absence is not proof that an arbitrary real provider cannot complete."
+    },
+    {
+      "name": "crm: stale approved source cannot overwrite a later update",
+      "passed": true,
+      "detail": "The fixture enforces an exact source version at write time. This CAS extension is not a live HubSpot feature claim."
+    },
+    {
+      "name": "worker SIGKILL before effect",
+      "passed": true,
+      "detail": "Terminate a real worker process; lease expiry injected in isolated test schema. Before-effect absence remains uncertain, never automatically retried."
+    },
+    {
+      "name": "worker SIGKILL after effect",
+      "passed": true,
+      "detail": "Terminate a real worker process; lease expiry injected in isolated test schema. Before-effect absence remains uncertain, never automatically retried."
+    },
+    {
+      "name": "isolated database backup and restore preserves actions and evidence",
+      "passed": true,
+      "detail": "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA."
+    }
+  ],
+  "sourceFingerprints": {
+    "lib/connectors/contracts.ts": "4fb199cab089d2b21cd44f63c6aabba898af49d8c90cf746d4cae05cdc355165",
+    "lib/connectors/service.ts": "3787d3ed5ce1d9a89ed50b3861989d0d917bfed1a55d43f1b66468ff9515d3e4",
+    "lib/connectors/twin.ts": "e5dff9ea3954543e24df6d3b13b23d02d3a101dacb6cbdfe76bf524ba8ecdeca",
+    "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
+    "app/api/durable/connectors/route.ts": "e2e3c0f720c92d31b71375660f5ba2d7159ca086b0aef80c68d9c436fc47544e",
+    "scripts/connector-twin.py": "8ee1508e9c41ab0f62b049ee06ee56d21af5dbe897a7c18c56c6513101c2e616"
+  },
+  "localRestoreMilliseconds": 76,
+  "limits": [
+    "Fixture action journal and contact version are LoopLabs extensions, not live provider parity.",
+    "No SSO, failover, production load or real delivery proof.",
+    "Only one sample contact and one fixed message template/recipient."
+  ],
+  "providerEffects": 7
+}

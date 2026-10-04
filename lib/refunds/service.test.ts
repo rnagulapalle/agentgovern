@@ -29,6 +29,8 @@ class Provider implements RefundProvider {
   mismatch = false;
   pending = false;
   calls = 0;
+  writeGate: Promise<void> | null = null;
+  readGate: Promise<void> | null = null;
   async payment() {
     if (this.failRead) throw new Error("Unavailable");
     return {
@@ -42,11 +44,13 @@ class Provider implements RefundProvider {
     };
   }
   async refunds() {
+    if (this.readGate) await this.readGate;
     if (this.failRead) throw new Error("Unavailable");
     return this.list;
   }
   async create(a: RefundAction, lose: boolean) {
     this.calls++;
+    if (this.writeGate) await this.writeGate;
     if (this.failCreate) throw new Error("Unknown result");
     const r = {
       id: `re_${a.id}`,
@@ -399,4 +403,46 @@ describe("Refund action and external effect boundary", () => {
       status: 503,
     });
   });
+});
+
+it("lets containment proceed during an in-flight provider call and retains uncertainty", async () => {
+  const a = await control.propose(agent, proposal());
+  let release!: () => void;
+  provider.writeGate = new Promise<void>((r) => (release = r));
+  const pending = control.execute(worker, a.id);
+  for (let i = 0; i < 100 && !provider.calls; i++)
+    await new Promise((r) => setTimeout(r, 5));
+  expect(provider.calls).toBe(1);
+  await control.configure(operator, { agentActive: false });
+  release();
+  expect((await pending).state).toBe("uncertain");
+  expect((await control.reconcile(operator, a.id)).state).toBe("succeeded");
+  expect((await control.snapshot(operator)).agent?.active).toBe(false);
+  expect(provider.calls).toBe(1);
+});
+it("keeps expired dispatch leases uncertain even when the provider returns success", async () => {
+  const a = await control.propose(agent, proposal());
+  let release!: () => void;
+  provider.writeGate = new Promise<void>((r) => (release = r));
+  const pending = control.execute(worker, a.id);
+  for (let i = 0; i < 100 && !provider.calls; i++)
+    await new Promise((r) => setTimeout(r, 5));
+  await db.query(
+    "UPDATE ll_refund_actions SET lease_until=now()-interval '1 second' WHERE id=$1",
+    [a.id],
+  );
+  release();
+  expect((await pending).state).toBe("uncertain");
+});
+it("does not hold mutation locks during provider reconciliation", async () => {
+  const a = await control.propose(agent, proposal());
+  await control.execute(worker, a.id, true);
+  let release!: () => void;
+  provider.readGate = new Promise<void>((r) => (release = r));
+  const pending = control.reconcile(operator, a.id);
+  await new Promise((r) => setTimeout(r, 20));
+  await control.configure(operator, { agentActive: false });
+  release();
+  expect((await pending).state).toBe("succeeded");
+  expect(provider.calls).toBe(1);
 });
