@@ -112,12 +112,12 @@ describe("PostgreSQL control boundary", () => {
     ).rejects.toMatchObject({ status: 403 });
     const p = proposal(25);
     const a = await control.propose(agent, p);
-    for (const promise of [
-      control.readAction(outsider, a.id),
-      control.review(outsider, a.id, true, a.payload_hash),
-      control.execute(outsider, a.id),
+    for (const attempt of [
+      () => control.readAction(outsider, a.id),
+      () => control.review(outsider, a.id, true, a.payload_hash),
+      () => control.execute(outsider, a.id),
     ])
-      await expect(promise).rejects.toMatchObject({ status: 404 });
+      await expect(attempt()).rejects.toMatchObject({ status: 404 });
     await expect(control.snapshot(agent)).rejects.toMatchObject({
       status: 403,
     });
