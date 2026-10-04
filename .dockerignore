@@ -4,7 +4,9 @@ node_modules
 .gitignore
 Dockerfile
 .dockerignore
-docs
+docs/**
+!docs/evidence/
+!docs/evidence/connector-proof.json
 *.md
 npm-debug.log*
 .DS_Store
