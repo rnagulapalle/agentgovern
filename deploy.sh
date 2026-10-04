@@ -81,7 +81,7 @@ network=$(sudo docker inspect --format '{{range $name, $_ := .NetworkSettings.Ne
 python3 - "$app/.env" "$backup/candidate-runtime.env" <<'PYENV'
 import sys
 from pathlib import Path
-allowed = {"LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN"}
+allowed = {"LOOPLABS_DURABLE_ORIGIN", "LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN"}
 source = Path(sys.argv[1])
 values = [line for line in source.read_text().splitlines() if line.split("=", 1)[0] in allowed] if source.exists() else []
 target = Path(sys.argv[2]); target.touch(mode=0o600); target.write_text("\n".join(values) + "\n")
@@ -113,6 +113,11 @@ check_app() {
         if (!evidence.ok || (await evidence.json()).livemode !== false) throw new Error("Test provider unavailable");
         const anonymous = await fetch("http://127.0.0.1:3000/api/durable/refunds");
         if (anonymous.status !== 401) throw new Error("Refund API must deny anonymous access");
+        const invalidLogin = await fetch("http://127.0.0.1:3000/api/durable/session", {
+          method: "POST", headers: { "Content-Type": "application/json", Origin: process.env.LOOPLABS_DURABLE_ORIGIN },
+          body: JSON.stringify({ token: "release-check-invalid-credential" })
+        });
+        if (invalidLogin.status !== 401) throw new Error("Browser origin or login boundary failed");
       }
       const asset = html.match(/src="([^\"]+\/_next\/static\/[^\"]+\.js[^\"]*)"/)
         || html.match(/src="(\/_next\/static\/[^\"]+\.js[^\"]*)"/);

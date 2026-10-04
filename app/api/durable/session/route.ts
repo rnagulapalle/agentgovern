@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { database } from "@/lib/durable/database";
 import { authenticate } from "@/lib/durable/service";
 import { ControlError } from "@/lib/durable/contracts";
-import { body, failure, sameOrigin, SESSION_COOKIE } from "@/lib/durable/http";
+import { body, browserOrigin, failure, sameOrigin, SESSION_COOKIE } from "@/lib/durable/http";
 export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     response.headers.set("Cache-Control", "no-store");
     response.cookies.set(SESSION_COOKIE, value.token, {
       httpOnly: true,
-      secure: new URL(request.url).protocol === "https:",
+      secure: new URL(browserOrigin(request)).protocol === "https:",
       sameSite: "strict",
       path: "/api/durable",
       maxAge: 3600,

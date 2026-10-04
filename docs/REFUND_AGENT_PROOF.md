@@ -160,3 +160,11 @@ fixture state uses private host storage. Both services restart after reboot.
 `deploy.sh` verifies migration 2, test-provider availability, anonymous denial,
 pages and assets before activating the release. This single-server deployment
 does not establish high availability or tested disaster recovery.
+
+Behind HTTPS reverse proxies, set the server-owned `LOOPLABS_DURABLE_ORIGIN`
+to `https://looplabs.run` (or the separate AgentGovern preview origin). Browser
+mutations compare with this fixed origin, not caller-supplied forwarded headers
+or the container address; sessions remain Secure. Release checks exercise this
+proxy path with an invalid credential and require authentication denial (401).
+Provisioning must grant the runtime role SELECT on `ll_migrations` for release
+checks; it must not grant migration writes or schema ownership.
