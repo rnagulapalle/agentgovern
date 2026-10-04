@@ -24,6 +24,7 @@ export default defineConfig({
         "lib/durable/http.ts",
         "lib/durable/client.ts",
         "app/api/durable/**/*.ts",
+        "lib/refunds/**/*.ts",
       ],
       exclude: ["**/*.test.ts"],
       thresholds: {
@@ -31,6 +32,12 @@ export default defineConfig({
         branches: 85,
         functions: 90,
         lines: 90,
+        "lib/refunds/**": {
+          statements: 90,
+          branches: 85,
+          functions: 90,
+          lines: 90,
+        },
         "lib/durable/**": {
           statements: 90,
           branches: 85,

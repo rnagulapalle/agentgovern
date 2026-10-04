@@ -35,6 +35,7 @@ const groups = [
     items: [
       { key: "overview", label: "Overview", icon: LayoutGrid },
       { key: "durable", label: "Durable workspace", icon: Database },
+      { key: "refunds", label: "Refund agent", icon: ShieldCheck },
       { key: "workflows", label: "Workflow library", icon: BookOpen },
       { key: "agents", label: "Agent directory", icon: Bot },
       { key: "gateway", label: "Model gateway", icon: Network },
@@ -65,7 +66,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
   const { state, toast } = useControl();
   const pathname = usePathname();
   const section = pathname.split("/")[2] || "overview";
-  const durable = section === "durable";
+  const durable = section === "durable" || section === "refunds";
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);
   const [query, setQuery] = useState("");

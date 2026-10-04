@@ -11,6 +11,13 @@ establish external integrations or industry-grade reliability.
 
 The application lives at `/control-plane` in the existing Next.js / Tailwind project. The public website and original scenario demo remain available. The homepage now links to the unified workspace.
 
+## Refund agent proof
+
+`/control-plane/refunds` adds a separate persisted refund action state machine
+and scoped agent against a local FetchSandbox Stripe payment twin. No actual
+payment provider or model is called. See `REFUND_AGENT_PROOF.md` for its failure
+proofs, permission boundary, setup, and deliberate limits.
+
 ## Run locally
 
 ```sh

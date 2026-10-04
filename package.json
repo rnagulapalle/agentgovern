@@ -18,7 +18,10 @@
     "durable:setup": "tsx --env-file=.env.local scripts/durable-setup.ts",
     "durable:worker": "tsx --env-file=.env.local scripts/durable-worker.ts",
     "durable:agent": "tsx --env-file=.env.local scripts/durable-agent.ts",
-    "durable:runtime-role": "tsx --env-file=.env.local scripts/durable-runtime-role.ts"
+    "durable:runtime-role": "tsx --env-file=.env.local scripts/durable-runtime-role.ts",
+    "refund:setup": "tsx --env-file=.env.local scripts/refund-setup.ts",
+    "refund:twin": "bash scripts/refund-twin.sh",
+    "refund:proof": "tsx --env-file=.env.local scripts/refund-proof.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

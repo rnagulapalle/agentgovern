@@ -29,7 +29,7 @@ export async function authenticate(db: Pool, token: string): Promise<Actor> {
     tokenHash: hash,
   };
 }
-async function authorize(c: PoolClient, actor: Actor, roles: Role[]) {
+export async function authorize(c: PoolClient, actor: Actor, roles: Role[]) {
   const { rows } = await c.query(
     "SELECT 1 FROM ll_tokens WHERE hash=$1 AND org_id=$2 AND subject=$3 AND role=$4 AND active=true",
     [actor.tokenHash, actor.orgId, actor.subject, actor.role],

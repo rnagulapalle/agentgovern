@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { PageTitle, PanelHead, Status } from "./ui";
 import type {
   DurableAction,
@@ -113,6 +114,11 @@ export function DurableWorkspace() {
       />
       <div className="cp-durable-scope">
         <strong>Controlled connector · test data only</strong>
+        <p>
+          <Link href="/control-plane/refunds">
+            Try the refund agent with a FetchSandbox payment twin →
+          </Link>
+        </p>
         <p>
           This workspace changes one PostgreSQL test record. It does not connect
           to your CRM, send messages, call models, or process payments. The
