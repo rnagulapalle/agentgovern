@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { workspaceJson } from "@/lib/workspace/response";
 import { useCallback, useEffect, useState } from "react";
 import { PageTitle } from "./ui";
 import { agentPresentation } from "@/lib/workspace/presentation";
@@ -25,7 +26,7 @@ export function AgentsWorkspace() {
   const [connector, setConnector] = useState("discount_record");
   const refresh = useCallback(async () => {
     const r = await fetch("/api/workspace/agents", { cache: "no-store" });
-    const v = await r.json();
+    const v = await workspaceJson(r);
     if (!r.ok) throw new Error(v.error);
     setData(v);
   }, []);
@@ -76,7 +77,7 @@ export function AgentsWorkspace() {
                   actionLimit: Number(values.actionLimit),
                 }),
               });
-              const v = await r.json();
+              const v = await workspaceJson(r);
               if (!r.ok) throw new Error(v.error);
               setKey(v.agentToken);
               form.reset();

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { workspaceJson } from "@/lib/workspace/response";
 import { useCallback, useEffect, useState } from "react";
 import type { Connector, ConnectorAction } from "@/lib/connectors/contracts";
 import { PageTitle } from "./ui";
@@ -32,7 +33,7 @@ export function ConnectorActionsWorkspace({
       fetch("/api/durable/connectors", { cache: "no-store" }),
       fetch("/api/workspace/agents", { cache: "no-store" }),
     ]);
-    const [v, a] = await Promise.all(rs.map((r) => r.json()));
+    const [v, a] = await Promise.all(rs.map((r) => workspaceJson(r)));
     if (rs.some((r) => !r.ok)) throw new Error(v.error || a.error);
     setData(v);
     setAgents(a.agents);
@@ -52,7 +53,7 @@ export function ConnectorActionsWorkspace({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ operation, ...p }),
       });
-      const v = await r.json();
+      const v = await workspaceJson(r);
       if (!r.ok) throw new Error(v.error);
       await refresh();
     } catch (e) {

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { workspaceJson } from "@/lib/workspace/response";
 import { useEffect, useState } from "react";
 import { PageTitle } from "./ui";
 export function ConnectorsWorkspace() {
@@ -17,7 +18,7 @@ export function ConnectorsWorkspace() {
       fetch("/api/durable/connectors", { cache: "no-store" }),
     ])
       .then(async (rs) => {
-        const data = await Promise.all(rs.map((r) => r.json()));
+        const data = await Promise.all(rs.map((r) => workspaceJson(r)));
         if (rs.some((r) => !r.ok))
           throw new Error(data.find((v) => v.error)?.error);
         setState({
