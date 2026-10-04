@@ -6,7 +6,7 @@ import {
   type RefundProvider,
   type PaymentEvidence,
 } from "./contracts";
-// Intentionally loopback-only. No live payment endpoints or customer-selected URLs.
+// Only the local fixture or its fixed private Docker service. No arbitrary URLs.
 export class FetchSandboxStripe implements RefundProvider {
   readonly workspaceId = "local-proof";
   constructor(
@@ -15,7 +15,7 @@ export class FetchSandboxStripe implements RefundProvider {
     readonly timeout = 1500,
   ) {
     if (
-      base !== "http://127.0.0.1:8017" ||
+      !["http://127.0.0.1:8017", "http://refund-twin:8017"].includes(base) ||
       !/^sk_test_[A-Za-z0-9_-]{32,}$/.test(token)
     )
       throw new ControlError(

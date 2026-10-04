@@ -96,4 +96,4 @@ async def route(path: str,request: Request):
 if __name__=="__main__":
  import uvicorn
  persist()
- uvicorn.run(app,host="127.0.0.1",port=8017,access_log=False,log_level="warning")
+ uvicorn.run(app,host="0.0.0.0" if os.environ.get("LOOPLABS_TWIN_CONTAINER")=="1" else "127.0.0.1",port=8017,access_log=False,log_level="warning")

@@ -26,9 +26,13 @@ describe("Restricted FetchSandbox Stripe adapter", () => {
       ["", ""],
       ["https://api.stripe.com", key],
       ["http://localhost:8017", key],
+      ["http://refund-twin:8017.evil.test", key],
+      ["http://refund-twin:8017/", key],
+      ["http://refund-twin:8017@evil.test", key],
       ["http://127.0.0.1:8017", "sk_live_bad"],
     ])
       expect(() => new FetchSandboxStripe(base, token)).toThrow();
+    expect(() => new FetchSandboxStripe("http://refund-twin:8017", key)).not.toThrow();
     const old = {
       url: process.env.LOOPLABS_REFUND_TWIN_URL,
       token: process.env.LOOPLABS_REFUND_TWIN_TOKEN,

@@ -65,7 +65,7 @@ pnpm refund:proof
 
 Set `FETCHSANDBOX_BACKEND_PATH` if FetchSandbox is not at `~/sandbox/backend`.
 The twin listens only on `127.0.0.1:8017`; LoopLabs rejects any other adapter
-origin, including live Stripe. Setup creates ignored private scoped agent/twin
+origin, except the fixed private Docker service `http://refund-twin:8017`, including live Stripe. Setup creates ignored private scoped agent/twin
 credentials and app environment values. Restart Next after provisioning.
 The existing runtime DB role receives read/insert/update on refund state and only
 read/insert on refund events; events reject update/delete.
@@ -141,3 +141,22 @@ References:
 - https://docs.stripe.com/api/refunds/create
 - FetchSandbox source: `~/sandbox/backend/app/sandbox/engine.py`
 - FetchSandbox MCP: `~/sandbox/mcp/README.md`
+
+## Hosted test workspace
+
+Deployment uses a separate PostgreSQL database with a restricted runtime role,
+a persistent private FetchSandbox fixture, and fresh server-owned credentials.
+The Docker fixture listens inside the private service network; port 8017 and
+PostgreSQL are not published to the internet. Only the fixed `refund-twin`
+service origin is permitted in addition to local loopback. The runtime web
+container receives neither database-owner credentials nor agent/operator tokens.
+Operators sign in with a separately shared private token. This is still a
+bounded test-payment proof, not a live refund integration or general agent gateway.
+
+The infrastructure reference files are in `infrastructure/`. The fixture build
+context uses the existing FetchSandbox source; its Docker ignore rules exclude
+private state, credentials and node dependencies. PostgreSQL uses a named volume;
+fixture state uses private host storage. Both services restart after reboot.
+`deploy.sh` verifies migration 2, test-provider availability, anonymous denial,
+pages and assets before activating the release. This single-server deployment
+does not establish high availability or tested disaster recovery.
