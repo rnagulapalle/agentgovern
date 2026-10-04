@@ -7,7 +7,7 @@ export function database() {
   if (!url)
     throw new ControlError(
       503,
-      "Durable workspace is not configured. Follow docs/DURABLE_CONTROL_PLANE.md.",
+      "The workspace is temporarily unavailable. Please contact the LoopLabs team.",
     );
   if (!pool) {
     pool = new Pool({

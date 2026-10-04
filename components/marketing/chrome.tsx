@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import { LoopMark } from "@/components/brand/loop-mark";
 import { SITE } from "@/lib/site";
 
-const CAL_URL = "https://cal.com/rajnagulapalle";
+const CAL_URL = "/contact-sales";
 const NAV = [
   { href: "/#how-it-works", label: "How it works" },
   { href: "/#recovery", label: "Recovery" },
@@ -70,9 +70,9 @@ export function MarketingHeader({ section, bookingUrl = CAL_URL }: { section?: s
         {NAV.map((item) => (
           <Link key={item.href} href={item.href}>{item.label}</Link>
         ))}
-        <Link href="/control-plane">Product tour <ArrowUpRight size={14} /></Link>
+        <Link href="/platform">Product overview <ArrowUpRight size={14} /></Link>
       </nav>
-      <a className="marketing-nav-cta" href={bookingUrl} target="_blank" rel="noopener noreferrer">
+      <a className="marketing-nav-cta" href={bookingUrl}>
         Book a demo
       </a>
       <button
@@ -99,8 +99,8 @@ export function MarketingHeader({ section, bookingUrl = CAL_URL }: { section?: s
               {item.label}<ArrowUpRight size={16} />
             </Link>
           ))}
-          <Link href="/control-plane" onClick={() => setOpen(false)}>
-            Product tour <ArrowUpRight size={16} />
+          <Link href="/platform" onClick={() => setOpen(false)}>
+            Product overview <ArrowUpRight size={16} />
           </Link>
         </nav>
       )}

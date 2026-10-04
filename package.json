@@ -21,7 +21,8 @@
     "durable:runtime-role": "tsx --env-file=.env.local scripts/durable-runtime-role.ts",
     "refund:setup": "tsx --env-file=.env.local scripts/refund-setup.ts",
     "refund:twin": "bash scripts/refund-twin.sh",
-    "refund:proof": "tsx --env-file=.env.local scripts/refund-proof.ts"
+    "refund:proof": "tsx --env-file=.env.local scripts/refund-proof.ts",
+    "workspace:setup": "tsx --env-file=.env.local scripts/workspace-setup.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

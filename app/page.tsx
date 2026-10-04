@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const CAL_URL = "https://cal.com/rajnagulapalle";
+const CAL_URL = "/contact-sales";
 const FAQ = [
   {
     q: "What if we do not have any agents today?",
@@ -51,15 +51,15 @@ const FAQ = [
   },
   {
     q: "What if an action times out and we do not know whether it worked?",
-    a: "Do not retry it blindly. The recovery path checks the external system and the current record version first. It can then confirm the result, permit a safe retry, prepare a compensating change, or send the decision to a person. The current tour demonstrates this pattern with sample browser data; production connectors are part of an early-access implementation.",
+    a: "Do not retry it blindly. The recovery path checks the external system and the current record version first. It can then confirm the result, permit a safe retry, prepare a compensating change, or send the decision to a person. The invited workspace demonstrates this with a saved sample record and simulated refunds. Customer connectors require a scoped integration.",
   },
   {
     q: "How does the model gateway fit in?",
-    a: "The model gateway controls which models agents may call and how much they may spend. The control plane ties those limits to each agent's identity, workflow, actions, running execution, and outputs. The interactive tour uses representative data; a production deployment connects these controls to your gateway and tools.",
+    a: "The prepared model-access example shows model permissions and simulated budgets tied to an agent identity. Live model calls and a production model gateway are not connected. The saved workspace currently enforces discount and refund action boundaries.",
   },
   {
     q: "What can I try today?",
-    a: "The interactive product tour includes agent onboarding, workflow controls, approvals, execution traces, output checks, and recovery previews. It uses sample data saved in your browser and does not change external systems. Book a demo to map LoopLabs to one of your production workflows.",
+    a: "Contact us for a guided walkthrough. Invited teams can configure agents and explore saved approvals and recovery with sample discount data and a simulated refund provider. Other prepared examples use browser-local data. Live customer connectors, model execution and a general workflow builder are not available yet.",
   },
 ];
 
@@ -180,30 +180,29 @@ export default function LandingPage() {
                 CONTROL + RECOVERY FOR AGENT-RUN WORKFLOWS
               </span>
               <h1 id="hero-title">
-                Put agent workflows
+                Automate the work.
                 <br />
-                into production.
+                Control the actions.
                 <br />
-                Keep control.
+                Verify the outcome.
               </h1>
               <p>
-                Verify delegated authority, control consequential actions,
-                preserve execution evidence, and reconcile uncertain outcomes
-                before an unsafe retry.
+                Start with one workflow. Give every agent an owner and limits.
+                Hold risky requests for approval, and check what happened
+                before retrying.
               </p>
               <div className="ll-hero-actions">
                 <a
                   className="ll-button"
                   href={CAL_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
                 >
                   Bring us one workflow <ArrowUpRight size={16} />
                 </a>
-                <Link className="ll-text-link" href="/control-plane">
-                  Explore the product tour <ArrowRight size={17} />
+                <Link className="ll-text-link" href="/platform">
+                  See how it works <ArrowRight size={17} />
                 </Link>
               </div>
+              <p className="ll-small-copy">Evaluate saved controls with sample discounts and simulated refunds. Customer integrations are scoped with the founders.</p>
             </div>
             <ControlWave />
           </section>
@@ -254,8 +253,6 @@ export default function LandingPage() {
                 <a
                   className="ll-text-link"
                   href={CAL_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
                 >
                   Bring us one workflow <ArrowUpRight size={16} />
                 </a>
@@ -436,9 +433,9 @@ export default function LandingPage() {
                 confirm, retry, compensate, or send the decision to a person.
               </p>
               <p className="ll-small-copy">
-                The product tour demonstrates version-aware recovery over
-                sample state. Production connectors are configured during
-                early access.
+                The invited workspace verifies changes to a sample record and
+                a simulated payment provider. Customer connectors need a
+                scoped integration before a pilot.
               </p>
               <Link
                 className="ll-text-link"
@@ -462,12 +459,12 @@ export default function LandingPage() {
                   on a real task.
                 </h2>
               </div>
-              <Link className="ll-text-link" href="/control-plane">
-                Explore the product tour <ArrowUpRight size={16} />
+              <Link className="ll-text-link" href="/platform">
+                See how it works <ArrowUpRight size={16} />
               </Link>
             </div>
             <div className="ll-scenario-grid">
-              <Link href="/control-plane/approvals">
+              <Link href="/control-plane/actions?workflow=discounts">
                 <span className="ll-scenario-icon">
                   <CircleApproval />
                 </span>
@@ -477,7 +474,7 @@ export default function LandingPage() {
                   <br />
                   the agent&apos;s authority.
                 </h3>
-                <p>The email waits for approval before it can be sent.</p>
+                <p>The discount change waits for a named approver.</p>
                 <span className="ll-scenario-link">
                   Review the request <ArrowUpRight size={17} />
                 </span>
@@ -517,9 +514,9 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="ll-sandbox-note">
-              The product tour uses sample browser data and a prepared renewal
-              workflow. Policy evaluation and state transitions run locally;
-              model calls, external actions, and production recovery are simulated.
+              Saved discount and refund controls are available in the invited workspace.
+              The prepared tour uses sample browser data for output checks and multi-step traces.
+              No real money moves, no model runs, and customer systems are not connected.
             </p>
           </section>
 
@@ -534,8 +531,6 @@ export default function LandingPage() {
               <a
                 className="ll-text-link"
                 href={CAL_URL}
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 Talk through your use case <ArrowUpRight size={16} />
               </a>
@@ -573,13 +568,11 @@ export default function LandingPage() {
               <a
                 className="ll-button"
                 href={CAL_URL}
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 Bring us one workflow <ArrowUpRight size={16} />
               </a>
-              <Link className="ll-text-link" href="/control-plane">
-                Or explore the product tour <ArrowRight size={16} />
+              <Link className="ll-text-link" href="/platform">
+                Or see how the controls work <ArrowRight size={16} />
               </Link>
               <Link className="ll-text-link" href="/blog/2026-10-02-ai-crm-workflow-pilot">
                 What a CRM workflow pilot involves <ArrowRight size={16} />

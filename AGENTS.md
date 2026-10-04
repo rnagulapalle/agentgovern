@@ -10,6 +10,8 @@ Use `docs/LOOPLABS_CLAIM_AND_FUNNEL_AUDIT.md` for the claim matrix and `docs/CON
 
 The separate `/control-plane/durable` workspace adds authenticated PostgreSQL-backed actions, approvals, leases, effect verification, and compensation for one controlled database test connector. Read `docs/DURABLE_CONTROL_PLANE.md` before changing it. Original demos remain browser-local; industry-grade reliability and external integrations are not established. The separate `/control-plane/refunds` workspace adds a scoped refund agent and PostgreSQL-backed policy/approval/execution/reconciliation against a dedicated private FetchSandbox Stripe twin. No real money moves, no model runs, and the refund fixture is not full live Stripe parity. Read `docs/REFUND_AGENT_PROOF.md`. Durable tests require a dedicated `LOOPLABS_TEST_DATABASE_URL` and must not be skipped.
 
+The private `/control-plane` now uses invited named member sign-in. `/control-plane/actions` unifies discount and refund views; legacy durable/refund URLs redirect there. Agent registration persists a scoped discount identity, invited owner and allowance. Prepared examples remain browser-local. Read `docs/WORKSPACE_ACCESS.md` before changing authentication, sales intake or registration. Applied schema migration 3 must not be edited after release; add a new migration.
+
 ## Required workflow
 
 1. Inspect the affected route, its tests, and the relevant docs before editing.

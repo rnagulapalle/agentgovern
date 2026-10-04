@@ -6,11 +6,10 @@ import { DurableWorkspace } from "./durable-workspace";
 describe("action workspace access", () => {
   it("offers workspace access without developer setup or an initial failure", () => {
     const html = renderToStaticMarkup(createElement(DurableWorkspace));
-    expect(html).toContain("Action workspace");
-    expect(html).toContain("Workspace access key");
-    expect(html).toContain('type="password"');
-    expect(html).toContain('autoComplete="off"');
-    expect(html).toContain("Open workspace");
+    expect(html).toContain("Discount changes");
+    expect(html).toContain("Your team sign-in provides access");
+    expect(html).toContain('href="/sign-in"');
+    expect(html).not.toContain('type="password"');
     expect(html).not.toContain('role="alert"');
     for (const setup of ["PostgreSQL", "pnpm", "docs/", "Local setup", "SERVER-BACKED PROOF"])
       expect(html).not.toContain(setup);
@@ -21,7 +20,7 @@ describe("action workspace access", () => {
     expect(html).toContain("Connected sample data");
     expect(html).toContain("sample discount record");
     expect(html).toContain("your customer systems are not connected");
-    expect(html).toContain('href="/control-plane/refunds"');
+    expect(html).toContain('href="/control-plane/actions?workflow=refunds"');
     expect(html).not.toContain("Apply discount");
     expect(html).not.toContain("Approve this discount");
   });

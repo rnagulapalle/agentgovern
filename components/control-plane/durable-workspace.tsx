@@ -21,7 +21,6 @@ const labels: Record<string, string> = {
 };
 export function DurableWorkspace() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
-  const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,6 +45,7 @@ export function DurableWorkspace() {
   useEffect(() => {
     refresh().catch((e) => setError(e.message));
   }, [refresh]);
+  const discountAgents = snapshot?.agents.filter(a => a.tools.includes("proof.discount")) || [];
   const signedIn = Boolean(snapshot);
   useEffect(() => {
     if (!signedIn) return;
@@ -95,8 +95,8 @@ export function DurableWorkspace() {
   return (
     <div className="cp-durable">
       <PageTitle
-        eyebrow="ACTION MANAGEMENT"
-        title="Action workspace"
+        eyebrow="DISCOUNT WORKFLOW"
+        title="Discount changes"
         description="Review what agents want to change, approve exceptions, and resolve uncertain outcomes. Your actions and decisions stay saved across sessions."
         action={
           snapshot ? (
@@ -118,8 +118,8 @@ export function DurableWorkspace() {
       <div className="cp-durable-scope">
         <strong>Connected sample data</strong>
         <p>
-          <Link href="/control-plane/refunds">
-            Manage refund actions →
+          <Link href="/control-plane/actions?workflow=refunds">
+            View refund workflow →
           </Link>
         </p>
         <p>
@@ -139,47 +139,9 @@ export function DurableWorkspace() {
       )}
       {!snapshot ? (
         <section className="cp-panel cp-durable-card">
-          <PanelHead
-            title="Open your action workspace"
-            sub="Enter your workspace access key to review and manage agent actions."
-          />
-          <form
-            className="cp-durable-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              task(async () => {
-                const response = await fetch("/api/durable/session", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ token }),
-                });
-                const value = await response.json();
-                if (!response.ok) throw new Error(value.error);
-                setToken("");
-                await refresh();
-                setNotice(
-                  "Your action workspace is open.",
-                );
-              });
-            }}
-          >
-            <label>
-              Workspace access key
-              <input
-                type="password"
-                required
-                autoComplete="off"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-              />
-            </label>
-            <button className="cp-button cp-button-dark" disabled={busy}>
-              Open workspace
-            </button>
-          </form>
-          <p className="cp-durable-help">
-            Need access? Ask your workspace administrator for a private access key.
-          </p>
+          <h2>{error ? "Workspace needs attention" : "Loading discount actions…"}</h2>
+          <p>Your team sign-in provides access to this workflow.</p>
+          <Link className="cp-button" href="/sign-in">Sign in again</Link>
         </section>
       ) : (
         <>
@@ -193,7 +155,7 @@ export function DurableWorkspace() {
               <p>The latest saved value for the connected sample record.</p>
             </section>
             <section className="cp-panel cp-durable-card">
-              <h2>Agent permissions</h2>
+              <h2>Workspace agent access</h2>
               <p>
                 <strong>
                   {snapshot.agents.every((a) => a.active)
@@ -201,10 +163,10 @@ export function DurableWorkspace() {
                     : "Paused"}
                 </strong>
               </p>
-              <p>Allowed action: update the sample discount.</p>
+              <p>Discount agents may update the sample discount. Pausing workspace agents also pauses the refund agent.</p>
               <p>
-                {snapshot.agents[0]?.reserved} of{" "}
-                {snapshot.agents[0]?.action_limit} allocated actions
+                {discountAgents.reduce((n,a)=>n+a.reserved,0)} of{" "}
+                {discountAgents.reduce((n,a)=>n+a.action_limit,0)} allocated discount actions
                 used. Repeating a request does not use another action.
               </p>
               <button
@@ -220,8 +182,8 @@ export function DurableWorkspace() {
                 }
               >
                 {snapshot.agents.every((a) => a.active)
-                  ? "Pause agent actions"
-                  : "Resume agent actions"}
+                  ? "Pause workspace agents"
+                  : "Resume workspace agents"}
               </button>
             </section>
             <section className="cp-panel cp-durable-card">
@@ -266,7 +228,7 @@ export function DurableWorkspace() {
                 task(async () => {
                   const p = submitted || {
                     actionId: crypto.randomUUID(),
-                    agentId: agentId || snapshot.agents[0].id,
+                    agentId: agentId || discountAgents[0].id,
                     discount,
                     expectedVersion: snapshot.record.version,
                   };
@@ -279,10 +241,10 @@ export function DurableWorkspace() {
                 Registered agent
                 <select
                   disabled={Boolean(submitted)}
-                  value={agentId || snapshot.agents[0]?.id}
+                  value={agentId || discountAgents[0]?.id}
                   onChange={(e) => setAgentId(e.target.value)}
                 >
-                  {snapshot.agents.map((a) => (
+                  {discountAgents.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.id}
                     </option>
@@ -301,7 +263,7 @@ export function DurableWorkspace() {
                   onChange={(e) => setDiscount(Number(e.target.value))}
                 />
               </label>
-              <button className="cp-button cp-button-dark" disabled={busy}>
+              <button className="cp-button cp-button-dark" disabled={busy || !discountAgents.length}>
                 {submitted ? "Check the same request" : "Submit action"}
               </button>
               {submitted && (
@@ -486,23 +448,7 @@ export function DurableWorkspace() {
               recent events. Earlier history remains saved on the server.
             </p>
           </section>
-          <button
-            className="cp-button"
-            disabled={busy}
-            onClick={() =>
-              task(async () => {
-                const response = await fetch("/api/durable/session", {
-                  method: "DELETE",
-                });
-                if (!response.ok) throw new Error("Sign-out failed.");
-                setSnapshot(null);
-                setSubmitted(null);
-                setNotice("Signed out. Your workspace history remains saved.");
-              })
-            }
-          >
-            Sign out
-          </button>
+
         </>
       )}
     </div>

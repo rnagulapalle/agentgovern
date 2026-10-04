@@ -52,6 +52,7 @@ export const AGENTGOVERN_SEO_TOOLS: SeoLink[] = [
 export const AGENTGOVERN_SITEMAP_PATHS: string[] = [
   "/",
   "/about",
-  "/control-plane",
+  "/platform",
+  "/contact-sales",
   ...AGENTGOVERN_SEO_TOOLS.map((t) => t.href),
 ];

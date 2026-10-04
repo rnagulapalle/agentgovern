@@ -1,18 +1,24 @@
 import type { NextRequest } from "next/server";
+import { WORKSPACE_COOKIE } from "../workspace/identity";
 import { ControlError } from "./contracts";
 export const SESSION_COOKIE = "looplabs_durable_session";
 export function credential(request: NextRequest) {
   const bearer = request.headers.get("authorization");
   return bearer?.startsWith("Bearer ")
     ? bearer.slice(7)
-    : request.cookies.get(SESSION_COOKIE)?.value || "";
+    : request.cookies.get(WORKSPACE_COOKIE)?.value ||
+        request.cookies.get(SESSION_COOKIE)?.value ||
+        "";
 }
 export function browserOrigin(request: NextRequest) {
   const configured = process.env.LOOPLABS_DURABLE_ORIGIN;
   if (!configured) return new URL(request.url).origin;
   // Server-owned origin, never inferred from caller-controlled proxy headers.
   if (!["https://looplabs.run", "https://agentgovern.ai"].includes(configured))
-    throw new ControlError(503, "Durable browser origin is not configured correctly.");
+    throw new ControlError(
+      503,
+      "Durable browser origin is not configured correctly.",
+    );
   return configured;
 }
 export function sameOrigin(request: NextRequest, requireOrigin = false) {

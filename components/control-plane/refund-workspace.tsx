@@ -23,7 +23,6 @@ const labels: Record<string, string> = {
 };
 export function RefundWorkspace() {
   const [snapshot, setSnapshot] = useState<RefundSnapshot | null>(null);
-  const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -94,8 +93,8 @@ export function RefundWorkspace() {
   return (
     <div className="cp-durable cp-refunds">
       <PageTitle
-        eyebrow="FETCHSANDBOX · TEST PAYMENTS"
-        title="A refund agent you can supervise"
+        eyebrow="REFUND WORKFLOW"
+        title="Refunds"
         description="A customer asks for a refund. See what the agent can do, what needs your approval, and how an uncertain payment gets resolved."
         action={
           snapshot ? (
@@ -105,24 +104,22 @@ export function RefundWorkspace() {
               onClick={() =>
                 task(async () => {
                   await refresh();
-                  setNotice("Read fresh database and provider state.");
+                  setNotice("Workflow is up to date.");
                 })
               }
             >
-              Refresh evidence
+              Refresh workflow
             </button>
           ) : undefined
         }
       />
       <div className="cp-durable-scope">
         <strong>
-          Real control-plane transactions. Simulated payment provider.
+          Simulated payment provider
         </strong>
         <p>
-          PostgreSQL saves every decision. A dedicated local FetchSandbox Stripe
-          twin holds the test payment and refunds. No real money moves; no model
-          is called. The operator drives the prepared agent proposal for this
-          walkthrough.
+          Review refunds for the prepared payment. Actions and decisions are saved.
+          No real money moves and no AI model is called.
         </p>
       </div>
       {error && (
@@ -137,42 +134,8 @@ export function RefundWorkspace() {
       )}
       {!snapshot ? (
         <section className="cp-panel cp-durable-card">
-          <h2>Open the refund workspace</h2>
-          <p>
-            Use the same operator token as the durable workspace. It stays in an
-            HTTP-only session, never browser storage.
-          </p>
-          <form
-            className="cp-durable-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              task(async () => {
-                const r = await fetch("/api/durable/session", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ token }),
-                });
-                const v = await r.json();
-                if (!r.ok) throw new Error(v.error);
-                setToken("");
-                await refresh();
-              });
-            }}
-          >
-            <label>
-              Operator access token
-              <input
-                type="password"
-                value={token}
-                autoComplete="off"
-                onChange={(e) => setToken(e.target.value)}
-                required
-              />
-            </label>
-            <button className="cp-button is-primary" disabled={busy}>
-              Open workspace
-            </button>
-          </form>
+          <h2>{error ? "Workspace needs attention" : "Loading refund actions…"}</h2>
+          <p>Your team sign-in provides access to this workflow.</p>
         </section>
       ) : (
         <>
@@ -310,7 +273,7 @@ export function RefundWorkspace() {
                 value={snapshot.provider.available ? "active" : "uncertain"}
                 label={
                   snapshot.provider.available
-                    ? "FetchSandbox twin connected"
+                    ? "Simulated provider connected"
                     : "Provider unavailable"
                 }
               />
@@ -344,7 +307,7 @@ export function RefundWorkspace() {
           <section className="cp-panel cp-durable-card">
             <h2>3–5. Follow the refund</h2>
             <p>
-              For the recovery proof, execute a ready refund with “Lose the
+              To explore recovery, execute a ready refund with “Lose the
               response.” The twin records the refund before the request times
               out. Then reconcile to verify that existing refund.
             </p>
@@ -456,7 +419,7 @@ export function RefundWorkspace() {
           <section className="cp-panel cp-durable-card">
             <h2>Persisted decisions</h2>
             <p>
-              Last 100 events. Reloading the page preserves the PostgreSQL
+              Last 100 events. Reloading the page preserves the saved
               history.
             </p>
             <ul className="cp-durable-events">
@@ -474,8 +437,8 @@ export function RefundWorkspace() {
         </>
       )}
       <p className="cp-durable-help">
-        <Link href="/control-plane/durable">
-          Open the original durable record proof →
+        <Link href="/control-plane/actions?workflow=discounts">
+          Review discount actions →
         </Link>
       </p>
     </div>

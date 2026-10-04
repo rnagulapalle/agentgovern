@@ -1,4 +1,2 @@
-import { RefundWorkspace } from "@/components/control-plane/refund-workspace";
-export default function RefundPage() {
-  return <RefundWorkspace />;
-}
+import { redirect } from "next/navigation";
+export default function RefundPage(){redirect("/control-plane/actions?workflow=refunds");}
