@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -23,5 +24,16 @@ describe("shared site navigation", () => {
     const externalLinks = html.match(/<a[^>]*target="_blank"[^>]*>/g) ?? [];
     expect(externalLinks.length).toBeGreaterThan(0);
     for (const link of externalLinks) expect(link).toContain('rel="noopener noreferrer"');
+  });
+});
+
+
+describe("launch social preview claims", () => {
+  it("states the prototype scope beside the workflow-control promise", () => {
+    const source = readFileSync("app/opengraph-image.tsx", "utf8");
+    expect(source).toContain("Explore agent workflow controls.");
+    expect(source).toContain("Try approvals and recovery with sample data.");
+    expect(source).toContain("Early-stage prototype / Guided implementation");
+    expect(source).not.toContain("Control every agent action");
   });
 });

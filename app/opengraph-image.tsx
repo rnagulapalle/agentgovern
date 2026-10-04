@@ -32,14 +32,14 @@ export default function OpenGraphImage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ fontSize: 78, fontWeight: 700, letterSpacing: -4, lineHeight: 1.05 }}>
-            Control every agent action.
+            Explore agent workflow controls.
           </div>
           <div style={{ fontSize: 28, color: "#57534e" }}>
-            Enforce permissions, supervise execution, inspect outputs, and recover state.
+            Try approvals and recovery with sample data. Scope one workflow with us.
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #d6d3d1", paddingTop: 26, fontSize: 20 }}>
-          <span>Actions / Execution / Outputs / Recovery</span>
+          <span>Early-stage prototype / Guided implementation</span>
           <span>{new URL(SITE.url).hostname}</span>
         </div>
       </div>
