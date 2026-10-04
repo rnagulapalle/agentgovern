@@ -34,7 +34,7 @@ const groups = [
     name: "WORKSPACE",
     items: [
       { key: "overview", label: "Overview", icon: LayoutGrid },
-      { key: "durable", label: "Durable workspace", icon: Database },
+      { key: "durable", label: "Action workspace", icon: Database },
       { key: "refunds", label: "Refund agent", icon: ShieldCheck },
       { key: "workflows", label: "Workflow library", icon: BookOpen },
       { key: "agents", label: "Agent directory", icon: Bot },
@@ -142,8 +142,8 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
         <Link href={durable ? "/control-plane/durable" : "/control-plane/settings"} className="cp-workspace">
           <span className="cp-workspace-icon">M</span>
           <span>
-            <strong>{durable ? "Durable proof" : "Meridian workspace"}</strong>
-            <small>{durable ? "PostgreSQL · controlled connector" : "Demo workspace"}</small>
+            <strong>{durable ? "Action workspace" : "Meridian workspace"}</strong>
+            <small>{durable ? "Connected sample data" : "Demo workspace"}</small>
           </span>
           <ChevronDown size={14} />
         </Link>
@@ -188,7 +188,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
               ))}
             </div>
             <span>
-              {durable ? "SERVER-BACKED PROOF" : "INTERACTIVE DEMO"} <span>v0.1</span>
+              {durable ? "SAVED WORKSPACE" : "INTERACTIVE DEMO"} <span>v0.1</span>
             </span>
           </div>
           <Link
@@ -230,7 +230,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
           <div className="cp-topbar-right">
             <span className="cp-environment">
               <i />
-              {durable ? "PostgreSQL proof" : "Demo workspace"}
+              {durable ? "Connected sample data" : "Demo workspace"}
             </span>
             {!durable && <button
               className="cp-search-trigger"
@@ -246,7 +246,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
             <Link
               className="cp-notifications"
               href={durable ? "/control-plane/durable" : "/control-plane/approvals"}
-              aria-label={durable ? "Durable action history" : `${pending} pending approvals`}
+              aria-label={durable ? "Action history" : `${pending} pending approvals`}
             >
               <Bell size={17} />
               {!durable && pending > 0 && <i />}
@@ -261,7 +261,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
           <span>
             <BrandMark small /> Action, execution, and output controls
           </span>
-          <span>{durable ? "Controlled test record · server-backed state" : "Sample data · changes saved in this browser"}</span>
+          <span>{durable ? "Sample data · decisions saved on the server" : "Sample data · changes saved in this browser"}</span>
         </footer>
       </div>
       {toast && (

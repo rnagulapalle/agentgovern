@@ -12,12 +12,12 @@ import type {
 const labels: Record<string, string> = {
   held: "Needs approval",
   ready: "Ready to execute",
-  executing: "Worker executing",
-  succeeded: "Effect recorded",
+  executing: "Applying change",
+  succeeded: "Change confirmed",
   uncertain: "Outcome uncertain",
   conflict: "Manual review",
   recovered: "State restored",
-  cancelled: "Authorization invalidated",
+  cancelled: "Permission changed",
 };
 export function DurableWorkspace() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
@@ -34,7 +34,10 @@ export function DurableWorkspace() {
     const response = await fetch("/api/durable", { cache: "no-store" });
     const data = await response.json();
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) setSnapshot(null);
+      if (response.status === 401 || response.status === 403) {
+        setSnapshot(null);
+        return null;
+      }
       throw new Error(data.error);
     }
     setSnapshot(data);
@@ -75,7 +78,7 @@ export function DurableWorkspace() {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error);
     await refresh();
-    setNotice(result.reason || "Control change saved in PostgreSQL.");
+    setNotice(result.reason || "Workspace updated.");
   }
   async function operation(a: DurableAction, op: string, lostResponse = false) {
     await task(() =>
@@ -92,9 +95,9 @@ export function DurableWorkspace() {
   return (
     <div className="cp-durable">
       <PageTitle
-        eyebrow="SERVER-BACKED PROOF"
-        title="Durable action controls"
-        description="Submit an action, approve its exact payload, and verify the effect. State and decisions are saved in PostgreSQL."
+        eyebrow="ACTION MANAGEMENT"
+        title="Action workspace"
+        description="Review what agents want to change, approve exceptions, and resolve uncertain outcomes. Your actions and decisions stay saved across sessions."
         action={
           snapshot ? (
             <button
@@ -103,26 +106,25 @@ export function DurableWorkspace() {
               onClick={() =>
                 task(async () => {
                   await refresh();
-                  setNotice("Read the latest persisted state.");
+                  setNotice("Workspace is up to date.");
                 })
               }
             >
-              Refresh state
+              Refresh workspace
             </button>
           ) : undefined
         }
       />
       <div className="cp-durable-scope">
-        <strong>Controlled connector · test data only</strong>
+        <strong>Connected sample data</strong>
         <p>
           <Link href="/control-plane/refunds">
-            Try the refund agent with a FetchSandbox payment twin →
+            Manage refund actions →
           </Link>
         </p>
         <p>
-          This workspace changes one PostgreSQL test record. It does not connect
-          to your CRM, send messages, call models, or process payments. The
-          original product tour remains a separate browser-local demo.
+          Manage changes to a sample discount record. Decisions are saved on the
+          server; your customer systems are not connected.
         </p>
       </div>
       {error && (
@@ -138,8 +140,8 @@ export function DurableWorkspace() {
       {!snapshot ? (
         <section className="cp-panel cp-durable-card">
           <PanelHead
-            title="Open your durable workspace"
-            sub="Use the operator token provisioned by your administrator. It is not saved in local storage."
+            title="Open your action workspace"
+            sub="Enter your workspace access key to review and manage agent actions."
           />
           <form
             className="cp-durable-form"
@@ -156,13 +158,13 @@ export function DurableWorkspace() {
                 setToken("");
                 await refresh();
                 setNotice(
-                  "Connected to PostgreSQL. Your browser uses an HTTP-only session cookie.",
+                  "Your action workspace is open.",
                 );
               });
             }}
           >
             <label>
-              Operator access token
+              Workspace access key
               <input
                 type="password"
                 required
@@ -176,36 +178,34 @@ export function DurableWorkspace() {
             </button>
           </form>
           <p className="cp-durable-help">
-            Local setup: follow <code>docs/DURABLE_CONTROL_PLANE.md</code>, run{" "}
-            <code>pnpm durable:setup</code>, then use the private credentials
-            file. Never share tokens in screenshots or commit them.
+            Need access? Ask your workspace administrator for a private access key.
           </p>
         </section>
       ) : (
         <>
           <div className="cp-durable-grid">
             <section className="cp-panel cp-durable-card">
-              <h2>Observed test record</h2>
+              <h2>Current discount</h2>
               <div className="cp-durable-number">
                 {snapshot.record.discount}%
               </div>
               <p>Current discount · version {snapshot.record.version}</p>
-              <p>One controlled record, stored on the server.</p>
+              <p>The latest saved value for the connected sample record.</p>
             </section>
             <section className="cp-panel cp-durable-card">
-              <h2>Agent authority</h2>
+              <h2>Agent permissions</h2>
               <p>
                 <strong>
                   {snapshot.agents.every((a) => a.active)
                     ? "Active"
-                    : "Contained"}
+                    : "Paused"}
                 </strong>
               </p>
-              <p>Tool: proof.discount</p>
+              <p>Allowed action: update the sample discount.</p>
               <p>
                 {snapshot.agents[0]?.reserved} of{" "}
-                {snapshot.agents[0]?.action_limit} lifetime action admissions
-                used. Replays use no extra allowance.
+                {snapshot.agents[0]?.action_limit} allocated actions
+                used. Repeating a request does not use another action.
               </p>
               <button
                 className="cp-button"
@@ -220,12 +220,12 @@ export function DurableWorkspace() {
                 }
               >
                 {snapshot.agents.every((a) => a.active)
-                  ? "Contain agents"
-                  : "Enable agents"}
+                  ? "Pause agent actions"
+                  : "Resume agent actions"}
               </button>
             </section>
             <section className="cp-panel cp-durable-card">
-              <h2>Action policy</h2>
+              <h2>Approval rules</h2>
               <p>
                 Version {snapshot.policy.version}. Above{" "}
                 {snapshot.policy.auto_limit}% needs approval. Above{" "}
@@ -249,15 +249,15 @@ export function DurableWorkspace() {
                   />
                 </label>
                 <button className="cp-button" disabled={busy}>
-                  Save new policy version
+                  Save approval rule
                 </button>
               </form>
             </section>
           </div>
           <section className="cp-panel cp-durable-card">
             <PanelHead
-              title="Submit a protected action"
-              sub="The operator can test a registered agent. Agent API callers must authenticate as the exact proposing agent."
+              title="Request a discount change"
+              sub="Choose an agent and a discount. Its permissions and the current approval rules determine whether the action can proceed."
             />
             <form
               className="cp-durable-form"
@@ -302,7 +302,7 @@ export function DurableWorkspace() {
                 />
               </label>
               <button className="cp-button cp-button-dark" disabled={busy}>
-                {submitted ? "Replay same action ID" : "Submit action"}
+                {submitted ? "Check the same request" : "Submit action"}
               </button>
               {submitted && (
                 <button
@@ -311,33 +311,32 @@ export function DurableWorkspace() {
                   disabled={busy}
                   onClick={() => setSubmitted(null)}
                 >
-                  Prepare a new action
+                  New request
                 </button>
               )}
             </form>
             {submitted && (
               <p className="cp-durable-help">
-                Action {submitted.actionId} · source version{" "}
-                {submitted.expectedVersion}. Replaying keeps the same payload
-                and must not create another action or effect.
+                This request is tied to record version {submitted.expectedVersion}.
+                Checking it again keeps the original request and does not create
+                another change.
               </p>
             )}
           </section>
           <section className="cp-panel cp-durable-card">
             <PanelHead
               title="Execution and recovery"
-              sub="Ready → executing → effect recorded. Uncertain outcomes stop until verified."
+              sub="Follow each request from approval to a confirmed change. Uncertain outcomes wait for review."
             />
             <p className="cp-durable-help">
-              Try 5% for automatic authorization, 25% for approval, or 70% for a
-              policy block. Choose “Execute with lost response” to write the
-              test record but hold the action as uncertain. Reconcile it to
-              prove that no second write occurs. To restore a successful action,
-              contain the agents first.
+              An allowed change is ready to apply. Requests above the approval limit
+              wait for a person; those above the maximum are blocked. If a
+              response is interrupted, check the saved outcome before trying
+              again. Pause agent actions before restoring a previous discount.
             </p>
             <div className="cp-durable-actions">
               {snapshot.actions.length === 0 ? (
-                <p>No actions yet. Submit the first one above.</p>
+                <p>No actions yet. Request a discount change to get started.</p>
               ) : (
                 snapshot.actions.map((a) => (
                   <article key={a.id}>
@@ -365,20 +364,14 @@ export function DurableWorkspace() {
                         <dt>Approval</dt>
                         <dd>{a.approved_by || "Not issued"}</dd>
                       </div>
-                      <div>
-                        <dt>Action ID</dt>
-                        <dd className="cp-durable-id">{a.id}</dd>
-                      </div>
                     </dl>
                     <details>
-                      <summary>Inspect the bound payload</summary>
+                      <summary>Review action details</summary>
                       <p>
                         Discount: {a.discount}%. Expected record version:{" "}
                         {a.expected_version}.
                       </p>
-                      <p className="cp-durable-id">
-                        SHA-256 payload digest: {a.payload_hash}
-                      </p>
+                      <p className="cp-durable-id">Request reference: {a.id}</p>
                     </details>
                     <div className="cp-durable-buttons">
                       {a.state === "held" && (
@@ -388,7 +381,7 @@ export function DurableWorkspace() {
                             disabled={busy}
                             onClick={() => operation(a, "approve")}
                           >
-                            Approve exact action
+                            Approve this discount
                           </button>
                           <button
                             className="cp-button"
@@ -406,14 +399,14 @@ export function DurableWorkspace() {
                             disabled={busy}
                             onClick={() => operation(a, "execute")}
                           >
-                            Execute test write
+                            Apply discount
                           </button>
                           <button
                             className="cp-button"
                             disabled={busy}
                             onClick={() => operation(a, "execute", true)}
                           >
-                            Execute with lost response
+                            Explore an interrupted response
                           </button>
                         </>
                       )}
@@ -423,7 +416,7 @@ export function DurableWorkspace() {
                           disabled={busy}
                           onClick={() => operation(a, "reconcile")}
                         >
-                          Verify outcome before retry
+                          Check outcome
                         </button>
                       )}
                       {a.state === "succeeded" && (
@@ -432,7 +425,7 @@ export function DurableWorkspace() {
                           disabled={busy}
                           onClick={() => operation(a, "recover")}
                         >
-                          Verify & restore previous state
+                          Restore previous discount
                         </button>
                       )}
                     </div>
@@ -443,8 +436,8 @@ export function DurableWorkspace() {
           </section>
           <section className="cp-panel cp-durable-card">
             <PanelHead
-              title="Persisted decision history"
-              sub="Server records with authenticated subjects. Database administrators retain control; this is not cryptographically signed evidence."
+              title="Decision history"
+              sub="See who acted, what changed, and when. Your history remains available when you return."
               action={
                 <button
                   className="cp-button"
@@ -456,12 +449,12 @@ export function DurableWorkspace() {
                     );
                     const link = document.createElement("a");
                     link.href = url;
-                    link.download = "looplabs-durable-proof.json";
+                    link.download = "looplabs-action-history.json";
                     link.click();
                     URL.revokeObjectURL(url);
                   }}
                 >
-                  Export proof
+                  Export history
                 </button>
               }
             />
@@ -490,7 +483,7 @@ export function DurableWorkspace() {
             )}
             <p className="cp-durable-help">
               This view and export include up to 100 recent actions and 200
-              recent events. Older records remain in PostgreSQL.
+              recent events. Earlier history remains saved on the server.
             </p>
           </section>
           <button
@@ -504,7 +497,7 @@ export function DurableWorkspace() {
                 if (!response.ok) throw new Error("Sign-out failed.");
                 setSnapshot(null);
                 setSubmitted(null);
-                setNotice("Signed out. Server state remains saved.");
+                setNotice("Signed out. Your workspace history remains saved.");
               })
             }
           >
