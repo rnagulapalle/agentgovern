@@ -8,7 +8,7 @@ describe("shared site navigation", () => {
   it("returns visitors home and keeps section destinations valid from nested pages", () => {
     const html = renderToStaticMarkup(createElement(MarketingHeader, { section: "Guides" }));
     expect(html).toContain('href="/"');
-    for (const href of ["/#how-it-works", "/#recovery", "/guides", "/blog", "/control-plane"]) {
+    for (const href of ["/#how-it-works", "/#recovery", "/guides", "/blog", "/platform", "/contact-sales"]) {
       expect(html).toContain(`href="${href}"`);
     }
     expect(html).not.toMatch(/href="#/);

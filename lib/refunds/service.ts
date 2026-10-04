@@ -1,3 +1,4 @@
+import { activeApprover } from "../workspace/identity";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
@@ -101,12 +102,7 @@ export class RefundControl {
       return "Refund agent identity or refund permission is unavailable.";
     if (a.policy_version !== policy.version || a.amount > policy.hard_limit)
       return "Refund policy changed; propose a new action.";
-    const valid = (
-      await c.query(
-        "SELECT 1 FROM ll_tokens WHERE org_id=$1 AND role='operator' AND subject=$2 AND active=true",
-        [actor.orgId, a.approved_by],
-      )
-    ).rowCount;
+    const valid = a.approved_by ? await activeApprover(c, actor.orgId, a.approved_by) : false;
     if (
       !approving &&
       a.amount > policy.auto_limit &&

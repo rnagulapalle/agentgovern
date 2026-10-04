@@ -3669,3 +3669,17 @@ button.cp-entity:hover strong {
 @media (max-width: 400px) {
   .cp-topbar .cp-environment { display: none; }
 }
+.workspace-agent { padding: 24px 0; border-bottom: 1px solid #dedbd5; }
+.workspace-agent h3 { font-size: 22px; }
+.workspace-agent dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-bottom: 20px; }
+.workspace-agent dt { font-size: 16px; color: #57534e; }
+.workspace-agent dd { font-size: 18px; overflow-wrap: anywhere; }
+.workspace-workflow-select { margin-bottom: 28px; padding: 20px; border: 1px solid #dedbd5; }
+.workspace-workflow-select label { display: flex; align-items: center; gap: 16px; font-size: 18px; }
+.workspace-workflow-select select { padding: 12px; border: 1px solid #a8a29e; background: #fff; min-height: 48px; }
+.workspace-workflow-select p { font-size: 16px; color: #57534e; margin-top: 12px; }
+.workspace-start-steps { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 32px; }
+.workspace-start-steps h3 { font-size: 22px; margin: 12px 0; }
+.workspace-sign-out { min-height: 44px; font-size: 16px; }
+.cp-durable-scope input[aria-label="Private agent key"] { max-width: 100%; margin: 12px 0; padding: 10px; border: 1px solid #a8a29e; display: block; }
+@media(max-width:640px){ .workspace-start-steps,.workspace-agent dl { grid-template-columns:1fr; } .workspace-workflow-select label { align-items: start; flex-direction:column; } .workspace-workflow-select select { width:100%; } }

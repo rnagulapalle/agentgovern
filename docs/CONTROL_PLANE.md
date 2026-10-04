@@ -1,5 +1,10 @@
 # LoopLabs agent control plane
 
+## Current private workspace (October 4, 2026)
+
+See [WORKSPACE_ACCESS.md](WORKSPACE_ACCESS.md) for the current sales and access journey. `/control-plane` is invitation-only. Raj and Pratibha sign in as separate named members at `/sign-in`; anonymous visitors see the overview and contact-sales path. The Actions page combines discount and refund views. Saved agent registration currently supports the discount connector and restricted discount role; the prepared refund agent retains its own boundary. Other examples remain browser-local. No live customer systems, real payments, model execution or general workflow builder are connected. This section supersedes earlier references to a public tour and shared operator-token entry forms.
+
+
 ## Server-backed foundation (October 3, 2026)
 
 The separate `/control-plane/durable` route now uses PostgreSQL-backed actions,

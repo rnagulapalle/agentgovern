@@ -41,6 +41,7 @@ beforeAll(async () => {
     max: 12,
   });
   await db.query(await readFile("lib/durable/schema.sql", "utf8"));
+  await db.query(await readFile("lib/workspace/schema.sql", "utf8"));
   control = new DurableControl(db);
 }, 20000);
 beforeEach(async () => {

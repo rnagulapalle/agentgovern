@@ -70,6 +70,7 @@ beforeAll(async () => {
     options: `-c search_path=${schema}`,
   });
   await db.query(await readFile("lib/durable/schema.sql", "utf8"));
+  await db.query(await readFile("lib/workspace/schema.sql", "utf8"));
   await db.query(await readFile("lib/refunds/schema.sql", "utf8"));
   await db.query("INSERT INTO ll_orgs(id) VALUES('http')");
   await db.query("INSERT INTO ll_refund_policies(org_id) VALUES('http')");

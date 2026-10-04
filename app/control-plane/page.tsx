@@ -1,4 +1,2 @@
-import { ControlScreen } from "@/components/control-plane/screens";
-export default function OverviewPage() {
-  return <ControlScreen section="overview" />;
-}
+import { WorkspaceOverview } from "@/components/control-plane/workspace-overview";
+export default function OverviewPage(){return <WorkspaceOverview />;}

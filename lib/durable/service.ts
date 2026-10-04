@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
+import { activeApprover, memberAuthority, memberSession } from "../workspace/identity";
 import { transaction } from "./database";
 import {
   ControlError,
@@ -20,8 +21,11 @@ export async function authenticate(db: Pool, token: string): Promise<Actor> {
     "SELECT org_id,subject,role FROM ll_tokens WHERE hash=$1 AND active=true",
     [hash],
   );
-  if (!rows[0])
+  if (!rows[0]) {
+    const member = await memberSession(db, token);
+    if (member) return member;
     throw new ControlError(401, "Valid workspace credentials are required.");
+  }
   return {
     orgId: rows[0].org_id,
     subject: rows[0].subject,
@@ -34,7 +38,7 @@ export async function authorize(c: PoolClient, actor: Actor, roles: Role[]) {
     "SELECT 1 FROM ll_tokens WHERE hash=$1 AND org_id=$2 AND subject=$3 AND role=$4 AND active=true",
     [actor.tokenHash, actor.orgId, actor.subject, actor.role],
   );
-  if (!rows[0] || !roles.includes(actor.role))
+  if ((!rows[0] && !(await memberAuthority(c, actor))) || !roles.includes(actor.role))
     throw new ControlError(403, "This identity cannot perform that operation.");
 }
 async function event(
@@ -101,16 +105,9 @@ async function current(c: PoolClient, actor: Actor, agentId: string) {
   return { org, agent, record, identityActive };
 }
 async function approvalValid(c: PoolClient, actor: Actor, a: DurableAction) {
-  if (!a.approved_by) return true;
-  return Boolean(
-    (
-      await c.query(
-        "SELECT 1 FROM ll_tokens WHERE org_id=$1 AND subject=$2 AND role='operator' AND active=true",
-        [actor.orgId, a.approved_by],
-      )
-    ).rows[0],
-  );
+  return !a.approved_by || activeApprover(c, actor.orgId, a.approved_by);
 }
+
 function invalid(
   a: DurableAction,
   context: Awaited<ReturnType<typeof current>>,

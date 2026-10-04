@@ -24,7 +24,7 @@ export function Analytics() {
     const handleClick = (event: MouseEvent) => {
       const target = event.target as Element | null;
       const element = target?.closest<HTMLElement>("a,button,summary");
-      if (!element) return;
+      if (!element || element.closest("[data-private]")) return;
       const label = element.innerText.trim().replace(/\s+/g, " ").slice(0, 120);
       const href = element instanceof HTMLAnchorElement ? element.href : "";
       const url = href ? new URL(href, window.location.href) : null;

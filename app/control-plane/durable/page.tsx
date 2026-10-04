@@ -1,4 +1,2 @@
-import { DurableWorkspace } from "@/components/control-plane/durable-workspace";
-export default function DurablePage() {
-  return <DurableWorkspace />;
-}
+import { redirect } from "next/navigation";
+export default function DurablePage(){redirect("/control-plane/actions?workflow=discounts");}

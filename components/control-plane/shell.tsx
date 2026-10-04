@@ -34,39 +34,41 @@ const groups = [
     name: "WORKSPACE",
     items: [
       { key: "overview", label: "Overview", icon: LayoutGrid },
-      { key: "durable", label: "Action workspace", icon: Database },
-      { key: "refunds", label: "Refund agent", icon: ShieldCheck },
-      { key: "workflows", label: "Workflow library", icon: BookOpen },
-      { key: "agents", label: "Agent directory", icon: Bot },
-      { key: "gateway", label: "Model gateway", icon: Network },
+      { key: "agents", label: "Agents and boundaries", icon: Bot },
+      { key: "connectors", label: "Connectors", icon: Database },
+      { key: "actions", label: "Actions", icon: SlidersHorizontal },
+      { key: "requests", label: "Sales requests", icon: BookOpen },
     ],
   },
   {
-    name: "CONTROLS",
+    name: "PREPARED EXAMPLES",
     items: [
-      {
-        key: "policies",
-        label: "Action controls",
-        icon: SlidersHorizontal,
-      },
-      { key: "runs", label: "Execution controls", icon: GitBranch },
-      { key: "outputs", label: "Output controls", icon: Activity },
-    ],
-  },
-  {
-    name: "REVIEW",
-    items: [
-      { key: "approvals", label: "Approvals", icon: ShieldCheck },
-      { key: "reconciliation", label: "Recovery", icon: Undo2 },
-      { key: "audit", label: "Audit trail", icon: History },
+      { key: "workflows", label: "Workflow library", icon: Network },
+      { key: "gateway", label: "Model access", icon: Activity },
+      { key: "runs", label: "Execution traces", icon: GitBranch },
+      { key: "outputs", label: "Output checks", icon: ShieldCheck },
+      { key: "reconciliation", label: "Recovery example", icon: Undo2 },
+      { key: "audit", label: "Example history", icon: History },
     ],
   },
 ];
-export function ControlShell({ children }: { children: React.ReactNode }) {
+export function ControlShell({
+  children,
+  member,
+}: {
+  children: React.ReactNode;
+  member: { name: string; email: string };
+}) {
   const { state, toast } = useControl();
   const pathname = usePathname();
   const section = pathname.split("/")[2] || "overview";
-  const durable = section === "durable" || section === "refunds";
+  const durable = [
+    "overview",
+    "actions",
+    "agents",
+    "connectors",
+    "requests",
+  ].includes(section);
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);
   const [query, setQuery] = useState("");
@@ -80,17 +82,17 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      if (!durable && (e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setSearch((v) => !v);
       }
     };
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
-  }, []);
+  }, [durable]);
   const title =
     groups.flatMap((g) => g.items).find((i) => i.key === section)?.label ||
-    "Workspace settings";
+    "Example settings";
   const results = [
     ...state.agents.map((a) => ({
       name: a.name,
@@ -116,7 +118,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
     )
     .slice(0, 8);
   return (
-    <div className="cp-app">
+    <div className="cp-app ph-no-capture" data-private>
       <a href="#control-content" className="cp-skip">
         Skip to content
       </a>
@@ -139,11 +141,18 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
             <span className="cp-brand-sub">THE AGENT CONTROL PLANE</span>
           </span>
         </Link>
-        <Link href={durable ? "/control-plane/durable" : "/control-plane/settings"} className="cp-workspace">
+        <Link
+          href={durable ? "/control-plane" : "/control-plane/settings"}
+          className="cp-workspace"
+        >
           <span className="cp-workspace-icon">M</span>
           <span>
-            <strong>{durable ? "Action workspace" : "Meridian workspace"}</strong>
-            <small>{durable ? "Connected sample data" : "Demo workspace"}</small>
+            <strong>
+              {durable ? "LoopLabs workspace" : "Prepared examples"}
+            </strong>
+            <small>
+              {durable ? "Saved controls" : "Browser-local sample data"}
+            </small>
           </span>
           <ChevronDown size={14} />
         </Link>
@@ -167,9 +176,9 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
                   {!durable && item.key === "approvals" && pending > 0 && (
                     <span className="cp-nav-count">{pending}</span>
                   )}
-                  {!durable && item.key === "reconciliation" && incidents > 0 && (
-                    <span className="cp-nav-alert" />
-                  )}
+                  {!durable &&
+                    item.key === "reconciliation" &&
+                    incidents > 0 && <span className="cp-nav-alert" />}
                 </Link>
               ))}
             </div>
@@ -188,7 +197,8 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
               ))}
             </div>
             <span>
-              {durable ? "SAVED WORKSPACE" : "INTERACTIVE DEMO"} <span>v0.1</span>
+              {durable ? "SAVED WORKSPACE" : "INTERACTIVE DEMO"}{" "}
+              <span>v0.1</span>
             </span>
           </div>
           <Link
@@ -196,7 +206,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
             className={`cp-nav-item ${section === "settings" ? "is-active" : ""}`}
           >
             <Settings2 size={17} strokeWidth={1.5} />
-            Workspace settings
+            Example settings
           </Link>
           <button className="cp-nav-item" onClick={() => setHelp(true)}>
             <CircleHelp size={17} strokeWidth={1.5} />
@@ -204,10 +214,16 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
             <ArrowUpRight size={13} className="cp-push" />
           </button>
           <Link href="/" className="cp-sidebar-user">
-            <span className="cp-user-avatar">RN</span>
+            <span className="cp-user-avatar">
+              {member.name
+                .split(" ")
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join("")}
+            </span>
             <span>
-              <strong>{durable ? "Operator access" : "Raj Nagulapalle"}</strong>
-              <small>{durable ? "Authenticated workspace required" : "Workspace admin · demo"}</small>
+              <strong>{member.name}</strong>
+              <small>{member.email}</small>
             </span>
             <ArrowUpRight size={14} />
           </Link>
@@ -230,28 +246,43 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
           <div className="cp-topbar-right">
             <span className="cp-environment">
               <i />
-              {durable ? "Connected sample data" : "Demo workspace"}
+              {durable ? "Saved controls" : "Browser-local sample data"}
             </span>
-            {!durable && <button
-              className="cp-search-trigger"
-              aria-label="Search workspace"
-              onClick={() => setSearch(true)}
-            >
-              <Search size={15} />
-              <span>Search anything</span>
-              <kbd>
-                <Command size={10} /> K
-              </kbd>
-            </button>}
+            {!durable && (
+              <button
+                className="cp-search-trigger"
+                aria-label="Search workspace"
+                onClick={() => setSearch(true)}
+              >
+                <Search size={15} />
+                <span>Search anything</span>
+                <kbd>
+                  <Command size={10} /> K
+                </kbd>
+              </button>
+            )}
             <Link
               className="cp-notifications"
-              href={durable ? "/control-plane/durable" : "/control-plane/approvals"}
-              aria-label={durable ? "Action history" : `${pending} pending approvals`}
+              href={durable ? "/control-plane" : "/control-plane/approvals"}
+              aria-label={
+                durable ? "Action history" : `${pending} pending approvals`
+              }
             >
               <Bell size={17} />
               {!durable && pending > 0 && <i />}
             </Link>
-            <span className="cp-user-avatar is-small">RN</span>
+            <button
+              className="cp-button workspace-sign-out"
+              onClick={async () => {
+                const r = await fetch("/api/workspace/session", {
+                  method: "DELETE",
+                });
+                if (r.ok) window.location.assign("/sign-in");
+                else window.alert("Could not sign out. Please try again.");
+              }}
+            >
+              Sign out
+            </button>
           </div>
         </header>
         <main id="control-content" className="cp-content">
@@ -261,7 +292,11 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
           <span>
             <BrandMark small /> Action, execution, and output controls
           </span>
-          <span>{durable ? "Sample data · decisions saved on the server" : "Sample data · changes saved in this browser"}</span>
+          <span>
+            {durable
+              ? "Sample data · decisions saved on the server"
+              : "Sample data · changes saved in this browser"}
+          </span>
         </footer>
       </div>
       {toast && (
@@ -272,8 +307,8 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
       )}
       {search && (
         <Modal
-          title="Find anything"
-          subtitle="Search agents, executions, and policies in this workspace."
+          title="Find a prepared example"
+          subtitle="Search the prepared browser-local examples."
           onClose={() => setSearch(false)}
         >
           <div className="cp-search-input">
@@ -318,28 +353,52 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
           onClose={() => setHelp(false)}
         >
           <div className="cp-guide">
-            {[
-              [
-                "01",
-                "Give every agent an identity",
-                "Onboard an agent with an owner, a role, model access, tool permissions, and a budget.",
-              ],
-              [
-                "02",
-                "Check a proposed action",
-                "Simulate a renewal offer. Change the discount or record age to see the existing policy engine allow, hold, or block it.",
-              ],
-              [
-                "03",
-                "Keep humans in control",
-                "Review the exact proposed action. Suspend an agent or terminate a run to stop pending work.",
-              ],
-              [
-                "04",
-                "Recover carefully",
-                "Open Recovery, isolate the agent, preview the recovery plan, and restore a reversible record only if its version still matches.",
-              ],
-            ].map(([n, t, d]) => (
+            {(durable
+              ? [
+                  [
+                    "01",
+                    "Register an agent",
+                    "Assign an invited owner, a discount role, the approved sample connector and an action allowance.",
+                  ],
+                  [
+                    "02",
+                    "Set the rules",
+                    "Open Actions and choose discounts or refunds. Set automatic and hard limits; requests above the automatic limit need a named approver.",
+                  ],
+                  [
+                    "03",
+                    "Review and execute",
+                    "Submit a request, inspect the exact payload, approve a held action, and execute only if its authority remains valid.",
+                  ],
+                  [
+                    "04",
+                    "Verify before retry",
+                    "Explore a lost response. Reconcile the observed outcome, and restore a discount only when no newer write would be overwritten.",
+                  ],
+                ]
+              : [
+                  [
+                    "01",
+                    "Give every agent an identity",
+                    "Onboard an agent with an owner, a role, model access, tool permissions, and a budget.",
+                  ],
+                  [
+                    "02",
+                    "Check a proposed action",
+                    "Simulate a renewal offer. Change the discount or record age to see the existing policy engine allow, hold, or block it.",
+                  ],
+                  [
+                    "03",
+                    "Keep humans in control",
+                    "Review the exact proposed action. Suspend an agent or terminate a run to stop pending work.",
+                  ],
+                  [
+                    "04",
+                    "Recover carefully",
+                    "Open Recovery, isolate the agent, preview the recovery plan, and restore a reversible record only if its version still matches.",
+                  ],
+                ]
+            ).map(([n, t, d]) => (
               <div key={n}>
                 <span>{n}</span>
                 <section>
@@ -352,9 +411,9 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
           <div className="cp-note">
             <BookOpen size={17} />
             <p>
-              This is an interactive product tour. Model calls, business actions,
-              and recovery are simulated. Production identity and the Python
-              gateway are not connected.
+              {durable
+                ? "Discounts use a sample record; refunds use a simulated payment provider. Decisions are saved on the server. No real money moves and no AI model runs."
+                : "These prepared examples use browser-local sample data. Model access, output checks and execution traces are simulated."}
             </p>
           </div>
         </Modal>

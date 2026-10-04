@@ -93,10 +93,11 @@ check_app() {
   sudo docker exec "$1" node -e '
     (async () => {
       let html;
-      for (const path of ["/", "/control-plane", "/control-plane/durable", "/control-plane/refunds"]) {
+      for (const path of ["/", "/platform", "/contact-sales", "/sign-in", "/control-plane", "/control-plane/agents", "/control-plane/actions", "/control-plane/durable", "/control-plane/refunds"]) {
         const response = await fetch("http://127.0.0.1:3000" + path);
         const body = await response.text();
         if (response.status !== 200 || !body.includes("LoopLabs")) throw new Error("Page failed: " + path);
+        if (path.startsWith("/control-plane") && !body.includes("PRIVATE TEAM WORKSPACE")) throw new Error("Private page gate failed: " + path);
         if (path === "/") html = body;
       }
       if (process.env.LOOPLABS_REFUND_TWIN_URL) {
@@ -105,6 +106,7 @@ check_app() {
         try {
           const result = await pool.query("SELECT version FROM ll_migrations ORDER BY version");
           if (!result.rows.some(row => row.version === 2)) throw new Error("Refund schema missing");
+          if (!result.rows.some(row => row.version === 3)) throw new Error("Workspace membership schema missing");
         } finally { await pool.end(); }
         const evidence = await fetch(process.env.LOOPLABS_REFUND_TWIN_URL + "/v1/charges/ch_looplabs_refund_demo", {
           headers: { Authorization: "Bearer " + process.env.LOOPLABS_REFUND_TWIN_TOKEN },
@@ -118,6 +120,13 @@ check_app() {
           body: JSON.stringify({ token: "release-check-invalid-credential" })
         });
         if (invalidLogin.status !== 401) throw new Error("Browser origin or login boundary failed");
+        const workspace = await fetch("http://127.0.0.1:3000/api/workspace/agents");
+        if (workspace.status !== 401) throw new Error("Agent directory must deny anonymous access");
+        const memberLogin = await fetch("http://127.0.0.1:3000/api/workspace/session", {
+          method: "POST", headers: { "Content-Type": "application/json", Origin: process.env.LOOPLABS_DURABLE_ORIGIN },
+          body: JSON.stringify({ email: "release-check@example.invalid", password: "release-check-invalid-password" })
+        });
+        if (memberLogin.status !== 401) throw new Error("Named member login boundary failed");
       }
       const asset = html.match(/src="([^\"]+\/_next\/static\/[^\"]+\.js[^\"]*)"/)
         || html.match(/src="(\/_next\/static\/[^\"]+\.js[^\"]*)"/);

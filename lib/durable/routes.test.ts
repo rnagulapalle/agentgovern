@@ -44,6 +44,7 @@ beforeAll(async () => {
   await admin.query(`CREATE SCHEMA ${schema}`);
   db = new Pool({ connectionString: url, options: `-c search_path=${schema}` });
   await db.query(await readFile("lib/durable/schema.sql", "utf8"));
+  await db.query(await readFile("lib/workspace/schema.sql", "utf8"));
   await db.query("INSERT INTO ll_orgs(id) VALUES('http')");
   await db.query("INSERT INTO ll_records(org_id) VALUES('http')");
   await db.query(

@@ -104,7 +104,7 @@ describe("Durable HTTP boundary", () => {
     const original = process.env.LOOPLABS_DATABASE_URL;
     try {
       delete process.env.LOOPLABS_DATABASE_URL;
-      expect(() => database()).toThrow("not configured");
+      expect(() => database()).toThrow("temporarily unavailable");
       process.env.LOOPLABS_DATABASE_URL =
         process.env.LOOPLABS_TEST_DATABASE_URL;
       const pool = database();

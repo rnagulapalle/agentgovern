@@ -6,7 +6,7 @@
 export const SITE = {
   name: "LoopLabs",
   url: "https://looplabs.run",
-  title: "LoopLabs — Put agent workflows into production without losing control.",
+  title: "LoopLabs — Agent workflows, action controls and recovery.",
   tagline: "Control consequential agent actions. Reconcile uncertain outcomes.",
   description:
     "The control and recovery layer for agent-run workflows. Verify authority, control consequential actions, preserve execution evidence, and reconcile uncertain outcomes before retry.",
@@ -33,7 +33,7 @@ export const PRINCIPLES = [
   "See what AI is trying to do before it happens.",
   "Business policies apply — not just what someone typed in a chat.",
   "Risky actions stop for human approval.",
-  "Every outcome is logged for compliance and audit.",
+  "Keep the action, approval and outcome together for review.",
 ];
 
 /** Questions buyers ask when AI touches production systems (homepage). */
