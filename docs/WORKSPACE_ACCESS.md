@@ -12,11 +12,15 @@ All `/control-plane` pages require an invited named member session. Anonymous, e
 
 | Area | Working scope | Boundary |
 | --- | --- | --- |
-| Agent onboarding | Saved ID, name, named owner, restricted role, sample connector and lifetime action allowance; scoped key shown once | New registrations support discount agents only; no arbitrary roles or connector credentials |
+| Agent onboarding | Saved ID, name, named owner, restricted role, sample connector and lifetime action allowance; scoped key shown once | New registrations support discount, CRM and messaging agents; no arbitrary roles or live connector credentials |
 | Connectors | Versioned sample discount record and prepared simulated refund provider | CRM, email, live payments and model providers are not connected |
 | Discount actions | Saved rules, allow/hold/block, exact approval, execution lease, replay protection, verification and version-safe compensation | One controlled sample record |
+| CRM actions | Saved agent, exact named approval, fixture source-version bound, execution and read-back | One simulated contact; fixture CAS is not live HubSpot parity |
+| Customer messages | Saved agent, exact template/recipient allowlist, named approval, execution and outcome lookup | Private Resend twin; no real email or delivery proof |
 | Refund actions | Prepared refund agent, amount/budget policy, named approvals, execution and provider reconciliation | Private payment twin; no real money; irreversible refunds are not rolled back |
 | Output/model/multi-step examples | Existing deterministic browser-local examples behind team sign-in | No live model execution, production output gateway or general workflow builder |
+
+For CRM and messaging, an operator cannot approve a request they submitted; another named member must review it. Agent-originated requests need a named operator. This separation is not yet required by the older discount/refund walkthroughs.
 
 Named human operators may configure the supported boundaries, approve and execute. Scoped agent keys may submit/read their own actions and cannot approve, execute or configure. Saved decisions record the authenticated member email. Revoking the approver invalidates delayed approval; logout ends the session, not the already reviewed approval, which retains its existing 15-minute expiry.
 
@@ -41,3 +45,5 @@ The public navigation audit checked 29 Runlayer homepage destinations successful
 Authentication design references: [OWASP authentication guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html), [OWASP session management guidance](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
 
 Regression tests cover anonymous server-rendered gates, database failure, revoked members, tenant-scoped sales requests, bounded public intake, CSRF, login throttling, hashed credentials, cookie expiry/logout, named approval revocation, restricted agent registration and key authority. Existing durable/refund adversarial tests remain mandatory. Browser verification checks both founder identities, private API denial, unified workflows, logout and 390px layouts. A local browser walkthrough registered an agent owned by Pratibha, replayed a held request, approved as Pratibha, interrupted execution and verified one effect; the scoped agent key was denied execution. Private workspace text is masked in session replay and excluded from automatic interaction capture. Releases require `pnpm quality` and `./deploy.sh`.
+
+Migration 4 adds shared CRM/messaging actions, policies and protected event history, and extends supported profile roles. Existing migrations 1–3 remain byte-for-byte unchanged. Use `pnpm connectors:setup` with migration-owner access, then run the private twins. The runtime role cannot update/delete their events. See [CONNECTOR_VERIFICATION.md](CONNECTOR_VERIFICATION.md).

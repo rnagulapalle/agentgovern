@@ -25,7 +25,7 @@ Critical and high-risk changes need a regression test for the expected result an
 
 Use default-deny behavior for safety decisions. Validate at the boundary and again when delayed authority is exercised. Make mutations idempotent. Never trust client state as production authority. Avoid new dependencies unless the standard library or current stack cannot solve the problem clearly.
 
-Keep product language exact: current demos are browser-local simulations. A future architecture or planned capability must be labeled as such.
+Keep product language exact: original prepared demos remain browser-local. The invited workspace saves discount, refund, CRM and messaging controls on the server; provider twins and sample records are not live customer integrations. A future architecture or planned capability must be labeled as such.
 
 ## 4. Verify
 

@@ -71,11 +71,13 @@ export function ProductOverview({ gated = false }: { gated?: boolean }) {
       <div className="sales-scope">
         <h2>What you can evaluate today</h2>
         <p>
-          Invited users can register a discount agent, set its boundaries, and
-          use saved approval and recovery controls on a sample record. The
-          prepared refund workflow uses a simulated payment provider. No real
-          money moves. Live customer connectors, model execution and a general
-          workflow builder are not available yet.
+          Invited users can register discount, CRM and messaging agents with
+          named owners and supported boundaries. Saved controls govern a sample
+          discount record, a simulated CRM contact and a prepared customer
+          message. The refund workflow uses a simulated payment provider. No
+          real money moves and no customer email is delivered. Live customer
+          connectors, model execution and a general workflow builder are not
+          available yet.
         </p>
       </div>
     </main>

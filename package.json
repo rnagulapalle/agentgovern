@@ -22,7 +22,10 @@
     "refund:setup": "tsx --env-file=.env.local scripts/refund-setup.ts",
     "refund:twin": "bash scripts/refund-twin.sh",
     "refund:proof": "tsx --env-file=.env.local scripts/refund-proof.ts",
-    "workspace:setup": "tsx --env-file=.env.local scripts/workspace-setup.ts"
+    "workspace:setup": "tsx --env-file=.env.local scripts/workspace-setup.ts",
+    "connectors:setup": "tsx --env-file=.env.local scripts/connector-setup.ts",
+    "connectors:twin": "bash scripts/connector-twin.sh",
+    "connectors:proof": "tsx --env-file=.env.local scripts/connector-proof.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

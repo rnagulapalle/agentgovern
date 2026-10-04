@@ -102,7 +102,9 @@ export class RefundControl {
       return "Refund agent identity or refund permission is unavailable.";
     if (a.policy_version !== policy.version || a.amount > policy.hard_limit)
       return "Refund policy changed; propose a new action.";
-    const valid = a.approved_by ? await activeApprover(c, actor.orgId, a.approved_by) : false;
+    const valid = a.approved_by
+      ? await activeApprover(c, actor.orgId, a.approved_by)
+      : false;
     if (
       !approving &&
       a.amount > policy.auto_limit &&
@@ -358,47 +360,76 @@ export class RefundControl {
       return { ...a, state: "executing" as const, lease_token: lease };
     });
     if (!claim.lease_token) return claim;
+    const preflight = () =>
+      transaction(this.db, actor.orgId, async (c) => {
+        await this.authorize(c, actor, ["operator", "worker"]);
+        const a = await this.get(c, actor, id);
+        if (
+          a.state !== "executing" ||
+          a.lease_token !== claim.lease_token ||
+          !a.lease_until ||
+          new Date(a.lease_until).getTime() <= Date.now()
+        )
+          return { ...a, lease_token: null };
+        const reason = await this.invalid(c, actor, a);
+        if (reason) return this.state(c, actor, a, "cancelled", reason);
+        return a;
+      });
+    const initial = await preflight();
+    if (!initial.lease_token) return initial;
+    let refund: ProviderRefund | null = null;
+    let balanceConflict = false;
+    try {
+      // Network evidence and mutation never hold the workspace lock. Verify
+      // authority again after the lookup, immediately before dispatch.
+      const payment = await this.provider.payment();
+      balanceConflict =
+        payment.amount_refunded + initial.amount > payment.amount;
+      if (!balanceConflict) {
+        const dispatch = await preflight();
+        if (!dispatch.lease_token) return dispatch;
+        refund = await this.provider.create(dispatch, lostResponse);
+      }
+    } catch {
+      /* An unavailable response is not proof of no effect. */
+    }
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authorize(c, actor, ["operator", "worker"]);
       const a = await this.get(c, actor, id);
-      if (
-        a.state !== "executing" ||
-        a.lease_token !== claim.lease_token ||
-        !a.lease_until ||
-        new Date(a.lease_until).getTime() <= Date.now()
-      )
+      if (a.state !== "executing" || a.lease_token !== claim.lease_token)
         return { ...a, lease_token: null };
-      const reason = await this.invalid(c, actor, a);
-      if (reason) return this.state(c, actor, a, "cancelled", reason);
-      try {
-        const payment = await this.provider.payment();
-        if (payment.amount_refunded + a.amount > payment.amount)
-          return this.state(
-            c,
-            actor,
-            a,
-            "conflict",
-            "Payment balance changed. Refund cannot safely continue.",
-          );
-        return await this.observe(
-          c,
-          actor,
-          a,
-          await this.provider.create(a, lostResponse),
-        );
-      } catch {
+      if (
+        !a.lease_until ||
+        new Date(a.lease_until).getTime() <= Date.now() ||
+        (await this.invalid(c, actor, a))
+      )
         return this.state(
           c,
           actor,
           a,
           "uncertain",
-          "Provider response was not verified. Inspect the provider before any retry.",
+          "Authority or lease changed after dispatch. Verify the provider outcome.",
         );
-      }
+      if (balanceConflict)
+        return this.state(
+          c,
+          actor,
+          a,
+          "conflict",
+          "Payment balance changed. Refund cannot safely continue.",
+        );
+      if (refund) return this.observe(c, actor, a, refund);
+      return this.state(
+        c,
+        actor,
+        a,
+        "uncertain",
+        "Provider response was not verified. Inspect the provider before any retry.",
+      );
     });
   }
   async reconcile(actor: Actor, id: string) {
-    return transaction(this.db, actor.orgId, async (c) => {
+    const initial = await transaction(this.db, actor.orgId, async (c) => {
       await this.authorize(c, actor, ["operator"]);
       const a = await this.get(c, actor, id);
       if (
@@ -410,14 +441,24 @@ export class RefundControl {
           409,
           "Wait for the worker lease before reconciliation.",
         );
+      return { ...a, lease_token: null };
+    });
+    if (!["uncertain", "executing", "succeeded"].includes(initial.state))
+      return initial;
+    let matches: ProviderRefund[] | null = null;
+    try {
+      matches = (await this.provider.refunds()).filter(
+        (r) => r.metadata.looplabs_action === id,
+      );
+    } catch {
+      /* Keep uncertainty when lookup fails. */
+    }
+    return transaction(this.db, actor.orgId, async (c) => {
+      await this.authorize(c, actor, ["operator"]);
+      const a = await this.get(c, actor, id);
       if (!["uncertain", "executing", "succeeded"].includes(a.state))
         return { ...a, lease_token: null };
-      let matches: ProviderRefund[];
-      try {
-        matches = (await this.provider.refunds()).filter(
-          (r) => r.metadata.looplabs_action === a.id,
-        );
-      } catch {
+      if (!matches)
         return this.state(
           c,
           actor,
@@ -425,7 +466,6 @@ export class RefundControl {
           "uncertain",
           "Provider lookup failed. Keep contained; no retry performed.",
         );
-      }
       if (matches.length > 1)
         return this.state(
           c,

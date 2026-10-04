@@ -79,6 +79,7 @@ beforeAll(async () => {
   });
   await db.query(await readFile("lib/durable/schema.sql", "utf8"));
   await db.query(await readFile("lib/workspace/schema.sql", "utf8"));
+  await db.query(await readFile("lib/connectors/schema.sql", "utf8"));
   await admin.query(`GRANT USAGE ON SCHEMA ${schema} TO ll_runtime`);
   await db.query("GRANT INSERT ON ll_tokens TO ll_runtime");
   await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof'),('other')");
@@ -476,4 +477,37 @@ describe("sales intake and redirects", () => {
     ])
       expect(safeNext(v)).toBe("/control-plane");
   });
+});
+
+it("registers CRM and messaging agents with one supported permission and named owner", async () => {
+  const { actor } = await signed();
+  await db.query(
+    "INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email') ON CONFLICT DO NOTHING",
+  );
+  for (const [role, connector, tool] of [
+    ["crm_agent", "crm_twin", "twin.crm"],
+    ["email_agent", "email_twin", "twin.email"],
+  ]) {
+    const registered = await registerAgent(db, actor, {
+      ...proposal(`new-${role}`),
+      role,
+      connector,
+    });
+    const agent = await authenticate(db, registered.agentToken);
+    expect(agent.role).toBe("agent");
+    const row = (
+      await db.query("SELECT tools FROM ll_agents WHERE id=$1", [registered.id])
+    ).rows[0];
+    expect(row.tools).toEqual([tool]);
+  }
+  await db.query(
+    "UPDATE ll_connector_policies SET active=false WHERE connector='crm'",
+  );
+  await expect(
+    registerAgent(db, actor, {
+      ...proposal("unavailable-crm"),
+      role: "crm_agent",
+      connector: "crm_twin",
+    }),
+  ).rejects.toMatchObject({ status: 409 });
 });
