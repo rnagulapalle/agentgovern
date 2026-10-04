@@ -8,6 +8,16 @@ These are real database transactions. The original product tour remains
 browser-local. No external CRM, email, restaurant, payment, or model integration
 is shipped, and this foundation does not establish industry-grade reliability.
 
+## Product surface
+
+The navigation and heading call this feature **Action workspace**. It presents
+agent permissions, approval rules, requested discount changes, execution/recovery,
+and saved decision history. The connected sample-data notice remains visible;
+renaming does not expand connector support or production readiness. Setup paths,
+commands and database details belong in this document, not the operator UI.
+An absent or expired session opens the access form without an error banner;
+a failed sign-in or operational request still reports its failure.
+
 ## Research and decisions
 
 | Pattern | Implementation | Primary source |
