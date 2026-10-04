@@ -14,6 +14,7 @@ import {
   ChevronRight,
   CircleHelp,
   Command,
+  Database,
   GitBranch,
   History,
   LayoutGrid,
@@ -33,6 +34,7 @@ const groups = [
     name: "WORKSPACE",
     items: [
       { key: "overview", label: "Overview", icon: LayoutGrid },
+      { key: "durable", label: "Durable workspace", icon: Database },
       { key: "workflows", label: "Workflow library", icon: BookOpen },
       { key: "agents", label: "Agent directory", icon: Bot },
       { key: "gateway", label: "Model gateway", icon: Network },
@@ -63,6 +65,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
   const { state, toast } = useControl();
   const pathname = usePathname();
   const section = pathname.split("/")[2] || "overview";
+  const durable = section === "durable";
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);
   const [query, setQuery] = useState("");
@@ -135,11 +138,11 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
             <span className="cp-brand-sub">THE AGENT CONTROL PLANE</span>
           </span>
         </Link>
-        <Link href="/control-plane/settings" className="cp-workspace">
+        <Link href={durable ? "/control-plane/durable" : "/control-plane/settings"} className="cp-workspace">
           <span className="cp-workspace-icon">M</span>
           <span>
-            <strong>Meridian workspace</strong>
-            <small>Demo workspace</small>
+            <strong>{durable ? "Durable proof" : "Meridian workspace"}</strong>
+            <small>{durable ? "PostgreSQL · controlled connector" : "Demo workspace"}</small>
           </span>
           <ChevronDown size={14} />
         </Link>
@@ -160,10 +163,10 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
                 >
                   <item.icon size={17} strokeWidth={1.5} />
                   <span>{item.label}</span>
-                  {item.key === "approvals" && pending > 0 && (
+                  {!durable && item.key === "approvals" && pending > 0 && (
                     <span className="cp-nav-count">{pending}</span>
                   )}
-                  {item.key === "reconciliation" && incidents > 0 && (
+                  {!durable && item.key === "reconciliation" && incidents > 0 && (
                     <span className="cp-nav-alert" />
                   )}
                 </Link>
@@ -184,7 +187,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
               ))}
             </div>
             <span>
-              INTERACTIVE DEMO <span>v0.1</span>
+              {durable ? "SERVER-BACKED PROOF" : "INTERACTIVE DEMO"} <span>v0.1</span>
             </span>
           </div>
           <Link
@@ -202,8 +205,8 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="cp-sidebar-user">
             <span className="cp-user-avatar">RN</span>
             <span>
-              <strong>Raj Nagulapalle</strong>
-              <small>Workspace admin · demo</small>
+              <strong>{durable ? "Operator access" : "Raj Nagulapalle"}</strong>
+              <small>{durable ? "Authenticated workspace required" : "Workspace admin · demo"}</small>
             </span>
             <ArrowUpRight size={14} />
           </Link>
@@ -226,9 +229,9 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
           <div className="cp-topbar-right">
             <span className="cp-environment">
               <i />
-              Demo workspace
+              {durable ? "PostgreSQL proof" : "Demo workspace"}
             </span>
-            <button
+            {!durable && <button
               className="cp-search-trigger"
               aria-label="Search workspace"
               onClick={() => setSearch(true)}
@@ -238,14 +241,14 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
               <kbd>
                 <Command size={10} /> K
               </kbd>
-            </button>
+            </button>}
             <Link
               className="cp-notifications"
-              href="/control-plane/approvals"
-              aria-label={`${pending} pending approvals`}
+              href={durable ? "/control-plane/durable" : "/control-plane/approvals"}
+              aria-label={durable ? "Durable action history" : `${pending} pending approvals`}
             >
               <Bell size={17} />
-              {pending > 0 && <i />}
+              {!durable && pending > 0 && <i />}
             </Link>
             <span className="cp-user-avatar is-small">RN</span>
           </div>
@@ -257,7 +260,7 @@ export function ControlShell({ children }: { children: React.ReactNode }) {
           <span>
             <BrandMark small /> Action, execution, and output controls
           </span>
-          <span>Sample data · changes saved in this browser</span>
+          <span>{durable ? "Controlled test record · server-backed state" : "Sample data · changes saved in this browser"}</span>
         </footer>
       </div>
       {toast && (

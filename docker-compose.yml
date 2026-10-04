@@ -11,6 +11,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - LOOPLABS_DATABASE_URL=${LOOPLABS_DATABASE_URL:-}
       - INDEXNOW_KEY=${INDEXNOW_KEY:-a7e9b2c4d5f6a8g0o1v2e3r4n5a6n7a8}
     expose:
       - "3000"

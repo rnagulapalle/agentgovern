@@ -17,6 +17,22 @@ jobs:
     name: quality-gates
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: looplabs
+          POSTGRES_PASSWORD: ci-local-only
+          POSTGRES_DB: looplabs_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U looplabs -d looplabs_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      LOOPLABS_TEST_DATABASE_URL: postgresql://looplabs:ci-local-only@127.0.0.1:5432/looplabs_test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

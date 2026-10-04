@@ -13,3 +13,5 @@ nginx/certs
 certbot
 .env*
 *.tsbuildinfo
+.local
+coverage

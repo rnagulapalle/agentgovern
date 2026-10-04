@@ -2,6 +2,17 @@
 
 Date: 2026-09-30
 
+## October 3: separate durable foundation
+
+`/control-plane/durable` now demonstrates server-side enforcement for one
+controlled PostgreSQL test-record operation: scoped authentication, exact-payload
+approvals, persisted leases, unique effects, uncertain-outcome reconciliation,
+and contained version-safe compensation. Audit events persist with runtime write
+restrictions; they are not cryptographically signed. The original tour remains
+browser-local. No external CRM, restaurant, email, payment, model gateway,
+general workflow builder, or industry-grade availability claim is established.
+See `DURABLE_CONTROL_PLANE.md` for the contract, gaps, and stakeholder test guide.
+
 ## Executive assessment
 
 LoopLabs has a clear and valuable product thesis: agent adoption becomes a production systems problem when agents can send, write, pay, delete, delegate, or expose output. The strongest product story is the closed control loop: identify the agent, evaluate a proposed action, supervise the execution, inspect the output, and recover affected state.

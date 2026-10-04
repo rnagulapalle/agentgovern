@@ -45,6 +45,7 @@ REMOTE
 rsync -az \
   --exclude node_modules --exclude .next --exclude .git --exclude '.env*' \
   --exclude nginx/certs --exclude certbot --exclude '*.tsbuildinfo' --exclude .DS_Store \
+  --exclude .local --exclude coverage \
   -e "$RSYNC_SSH" "$REPO_DIR/" "$SERVER:$STAGE/"
 
 printf -v DEPLOY 'bash -s -- %q %q %q %q %q' "$APP_DIR" "$STAGE" "$BACKUP" "$RELEASE" "$HEALTH_HOST"
@@ -108,7 +109,7 @@ done
 # Keep active TLS/nginx settings and secrets. Source is a reference copy;
 # the tested immutable image is what actually runs.
 rsync -a --exclude '.env*' --exclude nginx/nginx.conf --exclude nginx/certs \
-  --exclude certbot "$stage/" "$app/"
+  --exclude certbot --exclude .local --exclude coverage "$stage/" "$app/"
 sudo docker tag "$image" looplabs-web:latest
 activated=1
 sudo env LOOPLABS_IMAGE="$image" docker compose up -d --no-deps --no-build web

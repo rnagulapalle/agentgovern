@@ -8,6 +8,8 @@ LoopLabs is an early-stage control-plane prototype for workflows involving peopl
 
 Use `docs/LOOPLABS_CLAIM_AND_FUNNEL_AUDIT.md` for the claim matrix and `docs/CONTROL_PLANE.md` for architecture. Never turn roadmap intent into a shipped claim.
 
+The separate `/control-plane/durable` workspace adds authenticated PostgreSQL-backed actions, approvals, leases, effect verification, and compensation for one controlled database test connector. Read `docs/DURABLE_CONTROL_PLANE.md` before changing it. Original demos remain browser-local; industry-grade reliability and external integrations are not established. Durable tests require a dedicated `LOOPLABS_TEST_DATABASE_URL` and must not be skipped.
+
 ## Required workflow
 
 1. Inspect the affected route, its tests, and the relevant docs before editing.
