@@ -1,5 +1,9 @@
 # LoopLabs agent control plane
 
+## Cancellation back office (October 5)
+
+The private `/control-plane/back-office` configures one bounded cancellation template, requires second-person approval, verifies sample order cancellation before refund, and holds confirmation until the payment is verified. See [CANCELLATION_BACK_OFFICE.md](CANCELLATION_BACK_OFFICE.md) for measured proof and limits. No arbitrary builder, model call, live order, payment or email integration is established.
+
 ## Bounded external-agent workflow (October 4)
 
 The private `/control-plane/workflow-runs` route links a CRM update, a held customer acknowledgement and final outcome verification. External scoped agents can submit their own immutable steps over HTTP; PostgreSQL preserves run dependencies. See [WORKFLOW_ONBOARDING_PROOF.md](WORKFLOW_ONBOARDING_PROOF.md) for migration 5, proof and limitations. This is not general workflow onboarding or live-provider support.

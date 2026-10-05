@@ -1,3 +1,4 @@
+import { caseRefundInvalid } from "../back-office/refund-guard";
 import { activeApprover } from "../workspace/identity";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
@@ -92,6 +93,8 @@ export class RefundControl {
     a: RefundAction,
     approving = false,
   ) {
+    const parentInvalid = await caseRefundInvalid(c, actor, a, approving);
+    if (parentInvalid) return parentInvalid;
     const { policy, agent, active } = await this.context(c, actor);
     if (
       !policy ||

@@ -27,6 +27,7 @@ export default defineConfig({
         "lib/refunds/**/*.ts",
         "lib/connectors/**/*.ts",
         "lib/workflows/**/*.ts",
+        "lib/back-office/**/*.ts",
         "lib/workspace/**/*.ts",
         "app/api/workspace/**/*.ts",
         "app/api/sales/route.ts",
@@ -37,6 +38,12 @@ export default defineConfig({
         branches: 85,
         functions: 90,
         lines: 90,
+        "lib/back-office/**": {
+          statements: 90,
+          branches: 85,
+          functions: 90,
+          lines: 90,
+        },
         "lib/workspace/**": {
           statements: 90,
           branches: 85,

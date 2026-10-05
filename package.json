@@ -25,7 +25,10 @@
     "workspace:setup": "tsx --env-file=.env.local scripts/workspace-setup.ts",
     "connectors:setup": "tsx --env-file=.env.local scripts/connector-setup.ts",
     "connectors:twin": "bash scripts/connector-twin.sh",
-    "connectors:proof": "tsx --env-file=.env.local scripts/connector-proof.ts"
+    "connectors:proof": "tsx --env-file=.env.local scripts/connector-proof.ts",
+    "backoffice:setup": "tsx --env-file=.env.local scripts/backoffice-setup.ts",
+    "backoffice:twin": "bash scripts/backoffice-twin.sh",
+    "backoffice:proof": "tsx --env-file=.env.local scripts/backoffice-proof.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",
