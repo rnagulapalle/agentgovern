@@ -1,0 +1,406 @@
+.ll-action-flow {
+  width: 100%;
+  max-width: 740px;
+  align-self: center;
+  background: #fafaf7;
+  border: 1px solid #d6d4cb;
+  border-radius: 4px;
+  overflow: hidden;
+  color: #272720;
+  box-shadow: 0 18px 55px -38px #34362a40;
+}
+.ll-action-flow-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  border-bottom: 1px solid #e1dfd7;
+  font-size: 14px;
+  font-weight: 500;
+}
+.ll-action-flow-heading span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.ll-action-flow-heading i {
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  background: #7e8a69;
+}
+.ll-action-flow button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.ll-action-flow button:hover {
+  background: #eceee4;
+}
+.ll-action-flow button:focus-visible {
+  outline: 2px solid #596744;
+  outline-offset: -3px;
+}
+.ll-action-diagram {
+  overflow: hidden;
+  min-height: 180px;
+  background: radial-gradient(ellipse at 42% 45%, #f0f2e955, transparent 60%);
+}
+.ll-action-network {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 4px 0;
+  animation: ll-action-enter 0.65s ease-out;
+}
+.ll-action-network text {
+  fill: #68685b;
+  font-family: inherit;
+  font-size: 15px;
+}
+.ll-action-network .ll-action-node-label {
+  fill: #445038;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ll-action-network .ll-action-hold-label {
+  fill: #805f34;
+  font-size: 13px;
+  font-weight: 500;
+}
+.ll-action-pulse {
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 5 95;
+  animation: ll-action-travel 3.2s linear var(--flow-delay, 0s) infinite;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+.ll-action-team-0 {
+  stroke: #829372;
+  color: #829372;
+}
+.ll-action-team-1 {
+  stroke: #b59772;
+  color: #b59772;
+}
+.ll-action-team-2 {
+  stroke: #7e929c;
+  color: #7e929c;
+}
+.ll-action-allowed {
+  stroke: #6c8055;
+  color: #6c8055;
+  animation-duration: 2.8s;
+}
+.ll-action-check {
+  stroke: #b98c50;
+  color: #b98c50;
+  animation-duration: 3.5s;
+}
+.ll-action-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0 22px;
+  border-top: 1px solid #e1dfd7;
+  border-bottom: 1px solid #e1dfd7;
+}
+.ll-action-status-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+}
+.ll-action-status-grid > div + div {
+  border-left: 1px solid #e1dfd7;
+  padding-left: 20px;
+}
+.ll-action-status-grid span {
+  font-size: 13px;
+  color: #68685b;
+}
+.ll-action-status-grid strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.ll-action-status-grid i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.ll-action-tone-neutral {
+  color: #595d53;
+}
+.ll-action-tone-held {
+  color: #805f34;
+}
+.ll-action-tone-verified {
+  color: #4f6539;
+}
+.ll-action-story {
+  position: relative;
+  padding: 22px;
+  min-height: 158px;
+}
+.ll-action-step {
+  display: block;
+  font-size: 12px;
+  color: #68685b;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.ll-action-story h3 {
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -0.035em;
+  font-weight: 500;
+  margin: 0 0 9px;
+}
+.ll-action-story p {
+  font-size: 15px;
+  line-height: 1.55;
+  color: #595c50;
+  margin: 0;
+  max-width: 56ch;
+}
+.ll-action-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 14px 6px;
+}
+.ll-action-progress {
+  display: flex;
+  flex: 1;
+  gap: 0;
+}
+.ll-action-progress button {
+  min-width: 0;
+  width: 28px;
+}
+.ll-action-progress span {
+  width: 17px;
+  height: 3px;
+  background: #dadcd2;
+  border-radius: 2px;
+}
+.ll-action-progress [aria-current="step"] span {
+  background: #6c8055;
+}
+.ll-action-next {
+  gap: 7px;
+  padding: 0 10px;
+  font-size: 14px;
+}
+.ll-action-flow .ll-action-disclosure {
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 13px 22px;
+  border-top: 1px solid #e1dfd7;
+  color: #68685b;
+}
+.ll-action-phone-flow {
+  display: none;
+}
+.is-paused .ll-action-pulse {
+  animation-play-state: paused;
+}
+.is-reduced .ll-action-pulse {
+  animation: none;
+}
+.is-reduced .ll-action-network {
+  animation: none;
+}
+@keyframes ll-action-travel {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes ll-action-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (max-width: 600px) {
+  .ll-action-flow {
+    margin: 8px 0 24px;
+  }
+  .ll-action-network {
+    display: none;
+  }
+  .ll-action-flow-heading {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  .ll-action-phone-flow {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 22px;
+    align-items: stretch;
+  }
+  .ll-action-phone-flow > div {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    align-items: center;
+    column-gap: 12px;
+    border: 1px solid #d8dace;
+    background: #f6f7f0;
+    border-radius: 5px;
+    padding: 12px 15px;
+    min-height: 72px;
+  }
+  .ll-action-phone-flow > div > svg,
+  .ll-action-phone-icon {
+    grid-row: span 2;
+    color: #62764c;
+  }
+  .ll-action-phone-flow span {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .ll-action-phone-flow small {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #68685b;
+  }
+  .ll-action-phone-flow .ll-action-phone-icon {
+    font-size: 12px;
+    letter-spacing: -0.02em;
+  }
+  .ll-action-phone-flow i {
+    align-self: center;
+    height: 22px;
+    width: 2px;
+    background: repeating-linear-gradient(
+      to bottom,
+      #bba179 0 3px,
+      transparent 3px 6px
+    );
+  }
+  .ll-action-phone-flow i.is-released {
+    background: #7e8a69;
+  }
+  .ll-action-status-grid {
+    margin: 0 16px;
+  }
+  .ll-action-status-grid > div {
+    padding: 14px 0;
+  }
+  .ll-action-status-grid > div + div {
+    padding-left: 12px;
+  }
+  .ll-action-status-grid span {
+    font-size: 13px;
+  }
+  .ll-action-status-grid strong {
+    font-size: 14px;
+  }
+  .ll-action-story {
+    padding: 20px 16px;
+    min-height: 185px;
+  }
+  .ll-action-story h3 {
+    font-size: 24px;
+  }
+  .ll-action-story p {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .ll-action-flow .ll-action-disclosure {
+    font-size: 13px;
+    padding: 12px 16px;
+  }
+  .ll-action-controls {
+    padding: 0 8px 8px;
+  }
+  .ll-action-progress button {
+    width: 26px;
+  }
+  .ll-action-next {
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-action-pulse,
+  .ll-action-network {
+    animation: none;
+  }
+}
+
+.ll-action-once {
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+@media (max-width: 600px) {
+  .ll-action-phone-flow i {
+    position: relative;
+  }
+  .ll-action-phone-flow i::after {
+    content: "";
+    position: absolute;
+    left: -2px;
+    top: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #a48251;
+    animation: ll-action-phone-travel 1.8s ease-in-out infinite;
+  }
+  .ll-action-phone-flow i.is-released::after {
+    background: #6c8055;
+  }
+  .ll-action-scene[data-step="0"] .ll-action-phone-flow i::after,
+  .ll-action-scene[data-step="1"] .ll-action-phone-flow i::after {
+    animation: none;
+    top: 5px;
+  }
+  .ll-action-phone-flow i:not(.is-released):last-of-type::after {
+    animation: none;
+    top: 5px;
+  }
+  .is-paused .ll-action-phone-flow i::after {
+    animation-play-state: paused;
+  }
+}
+@keyframes ll-action-phone-travel {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-action-phone-flow i::after {
+    animation: none;
+  }
+}
