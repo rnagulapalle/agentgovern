@@ -39,6 +39,7 @@ const groups = [
       { key: "actions", label: "Actions", icon: SlidersHorizontal },
       { key: "verification", label: "Verification", icon: ShieldCheck },
       { key: "workflow-runs", label: "Workflow runs", icon: Network },
+      { key: "back-office", label: "Cancellation back office", icon: Network },
       { key: "requests", label: "Sales requests", icon: BookOpen },
     ],
   },
@@ -72,6 +73,7 @@ export function ControlShell({
     "requests",
     "verification",
     "workflow-runs",
+    "back-office",
   ].includes(section);
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);

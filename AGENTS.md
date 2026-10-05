@@ -14,6 +14,8 @@ The private `/control-plane` now uses invited named member sign-in. `/control-pl
 
 The private `/control-plane/workflow-runs` adds a fixed CRM-to-message workflow with immutable step IDs, enrolled scoped agents, dependency checks at dispatch, pause and final effect verification. Migration 5 is new; migrations 1–4 remain unchanged. Read `docs/WORKFLOW_ONBOARDING_PROOF.md`. This is a bounded provider-twin proof, not arbitrary workflow orchestration or live customer integration.
 
+The private `/control-plane/back-office` adds one bounded cancellation template, second-person case approval, ordered cancellation/refund/email steps and PostgreSQL-backed case history. Read `docs/CANCELLATION_BACK_OFFICE.md`. This is not an LLM builder or live customer integration. Migration 6 is append-only after application; do not modify migrations 1–5.
+
 ## Required workflow
 
 1. Inspect the affected route, its tests, and the relevant docs before editing.

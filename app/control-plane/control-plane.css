@@ -3683,3 +3683,11 @@ button.cp-entity:hover strong {
 .workspace-sign-out { min-height: 44px; font-size: 16px; }
 .cp-durable-scope input[aria-label="Private agent key"] { max-width: 100%; margin: 12px 0; padding: 10px; border: 1px solid #a8a29e; display: block; }
 @media(max-width:640px){ .workspace-start-steps,.workspace-agent dl { grid-template-columns:1fr; } .workspace-workflow-select label { align-items: start; flex-direction:column; } .workspace-workflow-select select { width:100%; } }
+
+/* The cancellation back office follows the same readable form scale as saved controls. */
+.cp-backoffice .cp-durable-card > label { display: grid; gap: 8px; margin: 20px 0; font-size: 16px; }
+.cp-backoffice textarea, .cp-backoffice select, .cp-backoffice input { display: block; width: 100%; min-height: 48px; padding: 12px; border: 1px solid #b8b3aa; background: #fff; color: #1c1917; font: inherit; }
+.cp-backoffice textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
+.cp-backoffice input { max-width: 240px; }
+.cp-backoffice ol { list-style: decimal; padding-left: 24px; margin: 20px 0; display: grid; gap: 12px; }
+.cp-backoffice .cp-durable-grid button { min-height: 48px; }

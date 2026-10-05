@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-05T19:25:11.768Z",
+  "scope": "Named founder sessions + PostgreSQL + actual HTTP to private FetchSandbox Stripe/Resend engines; sample order fixture; no live payment/email",
+  "caseId": "c8884d17-6a53-4b7c-b0fc-56a1cc8754f6",
+  "planId": "c36e7188-1d4b-4a06-afda-a3b17d23d585",
+  "checks": {
+    "selfApprovalDenied": true,
+    "enableBeforeTestDenied": true,
+    "caseReplayDeduplicated": true,
+    "cancelVerifiedBeforeRefund": true,
+    "lostResponsesAtAllThreeWrites": true,
+    "refundReadBackBeforeConfirmation": true,
+    "oneRefundDespiteReplay": true,
+    "emailAcceptedNotDelivered": true,
+    "enableAfterCompletedTest": true
+  },
+  "providerRefundsAdded": 1,
+  "result": "completed"
+}
