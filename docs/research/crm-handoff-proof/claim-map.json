@@ -1,0 +1,45 @@
+{
+  "prepared": "2026-10-05",
+  "status": "local evaluation asset, not distributed",
+  "recorded_proof_at": "2026-10-05T04:22:51.691Z",
+  "source": "docs/evidence/connector-proof.json",
+  "sourceFingerprintCheck": "all recorded source hashes matched when preparing this asset",
+  "claims": [
+    {
+      "statement": "Lost response does not release the customer message",
+      "check": "workflow: lost upstream response holds downstream execution",
+      "recorded_passed": true,
+      "boundary": "controlled PostgreSQL and FetchSandbox CRM/message fixtures; not live customer systems"
+    },
+    {
+      "statement": "A direct action call cannot skip the dependency",
+      "check": "workflow: downstream API cannot bypass a missing predecessor",
+      "recorded_passed": true,
+      "boundary": "controlled PostgreSQL and FetchSandbox CRM/message fixtures; not live customer systems"
+    },
+    {
+      "statement": "Saved run survives service termination",
+      "check": "workflow: API process termination preserves run and proposals",
+      "recorded_passed": true,
+      "boundary": "controlled PostgreSQL and FetchSandbox CRM/message fixtures; not live customer systems"
+    },
+    {
+      "statement": "Read-back permits the next step without another upstream write",
+      "check": "workflow: reconciliation unlocks the downstream step without resending upstream",
+      "recorded_passed": true,
+      "boundary": "controlled PostgreSQL and FetchSandbox CRM/message fixtures; not live customer systems"
+    },
+    {
+      "statement": "A stale CRM approval cannot release the message",
+      "check": "workflow: stale CRM approval cannot release the downstream message",
+      "recorded_passed": true,
+      "boundary": "controlled PostgreSQL and FetchSandbox CRM/message fixtures; not live customer systems"
+    },
+    {
+      "statement": "An enrolled agent cannot invent another step",
+      "check": "workflow: fresh action IDs cannot escape enrolled agent boundaries",
+      "recorded_passed": true,
+      "boundary": "controlled PostgreSQL and FetchSandbox CRM/message fixtures; not live customer systems"
+    }
+  ]
+}
