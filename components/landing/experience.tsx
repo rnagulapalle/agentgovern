@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   useRef,
   useState,
-  type CSSProperties,
   type KeyboardEvent,
 } from "react";
 import {
@@ -19,11 +18,11 @@ import {
   GitBranch,
   LockKeyhole,
   Pause,
-  Play,
   ShieldCheck,
   SlidersHorizontal,
   Undo2,
 } from "lucide-react";
+import { ActionFlowAnimation } from "./action-flow";
 import { MarketingHeader } from "@/components/marketing/chrome";
 import { LoopMark } from "@/components/brand/loop-mark";
 
@@ -32,185 +31,7 @@ export function LandingHeader({ bookingUrl }: { bookingUrl: string }) {
 }
 
 export function ControlWave() {
-  const [paused, setPaused] = useState(false);
-  const packetRows = [214, 244, 274, 304, 334];
-  return (
-    <div className={`ll-wave ${paused ? "ll-wave-paused" : ""}`}>
-      <svg
-        className="ll-wave-drawing"
-        viewBox="0 0 660 550"
-        fill="none"
-        role="img"
-        aria-label="Agent actions pass through a control boundary while an uncertain external outcome loops back for reconciliation before retry."
-      >
-        <defs>
-          <linearGradient
-            id="wave-fade"
-            gradientUnits="userSpaceOnUse"
-            x1="0"
-            y1="0"
-            x2="660"
-            y2="0"
-          >
-            <stop stopColor="#1c1917" stopOpacity="0" />
-            <stop offset=".28" stopColor="#1c1917" stopOpacity=".5" />
-            <stop offset=".52" stopColor="#1c1917" />
-            <stop offset=".9" stopColor="#1c1917" />
-            <stop offset="1" stopColor="#1c1917" stopOpacity=".12" />
-          </linearGradient>
-        </defs>
-        <rect x="35" y="153" width="275" height="244" rx="4" className="ll-wave-zone ll-wave-zone-in" />
-        <rect x="407" y="153" width="218" height="244" rx="4" className="ll-wave-zone ll-wave-zone-out" />
-        <text x="54" y="178" className="ll-wave-zone-label">AGENT ACTIONS</text>
-        <text x="429" y="178" className="ll-wave-zone-label">EXTERNAL EFFECT</text>
-        <g stroke="url(#wave-fade)" opacity=".42">
-          {Array.from({ length: 104 }, (_, i) => {
-            const x = 14 + i * 6.2;
-            const disorder = Math.max(0, 1 - i / 57);
-            const height =
-              122 + disorder * (95 + 235 * Math.abs(Math.sin(i * 1.19)));
-            const shift = disorder * Math.sin(i * 2.13) * 42;
-            return (
-              <path
-                key={i}
-                className={
-                  i < 58
-                    ? "ll-wave-line ll-wave-loose"
-                    : "ll-wave-line ll-wave-steady"
-                }
-                d={`M${x.toFixed(2)} ${(275 - height / 2 + shift).toFixed(2)}v${height.toFixed(2)}`}
-                strokeWidth={i % 5 === 0 ? 1.2 : 0.7}
-                style={
-                  {
-                    "--line-delay": `${-i * 0.18}s`,
-                    "--line-speed": `${3.8 + (i % 7) * 0.45}s`,
-                  } as CSSProperties
-                }
-              />
-            );
-          })}
-        </g>
-        <path
-          d="M358 123v92m0 121v91"
-          stroke="#a8a29e"
-          strokeWidth=".8"
-          strokeDasharray="2 4"
-        />
-        <g className="ll-wave-rails" strokeWidth="1">
-          {packetRows.map((y) => (
-            <path key={y} d={`M56 ${y}H326M390 ${y}H610`} />
-          ))}
-        </g>
-        <g className="ll-wave-packets-in">
-          {packetRows.map((y, i) => (
-            <g
-              key={y}
-              className="ll-packet ll-packet-in"
-              style={{ "--packet-delay": `${i * 0.54}s` } as CSSProperties}
-            >
-              <circle cx="62" cy={y} r="6" />
-              <circle cx="62" cy={y} r="11" className="ll-packet-ring" />
-            </g>
-          ))}
-        </g>
-        <g className="ll-wave-packets-out">
-          {packetRows.map((y, i) => (
-            <g
-              key={y}
-              className="ll-packet ll-packet-out"
-              style={{ "--packet-delay": `${1.12 + i * 0.54}s` } as CSSProperties}
-            >
-              <circle cx="395" cy={y} r="5" />
-              <path d={`M404 ${y}h15`} />
-            </g>
-          ))}
-        </g>
-        <g className="ll-packet ll-packet-blocked">
-          <circle cx="62" cy="372" r="6" />
-          <path d="m56 366 12 12m0-12-12 12" />
-        </g>
-        <g className="ll-wave-gate">
-          <circle cx="358" cy="275" r="53" className="ll-gate-pulse" />
-          <rect
-            x="322"
-            y="239"
-            width="72"
-            height="72"
-            fill="#f5f5f4"
-            stroke="#a8a29e"
-            strokeWidth=".8"
-          />
-          <path
-            d="m358 254-17 7v13c0 11 8 19 17 23 9-4 17-12 17-23v-13l-17-7Z"
-            stroke="#57534e"
-            strokeWidth="1.3"
-          />
-          <path d="m350 274 6 6 11-13" stroke="#57534e" strokeWidth="1.5" />
-        </g>
-        <g className="ll-wave-decision">
-          <rect x="303" y="326" width="110" height="24" rx="12" />
-          <circle cx="317" cy="338" r="3" />
-          <text x="327" y="342">POLICY CHECK</text>
-        </g>
-        <g className="ll-wave-blocked-label">
-          <rect x="252" y="387" width="130" height="23" rx="3" />
-          <text x="266" y="402">1 ACTION HELD</text>
-        </g>
-        <path
-          className="ll-reconcile-path"
-          d="M586 356 C620 408 555 443 466 432 C410 425 389 399 377 362"
-        />
-        <g className="ll-reconcile-packet">
-          <circle cx="0" cy="0" r="6" />
-          <circle cx="0" cy="0" r="11" className="ll-packet-ring" />
-        </g>
-        <g className="ll-reconcile-label">
-          <rect x="444" y="405" width="178" height="23" rx="3" />
-          <text x="456" y="420">RECONCILE BEFORE RETRY</text>
-        </g>
-        <g className="ll-wave-caption">
-          <rect
-            x="248"
-            y="98"
-            width="220"
-            height="26"
-            rx="13"
-            fill="#f5f5f4"
-            stroke="#a8a29e"
-            strokeWidth=".7"
-          />
-          <circle cx="265" cy="111" r="2.4" fill="#73745e" />
-          <text
-            x="366"
-            y="115"
-            fill="#57534e"
-            fontSize="12"
-            textAnchor="middle"
-          >
-            Authority → action → effect
-          </text>
-          <text
-            x="358"
-            y="451"
-            fill="#57534e"
-            textAnchor="middle"
-            fontSize="12"
-            letterSpacing="2"
-          >
-            CONTROL + RECOVERY BOUNDARY
-          </text>
-        </g>
-      </svg>
-      <button
-        className="ll-animation-toggle"
-        aria-label={paused ? "Play hero animation" : "Pause hero animation"}
-        aria-pressed={paused}
-        onClick={() => setPaused(!paused)}
-      >
-        {paused ? <Play size={12} /> : <Pause size={12} />}
-      </button>
-    </div>
-  );
+  return <ActionFlowAnimation />;
 }
 
 const controls = [
