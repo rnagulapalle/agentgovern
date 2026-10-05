@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-04T17:46:36.225Z",
+  "at": "2026-10-05T04:22:51.691Z",
   "scope": "Isolated PostgreSQL schema and private FetchSandbox HubSpot Contacts / Resend single-send fixtures. No live CRM, real email, model or money.",
   "checks": [
     {
@@ -88,24 +88,70 @@
       "detail": "Terminate a real worker process; lease expiry injected in isolated test schema. Before-effect absence remains uncertain, never automatically retried."
     },
     {
+      "name": "workflow: external agents submit scoped steps through actual HTTP handlers",
+      "passed": true,
+      "detail": "Separate Node agent processes use only scoped keys. Provider credentials stay in the server harness."
+    },
+    {
+      "name": "workflow: fresh action IDs cannot escape enrolled agent boundaries",
+      "passed": true,
+      "detail": "Enrollment restricts these agent identities to immutable workflow step IDs, not merely the dashboard path."
+    },
+    {
+      "name": "workflow: downstream API cannot bypass a missing predecessor",
+      "passed": true,
+      "detail": "The dependency guard is enforced in the shared action execution service, not only in the dashboard."
+    },
+    {
+      "name": "workflow: lost upstream response holds downstream execution",
+      "passed": true,
+      "detail": "Actual twin write completes before its response is delayed; the message stays undispatched."
+    },
+    {
+      "name": "workflow: API process termination preserves run and proposals",
+      "passed": true,
+      "detail": "Terminate the actual HTTP handler process with SIGKILL, restart it and replay the external agent submission."
+    },
+    {
+      "name": "workflow: reconciliation unlocks the downstream step without resending upstream",
+      "passed": true,
+      "detail": "Third step reads both twin outcomes; there are two intended effects and no automatic upstream resend."
+    },
+    {
+      "name": "workflow: stale CRM approval cannot release the downstream message",
+      "passed": true,
+      "detail": "The actual twin rejects a stale approved CRM source version and the dependent message remains undispatched."
+    },
+    {
+      "name": "workflow: provider bypass without its private credential is rejected",
+      "passed": true,
+      "detail": "A LoopLabs agent key is not a provider credential. This is fixture enforcement, not a customer network audit."
+    },
+    {
       "name": "isolated database backup and restore preserves actions and evidence",
       "passed": true,
       "detail": "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA."
     }
   ],
   "sourceFingerprints": {
+    "lib/workflows/guard.ts": "274f58e857107b7ad882d0ef39b50f6c92854de1a73e576fca45996b0ed8cbee",
+    "lib/workflows/service.ts": "9571d88ef0fa7ef922771a03436d2e07f72e65001f7e9ceed5d9bc7c52d79264",
+    "app/api/durable/workflows/route.ts": "77490579c0dc450dff53955c35f53521bd486628d4ec2c60b4bc51400631e323",
+    "scripts/workflow-agent.mjs": "ba686dbe89ee3b5e999666d31597728016dc6aade2b0f3fc806db9c24acb85be",
+    "scripts/workflow-http-proof-server.ts": "e0a81ae703dd5a0fa55627f7db5bb011c319129e650fc95a2290873635ea700b",
     "lib/connectors/contracts.ts": "4fb199cab089d2b21cd44f63c6aabba898af49d8c90cf746d4cae05cdc355165",
-    "lib/connectors/service.ts": "3787d3ed5ce1d9a89ed50b3861989d0d917bfed1a55d43f1b66468ff9515d3e4",
+    "lib/connectors/service.ts": "d59537f60dd4af50d9f4796680bec4b44811339feeb6679c6c81a2e325e2af20",
     "lib/connectors/twin.ts": "e5dff9ea3954543e24df6d3b13b23d02d3a101dacb6cbdfe76bf524ba8ecdeca",
     "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
+    "lib/workflows/schema.sql": "fad98c6bed6e4cdc0168b5248ca5cbf7411c35ec49cd3bcbd24b27eb11bf3e4d",
     "app/api/durable/connectors/route.ts": "e2e3c0f720c92d31b71375660f5ba2d7159ca086b0aef80c68d9c436fc47544e",
     "scripts/connector-twin.py": "8ee1508e9c41ab0f62b049ee06ee56d21af5dbe897a7c18c56c6513101c2e616"
   },
-  "localRestoreMilliseconds": 76,
+  "localRestoreMilliseconds": 72,
   "limits": [
     "Fixture action journal and contact version are LoopLabs extensions, not live provider parity.",
     "No SSO, failover, production load or real delivery proof.",
     "Only one sample contact and one fixed message template/recipient."
   ],
-  "providerEffects": 7
+  "providerEffects": 10
 }

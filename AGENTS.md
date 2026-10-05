@@ -12,6 +12,8 @@ The separate `/control-plane/durable` workspace adds authenticated PostgreSQL-ba
 
 The private `/control-plane` now uses invited named member sign-in. `/control-plane/actions` unifies discount and refund views; legacy durable/refund URLs redirect there. Agent registration persists a scoped discount, CRM or messaging identity, invited owner and lifetime allowance. CRM and messaging actions require exact named approval; a human cannot approve their own request. Prepared examples remain browser-local. Read `docs/WORKSPACE_ACCESS.md` before changing authentication, sales intake or registration. Applied schema migrations 1–4 must not be edited after release; add a new migration. Read `docs/CONNECTOR_VERIFICATION.md` for private FetchSandbox CRM/messaging contracts, source-version fixture limits and measured proof.
 
+The private `/control-plane/workflow-runs` adds a fixed CRM-to-message workflow with immutable step IDs, enrolled scoped agents, dependency checks at dispatch, pause and final effect verification. Migration 5 is new; migrations 1–4 remain unchanged. Read `docs/WORKFLOW_ONBOARDING_PROOF.md`. This is a bounded provider-twin proof, not arbitrary workflow orchestration or live customer integration.
+
 ## Required workflow
 
 1. Inspect the affected route, its tests, and the relevant docs before editing.

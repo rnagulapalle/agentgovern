@@ -86,6 +86,7 @@ async function main() {
       "lib/durable/schema.sql",
       "lib/workspace/schema.sql",
       "lib/connectors/schema.sql",
+      "lib/workflows/schema.sql",
     ])
       await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
@@ -97,6 +98,7 @@ async function main() {
     );
     const actors = [];
     let workerToken = "";
+    const actorKeys: Record<string, string> = {};
     for (const [role, subject] of [
       ["agent", "crm-agent"],
       ["agent", "email-agent"],
@@ -105,6 +107,7 @@ async function main() {
     ]) {
       const key = randomBytes(32).toString("base64url");
       if (role === "worker") workerToken = key;
+      actorKeys[subject] = key;
       await db.query(
         "INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,$3)",
         [tokenHash(key), subject, role],
@@ -362,6 +365,368 @@ async function main() {
         },
         "Terminate a real worker process; lease expiry injected in isolated test schema. Before-effect absence remains uncertain, never automatically retried.",
       );
+    let api: ChildProcess | undefined;
+    let origin = "";
+    const isolatedUrl = new URL(url);
+    isolatedUrl.searchParams.set("options", `-c search_path=${schema}`);
+    async function startApi() {
+      api = spawn(
+        process.execPath,
+        ["--import", "tsx", "scripts/workflow-http-proof-server.ts"],
+        {
+          env: {
+            ...process.env,
+            LOOPLABS_DATABASE_URL: isolatedUrl.toString(),
+            LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018",
+            LOOPLABS_CONNECTOR_TWIN_TOKEN: token,
+          },
+          stdio: ["ignore", "pipe", "pipe"],
+        },
+      );
+      let output = "";
+      api.stdout!.on("data", (b) => {
+        output += String(b);
+      });
+      for (let i = 0; i < 100; i++) {
+        if (api.exitCode !== null)
+          throw new Error("Workflow HTTP harness exited before readiness.");
+        const match = output.match(/\{"port":(\d+)\}/);
+        if (match) {
+          origin = `http://127.0.0.1:${match[1]}`;
+          return;
+        }
+        await delay(50);
+      }
+      throw new Error("Workflow HTTP harness did not start.");
+    }
+    async function stopApi() {
+      if (api && api.exitCode === null && api.signalCode === null) {
+        const done = new Promise<void>((r) => api!.once("exit", () => r()));
+        api.kill("SIGKILL");
+        await done;
+      }
+    }
+    async function http(path: string, key: string, value?: object) {
+      const response = await fetch(origin + path, {
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
+        ...(value ? { method: "POST", body: JSON.stringify(value) } : {}),
+      });
+      return { status: response.status, data: await response.json() };
+    }
+    try {
+      await startApi();
+      const enrolled = await http(
+        "/api/durable/workflows",
+        actorKeys.reviewer,
+        {
+          operation: "create",
+          crmAgent: "crm-agent",
+          emailAgent: "email-agent",
+          runId: randomUUID(),
+        },
+      );
+      assert.equal(enrolled.status, 200);
+      const runId = enrolled.data.id;
+      async function externalAgent(key: string) {
+        await execFileAsync(process.execPath, ["scripts/workflow-agent.mjs"], {
+          env: {
+            ...process.env,
+            LOOPLABS_AGENT_ORIGIN: origin,
+            LOOPLABS_RUN_ID: runId,
+            LOOPLABS_AGENT_KEY: key,
+          },
+        });
+      }
+      await check(
+        "workflow: external agents submit scoped steps through actual HTTP handlers",
+        async () => {
+          await externalAgent(actorKeys["crm-agent"]);
+          await externalAgent(actorKeys["email-agent"]);
+          const privatePlan = await http(
+            `/api/durable/workflows?run=${runId}`,
+            actorKeys["crm-agent"],
+          );
+          assert.equal(privatePlan.data.steps.length, 1);
+          assert.equal(
+            (
+              await http("/api/durable/workflows", actorKeys["crm-agent"], {
+                operation: "create",
+                crmAgent: "crm-agent",
+                emailAgent: "email-agent",
+                runId: randomUUID(),
+              })
+            ).status,
+            403,
+          );
+        },
+        "Separate Node agent processes use only scoped keys. Provider credentials stay in the server harness.",
+      );
+      let plan = (
+        await http(`/api/durable/workflows?run=${runId}`, actorKeys.reviewer)
+      ).data;
+      const [first, next] = plan.steps;
+      for (const step of plan.steps)
+        assert.equal(
+          (
+            await http("/api/durable/connectors", actorKeys.reviewer, {
+              operation: "approve",
+              actionId: step.action_id,
+              payloadHash: step.payload_hash,
+            })
+          ).status,
+          200,
+        );
+      await check(
+        "workflow: fresh action IDs cannot escape enrolled agent boundaries",
+        async () => {
+          const escaped = await http(
+            "/api/durable/connectors",
+            actorKeys["email-agent"],
+            {
+              operation: "propose",
+              actionId: randomUUID(),
+              agentId: "email-agent",
+              connector: "email",
+              payload: { template: "case_received" },
+            },
+          );
+          assert.equal(escaped.status, 403);
+        },
+        "Enrollment restricts these agent identities to immutable workflow step IDs, not merely the dashboard path.",
+      );
+      await check(
+        "workflow: downstream API cannot bypass a missing predecessor",
+        async () => {
+          assert.equal(
+            (
+              await http("/api/durable/connectors", workerToken, {
+                operation: "execute",
+                actionId: next.action_id,
+              })
+            ).status,
+            409,
+          );
+        },
+        "The dependency guard is enforced in the shared action execution service, not only in the dashboard.",
+      );
+      await check(
+        "workflow: lost upstream response holds downstream execution",
+        async () => {
+          const executed = await http("/api/durable/connectors", workerToken, {
+            operation: "execute",
+            actionId: first.action_id,
+            lostResponse: true,
+          });
+          assert.equal(executed.data.state, "uncertain");
+          assert.equal(
+            (
+              await http("/api/durable/connectors", workerToken, {
+                operation: "execute",
+                actionId: next.action_id,
+              })
+            ).status,
+            409,
+          );
+        },
+        "Actual twin write completes before its response is delayed; the message stays undispatched.",
+      );
+      await check(
+        "workflow: API process termination preserves run and proposals",
+        async () => {
+          await stopApi();
+          await startApi();
+          await externalAgent(actorKeys["crm-agent"]);
+          plan = (
+            await http(
+              `/api/durable/workflows?run=${runId}`,
+              actorKeys.reviewer,
+            )
+          ).data;
+          assert.equal(plan.steps[0].state, "uncertain");
+          assert.equal(
+            (
+              await db!.query(
+                "SELECT count(*)::integer AS n FROM ll_connector_actions WHERE id=$1",
+                [first.action_id],
+              )
+            ).rows[0].n,
+            1,
+          );
+        },
+        "Terminate the actual HTTP handler process with SIGKILL, restart it and replay the external agent submission.",
+      );
+      await check(
+        "workflow: reconciliation unlocks the downstream step without resending upstream",
+        async () => {
+          assert.equal(
+            (
+              await http("/api/durable/connectors", actorKeys.reviewer, {
+                operation: "reconcile",
+                actionId: first.action_id,
+              })
+            ).data.state,
+            "succeeded",
+          );
+          assert.equal(
+            (
+              await http("/api/durable/connectors", workerToken, {
+                operation: "execute",
+                actionId: next.action_id,
+              })
+            ).data.state,
+            "succeeded",
+          );
+          assert.equal(
+            (
+              await http("/api/durable/workflows", actorKeys.reviewer, {
+                operation: "verify",
+                runId,
+              })
+            ).status,
+            200,
+          );
+          assert.equal(
+            (
+              await http(
+                `/api/durable/workflows?run=${runId}`,
+                actorKeys.reviewer,
+              )
+            ).data.state,
+            "completed",
+          );
+        },
+        "Third step reads both twin outcomes; there are two intended effects and no automatic upstream resend.",
+      );
+      await check(
+        "workflow: stale CRM approval cannot release the downstream message",
+        async () => {
+          const staleRun = (
+            await http("/api/durable/workflows", actorKeys.reviewer, {
+              operation: "create",
+              crmAgent: "crm-agent",
+              emailAgent: "email-agent",
+              runId: randomUUID(),
+            })
+          ).data.id;
+          await execFileAsync(
+            process.execPath,
+            ["scripts/workflow-agent.mjs"],
+            {
+              env: {
+                ...process.env,
+                LOOPLABS_AGENT_ORIGIN: origin,
+                LOOPLABS_RUN_ID: staleRun,
+                LOOPLABS_AGENT_KEY: actorKeys["crm-agent"],
+              },
+            },
+          );
+          await execFileAsync(
+            process.execPath,
+            ["scripts/workflow-agent.mjs"],
+            {
+              env: {
+                ...process.env,
+                LOOPLABS_AGENT_ORIGIN: origin,
+                LOOPLABS_RUN_ID: staleRun,
+                LOOPLABS_AGENT_KEY: actorKeys["email-agent"],
+              },
+            },
+          );
+          const steps = (
+            await http(
+              `/api/durable/workflows?run=${staleRun}`,
+              actorKeys.reviewer,
+            )
+          ).data.steps;
+          for (const step of steps)
+            await http("/api/durable/connectors", actorKeys.reviewer, {
+              operation: "approve",
+              actionId: step.action_id,
+              payloadHash: step.payload_hash,
+            });
+          // A different authorized run writes the same contact after the first approval.
+          const newerRun = (
+            await http("/api/durable/workflows", actorKeys.reviewer, {
+              operation: "create",
+              crmAgent: "crm-agent",
+              emailAgent: "email-agent",
+              runId: randomUUID(),
+            })
+          ).data.id;
+          await execFileAsync(
+            process.execPath,
+            ["scripts/workflow-agent.mjs"],
+            {
+              env: {
+                ...process.env,
+                LOOPLABS_AGENT_ORIGIN: origin,
+                LOOPLABS_RUN_ID: newerRun,
+                LOOPLABS_AGENT_KEY: actorKeys["crm-agent"],
+              },
+            },
+          );
+          const newer = (
+            await http(
+              `/api/durable/workflows?run=${newerRun}`,
+              actorKeys.reviewer,
+            )
+          ).data.steps[0];
+          await http("/api/durable/connectors", actorKeys.reviewer, {
+            operation: "approve",
+            actionId: newer.action_id,
+            payloadHash: newer.payload_hash,
+          });
+          assert.equal(
+            (
+              await http("/api/durable/connectors", workerToken, {
+                operation: "execute",
+                actionId: newer.action_id,
+              })
+            ).data.state,
+            "succeeded",
+          );
+          assert.equal(
+            (
+              await http("/api/durable/connectors", workerToken, {
+                operation: "execute",
+                actionId: steps[0].action_id,
+              })
+            ).data.state,
+            "uncertain",
+          );
+          assert.equal(
+            (
+              await http("/api/durable/connectors", workerToken, {
+                operation: "execute",
+                actionId: steps[1].action_id,
+              })
+            ).status,
+            409,
+          );
+        },
+        "The actual twin rejects a stale approved CRM source version and the dependent message remains undispatched.",
+      );
+      await check(
+        "workflow: provider bypass without its private credential is rejected",
+        async () => {
+          const r = await fetch("http://127.0.0.1:8018/email/emails", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${actorKeys["email-agent"]}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({}),
+          });
+          assert.equal(r.status, 401);
+        },
+        "A LoopLabs agent key is not a provider credential. This is fixture enforcement, not a customer network audit.",
+      );
+    } finally {
+      await stopApi();
+    }
     let restoreMilliseconds = 0;
     await check(
       "isolated database backup and restore preserves actions and evidence",
@@ -419,10 +784,16 @@ async function main() {
       "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA.",
     );
     const fingerprintFiles = [
+      "lib/workflows/guard.ts",
+      "lib/workflows/service.ts",
+      "app/api/durable/workflows/route.ts",
+      "scripts/workflow-agent.mjs",
+      "scripts/workflow-http-proof-server.ts",
       "lib/connectors/contracts.ts",
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
       "lib/connectors/schema.sql",
+      "lib/workflows/schema.sql",
       "app/api/durable/connectors/route.ts",
       "scripts/connector-twin.py",
     ];

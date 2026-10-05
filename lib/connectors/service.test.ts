@@ -5,6 +5,7 @@ import { beforeAll, beforeEach, afterAll, describe, it, expect } from "vitest";
 import { authenticate, tokenHash } from "../durable/service";
 import type { Actor } from "../durable/contracts";
 import { ConnectorControl } from "./service";
+import { WorkflowControl } from "../workflows/service";
 import {
   parseConnectorProposal,
   type ConnectorAction,
@@ -71,6 +72,7 @@ beforeAll(async () => {
     "lib/durable/schema.sql",
     "lib/workspace/schema.sql",
     "lib/connectors/schema.sql",
+    "lib/workflows/schema.sql",
   ])
     await db.query(await readFile(file, "utf8"));
 }, 20000);
@@ -372,3 +374,175 @@ async function createOtherToken() {
   );
   return token;
 }
+
+describe("durable workflow dependency boundary", () => {
+  async function plan() {
+    const w = new WorkflowControl(db, control);
+    const id = await w.create(
+      operator,
+      "test-agent",
+      "test-agent",
+      randomUUID(),
+    );
+    return { w, id, run: await w.read(operator, id) };
+  }
+  async function submit(s: {
+    action_id: string;
+    agent_id: string;
+    connector: string;
+    payload: unknown;
+  }) {
+    return control.propose(agent, {
+      actionId: s.action_id,
+      agentId: s.agent_id,
+      connector: s.connector,
+      payload: s.payload,
+    });
+  }
+  async function approved(s: Parameters<typeof submit>[0]) {
+    const a = await submit(s);
+    return control.review(second, a.id, a.payload_hash, true);
+  }
+  it("holds downstream through missing and uncertain upstream state, survives service restart and completes by verification", async () => {
+    const { w, id, run } = await plan();
+    const [first, next] = run.steps;
+    const downstream = await approved(next);
+    await expect(control.execute(worker, downstream.id)).rejects.toThrow(
+      "preceding step",
+    );
+    const upstream = await approved(first);
+    await control.execute(worker, upstream.id, true);
+    await expect(control.execute(worker, downstream.id)).rejects.toThrow(
+      "preceding step",
+    );
+    const restored = new WorkflowControl(
+      db,
+      new ConnectorControl(db, provider),
+    );
+    expect((await restored.read(operator, id)).steps[0].state).toBe(
+      "uncertain",
+    );
+    await control.reconcile(operator, upstream.id);
+    await control.execute(worker, downstream.id);
+    expect(await restored.verify(operator, id)).toEqual({ verified: true });
+    expect((await w.read(operator, id)).state).toBe("completed");
+    await expect(w.pause(operator, id)).rejects.toThrow("completed workflow");
+    expect(provider.calls).toBe(2);
+    expect((await w.list(operator)).length).toBe(1);
+    await expect(w.verify(operator, id)).rejects.toThrow("active workflow");
+  });
+  it("rejects altered step payloads, mismatched identities and unauthorized enrollment", async () => {
+    const { w, run, id } = await plan();
+    const s = run.steps[0];
+    expect(await w.create(operator, "test-agent", "test-agent", id)).toBe(id);
+    await expect(control.propose(agent, p())).rejects.toThrow(
+      "enrolled workflow steps",
+    );
+    await expect(
+      w.create(operator, "other-agent", "test-agent", id),
+    ).rejects.toThrow("different plan");
+    await expect(
+      w.create(operator, "test-agent", "test-agent", "invalid"),
+    ).rejects.toThrow("stable workflow");
+    await expect(
+      control.propose(agent, {
+        actionId: s.action_id,
+        agentId: "other-agent",
+        connector: "crm",
+        payload: s.payload,
+      }),
+    ).rejects.toThrow("match this workflow");
+    await expect(
+      control.propose(agent, {
+        actionId: s.action_id,
+        agentId: s.agent_id,
+        connector: "crm",
+        payload: { lifecycle: "lead" },
+      }),
+    ).rejects.toThrow("match this workflow");
+    await expect(
+      w.create(agent, "test-agent", "test-agent", randomUUID()),
+    ).rejects.toThrow();
+    await expect(
+      w.create(operator, "bad!", "test-agent", randomUUID()),
+    ).rejects.toThrow("registered");
+    await expect(
+      w.create(operator, "missing", "test-agent", randomUUID()),
+    ).rejects.toThrow("active scoped");
+    await expect(w.read(other, id)).rejects.toThrow();
+    await expect(w.read(operator, randomUUID())).rejects.toThrow("not found");
+    await expect(w.read(operator, "invalid")).rejects.toThrow("valid workflow");
+    await expect(w.list(agent)).rejects.toThrow();
+    await expect(w.verify(agent, id)).rejects.toThrow("named operator");
+  });
+  it("pause blocks the lower-level execute route even with approved actions", async () => {
+    const standalone = await ready();
+    const { w, id, run } = await plan();
+    const a = await approved(run.steps[0]);
+    await expect(control.execute(worker, standalone.id)).rejects.toThrow(
+      "enrolled workflow steps",
+    );
+    await w.pause(operator, id);
+    expect(await w.pause(operator, id)).toEqual({ paused: true });
+    expect(
+      (
+        await db.query(
+          "SELECT * FROM ll_workflow_events WHERE run_id=$1 AND kind='pause_requested'",
+          [id],
+        )
+      ).rows,
+    ).toHaveLength(1);
+    await expect(control.execute(worker, a.id)).rejects.toThrow("paused");
+    expect(provider.calls).toBe(0);
+    await expect(w.verify(operator, id)).rejects.toThrow("active workflow");
+    await expect(w.pause(agent, id)).rejects.toThrow();
+  });
+  it("agent instructions exclude peer steps and deny non-participants", async () => {
+    const w = new WorkflowControl(db, control);
+    const id = await w.create(
+      operator,
+      "other-agent",
+      "test-agent",
+      randomUUID(),
+    );
+    const own = await w.read(agent, id);
+    expect(own.steps).toHaveLength(1);
+    expect(own.steps[0].connector).toBe("email");
+    const token = await createOtherToken();
+    const peer = await authenticate(db, token);
+    expect((await w.read(peer, id)).steps).toHaveLength(1);
+    const key = randomBytes(32).toString("base64url");
+    await db.query(
+      "INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one','third','agent')",
+      [tokenHash(key)],
+    );
+    await expect(w.read(await authenticate(db, key), id)).rejects.toThrow(
+      "not found",
+    );
+  });
+  it("does not complete missing, conflicting or revoked workflow effects", async () => {
+    const { w, id, run } = await plan();
+    await expect(w.verify(operator, id)).rejects.toThrow("Every step");
+    const a = await approved(run.steps[0]);
+    await control.execute(worker, a.id);
+    const b = await approved(run.steps[1]);
+    await control.execute(worker, b.id);
+    provider.outcome = { outcome: "conflict", detail: "Newer record exists" };
+    await expect(w.verify(operator, id)).rejects.toThrow(
+      "conflicting outcomes",
+    );
+    provider.outcome = { outcome: "verified", detail: "Observed" };
+    await control.reconcile(operator, a.id);
+    await control.reconcile(operator, b.id);
+    const fresh = await plan();
+    const first = await approved(fresh.run.steps[0]);
+    await control.execute(worker, first.id);
+    const last = await approved(fresh.run.steps[1]);
+    await control.execute(worker, last.id);
+    await control.contain(operator, "crm");
+    await expect(control.execute(worker, randomUUID())).rejects.toThrow();
+    await expect(fresh.w.verify(operator, fresh.id)).rejects.toThrow(
+      "Authority changed",
+    );
+  });
+});

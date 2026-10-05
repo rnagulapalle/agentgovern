@@ -38,6 +38,7 @@ const groups = [
       { key: "connectors", label: "Connectors", icon: Database },
       { key: "actions", label: "Actions", icon: SlidersHorizontal },
       { key: "verification", label: "Verification", icon: ShieldCheck },
+      { key: "workflow-runs", label: "Workflow runs", icon: Network },
       { key: "requests", label: "Sales requests", icon: BookOpen },
     ],
   },
@@ -70,6 +71,7 @@ export function ControlShell({
     "connectors",
     "requests",
     "verification",
+    "workflow-runs",
   ].includes(section);
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);

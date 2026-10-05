@@ -2,6 +2,40 @@ import Link from "next/link";
 import evidence from "@/docs/evidence/connector-proof.json";
 import { PageTitle } from "@/components/control-plane/ui";
 const descriptions: Record<string, [string, string]> = {
+  "workflow: external agents submit scoped steps through actual HTTP handlers":
+    [
+      "External agents submit only their own steps",
+      "Separate agent processes call LoopLabs over HTTP without provider credentials.",
+    ],
+  "workflow: fresh action IDs cannot escape enrolled agent boundaries": [
+    "An enrolled agent cannot escape its workflow",
+    "Fresh action IDs outside the immutable plan are refused.",
+  ],
+  "workflow: downstream API cannot bypass a missing predecessor": [
+    "The next action waits for the previous result",
+    "Calling the action API directly cannot bypass the workflow dependency.",
+  ],
+  "workflow: lost upstream response holds downstream execution": [
+    "An uncertain update holds the message",
+    "A lost response after the twin write prevents downstream dispatch.",
+  ],
+  "workflow: API process termination preserves run and proposals": [
+    "Workflow decisions survive interruption",
+    "The HTTP process is killed and restarted, then the agent replays its existing request.",
+  ],
+  "workflow: reconciliation unlocks the downstream step without resending upstream":
+    [
+      "Verification lets the workflow continue",
+      "The existing CRM effect is found, then the message executes and both results are checked.",
+    ],
+  "workflow: stale CRM approval cannot release the downstream message": [
+    "A stale approval cannot move the workflow forward",
+    "The fixture refuses an outdated record version and the message stays held.",
+  ],
+  "workflow: provider bypass without its private credential is rejected": [
+    "Agent credentials cannot bypass the connector",
+    "The private twin refuses a direct request using a LoopLabs agent key.",
+  ],
   "crm: exact approval, execute and authoritative read-back": [
     "The CRM change matches the approval",
     "Read the simulated contact back and compare its saved value with the approved request.",
@@ -124,7 +158,7 @@ export default function VerificationPage() {
       </div>
       <section className="cp-panel cp-durable-card">
         <h2>
-          {evidence.checks.length} recorded CRM and messaging checks passed
+          {evidence.checks.length} recorded connector and workflow checks passed
         </h2>
         <p>
           Recorded {new Date(evidence.at).toISOString().slice(0, 10)} against an
