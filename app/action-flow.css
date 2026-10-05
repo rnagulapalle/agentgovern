@@ -712,3 +712,48 @@
     font-size: 16px;
   }
 }
+
+.ll-multi-icon-badge {
+  fill: #e6ebdd;
+}
+.ll-multi-icon-1 {
+  fill: #eee7dc;
+}
+.ll-multi-icon-2 {
+  fill: #e3ebee;
+}
+.ll-multi-agent-icon {
+  color: #65784e;
+}
+.ll-multi-agent-icon-1 {
+  color: #9a7d54;
+}
+.ll-multi-agent-icon-2 {
+  color: #64808c;
+}
+.ll-multi-network .ll-multi-agent-name {
+  font-size: 14px;
+}
+.ll-multi-system-badge {
+  fill: #edf0e5;
+}
+.ll-multi-system-icon {
+  color: #63764e;
+}
+.ll-multi-inspector-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.ll-multi-mobile-system {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ll-multi-mobile-system > svg {
+  flex-shrink: 0;
+  color: #63764e;
+}
+.ll-multi-mobile-system b {
+  font-weight: 500;
+}

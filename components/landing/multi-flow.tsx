@@ -1,6 +1,33 @@
 "use client";
 
 import { useId, useState, type CSSProperties } from "react";
+import {
+  Headset,
+  Landmark,
+  Package,
+  ContactRound,
+  Mail,
+  CreditCard,
+  Warehouse,
+  ArrowUpRight,
+} from "lucide-react";
+
+const systemIcons = {
+  crm: ContactRound,
+  email: Mail,
+  credit: CreditCard,
+  vendor: Warehouse,
+};
+const diagramCaptions: Record<string, string> = {
+  "Awaiting approval": "Needs approval",
+  "Executing approved update": "Updating",
+  "Outcome uncertain": "Uncertain",
+  "Effect verified": "Verified",
+  "Separate approval required": "Needs approval",
+  "Held · verify CRM first": "Waiting on CRM",
+  "Blocked · above limit": "Limit exceeded",
+  "Held · named review": "Needs review",
+};
 
 export const multiFlowScenes = [
   {
@@ -184,7 +211,8 @@ export function MultiFlowScene({
           <text x="475" y="26" className="ll-multi-column">
             BUSINESS SYSTEMS
           </text>
-          {["Customer ops", "Finance ops", "Vendor ops"].map((name, i) => {
+          {["Customer", "Finance", "Vendor"].map((name, i) => {
+            const AgentIcon = [Headset, Landmark, Package][i];
             const y = 90 + i * 100;
             const d = `M154 ${y} C205 ${y},210 190,250 190`;
             return (
@@ -230,11 +258,26 @@ export function MultiFlowScene({
                   fill="#f3f4ed"
                   stroke="#d0d3c5"
                 />
+                <rect
+                  x="31"
+                  y={y - 15}
+                  width="30"
+                  height="30"
+                  rx="7"
+                  className={`ll-multi-icon-badge ll-multi-icon-${i}`}
+                />
+                <AgentIcon
+                  x={37}
+                  y={y - 9}
+                  width={18}
+                  height={18}
+                  strokeWidth={1.7}
+                  className={`ll-multi-agent-icon ll-multi-agent-icon-${i}`}
+                />
                 <text
-                  x="88"
-                  y={y + 6}
-                  textAnchor="middle"
-                  className="ll-multi-agent"
+                  x="69"
+                  y={y + 5}
+                  className="ll-multi-agent ll-multi-agent-name"
                 >
                   {name}
                 </text>
@@ -263,6 +306,7 @@ export function MultiFlowScene({
             Per-action decisions
           </text>
           {branches.map((branch, index) => {
+            const SystemIcon = systemIcons[branch.id];
             const y = 72 + index * 88;
             const d = `M322 190 C380 190,397 ${y},473 ${y}`;
             const stopX = 418;
@@ -340,15 +384,31 @@ export function MultiFlowScene({
                   fill="#fafaf7"
                   stroke="#d2d4c9"
                 />
-                <text x="486" y={y - 8} className="ll-multi-agent">
+                <rect
+                  x="485"
+                  y={y - 18}
+                  width="29"
+                  height="36"
+                  rx="7"
+                  className="ll-multi-system-badge"
+                />
+                <SystemIcon
+                  x={490}
+                  y={y - 9}
+                  width={19}
+                  height={19}
+                  strokeWidth={1.7}
+                  className="ll-multi-system-icon"
+                />
+                <text x="524" y={y - 8} className="ll-multi-agent">
                   {branch.system}
                 </text>
                 <text
-                  x="486"
+                  x="524"
                   y={y + 16}
                   className={`ll-multi-status ll-action-tone-${branch.tone}`}
                 >
-                  {branch.status}
+                  {diagramCaptions[branch.status]}
                 </text>
               </g>
             );
@@ -401,23 +461,29 @@ export function MultiFlowScene({
           <strong>LoopLabs · per-action control</strong>
           <span>{scene.gate}</span>
         </div>
-        {branches.map((branch) => (
-          <div
-            key={branch.id}
-            className="ll-multi-mobile-branch"
-            data-branch={branch.id}
-            data-dispatched={branch.dispatch}
-          >
-            <span className="ll-multi-mobile-owner">{branch.owner}</span>
-            <strong>
-              {branch.system} <span>→ {branch.action}</span>
-            </strong>
-            <span className={`ll-action-tone-${branch.tone}`}>
-              <i />
-              {branch.status}
-            </span>
-          </div>
-        ))}
+        {branches.map((branch) => {
+          const SystemIcon = systemIcons[branch.id];
+          return (
+            <div
+              key={branch.id}
+              className="ll-multi-mobile-branch"
+              data-branch={branch.id}
+              data-dispatched={branch.dispatch}
+            >
+              <span className="ll-multi-mobile-owner">{branch.owner}</span>
+              <strong className="ll-multi-mobile-system">
+                <SystemIcon size={24} strokeWidth={1.7} aria-hidden="true" />
+                <span>
+                  <b>{branch.system}</b> · {branch.action}
+                </span>
+              </strong>
+              <span className={`ll-action-tone-${branch.tone}`}>
+                <i />
+                {branch.status}
+              </span>
+            </div>
+          );
+        })}
       </div>
       <div
         className="ll-multi-inspector-controls"
@@ -426,17 +492,23 @@ export function MultiFlowScene({
       >
         <span>Explore a decision</span>
         <div>
-          {branches.map((branch) => (
-            <button
-              key={branch.id}
-              type="button"
-              aria-pressed={selectedId === branch.id}
-              aria-controls={`${id}-inspection`}
-              onClick={() => inspect(branch.id)}
-            >
-              {branch.system} ↗
-            </button>
-          ))}
+          {branches.map((branch) => {
+            const SystemIcon = systemIcons[branch.id];
+            return (
+              <button
+                key={branch.id}
+                type="button"
+                aria-label={`${branch.system} ↗`}
+                aria-pressed={selectedId === branch.id}
+                aria-controls={`${id}-inspection`}
+                onClick={() => inspect(branch.id)}
+              >
+                <SystemIcon size={17} strokeWidth={1.7} aria-hidden="true" />
+                {branch.system}
+                <ArrowUpRight size={13} aria-hidden="true" />
+              </button>
+            );
+          })}
         </div>
       </div>
       {selected && (
