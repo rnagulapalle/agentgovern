@@ -10,6 +10,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { MultiFlowScene, multiFlowScenes } from "./multi-flow";
+
 export const actionFlowScenes = [
   {
     title: "One request. A clear boundary.",
@@ -131,16 +133,16 @@ export function ActionFlowScene({
             />
           )}
           <path
-            d="M469 104 C513 104,511 214,567 214"
+            d="M320 155 C425 155,465 214,567 214"
             stroke="#d7d8d0"
             strokeWidth="1.5"
             strokeDasharray={released ? undefined : "4 5"}
           />
           {released && (
             <path
-              d="M469 104 C513 104,511 214,567 214"
+              d="M320 155 C425 155,465 214,567 214"
               pathLength="100"
-              className="ll-action-pulse ll-action-allowed"
+              className="ll-action-pulse ll-action-allowed ll-action-once"
             />
           )}
           {uncertain && (
@@ -295,6 +297,8 @@ export function ActionFlowScene({
 }
 
 export function ActionFlowAnimation() {
+  const [mode, setMode] = useState<"pattern" | "proof">("pattern");
+  const scenes = mode === "pattern" ? multiFlowScenes : actionFlowScenes;
   const [step, setStep] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -327,7 +331,7 @@ export function ActionFlowAnimation() {
     <div ref={root} className={`ll-action-flow ${reduced ? "is-reduced" : ""}`}>
       <div className="ll-action-flow-heading">
         <span>
-          <i /> CRM → customer message
+          <i /> Agents → controls → business systems
         </span>
         <button
           type="button"
@@ -340,13 +344,41 @@ export function ActionFlowAnimation() {
           {paused ? <Play size={17} /> : <Pause size={17} />}
         </button>
       </div>
-      <ActionFlowScene step={step} paused={paused || reduced || !visible} />
+      <div className="ll-action-modes" aria-label="Workflow illustration views">
+        <button
+          type="button"
+          aria-pressed={mode === "pattern"}
+          onClick={() => {
+            setMode("pattern");
+            setStep(0);
+            setPaused(false);
+          }}
+        >
+          Multiple workflows
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === "proof"}
+          onClick={() => {
+            setMode("proof");
+            setStep(0);
+            setPaused(false);
+          }}
+        >
+          Tested CRM handoff
+        </button>
+      </div>
+      {mode === "pattern" ? (
+        <MultiFlowScene step={step} paused={paused || reduced || !visible} />
+      ) : (
+        <ActionFlowScene step={step} paused={paused || reduced || !visible} />
+      )}
       <div className="ll-action-controls">
         <div
           className="ll-action-progress"
           aria-label="Workflow illustration steps"
         >
-          {actionFlowScenes.map((scene, index) => (
+          {scenes.map((scene, index) => (
             <button
               type="button"
               key={scene.title}
@@ -383,7 +415,9 @@ export function ActionFlowAnimation() {
         </button>
       </div>
       <p className="ll-action-disclosure">
-        Illustrated provider-twin workflow. No live CRM or email delivery.
+        {mode === "pattern"
+          ? "Illustrative multi-system pattern, not a connected multi-branch workflow. CRM/email handoff is tested with provider twins; billing and ERP branches are conceptual."
+          : "Illustrated provider-twin workflow. No live CRM or email delivery."}
       </p>
     </div>
   );
