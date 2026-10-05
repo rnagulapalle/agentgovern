@@ -265,3 +265,8 @@ This document is the standing LoopLabs GTM/SEO/PR plan. Future content and distr
 - [Google: creating helpful, reliable, people-first content](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)
 - [Google: combining Search Console and analytics data](https://developers.google.com/search/docs/monitor-debug/google-analytics-search-console)
 - [OpenAI: publishers and developers FAQ](https://help.openai.com/en/articles/12627856)
+
+
+## Monday priority override — October 5–11, 2026
+
+The [weekly evidence review](research/2026-10-05-weekly-growth-review.md) governs the next executor run. Product Hunt launch is canceled; all launch tasks above are historical planning, not current authorization. Prioritize one annotated fixed CRM-to-message provider-twin proof for COO/customer-operations owners, improving the existing pilot/overview path instead of adding vertical pages. Target five independent comprehension sessions and one qualified bounded pilot; no sessions or customers are claimed. Continue only with three documented native-control gaps and two explicit follow-ups; revise if native tools suffice or buyers only want bespoke automation. Fresh API event aggregates show substantial repeat CTA activity, not a trustworthy sequential funnel. Resolve outcome/QA measurement before asserting conversion. Fresh GSC/dashboard and the 30-prompt answer-engine baseline remain blocked by locked authenticated sessions; unavailable is not zero. See the review for channel dispositions, exact window, limitations, proof scope and stop conditions.
