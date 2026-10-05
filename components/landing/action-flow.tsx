@@ -369,7 +369,11 @@ export function ActionFlowAnimation() {
         </button>
       </div>
       {mode === "pattern" ? (
-        <MultiFlowScene step={step} paused={paused || reduced || !visible} />
+        <MultiFlowScene
+          step={step}
+          paused={paused || reduced || !visible}
+          onInspect={() => setPaused(true)}
+        />
       ) : (
         <ActionFlowScene step={step} paused={paused || reduced || !visible} />
       )}

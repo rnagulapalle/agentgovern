@@ -580,3 +580,135 @@
 .is-paused .ll-multi-mobile-branch i {
   animation-play-state: paused;
 }
+
+/* Parallel request lanes converge at the action boundary. Only permitted
+   branches animate beyond it; stopped lanes end before business systems. */
+.ll-multi-thread {
+  fill: none;
+  stroke-width: 0.8;
+}
+.ll-multi-thread-0 {
+  stroke: #a7b29a;
+}
+.ll-multi-thread-1 {
+  stroke: #bdae98;
+}
+.ll-multi-thread-2 {
+  stroke: #9caeb6;
+}
+.ll-multi-network .ll-multi-signal {
+  stroke-width: 1.6;
+  stroke-dasharray: 3 97;
+  filter: none;
+  opacity: 0.85;
+}
+.ll-multi-permitted-thread {
+  stroke: #a3b095;
+}
+.ll-multi-stopped-thread {
+  stroke: #d0d2c7;
+  stroke-dasharray: 2 4;
+}
+.ll-multi-network .ll-multi-outbound-signal {
+  stroke-width: 1.5;
+  filter: none;
+}
+.ll-multi-evidence-thread {
+  stroke: #b7996e;
+  stroke-width: 0.8;
+  opacity: 0.5;
+  fill: none;
+}
+
+.ll-multi-inspector-controls {
+  padding: 12px 22px;
+  border-top: 1px solid #deded4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ll-multi-inspector-controls > span {
+  font-size: 13px;
+  color: #66695b;
+}
+.ll-multi-inspector-controls > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ll-multi-inspector-controls button {
+  border: 1px solid #d0d5c4;
+  padding: 8px 10px;
+  background: #fafaf7;
+  font: inherit;
+  font-size: 13px;
+  color: #3d4831;
+  cursor: pointer;
+}
+.ll-multi-inspector-controls button[aria-pressed="true"] {
+  background: #e5ebd9;
+  border-color: #819269;
+}
+.ll-multi-inspector-controls button:hover {
+  background: #eef1e7;
+}
+.ll-multi-inspector-controls button:focus-visible,
+.ll-multi-inspector button:focus-visible {
+  outline: 2px solid #596744;
+  outline-offset: 3px;
+}
+.ll-multi-inspector {
+  margin: 0 22px 14px;
+  padding: 16px;
+  border: 1px solid #cbd2bd;
+  background: #f1f4ea;
+}
+.ll-multi-inspector-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ll-multi-inspector-heading strong {
+  font-size: 17px;
+  font-weight: 500;
+}
+.ll-multi-inspector-heading button {
+  background: transparent;
+  border: 0;
+  width: 32px;
+  height: 32px;
+  font-size: 24px;
+  cursor: pointer;
+}
+.ll-multi-inspector p {
+  margin: 8px 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.ll-multi-inspector span,
+.ll-multi-inspector small {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #5d6651;
+  line-height: 1.5;
+}
+@media (max-width: 600px) {
+  .ll-multi-inspector-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px;
+  }
+  .ll-multi-inspector-controls button {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .ll-multi-inspector {
+    margin: 0 16px 14px;
+  }
+  .ll-multi-inspector p {
+    font-size: 16px;
+  }
+}

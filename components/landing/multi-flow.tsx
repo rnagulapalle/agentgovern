@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState, type CSSProperties } from "react";
 
 export const multiFlowScenes = [
   {
@@ -110,14 +110,40 @@ export function multiFlowBranches(step: number) {
 export function MultiFlowScene({
   step,
   paused = false,
+  onInspect,
 }: {
   step: number;
   paused?: boolean;
+  onInspect?: () => void;
 }) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const id = useId().replace(/:/g, "");
   const current = Math.max(0, Math.min(6, step));
   const scene = multiFlowScenes[current];
   const branches = multiFlowBranches(current);
+  const selected = branches.find((branch) => branch.id === selectedId);
+  const reasons: Record<string, string> = {
+    crm:
+      current < 2
+        ? "A named reviewer must approve this exact record change."
+        : current < 5
+          ? "Check the observed record before any retry. A timeout is not proof of failure."
+          : "The record change is verified. Do not write it a second time.",
+    email:
+      current === 6
+        ? "The message follows its own approval and a verified CRM prerequisite."
+        : current === 5
+          ? "The CRM prerequisite is satisfied, but message approval is still required."
+          : "Keep the message unsent until the CRM effect is verified and its own approval is granted.",
+    credit:
+      "The requested credit exceeds this agent’s authority. Another workflow’s approval cannot authorize it.",
+    vendor:
+      "A supplier change needs a named reviewer. It stays held independently of the customer workflow.",
+  };
+  const inspect = (branchId: string) => {
+    setSelectedId(branchId);
+    onInspect?.();
+  };
   return (
     <div
       className={`ll-action-scene ll-multi-scene ${paused ? "is-paused" : ""}`}
@@ -163,6 +189,27 @@ export function MultiFlowScene({
             const d = `M154 ${y} C205 ${y},210 190,250 190`;
             return (
               <g key={name}>
+                {[-15, -10, -5, 0, 5, 10, 15].map((offset, lane) => {
+                  const lanePath = `M154 ${y + offset} C196 ${y + offset},211 ${174 + i * 16 + offset / 3},250 ${174 + i * 16 + offset / 3}`;
+                  return (
+                    <g key={offset} className="ll-multi-request-lane">
+                      <path
+                        d={lanePath}
+                        className={`ll-multi-thread ll-multi-thread-${i}`}
+                      />
+                      <path
+                        d={lanePath}
+                        pathLength="100"
+                        className={`ll-action-pulse ll-multi-signal ll-action-team-${i}`}
+                        style={
+                          {
+                            "--flow-delay": `${lane * -0.47 - i * 0.3}s`,
+                          } as CSSProperties
+                        }
+                      />
+                    </g>
+                  );
+                })}
                 <path
                   d={d}
                   stroke="#c6cbbf"
@@ -225,6 +272,30 @@ export function MultiFlowScene({
                 data-branch={branch.id}
                 data-dispatched={branch.dispatch}
               >
+                {[-12, -8, -4, 4, 8, 12].map((offset, lane) => {
+                  const endX = branch.dispatch ? 473 : 407;
+                  const lanePath = `M322 ${190 + offset / 2} C373 ${190 + offset / 2},390 ${y + offset},${endX} ${y + offset}`;
+                  return (
+                    <g key={offset}>
+                      <path
+                        d={lanePath}
+                        className={`ll-multi-thread ${branch.dispatch ? "ll-multi-permitted-thread" : "ll-multi-stopped-thread"}`}
+                      />
+                      {branch.dispatch && (
+                        <path
+                          d={lanePath}
+                          pathLength="100"
+                          className="ll-action-pulse ll-action-allowed ll-action-once ll-multi-outbound-signal"
+                          style={
+                            {
+                              "--flow-delay": `${lane * 0.12}s`,
+                            } as CSSProperties
+                          }
+                        />
+                      )}
+                    </g>
+                  );
+                })}
                 <path
                   d={d}
                   stroke={branch.dispatch ? "#899777" : "#d4d5cd"}
@@ -284,6 +355,13 @@ export function MultiFlowScene({
           })}
           {current >= 3 && (
             <g className="ll-multi-readback">
+              {[-8, -4, 4, 8].map((offset) => (
+                <path
+                  key={offset}
+                  d={`M473 ${108 + offset} C380 ${108 + offset},376 ${272 + offset},324 ${236 + offset / 2}`}
+                  className="ll-multi-evidence-thread"
+                />
+              ))}
               <path
                 d="M473 108 C380 108,376 272,324 236"
                 stroke="#b28b56"
@@ -341,6 +419,50 @@ export function MultiFlowScene({
           </div>
         ))}
       </div>
+      <div
+        className="ll-multi-inspector-controls"
+        role="group"
+        aria-label="Inspect a downstream action"
+      >
+        <span>Explore a decision</span>
+        <div>
+          {branches.map((branch) => (
+            <button
+              key={branch.id}
+              type="button"
+              aria-pressed={selectedId === branch.id}
+              aria-controls={`${id}-inspection`}
+              onClick={() => inspect(branch.id)}
+            >
+              {branch.system} ↗
+            </button>
+          ))}
+        </div>
+      </div>
+      {selected && (
+        <section
+          id={`${id}-inspection`}
+          className="ll-multi-inspector"
+          aria-label={`${selected.system} action decision`}
+        >
+          <div className="ll-multi-inspector-heading">
+            <strong>{selected.action}</strong>
+            <button
+              type="button"
+              aria-label="Close action details"
+              onClick={() => setSelectedId(null)}
+            >
+              ×
+            </button>
+          </div>
+          <p className={`ll-action-tone-${selected.tone}`}>{selected.status}</p>
+          <p>{reasons[selected.id]}</p>
+          <span>Accountable team · {selected.owner}</span>
+          <small>
+            Illustrative decision · no external action is performed.
+          </small>
+        </section>
+      )}
       <div className="ll-action-status-grid">
         <div>
           <span>Control decision</span>
