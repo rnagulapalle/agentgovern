@@ -67,6 +67,7 @@ beforeAll(async () => {
     "lib/durable/schema.sql",
     "lib/workspace/schema.sql",
     "lib/connectors/schema.sql",
+    "lib/workflows/schema.sql",
   ])
     await db.query(await readFile(file, "utf8"));
   await db.query("INSERT INTO ll_orgs(id) VALUES('http')");
@@ -210,4 +211,71 @@ it("enforces auth, CSRF, named approval and exact supported API fields", async (
   expect(
     (await POST(req({ operation: "enable", connector: "crm" }))).status,
   ).toBe(200);
+});
+
+it("workflow HTTP enrollment is authenticated, strict and cannot grant an agent approval or execution", async () => {
+  const { GET: read, POST: write } = await import(
+    "@/app/api/durable/workflows/route"
+  );
+  const get = (suffix = "", auth = true) =>
+    new NextRequest("https://looplabs.run/api/durable/workflows" + suffix, {
+      headers: auth ? { Authorization: `Bearer ${tokens.operator}` } : {},
+    });
+  expect((await read(get("", false))).status).toBe(401);
+  expect(
+    (
+      await write(
+        req(
+          {
+            operation: "create",
+            crmAgent: "agent",
+            emailAgent: "agent",
+            runId: randomUUID(),
+          },
+          "agent",
+        ),
+      )
+    ).status,
+  ).toBe(403);
+  expect(
+    (
+      await write(
+        req({
+          operation: "create",
+          crmAgent: "agent",
+          emailAgent: "agent",
+          runId: randomUUID(),
+          extra: true,
+        }),
+      )
+    ).status,
+  ).toBe(400);
+  expect(
+    (await write(req({ operation: "unknown", runId: randomUUID() }))).status,
+  ).toBe(400);
+  const response = await write(
+    req({
+      operation: "create",
+      crmAgent: "agent",
+      emailAgent: "agent",
+      runId: randomUUID(),
+    }),
+  );
+  expect(response.status).toBe(200);
+  const { id } = await response.json();
+  expect((await read(get())).status).toBe(200);
+  expect((await read(get("?run=" + id))).status).toBe(200);
+  expect((await write(req({ operation: "verify", runId: id }))).status).toBe(
+    409,
+  );
+  expect((await write(req({ operation: "pause", runId: id }))).status).toBe(
+    200,
+  );
+  expect(
+    (
+      await write(
+        req({ operation: "pause", runId: id }, "operator", "https://evil.test"),
+      )
+    ).status,
+  ).toBe(403);
 });

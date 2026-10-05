@@ -25,6 +25,19 @@ async function main() {
         hash,
       ]);
     }
+    const workflowSql = await readFile("lib/workflows/schema.sql", "utf8");
+    const workflowHash = digest(workflowSql);
+    const migration5 = (
+      await c.query("SELECT digest FROM ll_migrations WHERE version=5")
+    ).rows[0];
+    if (migration5 && migration5.digest !== workflowHash)
+      throw new Error("Migration 5 changed after application.");
+    if (!migration5) {
+      await c.query(workflowSql);
+      await c.query("INSERT INTO ll_migrations(version,digest) VALUES(5,$1)", [
+        workflowHash,
+      ]);
+    }
     await c.query(
       "INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email') ON CONFLICT DO NOTHING",
     );
@@ -35,7 +48,16 @@ async function main() {
       await c.query(
         "GRANT SELECT,INSERT,UPDATE ON ll_connector_policies,ll_connector_actions TO ll_runtime",
       );
-      await c.query("GRANT SELECT,INSERT ON ll_connector_events TO ll_runtime");
+      await c.query(
+        "GRANT SELECT,INSERT ON ll_connector_events,ll_workflow_events TO ll_runtime",
+      );
+      await c.query(
+        "GRANT SELECT,INSERT,UPDATE ON ll_workflow_runs TO ll_runtime",
+      );
+      await c.query("GRANT SELECT,INSERT ON ll_workflow_steps,ll_workflow_agents TO ll_runtime");
+      await c.query(
+        "GRANT USAGE,SELECT ON SEQUENCE ll_workflow_events_id_seq TO ll_runtime",
+      );
       await c.query(
         "GRANT USAGE,SELECT ON SEQUENCE ll_connector_events_id_seq TO ll_runtime",
       );

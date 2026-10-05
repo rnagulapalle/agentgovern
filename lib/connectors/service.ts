@@ -11,6 +11,8 @@ import {
   type Observation,
 } from "./contracts";
 
+import { workflowProposal, workflowDispatch } from "../workflows/guard";
+
 // Only the isolated fixture workspace is supported by these provider contracts.
 export class ConnectorControl {
   constructor(
@@ -108,6 +110,7 @@ export class ConnectorControl {
           (p.payload as { template: string }).template);
     const previous = await transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["agent", "operator"]);
+      await workflowProposal(c, actor.orgId, p);
       if (actor.role === "agent" && actor.subject !== p.agentId)
         throw new ControlError(403, "Agent identity must match the request.");
       return (
@@ -138,6 +141,7 @@ export class ConnectorControl {
       p.connector === "crm" ? { ...p.payload, sourceVersion } : p.payload;
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["agent", "operator"]);
+      await workflowProposal(c, actor.orgId, p);
       if (actor.role === "agent" && actor.subject !== p.agentId)
         throw new ControlError(403, "Agent identity must match the request.");
       const hash = tokenHash(JSON.stringify([p.agentId, p.connector, payload]));
@@ -268,6 +272,7 @@ export class ConnectorControl {
           "Worker lease expired. Verify the outcome before any further action.",
         );
       if (a.state !== "ready") return { ...a, lease_token: null };
+      await workflowDispatch(c, actor.orgId, id);
       if (!(await this.valid(c, actor, a)))
         return this.state(
           c,

@@ -80,6 +80,7 @@ beforeAll(async () => {
   await db.query(await readFile("lib/durable/schema.sql", "utf8"));
   await db.query(await readFile("lib/workspace/schema.sql", "utf8"));
   await db.query(await readFile("lib/connectors/schema.sql", "utf8"));
+  await db.query(await readFile("lib/workflows/schema.sql", "utf8"));
   await admin.query(`GRANT USAGE ON SCHEMA ${schema} TO ll_runtime`);
   await db.query("GRANT INSERT ON ll_tokens TO ll_runtime");
   await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof'),('other')");

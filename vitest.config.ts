@@ -26,6 +26,7 @@ export default defineConfig({
         "app/api/durable/**/*.ts",
         "lib/refunds/**/*.ts",
         "lib/connectors/**/*.ts",
+        "lib/workflows/**/*.ts",
         "lib/workspace/**/*.ts",
         "app/api/workspace/**/*.ts",
         "app/api/sales/route.ts",
@@ -43,6 +44,12 @@ export default defineConfig({
           lines: 90,
         },
         "lib/refunds/**": {
+          statements: 90,
+          branches: 85,
+          functions: 90,
+          lines: 90,
+        },
+        "lib/workflows/**": {
           statements: 90,
           branches: 85,
           functions: 90,
