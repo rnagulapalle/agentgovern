@@ -841,6 +841,7 @@ async function main() {
       "lib/connectors/contracts.ts",
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
+      "lib/connectors/hosted.ts",
       "lib/connectors/schema.sql",
       "lib/workflows/schema.sql",
       "app/api/durable/connectors/route.ts",

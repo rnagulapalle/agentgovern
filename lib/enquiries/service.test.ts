@@ -20,6 +20,7 @@ vi.mock("../durable/database", async (original) => ({ ...(await original<typeof 
 vi.mock("../connectors/twin", () => ({ FetchSandboxConnectors: class {
   workspaceId = "one";
   async request() { return { id: contact.id, properties: { email: contact.email, lifecyclestage: contact.lifecycle }, updatedAt: contact.version }; }
+  async contact() { return this.request(); }
 } }));
 const provider: ConnectorProvider = {
   workspaceId: "one",

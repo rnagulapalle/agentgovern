@@ -4,7 +4,7 @@ import { authenticate } from "@/lib/durable/service";
 import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
 import { ControlError } from "@/lib/durable/contracts";
 import { ConnectorControl } from "@/lib/connectors/service";
-import { FetchSandboxConnectors } from "@/lib/connectors/twin";
+import { connectorProvider } from "@/lib/connectors/hosted";
 import { WorkflowControl } from "@/lib/workflows/service";
 import { EnquiryControl } from "@/lib/enquiries/service";
 import { fixtures } from "@/lib/enquiries/contracts";
@@ -13,10 +13,10 @@ export const dynamic = "force-dynamic";
 async function context(r: NextRequest) {
   const db = database();
   const actor = await authenticate(db, credential(r));
-  const twin = new FetchSandboxConnectors();
+  const twin = connectorProvider();
   const workflows = new WorkflowControl(db, new ConnectorControl(db, twin));
   const enquiries = new EnquiryControl(db, workflows, async () => {
-    const record = await twin.request("/crm/crm/v3/objects/contacts/1001");
+    const record = await twin.contact();
     return { id: record.id, email: record.properties?.email, version: record.updatedAt, lifecycle: record.properties?.lifecyclestage };
   });
   return { actor, enquiries };

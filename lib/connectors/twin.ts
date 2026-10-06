@@ -36,20 +36,8 @@ export class FetchSandboxConnectors implements ConnectorProvider {
       );
     return r.json();
   }
-  body(a: ConnectorAction) {
-    return a.connector === "crm"
-      ? {
-          properties: {
-            lifecyclestage: (a.payload as { lifecycle: string }).lifecycle,
-          },
-        }
-      : {
-          from: "LoopLabs <support@looplabs.example>",
-          to: ["customer@example.test"],
-          subject: "We received your case",
-          text: "Your request was received. A team member will review it.",
-        };
-  }
+  body(a: ConnectorAction) { return connectorBody(a); }
+  async contact() { return this.request("/crm/crm/v3/objects/contacts/1001"); }
   async source(connector: Connector) {
     if (connector === "email") return null;
     const r = await this.request("/crm/crm/v3/objects/contacts/1001");
@@ -145,4 +133,19 @@ export class FetchSandboxConnectors implements ConnectorProvider {
         "Simulated provider accepted the approved message. This is not proof of real delivery.",
     };
   }
+}
+
+export function connectorBody(a: ConnectorAction) {
+    return a.connector === "crm"
+      ? {
+          properties: {
+            lifecyclestage: (a.payload as { lifecycle: string }).lifecycle,
+          },
+        }
+      : {
+          from: "LoopLabs <support@looplabs.example>",
+          to: ["customer@example.test"],
+          subject: "We received your case",
+          text: "Your request was received. A team member will review it.",
+        };
 }

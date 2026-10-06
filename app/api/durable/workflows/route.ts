@@ -4,7 +4,7 @@ import { authenticate } from "@/lib/durable/service";
 import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
 import { ControlError } from "@/lib/durable/contracts";
 import { ConnectorControl } from "@/lib/connectors/service";
-import { FetchSandboxConnectors } from "@/lib/connectors/twin";
+import { connectorProvider } from "@/lib/connectors/hosted";
 import { WorkflowControl } from "@/lib/workflows/service";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ async function context(r: NextRequest) {
     actor: await authenticate(db, credential(r)),
     service: new WorkflowControl(
       db,
-      new ConnectorControl(db, new FetchSandboxConnectors()),
+      new ConnectorControl(db, connectorProvider()),
     ),
   };
 }
