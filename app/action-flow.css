@@ -760,17 +760,28 @@
 
 /* Mobile keeps moving request lanes visible without shrinking desktop SVG text. */
 @media (max-width: 600px) {
-  .ll-multi-mobile-inbound { display: flex; gap: 14px; justify-content: center; height: 36px; }
-  .ll-multi-mobile-inbound span { position: relative; width: 2px; height: 100%; background: #d5dacb; overflow: hidden; }
-  .ll-multi-mobile-inbound span::after { content: ""; position: absolute; width: 2px; height: 14px; background: #687d50; animation: ll-mobile-request 1.8s linear infinite; }
-  .ll-multi-mobile-inbound span:nth-child(2)::after { animation-delay: -.6s; }
-  .ll-multi-mobile-inbound span:nth-child(3)::after { animation-delay: -1.2s; }
-  .ll-multi-mobile-route { position: relative; height: 4px; background: #e0e3d9; overflow: hidden; }
+  .ll-multi-mobile-inbound { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: -14px; }
+  .ll-multi-mobile-source { display: flex; flex-direction: column; align-items: center; }
+  .ll-multi-mobile-agent { width: 100%; min-height: 64px; display: flex; align-items: center; justify-content: center; border: 1px solid #c4ccba; border-radius: 6px; background: #f0f3ea; color: #465837; }
+  .ll-multi-mobile-agent strong { font-size: 16px; font-weight: 500; }
+  .ll-multi-mobile-source:nth-child(2) .ll-multi-mobile-agent { background: #f5eee4; color: #80623c; }
+  .ll-multi-mobile-source:nth-child(3) .ll-multi-mobile-agent { background: #eaf0f3; color: #4e6d7a; }
+  .ll-multi-mobile-inbound span { position: relative; width: 60px; height: 92px; background: repeating-linear-gradient(90deg, transparent 0 5px, #d5dacb 5px 7px, transparent 7px 12px); overflow: hidden; }
+  .ll-multi-mobile-inbound span::after { content: ""; position: absolute; width: 100%; height: 32px; background: repeating-linear-gradient(90deg, transparent 0 5px, #526b38 5px 7px, transparent 7px 12px); animation: ll-mobile-request 2s linear infinite; }
+  .ll-multi-mobile-source:nth-child(2) span::after { animation-delay: -.6s; background: repeating-linear-gradient(90deg, transparent 0 5px, #947044 5px 7px, transparent 7px 12px); }
+  .ll-multi-mobile-source:nth-child(3) span::after { animation-delay: -1.2s; background: repeating-linear-gradient(90deg, transparent 0 5px, #527e90 5px 7px, transparent 7px 12px); }
+  .ll-multi-mobile-route { position: relative; height: 7px; background: #e0e3d9; overflow: hidden; }
+  .ll-multi-mobile-systems { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ll-multi-mobile-branch { min-width: 0; min-height: 142px; background: #fafaf7; color: inherit; font: inherit; cursor: pointer; text-align: center; align-items: center; }
+  .ll-multi-mobile-branch:focus-visible { outline: 2px solid #526b38; outline-offset: 2px; }
+  .ll-multi-mobile-system { flex-direction: column; gap: 6px; }
+  .ll-multi-mobile-route { align-self: stretch; }
+  .ll-multi-mobile-branch > span:last-child { justify-content: center; line-height: 1.4; }
   .ll-multi-mobile-route span { display: none; }
   .ll-multi-mobile-branch[data-dispatched="true"] .ll-multi-mobile-route span { display: block; position: absolute; width: 24%; height: 100%; background: #687d50; animation: ll-mobile-dispatch 1.8s linear infinite; }
   .ll-multi-mobile-branch[data-dispatched="true"] i { animation-iteration-count: infinite; }
 }
-@keyframes ll-mobile-request { from { transform: translateY(-14px); } to { transform: translateY(36px); } }
+@keyframes ll-mobile-request { from { transform: translateY(-32px); } to { transform: translateY(92px); } }
 @keyframes ll-mobile-dispatch { from { left: -24%; } to { left: 100%; } }
 .is-paused .ll-multi-mobile-inbound span::after,
 .is-paused .ll-multi-mobile-route span { animation-play-state: paused; }

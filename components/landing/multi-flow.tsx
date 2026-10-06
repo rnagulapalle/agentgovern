@@ -457,19 +457,32 @@ export function MultiFlowScene({
         </svg>
       </div>
       <div className="ll-multi-mobile">
-        <div className="ll-multi-mobile-inbound" aria-hidden="true">
-          <span />
-          <span />
-          <span />
+        <div className="ll-multi-mobile-inbound">
+          {["Customer", "Finance", "Vendor"].map((name, index) => {
+            const AgentIcon = [Headset, Landmark, Package][index];
+            return (
+              <div className="ll-multi-mobile-source" key={name}>
+                <div className="ll-multi-mobile-agent">
+                  <AgentIcon size={34} aria-hidden="true" />
+                  <strong className="sr-only">{name}</strong>
+                </div>
+                <span aria-hidden="true" />
+              </div>
+            );
+          })}
         </div>
         <div className="ll-multi-mobile-gate">
           <strong>LoopLabs · per-action control</strong>
           <span>{scene.gate}</span>
         </div>
+        <div className="ll-multi-mobile-systems">
         {branches.map((branch) => {
           const SystemIcon = systemIcons[branch.id];
           return (
-            <div
+            <button
+              type="button"
+              onClick={() => inspect(branch.id)}
+              aria-label={`${branch.system}: ${branch.action}. ${branch.status}. Explore decision`}
               key={branch.id}
               className="ll-multi-mobile-branch"
               data-branch={branch.id}
@@ -478,20 +491,18 @@ export function MultiFlowScene({
               <div className="ll-multi-mobile-route" aria-hidden="true">
                 <span />
               </div>
-              <span className="ll-multi-mobile-owner">{branch.owner}</span>
               <strong className="ll-multi-mobile-system">
-                <SystemIcon size={24} strokeWidth={1.7} aria-hidden="true" />
-                <span>
-                  <b>{branch.system}</b> · {branch.action}
-                </span>
+                <SystemIcon size={32} strokeWidth={1.7} aria-hidden="true" />
+                <b>{branch.system}</b>
               </strong>
               <span className={`ll-action-tone-${branch.tone}`}>
                 <i />
-                {branch.status}
+                {diagramCaptions[branch.status]}
               </span>
-            </div>
+            </button>
           );
         })}
+        </div>
       </div>
       <div
         className="ll-multi-inspector-controls"
