@@ -790,3 +790,28 @@
   .ll-multi-mobile-route span,
   .ll-multi-mobile-branch[data-dispatched="true"] i { animation: none; }
 }
+
+/* One horizontal scene at every width: motion carries the story, icons are inspectable. */
+.ll-horizontal-scene { padding: 22px 20px 12px; }
+.ll-horizontal-labels { display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; font-size: 15px; font-weight: 500; }
+.ll-horizontal-labels span:first-child { text-align: left; }
+.ll-horizontal-labels span:last-child { text-align: right; }
+.ll-horizontal-canvas { position: relative; aspect-ratio: 360 / 250; }
+.ll-horizontal-canvas > svg { width: 100%; height: 100%; display: block; }
+.ll-horizontal-canvas .ll-action-pulse { stroke-width: 1.6; filter: none; stroke-dasharray: 14 86; }
+.ll-horizontal-agent, .ll-action-flow .ll-horizontal-system { position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: #fafaf7; }
+.ll-horizontal-agent { left: 6.67%; color: #68735a; }
+.ll-action-flow .ll-horizontal-system { left: 90%; border: 1px solid #dbddd2; border-radius: 10px; }
+.ll-action-flow .ll-horizontal-system[aria-pressed="true"] { background: #edf0e4; border-color: #7e8a69; }
+.ll-action-flow .ll-horizontal-gate { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 15%; height: 34%; border: 1px solid #8e997d; border-radius: 28px; background: #edf0e4; color: #596744; }
+.ll-horizontal-caption { text-align: center; }
+.ll-horizontal-caption strong { display: block; font-size: 18px; font-weight: 500; }
+.ll-horizontal-caption p { font-size: 16px; line-height: 1.5; margin: 8px 0; color: #595c50; }
+.ll-horizontal-caption details { font-size: 14px; line-height: 1.5; margin-top: 12px; }
+.ll-horizontal-caption summary { cursor: pointer; padding: 8px; color: #68685b; }
+.ll-horizontal-caption details p { text-align: left; }
+@media (max-width: 600px) {
+  .ll-horizontal-scene { padding: 22px 16px 12px; }
+  .ll-horizontal-labels { font-size: 15px; }
+  .ll-action-flow .ll-action-disclosure { font-size: 14px; padding: 14px 16px; }
+}
