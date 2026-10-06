@@ -38,6 +38,9 @@ describe("multi-system illustration boundaries", () => {
     expect(paused).toContain("is-paused");
     const mobile = paused.slice(paused.indexOf('class="ll-multi-mobile"'));
     expect(mobile).toContain("ll-multi-mobile-inbound");
+    expect(mobile.match(/class="ll-multi-mobile-agent"/g)).toHaveLength(3);
+    for (const label of ["Customer", "Finance", "Vendor"])
+      expect(mobile).toContain(`<strong>${label}</strong>`);
     expect(mobile.match(/data-dispatched="false"/g)).toHaveLength(4);
     expect(mobile).not.toContain('data-dispatched="true"');
   });

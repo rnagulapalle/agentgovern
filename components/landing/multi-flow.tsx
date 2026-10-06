@@ -457,10 +457,19 @@ export function MultiFlowScene({
         </svg>
       </div>
       <div className="ll-multi-mobile">
-        <div className="ll-multi-mobile-inbound" aria-hidden="true">
-          <span />
-          <span />
-          <span />
+        <div className="ll-multi-mobile-inbound">
+          {["Customer", "Finance", "Vendor"].map((name, index) => {
+            const AgentIcon = [Headset, Landmark, Package][index];
+            return (
+              <div className="ll-multi-mobile-source" key={name}>
+                <div className="ll-multi-mobile-agent">
+                  <AgentIcon size={28} aria-hidden="true" />
+                  <strong>{name}</strong>
+                </div>
+                <span aria-hidden="true" />
+              </div>
+            );
+          })}
         </div>
         <div className="ll-multi-mobile-gate">
           <strong>LoopLabs · per-action control</strong>
