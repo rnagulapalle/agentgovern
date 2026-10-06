@@ -40,7 +40,9 @@ describe("multi-system illustration boundaries", () => {
     expect(mobile).toContain("ll-multi-mobile-inbound");
     expect(mobile.match(/class="ll-multi-mobile-agent"/g)).toHaveLength(3);
     for (const label of ["Customer", "Finance", "Vendor"])
-      expect(mobile).toContain(`<strong>${label}</strong>`);
+      expect(mobile).toContain(`<strong class="sr-only">${label}</strong>`);
+    expect(mobile).toContain('class="ll-multi-mobile-systems"');
+    expect(mobile).toContain("Explore decision");
     expect(mobile.match(/data-dispatched="false"/g)).toHaveLength(4);
     expect(mobile).not.toContain('data-dispatched="true"');
   });
