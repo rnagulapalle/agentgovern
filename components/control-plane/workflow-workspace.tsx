@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { PageTitle } from "./ui";
+import { RequestPlanner } from "./request-planner";
+import { explainStep } from "@/lib/workflows/request";
 type Step = {
   ordinal: number;
   action_id: string;
@@ -29,7 +31,8 @@ async function call(url: string, p?: object) {
   if (!r.ok) throw Error(d.error || "Request could not be confirmed.");
   return d;
 }
-export function WorkflowWorkspace() {
+export function WorkflowWorkspace({ guided = false }: { guided?: boolean }) {
+  const [reviewed, setReviewed] = useState(false);
   const creation = useRef<string>("");
   const [agents, setAgents] = useState<Agent[]>([]),
     [runs, setRuns] = useState<{ id: string; state: string }[]>([]),
@@ -90,9 +93,9 @@ export function WorkflowWorkspace() {
   return (
     <div className="cp-durable">
       <PageTitle
-        eyebrow="SAVED WORKFLOW RUNS"
-        title="Keep the next step on hold"
-        description="Verify a record update before a customer message can execute. Decisions and dependencies survive a refresh."
+        eyebrow={guided ? "WORK WITH AGENTS" : "SAVED WORKFLOW RUNS"}
+        title={guided ? "Describe the work. Review the plan." : "Keep the next step on hold"}
+        description={guided ? "Prepare a supported job, choose scoped agents, and follow decisions through approval and verified outcomes." : "Verify a record update before a customer message can execute. Decisions and dependencies survive a refresh."}
       />
       <section className="cp-durable-scope">
         <strong>Prepared CRM and messaging workflow.</strong>
@@ -102,12 +105,13 @@ export function WorkflowWorkspace() {
           FetchSandbox twins: no real CRM, email or model is connected.
         </p>
       </section>
+      {guided && <RequestPlanner onReview={setReviewed} />}
       {error && (
         <p role="alert" className="cp-durable-error">
           {error}
         </p>
       )}
-      <section className="cp-panel cp-durable-card">
+      {(!guided || reviewed) && <section className="cp-panel cp-durable-card">
         <h2>Start a customer handoff</h2>
         <p>
           Choose registered agents. Enrollment restricts them to workflow steps;
@@ -154,13 +158,13 @@ export function WorkflowWorkspace() {
               })
             }
           >
-            Start workflow
+          {guided ? "Create reviewed workflow" : "Start workflow"}
           </button>
         </div>
         <p>
           <Link href="/control-plane/agents">Register agents →</Link>
         </p>
-      </section>
+      </section>}
       <section className="cp-panel cp-durable-card">
         <h2>Saved runs</h2>
         {runs.map((r) => (
@@ -188,6 +192,7 @@ export function WorkflowWorkspace() {
               <p>
                 {s.reason || "The scoped agent can now submit this exact step."}
               </p>
+              <p>{explainStep(s.state)}</p>
               <div className="cp-durable-grid">
                 {!s.state && (
                   <button disabled={busy} onClick={() => action(s, "propose")}>
@@ -233,6 +238,7 @@ export function WorkflowWorkspace() {
             Both effects must be confirmed. Uncertainty and conflicting records
             keep the run open.
           </p>
+          <p>Pausing stops new dispatches; an action already sent may still take effect. Paused runs cannot resume in this version.</p>
           <button
             disabled={busy || run.state !== "active"}
             className="cp-button"

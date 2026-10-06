@@ -49,6 +49,11 @@ export function WorkspaceOverview() {
           {error}
         </p>
       )}
+      <section className="cp-panel cp-durable-card">
+        <h2>Ask for work, then review the plan.</h2>
+        <p>Try a prepared customer handoff: update a sample record, hold the acknowledgement until its outcome is verified, and follow the saved run. No live customer systems or AI model are connected.</p>
+        <Link prefetch={false} className="cp-button cp-button-dark" href="/control-plane/work">Work with agents →</Link>
+      </section>
       <div className="cp-durable-grid">
         <section className="cp-panel cp-durable-card">
           <h2>Registered agents</h2>
