@@ -10,7 +10,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import { MultiFlowScene, multiFlowScenes } from "./multi-flow";
+import { multiFlowScenes } from "./multi-flow";
+import { HorizontalFlowScene } from "./horizontal-flow";
 
 export const actionFlowScenes = [
   {
@@ -297,8 +298,7 @@ export function ActionFlowScene({
 }
 
 export function ActionFlowAnimation() {
-  const [mode, setMode] = useState<"pattern" | "proof">("pattern");
-  const scenes = mode === "pattern" ? multiFlowScenes : actionFlowScenes;
+  const scenes = multiFlowScenes;
   const [step, setStep] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -346,39 +346,11 @@ export function ActionFlowAnimation() {
           {paused ? <Play size={17} /> : <Pause size={17} />}
         </button>
       </div>
-      <div className="ll-action-modes" aria-label="Workflow illustration views">
-        <button
-          type="button"
-          aria-pressed={mode === "pattern"}
-          onClick={() => {
-            setMode("pattern");
-            setStep(0);
-            setPaused(false);
-          }}
-        >
-          Multiple workflows
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === "proof"}
-          onClick={() => {
-            setMode("proof");
-            setStep(0);
-            setPaused(false);
-          }}
-        >
-          Tested CRM handoff
-        </button>
-      </div>
-      {mode === "pattern" ? (
-        <MultiFlowScene
+        <HorizontalFlowScene
           step={step}
           paused={paused || reduced || !visible}
           onInspect={() => setPaused(true)}
         />
-      ) : (
-        <ActionFlowScene step={step} paused={paused || reduced || !visible} />
-      )}
       <div className="ll-action-controls">
         <div
           className="ll-action-progress"
@@ -421,9 +393,7 @@ export function ActionFlowAnimation() {
         </button>
       </div>
       <p className="ll-action-disclosure">
-        {mode === "pattern"
-          ? "Illustrative multi-system pattern, not a connected multi-branch workflow. CRM/email handoff is tested with provider twins; billing and ERP branches are conceptual."
-          : "Illustrated provider-twin workflow. No live CRM or email delivery."}
+        Illustrative multi-system pattern, not a connected multi-branch workflow. CRM/email handoff is tested with provider twins; billing and ERP branches are conceptual.
       </p>
     </div>
   );
