@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -25,6 +26,20 @@ describe("multi-system illustration boundaries", () => {
       createElement(MultiFlowScene, { step: 2 }),
     );
     expect(permitted.match(/ll-multi-outbound-signal/g)).toHaveLength(6);
+  });
+  it("keeps mobile motion pausable and stops outbound signals on held branches", () => {
+    const css = readFileSync("app/action-flow.css", "utf8");
+    expect(css).toContain(".ll-multi-mobile-inbound span::after");
+    expect(css).toContain(".is-paused .ll-multi-mobile-route span");
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    const paused = renderToStaticMarkup(
+      createElement(MultiFlowScene, { step: 4, paused: true }),
+    );
+    expect(paused).toContain("is-paused");
+    const mobile = paused.slice(paused.indexOf('class="ll-multi-mobile"'));
+    expect(mobile).toContain("ll-multi-mobile-inbound");
+    expect(mobile.match(/data-dispatched="false"/g)).toHaveLength(4);
+    expect(mobile).not.toContain('data-dispatched="true"');
   });
   it("shows returned evidence and labels the broader pattern as a design illustration", () => {
     const html = renderToStaticMarkup(

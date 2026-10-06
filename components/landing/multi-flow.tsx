@@ -457,6 +457,11 @@ export function MultiFlowScene({
         </svg>
       </div>
       <div className="ll-multi-mobile">
+        <div className="ll-multi-mobile-inbound" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
         <div className="ll-multi-mobile-gate">
           <strong>LoopLabs · per-action control</strong>
           <span>{scene.gate}</span>
@@ -470,6 +475,9 @@ export function MultiFlowScene({
               data-branch={branch.id}
               data-dispatched={branch.dispatch}
             >
+              <div className="ll-multi-mobile-route" aria-hidden="true">
+                <span />
+              </div>
               <span className="ll-multi-mobile-owner">{branch.owner}</span>
               <strong className="ll-multi-mobile-system">
                 <SystemIcon size={24} strokeWidth={1.7} aria-hidden="true" />

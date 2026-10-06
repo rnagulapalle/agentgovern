@@ -757,3 +757,25 @@
 .ll-multi-mobile-system b {
   font-weight: 500;
 }
+
+/* Mobile keeps moving request lanes visible without shrinking desktop SVG text. */
+@media (max-width: 600px) {
+  .ll-multi-mobile-inbound { display: flex; gap: 14px; justify-content: center; height: 36px; }
+  .ll-multi-mobile-inbound span { position: relative; width: 2px; height: 100%; background: #d5dacb; overflow: hidden; }
+  .ll-multi-mobile-inbound span::after { content: ""; position: absolute; width: 2px; height: 14px; background: #687d50; animation: ll-mobile-request 1.8s linear infinite; }
+  .ll-multi-mobile-inbound span:nth-child(2)::after { animation-delay: -.6s; }
+  .ll-multi-mobile-inbound span:nth-child(3)::after { animation-delay: -1.2s; }
+  .ll-multi-mobile-route { position: relative; height: 4px; background: #e0e3d9; overflow: hidden; }
+  .ll-multi-mobile-route span { display: none; }
+  .ll-multi-mobile-branch[data-dispatched="true"] .ll-multi-mobile-route span { display: block; position: absolute; width: 24%; height: 100%; background: #687d50; animation: ll-mobile-dispatch 1.8s linear infinite; }
+  .ll-multi-mobile-branch[data-dispatched="true"] i { animation-iteration-count: infinite; }
+}
+@keyframes ll-mobile-request { from { transform: translateY(-14px); } to { transform: translateY(36px); } }
+@keyframes ll-mobile-dispatch { from { left: -24%; } to { left: 100%; } }
+.is-paused .ll-multi-mobile-inbound span::after,
+.is-paused .ll-multi-mobile-route span { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .ll-multi-mobile-inbound span::after,
+  .ll-multi-mobile-route span,
+  .ll-multi-mobile-branch[data-dispatched="true"] i { animation: none; }
+}
