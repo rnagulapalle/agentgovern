@@ -1,5 +1,5 @@
-import { WorkflowWorkspace } from "@/components/control-plane/workflow-workspace";
+import { EnquiryWorkspace } from "@/components/control-plane/enquiry-workspace";
 
 export default function WorkPage() {
-  return <WorkflowWorkspace guided />;
+  return <EnquiryWorkspace />;
 }

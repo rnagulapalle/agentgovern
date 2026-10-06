@@ -71,3 +71,9 @@ export async function workflowDispatch(c: PoolClient, org: string, id: string) {
       "A preceding step is unverified or its authority changed. Downstream execution is held.",
     );
 }
+
+export async function enquirySource(c: PoolClient, org: string, actionId: string, version: string | null) {
+  const plan = (await c.query("SELECT p.source_version FROM ll_workflow_steps s JOIN ll_enquiry_plans p ON p.org_id=s.org_id AND p.run_id=s.run_id WHERE s.org_id=$1 AND s.action_id=$2 AND s.ordinal=1", [org, actionId])).rows[0];
+  if (plan && plan.source_version !== version)
+    throw new ControlError(409, "The contact changed after plan review. This enquiry stays held; prepare new work rather than silently changing its evidence.");
+}

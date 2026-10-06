@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
 import { authorize } from "../durable/service";
 import { ControlError, type Actor } from "../durable/contracts";
@@ -14,9 +14,13 @@ export class WorkflowControl {
     crmAgent: string,
     emailAgent: string,
     runId: string,
+    lifecycle: "lead" | "customer" = "customer",
+    client?: PoolClient,
   ) {
-    return transaction(this.db, actor.orgId, async (c) => {
+    const create = async (c: PoolClient) => {
       await this.connectors.authority(c, actor, ["operator"]);
+      if (!["lead", "customer"].includes(lifecycle))
+        throw new ControlError(400, "Choose a supported contact lifecycle.");
       if (
         typeof runId !== "string" ||
         !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -36,14 +40,15 @@ export class WorkflowControl {
       if (existing) {
         const steps = (
           await c.query(
-            "SELECT agent_id FROM ll_workflow_steps WHERE org_id=$1 AND run_id=$2 ORDER BY ordinal",
+            "SELECT agent_id,payload FROM ll_workflow_steps WHERE org_id=$1 AND run_id=$2 ORDER BY ordinal",
             [actor.orgId, runId],
           )
         ).rows;
         if (
           steps.length !== 2 ||
           steps[0].agent_id !== crmAgent ||
-          steps[1].agent_id !== emailAgent
+          steps[1].agent_id !== emailAgent ||
+          steps[0].payload.lifecycle !== lifecycle
         )
           throw new ControlError(
             409,
@@ -83,7 +88,7 @@ export class WorkflowControl {
         [actor.orgId, id, actor.subject],
       );
       for (const [ordinal, agent, connector, payload] of [
-        [1, crmAgent, "crm", { lifecycle: "customer" }],
+        [1, crmAgent, "crm", { lifecycle }],
         [2, emailAgent, "email", { template: "case_received" }],
       ] as const)
         await c.query(
@@ -103,7 +108,8 @@ export class WorkflowControl {
         [actor.orgId, id, actor.subject],
       );
       return id;
-    });
+    };
+    return client ? create(client) : transaction(this.db, actor.orgId, create);
   }
   async read(actor: Actor, id: string) {
     if (!/^[0-9a-f-]{36}$/i.test(id))

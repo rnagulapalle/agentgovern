@@ -4,6 +4,8 @@ October 5, 2026. This implements the first bounded interaction from the PRD, not
 
 ## Current slice
 
+The newer enquiry entry now replaces the prepared text composer at `/control-plane/work`. See [ENQUIRY_WORKFLOW.md](ENQUIRY_WORKFLOW.md) for saved plans, trusted contact checks and actual HTTP/provider-twin proof. The original prepared composer remains a component for its existing regression tests; it is not the default work page.
+
 Invited members open `/control-plane/work` from Work with agents. A prepared request produces an explicit customer-handoff plan. Unsupported or extended requests are refused rather than silently mapped to a different job. This is deterministic request admission, not natural-language understanding or model execution. Request text is kept only in React memory; private workspace analytics exclusions still apply.
 
 After reviewing the plan, the member chooses registered CRM and messaging identities and creates a saved workflow through the existing authenticated API. Reviewing the plan does not approve either action. The server still owns exact payloads and stable action IDs. Existing independent approvals, dispatch-time authority checks, dependency gates, outcome verification and pause controls remain authoritative. The original workflow-runs entry remains available.

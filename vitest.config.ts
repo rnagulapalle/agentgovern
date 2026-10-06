@@ -27,6 +27,7 @@ export default defineConfig({
         "lib/refunds/**/*.ts",
         "lib/connectors/**/*.ts",
         "lib/workflows/**/*.ts",
+        "lib/enquiries/**/*.ts",
         "lib/workspace/**/*.ts",
         "app/api/workspace/**/*.ts",
         "app/api/sales/route.ts",

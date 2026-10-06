@@ -108,6 +108,8 @@ check_app() {
           if (!result.rows.some(row => row.version === 2)) throw new Error("Refund schema missing");
           if (!result.rows.some(row => row.version === 3)) throw new Error("Workspace membership schema missing");
           if (!result.rows.some(row => row.version === 4)) throw new Error("Connector action schema missing");
+          if (!result.rows.some(row => row.version === 5)) throw new Error("Workflow schema missing");
+          if (!result.rows.some(row => row.version === 7)) throw new Error("Saved enquiry schema missing; apply enquiries:setup before release");
         } finally { await pool.end(); }
         const evidence = await fetch(process.env.LOOPLABS_REFUND_TWIN_URL + "/v1/charges/ch_looplabs_refund_demo", {
           headers: { Authorization: "Bearer " + process.env.LOOPLABS_REFUND_TWIN_TOKEN },

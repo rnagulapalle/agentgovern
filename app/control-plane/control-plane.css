@@ -6,6 +6,9 @@
 .cp-refunds .cp-durable-actions dt { font-size: 16px; }
 .cp-durable { display: grid; gap: 24px; }
 .cp-conversation { display: grid; gap: 20px; }
+.cp-enquiry-select { width: 100%; min-height: 48px; padding: 12px; background: #fff; border: 1px solid #b8b3aa; font: inherit; }
+.cp-enquiry-review { display: flex; align-items: flex-start; gap: 12px; font-size: var(--text-body); line-height: 1.6; }
+.cp-enquiry-review input { width: 22px; height: 22px; flex-shrink: 0; margin-top: 3px; }
 .cp-conversation-heading { display: flex; align-items: flex-start; gap: 14px; }
 .cp-conversation > button { justify-self: start; white-space: normal; }
 .cp-conversation form { display: grid; gap: 12px; }

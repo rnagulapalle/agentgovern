@@ -24,6 +24,7 @@
     "refund:proof": "tsx --env-file=.env.local scripts/refund-proof.ts",
     "workspace:setup": "tsx --env-file=.env.local scripts/workspace-setup.ts",
     "connectors:setup": "tsx --env-file=.env.local scripts/connector-setup.ts",
+    "enquiries:setup": "tsx --env-file=.env.local scripts/enquiry-setup.ts",
     "connectors:twin": "bash scripts/connector-twin.sh",
     "connectors:proof": "tsx --env-file=.env.local scripts/connector-proof.ts"
   },

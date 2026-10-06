@@ -31,7 +31,7 @@ async function call(url: string, p?: object) {
   if (!r.ok) throw Error(d.error || "Request could not be confirmed.");
   return d;
 }
-export function WorkflowWorkspace({ guided = false }: { guided?: boolean }) {
+export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: boolean; embeddedRunId?: string }) {
   const [reviewed, setReviewed] = useState(false);
   const creation = useRef<string>("");
   const [agents, setAgents] = useState<Agent[]>([]),
@@ -52,6 +52,9 @@ export function WorkflowWorkspace({ guided = false }: { guided?: boolean }) {
   useEffect(() => {
     load().catch((e) => setError(e.message));
   }, [load]);
+  useEffect(() => {
+    if (embeddedRunId) call("/api/durable/workflows?run=" + embeddedRunId).then(setRun).catch((e) => setError(e.message));
+  }, [embeddedRunId]);
   async function task(fn: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -92,11 +95,11 @@ export function WorkflowWorkspace({ guided = false }: { guided?: boolean }) {
   }
   return (
     <div className="cp-durable">
-      <PageTitle
+      {!embeddedRunId && <PageTitle
         eyebrow={guided ? "WORK WITH AGENTS" : "SAVED WORKFLOW RUNS"}
         title={guided ? "Describe the work. Review the plan." : "Keep the next step on hold"}
         description={guided ? "Prepare a supported job, choose scoped agents, and follow decisions through approval and verified outcomes." : "Verify a record update before a customer message can execute. Decisions and dependencies survive a refresh."}
-      />
+      />}
       <section className="cp-durable-scope">
         <strong>Prepared CRM and messaging workflow.</strong>
         <p>
@@ -111,7 +114,7 @@ export function WorkflowWorkspace({ guided = false }: { guided?: boolean }) {
           {error}
         </p>
       )}
-      {(!guided || reviewed) && <section className="cp-panel cp-durable-card">
+      {!embeddedRunId && (!guided || reviewed) && <section className="cp-panel cp-durable-card">
         <h2>Start a customer handoff</h2>
         <p>
           Choose registered agents. Enrollment restricts them to workflow steps;
@@ -165,7 +168,7 @@ export function WorkflowWorkspace({ guided = false }: { guided?: boolean }) {
           <Link href="/control-plane/agents">Register agents →</Link>
         </p>
       </section>}
-      <section className="cp-panel cp-durable-card">
+      {!embeddedRunId && <section className="cp-panel cp-durable-card">
         <h2>Saved runs</h2>
         {runs.map((r) => (
           <p key={r.id}>
@@ -174,7 +177,7 @@ export function WorkflowWorkspace({ guided = false }: { guided?: boolean }) {
             </button>
           </p>
         ))}
-      </section>
+      </section>}
       {run && (
         <section className="cp-panel cp-durable-card">
           <h2>Customer handoff · {run.state}</h2>
@@ -183,7 +186,7 @@ export function WorkflowWorkspace({ guided = false }: { guided?: boolean }) {
             <article className="cp-durable-scope" key={s.ordinal}>
               <h3>
                 {s.ordinal === 1
-                  ? "1. Update the sample customer record"
+                  ? `1. Set the sample contact lifecycle to ${(s.payload as { lifecycle: string }).lifecycle}`
                   : "2. Send the prepared acknowledgement"}
               </h3>
               <p>
