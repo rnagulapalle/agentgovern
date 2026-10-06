@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Opt-in fresh builds on space-constrained laptops; all release gates still run.
+  ...(process.env.LOOPLABS_DISABLE_BUILD_CACHE === "1" ? {
+    webpack(config) {
+      config.cache = false;
+      return config;
+    },
+  } : {}),
   // Self-contained server bundle for small Docker images (.next/standalone).
   output: "standalone",
   skipTrailingSlashRedirect: true,

@@ -311,7 +311,9 @@ export function ActionFlowAnimation() {
     preference.addEventListener("change", update);
     const observer = new IntersectionObserver(
       ([entry]) => setVisible(entry.isIntersecting),
-      { threshold: 0.15 },
+      // A tall mobile scene may never occupy 15% of its own area in a small
+      // viewport. Start when any part enters; pause when completely offscreen.
+      { threshold: 0 },
     );
     if (root.current) observer.observe(root.current);
     return () => {
