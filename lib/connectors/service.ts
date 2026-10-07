@@ -1,4 +1,4 @@
-import { managedWorker } from "../enquiries/dispatch";
+import { managedWorker, dispatchOwnership, managedOwnerActive } from "../enquiries/dispatch";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
@@ -26,7 +26,7 @@ export class ConnectorControl {
         403,
         "Connector is not assigned to this workspace.",
       );
-    await authorize(c, actor, roles, actor.role === "worker" && actor.subject === "enquiry-runner" ? "enquiries" : undefined);
+    await authorize(c, actor, roles, actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject) ? "enquiries" : undefined);
   }
   async get(c: PoolClient, actor: Actor, id: string): Promise<ConnectorAction> {
     const a = (
@@ -74,6 +74,7 @@ export class ConnectorControl {
     a: ConnectorAction,
     approval = true,
   ) {
+    if (!(await managedOwnerActive(c, actor.orgId, a.id))) return false;
     const row = (
       await c.query(
         "SELECT a.active,a.tools,p.version,p.active AS policy_active,EXISTS(SELECT 1 FROM ll_tokens t WHERE t.org_id=a.org_id AND t.subject=a.id AND t.role='agent' AND t.active=true) AS identity_active FROM ll_agents a JOIN ll_connector_policies p ON p.org_id=a.org_id AND p.connector=$3 WHERE a.org_id=$1 AND a.id=$2",
@@ -260,8 +261,9 @@ export class ConnectorControl {
   async execute(actor: Actor, id: string, loseResponse = false) {
     const claim = await transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["operator", "worker"]);
-      if (actor.role === "worker" && actor.subject === "enquiry-runner") await managedWorker(c, actor, id, true);
+      if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject)) await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
+      await dispatchOwnership(c, actor, id);
       if (
         a.state === "executing" &&
         a.lease_until &&
@@ -308,7 +310,7 @@ export class ConnectorControl {
     }
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["operator", "worker"]);
-      if (actor.role === "worker" && actor.subject === "enquiry-runner") await managedWorker(c, actor, id, true);
+      if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject)) await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
       if (a.lease_token !== claim.lease_token || a.state !== "executing")
         return { ...a, lease_token: null };
@@ -382,7 +384,7 @@ export class ConnectorControl {
   async read(actor: Actor, id: string) {
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["agent", "operator", "worker"]);
-      if (actor.role === "worker" && actor.subject === "enquiry-runner") await managedWorker(c, actor, id, true);
+      if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject)) await managedWorker(c, actor, id, true);
       return { ...(await this.get(c, actor, id)), lease_token: null };
     });
   }

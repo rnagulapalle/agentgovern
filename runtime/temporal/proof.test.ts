@@ -21,3 +21,13 @@ it("requires persisted-service restart and pinned-routing evidence matching impl
     expect(createHash("sha256").update(readFileSync(file)).digest("hex"), file).toBe(hash);
   expect(proof.scope).toContain("no production cutover");
 });
+
+it("requires actual ownership, scheduling fence and in-flight revocation evidence", () => {
+  const proof = JSON.parse(readFileSync("docs/evidence/temporal-dispatch-proof.json", "utf8"));
+  expect(proof.checks.length).toBeGreaterThanOrEqual(6);
+  for (const marker of ["excludes legacy", "Expired scheduler lease", "Concurrent authorized", "Closed Temporal", "Owner revoked"])
+    expect(proof.checks.join(" ")).toContain(marker);
+  for (const [file, hash] of Object.entries(proof.sourceFingerprints))
+    expect(createHash("sha256").update(readFileSync(file)).digest("hex"), file).toBe(hash);
+  expect(proof.scope).toContain("no production cutover");
+});

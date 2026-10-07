@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-07T18:43:30.463Z",
+  "at": "2026-10-07T19:01:12.113Z",
   "scope": "Local pinned deployments and persisted SQLite dev-service restart; no production cutover",
   "checks": [
     "Current v2 routes new runs to v2 while pending v1 remains pinned to v1; no approval from rollout",

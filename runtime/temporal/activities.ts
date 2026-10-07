@@ -7,7 +7,7 @@ export type Progress = "waiting" | "completed" | "contained";
 export function activities(workflows: WorkflowControl, actor: Actor) {
   return {
     async advance(runId: string): Promise<Progress> {
-      if (actor.role !== "worker" || actor.subject !== "enquiry-runner")
+      if (actor.role !== "worker" || !["enquiry-runner", "enquiry-temporal"].includes(actor.subject))
         throw new ControlError(403, "Dedicated managed worker required.");
       let run = await workflows.read(actor, runId);
       if (run.state === "completed") return "completed";

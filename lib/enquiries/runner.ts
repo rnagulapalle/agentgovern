@@ -11,7 +11,9 @@ export class EnquiryRunner {
       if (actor.subject !== "enquiry-runner") throw new ControlError(403, "Use the dedicated enquiry worker.");
       await c.query("INSERT INTO ll_enquiry_worker_status(org_id,last_tick) VALUES($1,clock_timestamp()) ON CONFLICT(org_id) DO UPDATE SET last_tick=clock_timestamp()", [actor.orgId]);
       const cursor = (await c.query("SELECT last_plan FROM ll_enquiry_worker_status WHERE org_id=$1", [actor.orgId])).rows[0].last_plan;
-      const pending = (await c.query("SELECT p.run_id, d.plan_id FROM ll_enquiry_dispatch d JOIN ll_enquiry_plans p ON p.org_id=d.org_id AND p.id=d.plan_id JOIN ll_workflow_runs r ON r.org_id=p.org_id AND r.id=p.run_id WHERE d.org_id=$1 AND r.state='active' ORDER BY CASE WHEN d.plan_id>$2::uuid THEN 0 ELSE 1 END,d.plan_id LIMIT 10", [actor.orgId, cursor])).rows;
+      const routed = Boolean((await c.query("SELECT to_regclass('ll_temporal_dispatch') AS present")).rows[0].present);
+      const exclude = routed ? " AND NOT EXISTS(SELECT 1 FROM ll_temporal_dispatch t WHERE t.org_id=d.org_id AND t.plan_id=d.plan_id)" : "";
+      const pending = (await c.query("SELECT p.run_id, d.plan_id FROM ll_enquiry_dispatch d JOIN ll_enquiry_plans p ON p.org_id=d.org_id AND p.id=d.plan_id JOIN ll_workflow_runs r ON r.org_id=p.org_id AND r.id=p.run_id WHERE d.org_id=$1 AND r.state='active'" + exclude + " ORDER BY CASE WHEN d.plan_id>$2::uuid THEN 0 ELSE 1 END,d.plan_id LIMIT 10", [actor.orgId, cursor])).rows;
       if (pending.length) await c.query("UPDATE ll_enquiry_worker_status SET last_plan=$2 WHERE org_id=$1", [actor.orgId, pending[pending.length - 1].plan_id]);
       return pending;
     });
