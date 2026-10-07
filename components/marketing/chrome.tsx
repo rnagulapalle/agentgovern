@@ -39,7 +39,7 @@ export function MarketingHeader({ section, bookingUrl = CAL_URL }: { section?: s
         toggle.current?.focus();
       }
     }}>
-      <Link href="/" className="marketing-wordmark" aria-label="LoopLabs home">
+      <Link prefetch={false} href="/" className="marketing-wordmark" aria-label="LoopLabs home">
         <LoopMark />
         <span>LoopLabs</span>
       </Link>
@@ -59,7 +59,7 @@ export function MarketingHeader({ section, bookingUrl = CAL_URL }: { section?: s
             <div id="marketing-solutions" className="marketing-solutions-popover">
               <span>Solutions</span>
               {SOLUTIONS.map((item) => (
-                <Link key={item.href} href={item.href} onClick={() => setSolutionsOpen(false)}>
+                <Link prefetch={false} key={item.href} href={item.href} onClick={() => setSolutionsOpen(false)}>
                   <span><strong>{item.label}</strong><small>{item.description}</small></span>
                   <ArrowUpRight size={15} />
                 </Link>
@@ -68,9 +68,9 @@ export function MarketingHeader({ section, bookingUrl = CAL_URL }: { section?: s
           )}
         </div>
         {NAV.map((item) => (
-          <Link key={item.href} href={item.href}>{item.label}</Link>
+          <Link prefetch={false} key={item.href} href={item.href}>{item.label}</Link>
         ))}
-        <Link href="/platform">Product overview <ArrowUpRight size={14} /></Link>
+        <Link prefetch={false} href="/platform">Product overview <ArrowUpRight size={14} /></Link>
       </nav>
       <a className="marketing-nav-cta" href={bookingUrl}>
         Book a demo
@@ -89,17 +89,17 @@ export function MarketingHeader({ section, bookingUrl = CAL_URL }: { section?: s
         <nav id="marketing-navigation" className="marketing-mobile-nav" aria-label="Mobile navigation">
           <span className="marketing-mobile-group-title">Solutions</span>
           {SOLUTIONS.map((item) => (
-            <Link className="marketing-mobile-solution" key={item.href} href={item.href} onClick={() => setOpen(false)}>
+            <Link prefetch={false} className="marketing-mobile-solution" key={item.href} href={item.href} onClick={() => setOpen(false)}>
               <span><strong>{item.label}</strong><small>{item.description}</small></span>
               <ArrowUpRight size={16} />
             </Link>
           ))}
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>
+            <Link prefetch={false} key={item.href} href={item.href} onClick={() => setOpen(false)}>
               {item.label}<ArrowUpRight size={16} />
             </Link>
           ))}
-          <Link href="/platform" onClick={() => setOpen(false)}>
+          <Link prefetch={false} href="/platform" onClick={() => setOpen(false)}>
             Product overview <ArrowUpRight size={16} />
           </Link>
         </nav>
@@ -113,30 +113,30 @@ export function MarketingFooter() {
     <footer className="marketing-footer">
       <div className="marketing-footer-grid">
         <div>
-          <Link href="/" className="marketing-wordmark"><LoopMark /><span>LoopLabs</span></Link>
+          <Link prefetch={false} href="/" className="marketing-wordmark"><LoopMark /><span>LoopLabs</span></Link>
           <p>The control and recovery layer for agent-run workflows.</p>
         </div>
         <nav aria-label="Solutions">
           <strong>SOLUTIONS</strong>
-          <Link href="/#automation">Governed workflow launch</Link>
-          <Link href="/control-plane/policies">Action controls</Link>
-          <Link href="/control-plane/runs">Execution controls</Link>
-          <Link href="/control-plane/outputs">Output controls</Link>
-          <Link href="/control-plane/reconciliation">Recovery</Link>
+          <Link prefetch={false} href="/#automation">Governed workflow launch</Link>
+          <Link prefetch={false} href="/control-plane/policies">Action controls</Link>
+          <Link prefetch={false} href="/control-plane/runs">Execution controls</Link>
+          <Link prefetch={false} href="/control-plane/outputs">Output controls</Link>
+          <Link prefetch={false} href="/control-plane/reconciliation">Recovery</Link>
         </nav>
         <nav aria-label="Platform">
           <strong>PLATFORM</strong>
-          <Link href="/control-plane/agents">Agent identities</Link>
-          <Link href="/control-plane/gateway">Model gateway</Link>
-          <Link href="/control-plane/approvals">Approvals</Link>
-          <Link href="/control-plane/audit">Audit trail</Link>
+          <Link prefetch={false} href="/control-plane/agents">Agent identities</Link>
+          <Link prefetch={false} href="/control-plane/gateway">Model gateway</Link>
+          <Link prefetch={false} href="/control-plane/approvals">Approvals</Link>
+          <Link prefetch={false} href="/control-plane/audit">Audit trail</Link>
         </nav>
         <nav aria-label="Resources">
           <strong>RESOURCES</strong>
-          <Link href="/guides">Guides</Link>
-          <Link href="/blog">Blog</Link>
-          <Link href="/about">About</Link>
-          <Link href="/feed.xml">RSS feed</Link>
+          <Link prefetch={false} href="/guides">Guides</Link>
+          <Link prefetch={false} href="/blog">Blog</Link>
+          <Link prefetch={false} href="/about">About</Link>
+          <Link prefetch={false} href="/feed.xml">RSS feed</Link>
         </nav>
         <nav aria-label="Contact">
           <strong>CONTACT</strong>
