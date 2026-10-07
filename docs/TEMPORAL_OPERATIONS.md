@@ -92,7 +92,12 @@ may still have affected the provider; uncertainty requires read-back.
 `docs/evidence/temporal-load-proof.json` records actual process SIGKILL/restart,
 25 held runs, 50 concurrent transfer calls, one history start per run, backlog
 recovery through natural lease expiry and one independently approved completion.
-Only that one run completes two provider-twin effects. Remaining plans share the
+The TCP fault boundary cuts existing worker/scheduler database connections and
+refuses new ones, while an independent assertion connection inspects persisted
+state. Both roles become unready. Restoration plus explicit supervisor replacement
+preserves all 25 histories and exact action IDs; held work stays effect-free. This
+is a connection-outage drill, not PostgreSQL crash, replica failover or backup
+restore evidence. Only that one run completes two provider-twin effects. Remaining plans share the
 same customer/version and are deliberately contained; this is not 25 independent
 customer workflows or a throughput benchmark. Measurements are a single laptop
 sample, not percentile latency, availability, RPO or RTO commitments.
@@ -120,3 +125,11 @@ empty private fixture environment. Container startup/native-runtime smoke remain
 Docker store is healthy and that smoke/secure-connection test passes. No daemon
 restart, pruning or production change was attempted. Status and source hashes are
 recorded in `docs/evidence/temporal-container-status.json`.
+
+
+## Current acceptance boundary
+
+Read `ENTERPRISE_ACCEPTANCE.md` before using an enterprise-readiness claim. Local
+fault/replay evidence is necessary but does not qualify the deployed product.
+Staging operations and representative workload acceptance must use explicit
+infrastructure and measured outcomes rather than extrapolating laptop timings.
