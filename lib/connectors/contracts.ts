@@ -42,6 +42,7 @@ export interface Observation {
   detail: string;
 }
 export interface ConnectorProvider {
+  readonly contactId?: string;
   readonly workspaceId: string;
   source(connector: Connector): Promise<string | null>;
   write(action: ConnectorAction, loseResponse: boolean): Promise<Observation>;

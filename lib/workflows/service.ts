@@ -147,7 +147,7 @@ export class WorkflowControl {
         steps:
           actor.role === "agent"
             ? steps.filter((s) => s.agent_id === actor.subject)
-            : steps.map(s => ({ ...s, proposedRequest: { method: s.connector === "crm" ? "PATCH" : "POST", resource: s.connector === "crm" ? "CRM contact 1001" : "Email acknowledgement", body: connectorBody(s), approvedSourceVersion: s.approved_payload?.sourceVersion || null } })),
+            : steps.map(s => ({ ...s, proposedRequest: { method: s.connector === "crm" ? "PATCH" : "POST", resource: s.connector === "crm" ? `CRM contact ${this.connectors.provider.contactId || "1001"}` : "Email acknowledgement", body: connectorBody(s), approvedSourceVersion: s.approved_payload?.sourceVersion || null } })),
       };
     });
   }

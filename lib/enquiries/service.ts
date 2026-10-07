@@ -7,7 +7,7 @@ import { WorkflowControl } from "../workflows/service";
 import { approvedReply, checkContact, enquiryFixture, validId, type Contact } from "./contracts";
 
 export class EnquiryControl {
-  constructor(readonly db: Pool, readonly workflows: WorkflowControl, readonly contact: () => Promise<Contact>) {}
+  constructor(readonly db: Pool, readonly workflows: WorkflowControl, readonly contact: () => Promise<Contact>, readonly contactId = "1001") {}
   async policies(c: PoolClient, actor: Actor) {
     await this.workflows.connectors.authority(c, actor, ["operator"]);
     const rows = (await c.query("SELECT connector,version FROM ll_connector_policies WHERE org_id=$1 AND active=true ORDER BY connector", [actor.orgId])).rows;
@@ -36,7 +36,7 @@ export class EnquiryControl {
   private async save(actor: Actor, id: string, fixtureId: string, fixture: { id: string; title: string; email: string; message: string }) {
     await transaction(this.db, actor.orgId, c => this.policies(c, actor));
     const contact = await this.contact();
-    checkContact(contact);
+    checkContact(contact, this.contactId);
     return transaction(this.db, actor.orgId, async (c) => {
       const versions = await this.policies(c, actor);
       const old = (await c.query("SELECT * FROM ll_enquiry_plans WHERE org_id=$1 AND id=$2", [actor.orgId, id])).rows[0];
@@ -64,7 +64,7 @@ export class EnquiryControl {
     if (typeof hash !== "string" || !/^[a-f0-9]{64}$/.test(hash)) throw new ControlError(400, "Review the exact saved plan first.");
     await transaction(this.db, actor.orgId, (c) => this.policies(c, actor));
     const contact = await this.contact();
-    checkContact(contact);
+    checkContact(contact, this.contactId);
     return transaction(this.db, actor.orgId, async (c) => {
       const versions = await this.policies(c, actor);
       const plan = (await c.query("SELECT * FROM ll_enquiry_plans WHERE org_id=$1 AND id=$2", [actor.orgId, id])).rows[0];
@@ -72,7 +72,7 @@ export class EnquiryControl {
       if (plan.plan_hash !== hash) throw new ControlError(409, "The plan changed. Review it again before starting work.");
       // A response lost after commit must resume the same immutable run, not
       // reject solely because that run has since changed the provider version.
-      if (!plan.run_id && (plan.source_version !== contact.version || JSON.stringify(plan.policy_versions) !== JSON.stringify(versions)))
+      if (!plan.run_id && (plan.plan.contact.id !== contact.id || plan.plan.contact.email !== contact.email || plan.source_version !== contact.version || JSON.stringify(plan.policy_versions) !== JSON.stringify(versions)))
         throw new ControlError(409, "The record or policy changed. Prepare a new plan and review it before execution.");
       if (!plan.run_id && (await c.query("SELECT 1 FROM ll_workflow_runs WHERE org_id=$1 AND id=$2", [actor.orgId, id])).rows[0])
         throw new ControlError(409, "This ID already belongs to unrelated work. Start a new enquiry plan.");

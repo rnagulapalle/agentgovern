@@ -316,3 +316,16 @@ it("rotates the durable cursor so held older work cannot starve a newer approved
   expect(writes).toBe(2);
   expect((await workflow.list(operator)).filter(r => r.state === "active")).toHaveLength(11);
 });
+
+it("uses only the server-pinned hosted contact ID and refuses an unbound same-email record", async () => {
+  const privatePlan = await prepared();
+  contact.id = "1";
+  const hosted = new EnquiryControl(db, workflow, async () => contact, "1");
+  const saved = await hosted.prepare(operator, randomUUID(), "service") as { saved: { plan: { contact: { id: string } } } };
+  expect(saved.saved.plan.contact.id).toBe("1");
+  await expect(hosted.start(operator, privatePlan.id, privatePlan.plan_hash, "crm", "email")).rejects.toThrow("record or policy changed");
+  contact.id = "2";
+  await expect(hosted.prepare(operator, randomUUID(), "service")).rejects.toThrow("unique supported contact");
+  expect(() => checkContact(contact, "bad")).toThrow();
+  expect(writes).toBe(0);
+});

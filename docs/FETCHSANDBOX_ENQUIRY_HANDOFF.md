@@ -23,6 +23,8 @@ The runner uses the same execution/verification service contracts as the existin
 
 ## Provider contract to resolve
 
+The sample contact is pinned by the server binding, not chosen by chat. Private mode uses contact 1001; hosted mode can preview the configured numeric contact ID while still requiring customer@example.test and the approved template. Changing bindings requires containing existing runs and invalidating old policy/approval authority; never reassign a provider underneath pending actions.
+
 For CRM, the write must atomically compare the approved source version **at the provider effect boundary**. A preflight GET followed by an unconditional PATCH is insufficient: another writer can change the record between those operations. No weakening to last-write-wins or pretending a matching final value proves the specific action is acceptable.
 
 The binding needs stable action idempotency, workspace isolation, an atomic expected-version conditional write, action-correlated accepted/effect evidence, and independent read-back. The current private twin uses an If-Match conditional PATCH and action-specific `/proof/effects/{actionId}` evidence. Hosted HubSpot/Resend paths are different and must implement/document a real capability rather than assuming private fixture extensions exist in hosted or live HubSpot.

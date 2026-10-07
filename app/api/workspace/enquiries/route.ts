@@ -19,7 +19,7 @@ async function context(r: NextRequest) {
   const enquiries = new EnquiryControl(db, workflows, async () => {
     const record = await twin.contact();
     return { id: record.id, email: record.properties?.email, version: record.updatedAt, lifecycle: record.properties?.lifecyclestage };
-  });
+  }, twin.contactId || "1001");
   return { actor, enquiries, twin, db };
 }
 export async function GET(r: NextRequest) {
@@ -38,7 +38,7 @@ export async function POST(r: NextRequest) {
     let result;
     if (p.operation === "checkConnections" && Object.keys(p).length === 1) {
       await enquiries.list(actor); // Authorize the workspace before making a provider read.
-      const contact = await enquiries.contact(); checkContact(contact);
+      const contact = await enquiries.contact(); checkContact(contact, enquiries.contactId);
       result = { checkedAt: new Date().toISOString(), crmReadable: true, sampleCustomer: contact.email, atomicVersion: !(twin instanceof HostedFetchSandboxConnectors), realDelivery: false };
     }
     else if (p.operation === "prepare" && Object.keys(p).length === 3 && typeof p.id === "string" && typeof p.fixtureId === "string")

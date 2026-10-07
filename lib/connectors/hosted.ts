@@ -12,6 +12,7 @@ export interface HostedBinding {
 const unavailable = () => new ControlError(503, "Hosted connector evidence unavailable. No safe retry inferred.");
 export class HostedFetchSandboxConnectors implements ConnectorProvider {
   readonly workspaceId: string;
+  get contactId() { return this.binding.contactId; }
   constructor(readonly binding: HostedBinding, readonly timeout = 1500) {
     if (!binding || !["https://fetchsandbox.com", "https://stage.fetchsandbox.com", "http://127.0.0.1:8019"].includes(binding.origin)
       || typeof binding.ownerKey !== "string" || !/^fsk_[a-zA-Z0-9_-]{20,128}$/.test(binding.ownerKey)
