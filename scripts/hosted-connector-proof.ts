@@ -124,4 +124,4 @@ async function main() {
     await db.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); await rm(dir, { recursive: true, force: true });
   }
 }
-main().catch(() => { console.error("Hosted connector proof failed; no completion claimed."); process.exitCode = 1; });
+main().catch(async e => { await writeFile(".local/hosted-proof-failure.log", String(e.stack || e), { mode: 0o600 }); console.error("Hosted connector proof failed; private diagnostics saved; no completion claimed."); process.exitCode = 1; });

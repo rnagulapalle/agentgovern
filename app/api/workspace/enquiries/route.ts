@@ -8,6 +8,7 @@ import { connectorProvider } from "@/lib/connectors/hosted";
 import { WorkflowControl } from "@/lib/workflows/service";
 import { EnquiryControl } from "@/lib/enquiries/service";
 import { fixtures } from "@/lib/enquiries/contracts";
+import { EnquiryChat } from "@/lib/enquiries/chat";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 async function context(r: NextRequest) {
@@ -35,6 +36,8 @@ export async function POST(r: NextRequest) {
     let result;
     if (p.operation === "prepare" && Object.keys(p).length === 3 && typeof p.id === "string" && typeof p.fixtureId === "string")
       result = await enquiries.prepare(actor, p.id, p.fixtureId);
+    else if (p.operation === "chat" && Object.keys(p).length === 3 && typeof p.id === "string")
+      result = await new EnquiryChat(enquiries).respond(actor, p.id, p.turns);
     else if (p.operation === "start" && Object.keys(p).length === 5 && typeof p.id === "string" && typeof p.planHash === "string" && typeof p.crmAgent === "string" && typeof p.emailAgent === "string")
       result = await enquiries.start(actor, p.id, p.planHash, p.crmAgent, p.emailAgent);
     else throw new ControlError(400, "Choose a supported enquiry operation.");

@@ -1,14 +1,14 @@
 # Customer enquiry: bounded base workflow
 
-October 5, 2026. This is a saved provider-twin workflow, not the complete conversational/live-connector product from the PRD.
+Updated October 6, 2026. The typed chat entry now calls a bounded model planner. This remains a saved provider-twin workflow, not the complete conversational/live-connector product from the PRD. See [CHAT_WORKFLOW_PROOF.md](CHAT_WORKFLOW_PROOF.md) for real browser evidence and the hosted CRM blocker.
 
 ## What works
 
-Invited operators open Work with agents. Prepared sample enquiries exercise a valid service request, a missing sender, an unsupported contact and a discount request requiring human judgment. Clarification cases create neither a saved plan nor executable work. The approved response is only the existing acknowledgement; no pricing or contractual commitments are inferred.
+Invited operators open Work with agents and type their request. Chat asks for missing sample details and saves the same immutable plan used by the existing control APIs. Prepared sample enquiries remain available through the API and exercise a valid service request, a missing sender, an unsupported contact and a discount request requiring human judgment. Clarification cases create neither a saved plan nor executable work. The approved response is only the existing acknowledgement; no pricing or contractual commitments are inferred.
 
 For the supported enquiry the server reads contact 1001 from the private CRM twin. Its email, version and lifecycle must match the supported contract. The plan preserves the existing lifecycle rather than promoting a lead or downgrading a customer. This connector does not create contacts, write enquiry notes, search a real CRM or deliver real email. The visible plan states those limits.
 
-The server saves the enquiry fixture, exact contact, CRM intent, approved reply reference, source version, policy versions, plan hash and creator in PostgreSQL. User-supplied free text, customer records and secrets are not accepted. The plan cannot be rewritten by normal runtime updates. Only its run link may be added once. Database owners can administer the data; this is not independent signed storage.
+The server saves the enquiry fixture, exact contact, CRM intent, approved reply reference, source version, policy versions, plan hash and creator in PostgreSQL. Bounded chat text is sent to Amazon Bedrock for interpretation but is not saved in PostgreSQL; only the canonical validated sample plan is persisted. Private customer data and secrets must not be entered. The plan cannot be rewritten by normal runtime updates. Only its run link may be added once. Database owners can administer the data; this is not independent signed storage.
 
 Reviewing a plan permits creating one workflow, not executing either effect. Start requires the exact plan hash, valid current contact/policy evidence and two active scoped agents. It creates the workflow and its plan link in one transaction. Repeat start with the same ID and identities returns the same run, including after a lost response/restart; changed identities conflict. A new ID denotes a different simulated enquiry event. Duplicate content under different event IDs is not automatically detected.
 
@@ -24,7 +24,7 @@ After connector migrations, apply `pnpm enquiries:setup` with migration-owner ac
 
 ## Still needed for the chosen customer pilot
 
-- A paid model API and structured conversational planner with ambiguity/unsupported-action handling. No model runs in this version. Personal model subscriptions are not a customer-service backend.
+- The bounded planner is implemented with a model-only Bedrock identity and rate limits. General planning, durable conversational memory and broader jobs remain unsupported. Personal model subscriptions are not used as the customer-service backend.
 - Approved reference-document ingestion and versioned retrieval; model drafts must cite approved facts and pass validation. This release uses one fixed reference/template.
 - Live-provider delegated access, customer-specific contact matching, notes, reply drafts and authoritative provider acceptance/effect contracts. The private fixture CAS/idempotency extensions are not live HubSpot/Resend guarantees.
 - Durable inbound events and message-thread/reply detection, then schedules and cancellation for follow-up.

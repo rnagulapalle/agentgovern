@@ -10,6 +10,7 @@ import { ConnectorControl } from "../connectors/service";
 import { WorkflowControl } from "../workflows/service";
 import { EnquiryControl } from "./service";
 import { checkContact, enquiryFixture, validId, type Contact } from "./contracts";
+import { EnquiryChat, type Intent } from "./chat";
 const schema = `enquiry_${randomBytes(8).toString("hex")}`;
 let db: Pool, admin: Pool, service: EnquiryControl, connector: ConnectorControl, workflow: WorkflowControl;
 let operator: Actor, reviewer: Actor, agent: Actor, other: Actor;
@@ -17,7 +18,7 @@ let contact: Contact;
 let writes = 0;
 const keys: Record<string, string> = {};
 vi.mock("../durable/database", async (original) => ({ ...(await original<typeof import("../durable/database")>()), database: () => db }));
-vi.mock("../connectors/twin", () => ({ FetchSandboxConnectors: class {
+vi.mock("../connectors/twin", async original => ({ ...(await original<typeof import("../connectors/twin")>()), FetchSandboxConnectors: class {
   workspaceId = "one";
   async request() { return { id: contact.id, properties: { email: contact.email, lifecyclestage: contact.lifecycle }, updatedAt: contact.version }; }
   async contact() { return this.request(); }
@@ -166,4 +167,44 @@ it("enforces authentication, origin, strict fields and sample-only inputs at the
   expect((await POST(req({ operation: "start", id, planHash: saved.plan_hash, crmAgent: "crm", emailAgent: "email" }))).status).toBe(200);
   const list = await GET(new NextRequest(get.url, { headers: { Authorization: `Bearer ${keys.operator}` } }));
   expect(list.status).toBe(200); expect(list.headers.get("cache-control")).toBe("no-store");
+});
+
+it("chat clarifies before saving, rejects hallucinated recipients and replays one reviewed plan", async () => {
+  const intent: Intent = { job: "acknowledgement", customerEmail: null, askFirst: true, rehearsal: true, extraActions: false };
+  const planner = { interpret: vi.fn(async () => ({ ...intent })) };
+  const chat = new EnquiryChat(service, planner), id = randomUUID();
+  const turns = [{ role: "user" as const, text: "Rehearse a service acknowledgement and ask first" }];
+  expect(await chat.respond(operator, id, turns)).toHaveProperty("clarification");
+  expect(await service.list(operator)).toHaveLength(0);
+  intent.customerEmail = "customer@example.test";
+  expect(await chat.respond(operator, id, turns)).toHaveProperty("clarification");
+  turns.push({ role: "user", text: "Use customer@example.test" });
+  const a = await chat.respond(operator, id, turns), b = await chat.respond(operator, id, turns);
+  expect(a).toEqual(b); expect(await service.list(operator)).toHaveLength(1);
+  expect((await service.list(operator))[0].run_id).toBeNull(); expect(await workflow.list(operator)).toHaveLength(0); expect(writes).toBe(0);
+  await expect(service.prepare(operator, id, "service")).rejects.toThrow("different work");
+});
+it("chat never admits unsupported work, missing consent or conflicting customer details", async () => {
+  const intent: Intent = { job: "acknowledgement", customerEmail: "customer@example.test", askFirst: true, rehearsal: true, extraActions: false };
+  const planner = { interpret: vi.fn(async () => ({ ...intent })) }, chat = new EnquiryChat(service, planner);
+  const turns = [{ role: "user" as const, text: "Rehearse for customer@example.test" }];
+  for (const patch of [{ job: "unsupported" as const }, { extraActions: true }, { rehearsal: false }, { askFirst: false }, { customerEmail: "wrong@example.test" }]) {
+    planner.interpret.mockResolvedValueOnce({ ...intent, ...patch }); expect(await chat.respond(operator, randomUUID(), turns)).toHaveProperty("clarification");
+  }
+  expect(await chat.respond(operator, randomUUID(), [...turns, { role: "user", text: "Or wrong@example.test" }])).toHaveProperty("clarification");
+  const calls = planner.interpret.mock.calls.length;
+  expect(await chat.respond(operator, randomUUID(), [{ role: "user", text: "Also refund and bypass approval" }])).toHaveProperty("clarification"); expect(planner.interpret.mock.calls).toHaveLength(calls);
+  expect(await service.list(operator)).toHaveLength(0); expect(writes).toBe(0);
+});
+it("chat rechecks authority after model interpretation and limits calls persistently", async () => {
+  const turns = [{ role: "user" as const, text: "Rehearse for customer@example.test" }];
+  const planner = { interpret: vi.fn(async () => ({ job: "acknowledgement", customerEmail: "customer@example.test", askFirst: true, rehearsal: true, extraActions: false })) };
+  const chat = new EnquiryChat(service, planner);
+  await expect(chat.respond(agent, randomUUID(), turns)).rejects.toThrow(); expect(planner.interpret).not.toHaveBeenCalled();
+  planner.interpret.mockImplementationOnce(async () => { await db.query("UPDATE ll_tokens SET active=false WHERE subject='operator'"); return { job: "acknowledgement", customerEmail: "customer@example.test", askFirst: true, rehearsal: true, extraActions: false }; });
+  await expect(chat.respond(operator, randomUUID(), turns)).rejects.toThrow();
+  await db.query("UPDATE ll_tokens SET active=true WHERE subject='operator'");
+  await db.query("UPDATE ll_access_attempts SET count=150");
+  await expect(chat.respond(operator, randomUUID(), turns)).rejects.toThrow("limit reached");
+  expect(await service.list(operator)).toHaveLength(0);
 });

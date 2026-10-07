@@ -1,5 +1,9 @@
 # LoopLabs claim, demo, and funnel audit
 
+## October 6: bounded chat rehearsal
+
+The invited `/control-plane/work` now interprets typed requests through Amazon Bedrock and asks for missing sample details. It saves a canonical CRM-to-acknowledgement plan for review using the existing server controls. Review never approves execution. Only isolated private FetchSandbox twins execute; no real email, live CRM, general workflow generation, inbox listener or durable chat memory is enabled. Hosted CRM dispatch remains blocked because atomic contact-version enforcement is unavailable. See [CHAT_WORKFLOW_PROOF.md](CHAT_WORKFLOW_PROOF.md) for actual browser proof. This supersedes older no-model statements only for the narrow chat planner; original demos retain their earlier scope.
+
 ## Current private workspace (October 4, 2026)
 
 See [WORKSPACE_ACCESS.md](WORKSPACE_ACCESS.md) for the current sales and access journey. `/control-plane` is invitation-only. Raj and Pratibha sign in as separate named members at `/sign-in`; anonymous visitors see the overview and contact-sales path. The Actions page combines discount and refund views. Saved agent registration supports restricted discount, CRM and messaging roles over sample systems; the prepared refund agent retains its own boundary. See `CONNECTOR_VERIFICATION.md` for the private FetchSandbox CRM/messaging contracts and recorded failure proof. Other examples remain browser-local. No live customer systems, real payments, model execution or general workflow builder are connected. This section supersedes earlier references to a public tour and shared operator-token entry forms.

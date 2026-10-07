@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-06T22:42:57.010Z",
+  "at": "2026-10-07T00:28:47.901Z",
   "scope": "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.",
   "checks": [
     {
@@ -28,14 +28,14 @@
     }
   ],
   "acceptedResponseLossEvidence": {
-    "acceptedRequestId": "370d3a841e4f",
+    "acceptedRequestId": "849697c9f2da",
     "acceptedStatus": 200,
     "transport": {
       "state": "delay_completed",
       "delay_ms": 15000,
-      "delay_started_at": "2026-10-06T22:42:41.510395+00:00",
-      "client_disconnected_at": "2026-10-06T22:42:42.998279+00:00",
-      "delay_completed_at": "2026-10-06T22:42:56.515251+00:00"
+      "delay_started_at": "2026-10-07T00:28:32.421389+00:00",
+      "client_disconnected_at": "2026-10-07T00:28:33.918427+00:00",
+      "delay_completed_at": "2026-10-07T00:28:47.426937+00:00"
     },
     "providerWritesAfterReconciliation": 1
   },
@@ -45,7 +45,7 @@
     "lib/connectors/service.ts": "316172c9a3c6553373c9c95ed92357937bc50159ecfeac2653e1f1b9466fb847",
     "app/api/durable/connectors/route.ts": "0bad77eb2c10cb6a1c14573f9ca54785a6890220d826880ad5845d479669e105",
     "app/api/durable/workflows/route.ts": "149168169108bde6cbbdd99b9c6fff4d35fad5138e6d2d1432fe785dccfd4d95",
-    "scripts/hosted-connector-proof.ts": "f853e606ffede8326507b081c4eb54164bba3136022e0a438a8fd11b0a4f5aa1",
+    "scripts/hosted-connector-proof.ts": "0294976b1b1ffa4f60d0dcd4ab67c431a2e35bd0cc848ca2825275f1d32c956a",
     "scripts/workflow-http-proof-server.ts": "0802e102094dd95243727121cedbfaf2e17f660f916d5511777c4441b044012e"
   },
   "limitations": [

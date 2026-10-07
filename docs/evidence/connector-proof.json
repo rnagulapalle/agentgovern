@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-06T22:44:10.760Z",
+  "at": "2026-10-07T00:35:05.123Z",
   "scope": "Isolated PostgreSQL schema and private FetchSandbox HubSpot Contacts / Resend single-send fixtures. No live CRM, real email, model or money.",
   "checks": [
     {
@@ -141,11 +141,11 @@
   "sourceFingerprints": {
     "lib/workflows/guard.ts": "02779db55e5f9637d06f790c578b0e9cc00e683cfbbab4d66ad8f76850009c8e",
     "lib/enquiries/contracts.ts": "244065bb61efdad8eb8b30fcf68c287b71b9cf775dbf412c0feb442d901500e0",
-    "lib/enquiries/service.ts": "045dbe2d0be93a17b0563c5f19745c2144610cf0cb72f6f49c17e2256b7f81c5",
+    "lib/enquiries/service.ts": "3705218829b221eea0ef67f93e1f6e97710b444c3f323695643796e4dc54d632",
     "lib/enquiries/schema.sql": "8e9c620147658f3bd59cd2948d0a46f872eb74066d67eba9f844bc5410fdd743",
-    "app/api/workspace/enquiries/route.ts": "d9f48af5e80d56a589e59e4dc3a090b4945f0945826c92da9ea73adb25352046",
+    "app/api/workspace/enquiries/route.ts": "9e831ce64efd9bf8f06530df22d5cdf0685913ffe79bf2f645a4f846c0920c01",
     "scripts/workflow-http-proof-server.ts": "0802e102094dd95243727121cedbfaf2e17f660f916d5511777c4441b044012e",
-    "lib/workflows/service.ts": "4694468852f19ab8b79446ac50200ca231252b3e2022af61d8aec803105c71e1",
+    "lib/workflows/service.ts": "00c3628ab2d61c92a968e24dc3c97921157d4883845447455c8dd7db42d249ed",
     "app/api/durable/workflows/route.ts": "149168169108bde6cbbdd99b9c6fff4d35fad5138e6d2d1432fe785dccfd4d95",
     "scripts/workflow-agent.mjs": "ba686dbe89ee3b5e999666d31597728016dc6aade2b0f3fc806db9c24acb85be",
     "lib/connectors/contracts.ts": "4fb199cab089d2b21cd44f63c6aabba898af49d8c90cf746d4cae05cdc355165",
@@ -157,7 +157,7 @@
     "app/api/durable/connectors/route.ts": "0bad77eb2c10cb6a1c14573f9ca54785a6890220d826880ad5845d479669e105",
     "scripts/connector-twin.py": "8ee1508e9c41ab0f62b049ee06ee56d21af5dbe897a7c18c56c6513101c2e616"
   },
-  "localRestoreMilliseconds": 605,
+  "localRestoreMilliseconds": 96,
   "limits": [
     "Fixture action journal and contact version are LoopLabs extensions, not live provider parity.",
     "No SSO, failover, production load or real delivery proof.",

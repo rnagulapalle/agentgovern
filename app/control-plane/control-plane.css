@@ -10,6 +10,7 @@
 .cp-enquiry-review { display: flex; align-items: flex-start; gap: 12px; font-size: var(--text-body); line-height: 1.6; }
 .cp-enquiry-review input { width: 22px; height: 22px; flex-shrink: 0; margin-top: 3px; }
 .cp-conversation-heading { display: flex; align-items: flex-start; gap: 14px; }
+.cp-durable-card .cp-button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .cp-conversation > button { justify-self: start; white-space: normal; }
 .cp-conversation form { display: grid; gap: 12px; }
 .cp-conversation label { font-size: var(--text-body); font-weight: 600; }

@@ -26,6 +26,14 @@ export class EnquiryControl {
     if (fixture.id === "missing") return { clarification: "Who sent this enquiry? A verified sender is required before matching a contact or preparing a message." };
     if (fixture.id === "unmatched") return { clarification: "This sender does not match the supported sample contact. Ask a person to identify the right record; no contact is created automatically." };
     if (fixture.id === "pricing") return { clarification: "This enquiry requests a discount. Approved information only permits an acknowledgement; a person must decide pricing. No discount or customer commitment is proposed." };
+    return this.save(actor, id, fixtureId, fixture);
+  }
+  async prepareChat(actor: Actor, id: string) {
+    validId(id);
+    return this.save(actor, id, "chat_ack_v1", { id: "chat_ack_v1", title: "Customer service acknowledgement", email: approvedReply.recipient, message: "Check the sample customer record, retain its lifecycle, and prepare an acknowledgement. Rehearsal only; independent approval before each effect." });
+  }
+  private async save(actor: Actor, id: string, fixtureId: string, fixture: { id: string; title: string; email: string; message: string }) {
+    await transaction(this.db, actor.orgId, c => this.policies(c, actor));
     const contact = await this.contact();
     checkContact(contact);
     return transaction(this.db, actor.orgId, async (c) => {

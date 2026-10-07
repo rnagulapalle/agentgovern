@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PageTitle } from "./ui";
 import { WorkflowWorkspace } from "./workflow-workspace";
+import { enquiryRequest, type Turn } from "@/lib/enquiries/chat-contract";
 type Plan = { id: string; plan_hash: string; source_version: string; run_id: string | null; plan: { enquiry: { title: string; message: string }; contact: { id: string; email: string }; crm: { lifecycle: string }; reply: { recipient: string; subject: string; text: string; reference: string } } };
 async function call(payload?: object) {
   const response = await fetch("/api/workspace/enquiries", { cache: "no-store", ...(payload ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) } : {}) });
@@ -11,10 +12,11 @@ async function call(payload?: object) {
 }
 export function EnquiryWorkspace() {
   const requestId = useRef("");
-  const [fixtures, setFixtures] = useState<{ id: string; title: string; message: string }[]>([]);
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [messages, setMessages] = useState<{ role: string; text: string }[]>([]);
+  const [input, setInput] = useState("");
   const [plans, setPlans] = useState<Plan[]>([]);
   const [agents, setAgents] = useState<{ id: string; tools: string[] }[]>([]);
-  const [fixture, setFixture] = useState("service");
   const [plan, setPlan] = useState<Plan | null>(null);
   const [reply, setReply] = useState("");
   const [crm, setCrm] = useState("");
@@ -23,7 +25,7 @@ export function EnquiryWorkspace() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const load = useCallback(async () => {
-    const data = await call(); setFixtures(data.fixtures); setPlans(data.plans);
+    const data = await call(); setPlans(data.plans);
     const response = await fetch("/api/workspace/agents", { cache: "no-store" });
     const directory = await response.json();
     if (!response.ok) throw new Error(directory.error || "Agent directory unavailable.");
@@ -35,24 +37,27 @@ export function EnquiryWorkspace() {
     try { await fn(); await load(); } catch (e) { setError(e instanceof Error ? e.message : "The result is uncertain. Refresh before retrying."); } finally { setBusy(false); }
   }
   return <div className="cp-durable">
-    <PageTitle eyebrow="WORK WITH AGENTS" title="Handle a customer enquiry" description="Check the contact, review an approved reply, and follow each effect through independent approval and verification." />
-    <section className="cp-durable-scope"><strong>Connected sample workflow</strong><p>This version uses prepared enquiries, one CRM contact and a fixed approved acknowledgement through private provider twins. No real email is delivered. Model calls and arbitrary reply generation are not enabled.</p></section>
+    <PageTitle eyebrow="WORK WITH AGENTS" title="Describe the work. Rehearse it first." description="Ask for a customer acknowledgement, review the exact plan, and follow it through approval and verified outcomes." />
+    <section className="cp-durable-scope"><strong>Customer enquiry rehearsal</strong><p>Chat interprets your request using a model. This first workflow uses one sample CRM contact and an approved acknowledgement through isolated FetchSandbox twins. No real email is delivered. Inbox monitoring, live connections and arbitrary reply generation are not enabled.</p></section>
     {error && <p role="alert" className="cp-durable-error">{error}</p>}
     <section className="cp-panel cp-durable-card cp-conversation">
-      <h2>1. Bring an enquiry</h2>
-      <label htmlFor="enquiry-example">Choose a sample situation</label>
-      <select id="enquiry-example" className="cp-enquiry-select" disabled={busy} value={fixture} onChange={(e) => { setFixture(e.target.value); requestId.current = ""; setPlan(null); setReply(""); setReviewed(false); }}>
-        {fixtures.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
-      </select>
-      <p>{fixtures.find((f) => f.id === fixture)?.message}</p>
-      <button className="cp-button cp-button-dark" disabled={busy || !fixtures.length} onClick={() => task(async () => {
+      <h2>1. What would you like to automate?</h2>
+      <p>Describe the job using sample details. Your messages are sent to the planning model; do not include private customer data or credentials. We save only the validated sample plan, not this conversation.</p>
+      <div role="log" aria-label="Workflow conversation" aria-live="polite">{messages.map((m, i) => <article className="cp-durable-scope" key={i}><strong>{m.role === "user" ? "You" : "LoopLabs"}</strong><p>{m.text}</p></article>)}</div>
+      <label htmlFor="enquiry-message">Your request or clarification</label>
+      <textarea id="enquiry-message" rows={4} maxLength={800} disabled={busy || !!plan} value={input} onChange={e => setInput(e.target.value)} placeholder="When a customer asks about our service…" />
+      <button className="cp-button" disabled={busy || !!plan} onClick={() => setInput(enquiryRequest)}>Use example request</button>{" "}
+      <button className="cp-button cp-button-dark" disabled={busy || !!plan || !input.trim()} onClick={() => task(async () => {
         if (!requestId.current) requestId.current = crypto.randomUUID();
         setReviewed(false);
-        const result = await call({ operation: "prepare", id: requestId.current, fixtureId: fixture });
-        setPlan(result.saved || null); setReply(result.clarification || "Contact checked. Review the proposed work below. Nothing has been executed.");
-      })}>Check and prepare</button>
+        const next: Turn[] = [...turns, { role: "user", text: input.trim() }];
+        const result = await call({ operation: "chat", id: requestId.current, turns: next });
+        const answer = result.clarification || result.reply;
+        setTurns(next); setMessages([...messages, { role: "user", text: input.trim() }, { role: "assistant", text: answer }]); setInput("");
+        setPlan(result.saved || null); setReply(answer);
+      })}>{busy ? "Preparing…" : "Send request"}</button>
       {reply && <p role="status">{reply}</p>}
-      {plan && <button className="cp-button" disabled={busy} onClick={() => { requestId.current = ""; setPlan(null); setReply(""); setReviewed(false); }}>Start another sample enquiry</button>}
+      <button className="cp-button" disabled={busy} onClick={() => { requestId.current = ""; setPlan(null); setReply(""); setReviewed(false); setTurns([]); setMessages([]); setInput(""); }}>Start a new conversation</button>
     </section>
     {plan && <section className="cp-panel cp-durable-card cp-conversation-plan">
       <h2>2. Review this exact plan</h2>
@@ -71,6 +76,6 @@ export function EnquiryWorkspace() {
       </>}
     </section>}
     {plan?.run_id && <WorkflowWorkspace embeddedRunId={plan.run_id} />}
-    <section className="cp-panel cp-durable-card"><h2>Saved enquiries</h2><p>Open saved work after a refresh. Reusing an enquiry ID resumes its existing plan and run.</p>{plans.map((p) => <p key={p.id}><button className="cp-button" disabled={busy} onClick={() => { setPlan(p); setReviewed(false); setReply(""); requestId.current = p.id; setFixture("service"); }}>{p.plan.enquiry.title} · {p.id.slice(0, 8)} · {p.run_id ? "Open run" : "Needs review"}</button></p>)}</section>
+    <section className="cp-panel cp-durable-card"><h2>Saved enquiries</h2><p>Open saved work after a refresh. Reusing an enquiry ID resumes its existing plan and run.</p>{plans.map((p) => <p key={p.id}><button className="cp-button" disabled={busy} onClick={() => { setPlan(p); setReviewed(false); setReply(""); requestId.current = p.id; }}>{p.plan.enquiry.title} · {p.id.slice(0, 8)} · {p.run_id ? "Open run" : "Needs review"}</button></p>)}</section>
   </div>;
 }

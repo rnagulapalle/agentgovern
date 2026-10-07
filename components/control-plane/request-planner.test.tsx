@@ -19,5 +19,6 @@ it("preserves the existing direct saved-workflow entry", () => {
   const html = renderToStaticMarkup(createElement(WorkflowWorkspace));
   expect(html).toContain("Start workflow");
   expect(html).not.toContain("What would you like done?");
-  expect(html).toContain("no real CRM, email or model is connected");
+  expect(html).toContain("no real CRM or email is connected");
+  expect(html).toContain("these buttons do not run an autonomous agent");
 });

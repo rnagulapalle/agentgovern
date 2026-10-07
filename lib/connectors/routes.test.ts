@@ -15,7 +15,8 @@ vi.mock("../durable/database", async (original) => ({
   ...(await original<typeof import("../durable/database")>()),
   database: () => db,
 }));
-vi.mock("./twin", () => ({
+vi.mock("./twin", async original => ({
+  ...(await original<typeof import("./twin")>()),
   FetchSandboxConnectors: class {
     readonly workspaceId = "http";
     async source() {

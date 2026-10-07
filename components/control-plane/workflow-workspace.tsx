@@ -13,6 +13,9 @@ type Step = {
   state: string | null;
   reason: string | null;
   payload_hash: string | null;
+  approved_by?: string | null;
+  evidence?: { outcome: string; reference?: string; detail: string } | null;
+  proposedRequest?: { method: string; resource: string; body: object; approvedSourceVersion: string | null };
 };
 type Run = { id: string; state: string; steps: Step[] };
 type Agent = { id: string; tools: string[] };
@@ -105,7 +108,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
         <p>
           Two scoped agents submit actions; named people approve them. A final
           check verifies both outcomes. External systems are private
-          FetchSandbox twins: no real CRM, email or model is connected.
+          FetchSandbox twins: no real CRM or email is connected. Any chat model interprets the request only; these buttons do not run an autonomous agent.
         </p>
       </section>
       {guided && <RequestPlanner onReview={setReviewed} />}
@@ -196,6 +199,9 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
                 {s.reason || "The scoped agent can now submit this exact step."}
               </p>
               <p>{explainStep(s.state)}</p>
+              {s.approved_by && <p>Approved by: {s.approved_by}</p>}
+              {s.evidence && <p>Observed effect: {s.evidence.detail} {s.evidence.reference && `Reference: ${s.evidence.reference}`}</p>}
+              {s.proposedRequest && <details><summary>Exact proposed connector request</summary><p>{s.proposedRequest.method} · {s.proposedRequest.resource}</p><pre>{JSON.stringify(s.proposedRequest.body, null, 2)}</pre><p>This is the approved request description. The observed effect above confirms what the provider twin reported; a proposed request alone is not execution evidence.</p></details>}
               <div className="cp-durable-grid">
                 {!s.state && (
                   <button disabled={busy} onClick={() => action(s, "propose")}>
@@ -237,6 +243,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
             </article>
           ))}
           <h3>3. Verify the full run</h3>
+          {run.state === "completed" && <section aria-label="Verification receipt" className="cp-durable-scope"><h3>Rehearsal verification receipt</h3><p>Run {run.id}: both connector effects were read back and the run was saved as completed. This is stored provider-twin evidence, not real email delivery or an independently signed certificate.</p>{run.steps.map(s => <p key={s.ordinal}>{s.connector}: {s.evidence?.outcome || s.state} · {s.evidence?.reference || "No reference"}</p>)}</section>}
           <p>
             Both effects must be confirmed. Uncertainty and conflicting records
             keep the run open.

@@ -4,6 +4,7 @@ import { transaction } from "../durable/database";
 import { authorize } from "../durable/service";
 import { ControlError, type Actor } from "../durable/contracts";
 import { ConnectorControl } from "../connectors/service";
+import { connectorBody } from "../connectors/twin";
 export class WorkflowControl {
   constructor(
     readonly db: Pool,
@@ -128,7 +129,7 @@ export class WorkflowControl {
       ).rows[0];
       const steps = (
         await c.query(
-          "SELECT s.*,a.state,a.reason,a.payload_hash FROM ll_workflow_steps s LEFT JOIN ll_connector_actions a ON a.org_id=s.org_id AND a.id=s.action_id WHERE s.org_id=$1 AND s.run_id=$2 ORDER BY s.ordinal",
+          "SELECT s.*,a.state,a.reason,a.payload_hash,a.payload AS approved_payload,a.evidence,a.approved_by,a.approval_until FROM ll_workflow_steps s LEFT JOIN ll_connector_actions a ON a.org_id=s.org_id AND a.id=s.action_id WHERE s.org_id=$1 AND s.run_id=$2 ORDER BY s.ordinal",
           [actor.orgId, id],
         )
       ).rows;
@@ -144,7 +145,7 @@ export class WorkflowControl {
         steps:
           actor.role === "agent"
             ? steps.filter((s) => s.agent_id === actor.subject)
-            : steps,
+            : steps.map(s => ({ ...s, proposedRequest: { method: s.connector === "crm" ? "PATCH" : "POST", resource: s.connector === "crm" ? "CRM contact 1001" : "Email acknowledgement", body: connectorBody(s), approvedSourceVersion: s.approved_payload?.sourceVersion || null } })),
       };
     });
   }
