@@ -29,10 +29,14 @@
     "connectors:proof": "tsx --env-file=.env.local scripts/connector-proof.ts",
     "chat:proof": "node --env-file=.env.local --import tsx scripts/chat-ui-proof.ts",
     "enquiries:managed-setup": "tsx --env-file=.env.local scripts/enquiry-managed-setup.ts",
-    "enquiries:worker": "tsx --env-file=.env.local scripts/enquiry-worker.ts"
+    "enquiries:worker": "tsx --env-file=.env.local scripts/enquiry-worker.ts",
+    "temporal:proof": "node --env-file=.env.local --import tsx scripts/temporal-proof.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1147.0",
+    "@temporalio/client": "^1.24.0",
+    "@temporalio/worker": "^1.24.0",
+    "@temporalio/workflow": "^1.24.0",
     "clsx": "^2.1.1",
     "geist": "^1.7.2",
     "lucide-react": "^0.471.1",
@@ -46,6 +50,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
     "@playwright/test": "^1.63.0",
+    "@temporalio/testing": "^1.24.0",
     "@types/node": "^22.10.7",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.0.7",

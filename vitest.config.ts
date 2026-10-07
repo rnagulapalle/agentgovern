@@ -17,6 +17,7 @@ export default defineConfig({
       reporter: ["text", "json-summary"],
       include: [
         "lib/engine/**/*.ts",
+        "runtime/temporal/activities.ts",
         "lib/control-plane/model.ts",
         "lib/durable/contracts.ts",
         "lib/durable/service.ts",
