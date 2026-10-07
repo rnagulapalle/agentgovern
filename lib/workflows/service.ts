@@ -122,7 +122,7 @@ export class WorkflowControl {
         "agent",
         "worker",
       ]);
-      if (actor.role === "worker" && actor.subject === "enquiry-runner") await managedWorker(c, actor, id);
+      if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject)) await managedWorker(c, actor, id);
       const run = (
         await c.query(
           "SELECT * FROM ll_workflow_runs WHERE org_id=$1 AND id=$2",

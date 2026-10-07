@@ -103,3 +103,65 @@ Results: `docs/evidence/temporal-version-proof.json`. The ordinary quality gate
 checks source fingerprints and regression coverage. Phase 3 must still establish
 exclusive dispatch ownership, persisted scheduling/outbox and concurrency before
 production cutover. Production continues to use its existing worker.
+
+## Phase 3A: exclusive dispatch and scheduling recovery
+
+Migration 9 adds `ll_temporal_dispatch`: one durable ownership record and start
+intent per opted-in plan. Only the active initiating owner can transfer an active
+run with two unexecuted held/ready actions. The workspace transaction lock orders
+transfer against dispatch. Identity, plan digest, contract versions and workflow
+ID cannot be rewritten or deleted. Existing migrations are unchanged. Transfer
+does not grant approval; human reviewers still approve exact actions separately.
+
+A distinct `enquiry-temporal` workload owns these runs. Legacy polling excludes
+them; legacy, generic workers and manual execution cannot bypass ownership.
+Temporal cannot operate an untransferred run. Missing migration/ownership denies
+Temporal while preserving existing legacy work. Current active plan-owner checks
+now run inside existing connector claim and completion transactions for both
+engines. Revocation after an HTTP effect records uncertainty and contains
+subsequent actions. Already-sent requests cannot be recalled.
+
+The outbox takes at most ten due intents with a 30-second lease, records attempts,
+and makes Temporal start requests outside the database transaction. Completion
+uses the same unexpired lease token. An expired scheduler cannot acknowledge a
+reclaimed intent. Transport failures retain intent with a five-second retry delay.
+Deterministic workflow IDs plus USE_EXISTING for open executions and
+REJECT_DUPLICATE for closed executions prevent a scheduling replay from creating
+another run. A stopped scheduler can be replaced without rebuilding plan/action
+IDs. Start completion means scheduled, not approved, executed or verified.
+
+Reproduce: `pnpm temporal:dispatch-proof`. Results and source fingerprints are in
+`docs/evidence/temporal-dispatch-proof.json`. The proof uses actual Temporal,
+isolated PostgreSQL and private HTTP twins. It injects scheduler lease expiry,
+retries accepted starts, tests concurrent schedulers/activities and revokes the
+owner after a real CRM HTTP effect. Original connector, hosted, browser/model
+and Temporal proof suites must also be rerun after affected service changes.
+
+`pnpm temporal:setup` installs migration 9 and privately provisions the separate
+workload after migration 8. It transfers no run and enables no production worker.
+No production migration/cutover is performed by this milestone. The outbox adapter
+is not yet a packaged production Temporal service or a self-service UI toggle.
+
+### Phase 3 still-open gates
+
+- Retain workspace-wide transaction serialization until narrower aggregate locks
+  are justified by contention tests; this proof demonstrates concurrency safety,
+  not throughput. Load/quotas/backpressure thresholds and SLOs remain unmeasured.
+- Package and operate a versioned worker/scheduler, with namespace/TLS credentials,
+  deployment routing, monitoring and explicit rollback/cutover drills. Bind it to
+  the existing invited UI before declaring a deployed Temporal product path.
+- Actual test-mode provider integration needs atomic CRM source-version guarantees
+  and connector-specific idempotency/read-back. Hosted CRM remains blocked; private
+  twins do not establish real-provider parity or email delivery.
+- Abrupt service/host loss, replicated persistence, restore/failover, retention
+  expiry, security review and operational availability remain Phase 4 gates.
+
+The architecture follows Temporal's deterministic workflow/activity separation
+and database outbox pattern. It does not make independent HTTP effects exactly
+once by assumption: LoopLabs still owns stable action IDs, provider verification
+and containment on uncertain results.
+
+Sources:
+- https://docs.temporal.io/activity-definition
+- https://docs.temporal.io/worker-versioning
+- https://community.temporal.io/t/what-is-recommended-approach-on-starting-workflow-in-transaction/16248

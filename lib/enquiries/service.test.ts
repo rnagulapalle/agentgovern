@@ -8,6 +8,8 @@ import type { Actor } from "../durable/contracts";
 import type { ConnectorAction, ConnectorProvider } from "../connectors/contracts";
 import { ConnectorControl } from "../connectors/service";
 import { WorkflowControl } from "../workflows/service";
+import { TemporalOutbox } from "../../runtime/temporal/outbox";
+import { WorkflowExecutionAlreadyStartedError, type Client } from "@temporalio/client";
 import { EnquiryRunner } from "./runner";
 import { EnquiryControl } from "./service";
 import { checkContact, enquiryFixture, validId, type Contact } from "./contracts";
@@ -36,7 +38,7 @@ beforeAll(async () => {
   admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
   await admin.query(`CREATE SCHEMA ${schema}`);
   db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
-  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"])
+  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"])
     await db.query(await readFile(file, "utf8"));
 });
 beforeEach(async () => {
@@ -327,5 +329,73 @@ it("uses only the server-pinned hosted contact ID and refuses an unbound same-em
   contact.id = "2";
   await expect(hosted.prepare(operator, randomUUID(), "service")).rejects.toThrow("unique supported contact");
   expect(() => checkContact(contact, "bad")).toThrow();
+  expect(writes).toBe(0);
+});
+
+it("atomically transfers one unexecuted run, excludes legacy dispatch and fences other executors", async () => {
+  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
+  const outbox = new TemporalOutbox(db);
+  await expect(outbox.transfer(other, p.id)).rejects.toThrow();
+  await expect(outbox.transfer(reviewer, p.id)).rejects.toThrow();
+  const ids = await Promise.all([outbox.transfer(operator, p.id), outbox.transfer(operator, p.id)]);
+  expect(ids[0]).toBe(ids[1]);
+  const run = await workflow.read(operator, p.id);
+  for (const step of run.steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+  const legacy = await workerActor(); const temporal = await workerActor("enquiry-temporal");
+  expect(await new EnquiryRunner(db, workflow).tick(legacy)).toBe(0);
+  await expect(connector.execute(legacy, run.steps[0].action_id)).rejects.toThrow("own");
+  await expect(connector.execute(operator, run.steps[0].action_id)).rejects.toThrow("own");
+  await expect(new DurableControl(db).execute(temporal, randomUUID())).rejects.toThrow("scoped");
+  expect((await workflow.read(temporal, p.id)).id).toBe(p.id);
+  expect(writes).toBe(0);
+  const q = await prepared(); await service.rehearse(operator, q.id, q.plan_hash);
+  await expect(workflow.read(temporal, q.id)).rejects.toThrow("own");
+  await expect(db.query("UPDATE ll_temporal_dispatch SET workflow_id='other' WHERE plan_id=$1", [p.id])).rejects.toThrow("rewritten");
+  await expect(db.query("DELETE FROM ll_temporal_dispatch WHERE plan_id=$1", [p.id])).rejects.toThrow("rewritten");
+});
+it("concurrent outbox polling claims once and retries the same intent after transport failure", async () => {
+  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
+  const outbox = new TemporalOutbox(db); await outbox.transfer(operator, p.id);
+  const temporal = await workerActor("enquiry-temporal");
+  await expect(outbox.tick(operator, {} as Client, "queue")).rejects.toThrow();
+  const start = vi.fn().mockRejectedValueOnce(Error("transport unavailable")).mockResolvedValue({});
+  const client = { workflow: { start } } as unknown as Client;
+  await expect(outbox.tick(temporal, client, "queue")).rejects.toThrow("transport");
+  await db.query("UPDATE ll_temporal_dispatch SET next_attempt=now()");
+  expect((await Promise.all([outbox.tick(temporal, client, "queue"), outbox.tick(temporal, client, "queue")])).reduce((a,b) => a+b, 0)).toBe(1);
+  expect(start).toHaveBeenCalledTimes(2);
+  expect(start.mock.calls[0][1]).toEqual(start.mock.calls[1][1]); expect(writes).toBe(0);
+  await outbox.tick(temporal, client, "queue"); expect(start).toHaveBeenCalledTimes(2);
+  await expect(db.query("UPDATE ll_temporal_dispatch SET state='pending'")).rejects.toThrow("rewritten");
+});
+it("does not transfer work after an effect or transfer a paused run", async () => {
+  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
+  const run = await workflow.read(operator, p.id);
+  for (const step of run.steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+  await connector.execute(await workerActor(), run.steps[0].action_id);
+  await expect(new TemporalOutbox(db).transfer(operator, p.id)).rejects.toThrow("unexecuted");
+  const q = await prepared(); await service.rehearse(operator, q.id, q.plan_hash); await workflow.pause(operator, q.id);
+  await expect(new TemporalOutbox(db).transfer(operator, q.id)).rejects.toThrow();
+});
+it("owner revocation during an external request records uncertainty and contains the downstream step", async () => {
+  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
+  await new TemporalOutbox(db).transfer(operator, p.id);
+  const run = await workflow.read(operator, p.id);
+  for (const step of run.steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+  let release!: () => void, entered!: () => void;
+  const started = new Promise<void>(r => { entered=r; }); const gate = new Promise<void>(r => { release=r; });
+  const slow = new ConnectorControl(db, { ...provider, async write(a, lose) { entered(); await gate; return provider.write(a, lose); } });
+  const temporal = await workerActor("enquiry-temporal");
+  const executing = slow.execute(temporal, run.steps[0].action_id);
+  await started; await db.query("UPDATE ll_members SET active=false WHERE email='operator'"); release();
+  expect((await executing).state).toBe("uncertain"); expect(writes).toBe(1);
+  await expect(slow.execute(temporal, run.steps[1].action_id)).rejects.toThrow("preceding"); expect(writes).toBe(1);
+});
+
+it("treats the SDK closed-execution duplicate as delivered intent without scheduling again", async () => {
+  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
+  const outbox = new TemporalOutbox(db), id = await outbox.transfer(operator, p.id);
+  const start = vi.fn().mockRejectedValue(new WorkflowExecutionAlreadyStartedError("exists", id, "pinnedAcknowledgement"));
+  expect(await outbox.tick(await workerActor("enquiry-temporal"), { workflow: { start } } as unknown as Client, "queue")).toBe(1);
   expect(writes).toBe(0);
 });

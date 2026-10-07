@@ -34,7 +34,7 @@ export async function authenticate(db: Pool, token: string): Promise<Actor> {
   };
 }
 export async function authorize(c: PoolClient, actor: Actor, roles: Role[], purpose?: "enquiries") {
-  if (actor.role === "worker" && actor.subject === "enquiry-runner" && purpose !== "enquiries")
+  if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject) && purpose !== "enquiries")
     throw new ControlError(403, "This worker is scoped to reviewed enquiry runs.");
   const { rows } = await c.query(
     "SELECT 1 FROM ll_tokens WHERE hash=$1 AND org_id=$2 AND subject=$3 AND role=$4 AND active=true",

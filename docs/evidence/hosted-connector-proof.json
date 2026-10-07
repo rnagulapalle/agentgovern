@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-07T02:24:53.404Z",
+  "at": "2026-10-07T18:58:45.273Z",
   "scope": "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.",
   "checks": [
     {
@@ -32,14 +32,14 @@
     }
   ],
   "acceptedResponseLossEvidence": {
-    "acceptedRequestId": "ec35cd13564b",
+    "acceptedRequestId": "13d12eb1d326",
     "acceptedStatus": 200,
     "transport": {
       "state": "delay_completed",
       "delay_ms": 15000,
-      "delay_started_at": "2026-10-07T02:24:37.955708+00:00",
-      "client_disconnected_at": "2026-10-07T02:24:39.458143+00:00",
-      "delay_completed_at": "2026-10-07T02:24:52.957927+00:00"
+      "delay_started_at": "2026-10-07T18:58:29.847825+00:00",
+      "client_disconnected_at": "2026-10-07T18:58:31.344699+00:00",
+      "delay_completed_at": "2026-10-07T18:58:44.852574+00:00"
     },
     "providerWritesAfterReconciliation": 1
   },
@@ -47,12 +47,12 @@
     "lib/enquiries/service.ts": "562483e9692bc1204923c77d1cd8d696ae3d8cdeb2a0499aaaefb42fe9ebd902",
     "lib/enquiries/contracts.ts": "089a125558beba8d6d9fffa5e9b0796535f7031f8264b3d50c16c95fe7b70833",
     "app/api/workspace/enquiries/route.ts": "d15eda40bf16f10d929ffc6cd51d0263762c379fd1830157e0ed1481a4fc760d",
-    "lib/durable/service.ts": "dd6eb90fa65a9393a6eae0388b2e58925adc4ad0828a22208bfca8882e295c80",
-    "lib/workflows/service.ts": "2eed0d138368c9e6936e85a6a82e3a098193857675031aa52c0d77d6094720e4",
-    "lib/enquiries/dispatch.ts": "17b292b2595e42eb5b408955f1ffc7ce5add1c5df68de1309e05e9ff128321fa",
+    "lib/durable/service.ts": "875bd1c16e7fdc27362f5983555d4f663c748fe3501554a26e1ccb4de07eeaf9",
+    "lib/workflows/service.ts": "8da7ab7684423f9221c22a7cf7af9611baadfbcc9e7f2563e4063a5ca6cebb9a",
+    "lib/enquiries/dispatch.ts": "4cc5701be853ae7c24e3092c8d9344eafb97f97844b7c29c8a8916ba27d09058",
     "lib/connectors/hosted.ts": "337a3331ade69ecc975ed72f34e1b3cb5c3a9becada82666aef22760b9262990",
     "lib/connectors/twin.ts": "6cf2c31d40f86cbdbb55e15a1ffecf18c8b7f7e715f524ba46c5b59de37e4235",
-    "lib/connectors/service.ts": "18e19ba67767f8f0acf94bc60a0f0e0968ced82bff8a386364edae13895f2f75",
+    "lib/connectors/service.ts": "fcca20c506183ad9589572617f1cf07b9bec8f1222af4b59980f5b033046db69",
     "app/api/durable/connectors/route.ts": "0bad77eb2c10cb6a1c14573f9ca54785a6890220d826880ad5845d479669e105",
     "app/api/durable/workflows/route.ts": "149168169108bde6cbbdd99b9c6fff4d35fad5138e6d2d1432fe785dccfd4d95",
     "scripts/hosted-connector-proof.ts": "d47180b9cbb698b4f12e01d8062c5835bdc3b38162968bdf039932ab492c50c3",

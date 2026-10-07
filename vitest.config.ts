@@ -19,6 +19,7 @@ export default defineConfig({
         "lib/engine/**/*.ts",
         "runtime/temporal/activities.ts",
         "runtime/temporal/version-contract.ts",
+        "runtime/temporal/outbox.ts",
         "lib/control-plane/model.ts",
         "lib/durable/contracts.ts",
         "lib/durable/service.ts",

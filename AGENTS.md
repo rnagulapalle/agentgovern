@@ -46,3 +46,15 @@ The managed customer acknowledgement in `/control-plane/work` automatically assi
 - `pnpm release:check` — production release eligibility plus the full quality gate
 
 The reusable implementation playbook is in `.agents/skills/looplabs-engineering/SKILL.md`. CI is defined in `.github/workflows/quality-gates.yml`.
+
+## Isolated Temporal adoption
+
+Read `docs/TEMPORAL_ADOPTION_PLAN.md` before modifying orchestration. Migration 9
+adds explicit one-way Temporal ownership and a leased start outbox, but production
+is not cut over. `enquiry-temporal` is a separate scoped workload. Never enable
+both dispatch paths for one run or treat scheduling/plan review as execution
+approval. Current owner revocation must be checked before dispatch and completion;
+an effect already sent may remain uncertain. Run the actual Temporal proof suites
+and all affected connector/chat proofs when their covered sources change. Applied
+migrations 1–5, 7 and 8 remain unchanged. Phase 3 throughput and real-provider gates,
+and Phase 4 HA/operational gates remain open; no Temporal-parity claim is supported.
