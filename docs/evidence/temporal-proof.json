@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-07T18:30:19.553Z",
+  "scope": "Local Temporal dev service; isolated PostgreSQL and private HTTP twins; no production cutover",
+  "checks": [
+    "Held work and duplicate wake do not execute or grant self approval",
+    "Pending v1 run survives worker stop and compatible v2 rollout; exact independent approvals complete two HTTP effects",
+    "Recorded v1 history replays with compatible v2 without effects or provider credentials in history",
+    "Lost CRM response is reconciled; Temporal recovery adds only the intended downstream email",
+    "SIGKILL after real CRM effect before completion recording; replacement worker reads back and sends only one downstream email (isolated lease expiry injected)",
+    "Incompatible activity command is rejected by recorded-history replay",
+    "Paused run stays contained without effects"
+  ],
+  "sourceFingerprints": {
+    "runtime/temporal/activities.ts": "331f923f7038cc2b333221213eaa4b408e570231bc9ce1cef67b50d96867905c",
+    "runtime/temporal/workflow.ts": "5ed74bf103edbae5d6345f258f77da6b6e6baf340ccec866d340065ffd607c14",
+    "runtime/temporal/workflow-v2.ts": "9fe1f067454651ae30cf692ba9357cf0afd5123b18014ef72994bbc9b8004ed5",
+    "scripts/temporal-proof.ts": "bfdc9c8edca253fcbf33bebe71eb29eaec6a0bd549bc8ace620edce363e424c6",
+    "scripts/temporal-proof-worker.ts": "8775873d79cfa4cf914a4f6b9cc3a9d34fe31b02b2caa05254f0f60d06239384"
+  },
+  "limitations": [
+    "Compatible patch rollout, not deployment pinning",
+    "Lease expiry shortened in isolated test; Temporal activity uses normal timeout/retry",
+    "No UI cutover, production failover, real providers or scale proof"
+  ]
+}
