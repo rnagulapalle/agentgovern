@@ -1,9 +1,13 @@
 {
-  "at": "2026-10-07T01:59:12.328Z",
+  "at": "2026-10-07T02:15:41.890Z",
   "scope": "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.",
   "checks": [
     {
       "name": "Native owner API keys provision isolated paired environments; other owners cannot inspect evidence",
+      "passed": true
+    },
+    {
+      "name": "Managed hosted rehearsal refuses the missing atomic CRM guarantee before submitting any action",
       "passed": true
     },
     {
@@ -28,24 +32,27 @@
     }
   ],
   "acceptedResponseLossEvidence": {
-    "acceptedRequestId": "a4061a5cb7f2",
+    "acceptedRequestId": "a3212f3d9136",
     "acceptedStatus": 200,
     "transport": {
       "state": "delay_completed",
       "delay_ms": 15000,
-      "delay_started_at": "2026-10-07T01:58:56.999036+00:00",
-      "client_disconnected_at": "2026-10-07T01:58:58.496462+00:00",
-      "delay_completed_at": "2026-10-07T01:59:12.002920+00:00"
+      "delay_started_at": "2026-10-07T02:15:26.398708+00:00",
+      "client_disconnected_at": "2026-10-07T02:15:27.895538+00:00",
+      "delay_completed_at": "2026-10-07T02:15:41.403273+00:00"
     },
     "providerWritesAfterReconciliation": 1
   },
   "sourceFingerprints": {
+    "lib/durable/service.ts": "dd6eb90fa65a9393a6eae0388b2e58925adc4ad0828a22208bfca8882e295c80",
+    "lib/workflows/service.ts": "11c1ea67cb8d212d705f37975b6a5a62bc1df6d2deff86b204f9968b71f431b4",
+    "lib/enquiries/dispatch.ts": "17b292b2595e42eb5b408955f1ffc7ce5add1c5df68de1309e05e9ff128321fa",
     "lib/connectors/hosted.ts": "cafd02de6e406321a9963887ec4817d797b0b54d6edaceeda3648305d7d39eba",
     "lib/connectors/twin.ts": "6dad313340a1ca01774cb847cd59f2e54ff6ffc66c6ba66e2a3c6f5e89d61d3a",
-    "lib/connectors/service.ts": "1fecbf7c3b19b5844f8af2c1fce0f4012d061f622d96ac766743a6f8fc6e4473",
+    "lib/connectors/service.ts": "18e19ba67767f8f0acf94bc60a0f0e0968ced82bff8a386364edae13895f2f75",
     "app/api/durable/connectors/route.ts": "0bad77eb2c10cb6a1c14573f9ca54785a6890220d826880ad5845d479669e105",
     "app/api/durable/workflows/route.ts": "149168169108bde6cbbdd99b9c6fff4d35fad5138e6d2d1432fe785dccfd4d95",
-    "scripts/hosted-connector-proof.ts": "80b3a7380044d53e517395f11b84a35741437b770e17bcce7cda9d5b3d888e1d",
+    "scripts/hosted-connector-proof.ts": "8c3a170a7443c5eddc0772139ba89c4c1dfb39d90079f6f6f9a5b8ab4d7a4e53",
     "scripts/workflow-http-proof-server.ts": "0802e102094dd95243727121cedbfaf2e17f660f916d5511777c4441b044012e"
   },
   "limitations": [

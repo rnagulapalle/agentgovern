@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-07T02:10:05.636Z",
+  "at": "2026-10-07T02:13:31.431Z",
   "scope": "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.",
   "checks": [
     {
@@ -51,16 +51,16 @@
   "observedRuns": [
     {
       "org_id": "local-proof",
-      "id": "900d050a-babe-44cb-a5b9-2f15d188faa4",
+      "id": "9941fa3b-499d-4b29-ab79-322fe7fd4cda",
       "state": "completed",
       "created_by": "requester@example.test",
-      "created_at": "2026-10-07T02:09:42.998Z",
+      "created_at": "2026-10-07T02:13:08.699Z",
       "steps": [
         {
           "org_id": "local-proof",
-          "run_id": "900d050a-babe-44cb-a5b9-2f15d188faa4",
+          "run_id": "9941fa3b-499d-4b29-ab79-322fe7fd4cda",
           "ordinal": 1,
-          "action_id": "a540b69c-acab-44bf-bf4b-15036e758894",
+          "action_id": "f2986e3b-ce8c-4954-89b2-d81fa0b48464",
           "agent_id": "crm-agent",
           "connector": "crm",
           "payload": {
@@ -79,7 +79,7 @@
             "reference": "1001"
           },
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:24:44.169Z",
+          "approval_until": "2026-10-07T02:28:09.928Z",
           "proposedRequest": {
             "method": "PATCH",
             "resource": "CRM contact 1001",
@@ -93,9 +93,9 @@
         },
         {
           "org_id": "local-proof",
-          "run_id": "900d050a-babe-44cb-a5b9-2f15d188faa4",
+          "run_id": "9941fa3b-499d-4b29-ab79-322fe7fd4cda",
           "ordinal": 2,
-          "action_id": "47dadca6-7a1a-4364-9ee6-3da82ddb13a4",
+          "action_id": "dd791afd-1911-45d0-98ba-11ef55a026ff",
           "agent_id": "email-agent",
           "connector": "email",
           "payload": {
@@ -110,10 +110,10 @@
           "evidence": {
             "detail": "Simulated provider accepted the approved message. This is not proof of real delivery.",
             "outcome": "verified",
-            "reference": "c313024c-a7b9-41b8-8555-85078346b2fb"
+            "reference": "137d1386-500a-4342-b162-0ef2d1a73824"
           },
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:24:44.218Z",
+          "approval_until": "2026-10-07T02:28:09.980Z",
           "proposedRequest": {
             "method": "POST",
             "resource": "Email acknowledgement",
@@ -132,16 +132,16 @@
     },
     {
       "org_id": "local-proof",
-      "id": "18dbb1e7-b3a0-4576-9a42-97944b2dd6e4",
+      "id": "fc660968-3237-48ed-835f-5824769f8fe2",
       "state": "completed",
       "created_by": "requester@example.test",
-      "created_at": "2026-10-07T02:09:46.907Z",
+      "created_at": "2026-10-07T02:13:12.279Z",
       "steps": [
         {
           "org_id": "local-proof",
-          "run_id": "18dbb1e7-b3a0-4576-9a42-97944b2dd6e4",
+          "run_id": "fc660968-3237-48ed-835f-5824769f8fe2",
           "ordinal": 1,
-          "action_id": "614dcd98-66b7-45db-b9aa-2a074ee1017e",
+          "action_id": "b67c587c-e7fb-4473-a778-ef9ed3852269",
           "agent_id": "crm-agent",
           "connector": "crm",
           "payload": {
@@ -149,10 +149,10 @@
           },
           "state": "succeeded",
           "reason": "Exact contact update verified by read-back from the simulated CRM.",
-          "payload_hash": "11464a415288cabba81ab3d334b4070d93d0aafa6757cbad2d554830aa381e17",
+          "payload_hash": "9b13c4101eb980f3490d9bb67669920f16ca1ff7c7766f6dd2ac72904582843f",
           "approved_payload": {
             "lifecycle": "lead",
-            "sourceVersion": "9be1eca84023708747b6c68bcdc1323da3d4cc4d51733674d433ddde2176ce49"
+            "sourceVersion": "54367a6059068e722268bb4d9c8b347c5e535e28c94b0668986fe6661dcf4863"
           },
           "evidence": {
             "detail": "Exact contact update verified by read-back from the simulated CRM.",
@@ -160,7 +160,7 @@
             "reference": "1001"
           },
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:24:47.237Z",
+          "approval_until": "2026-10-07T02:28:12.607Z",
           "proposedRequest": {
             "method": "PATCH",
             "resource": "CRM contact 1001",
@@ -169,14 +169,14 @@
                 "lifecyclestage": "lead"
               }
             },
-            "approvedSourceVersion": "9be1eca84023708747b6c68bcdc1323da3d4cc4d51733674d433ddde2176ce49"
+            "approvedSourceVersion": "54367a6059068e722268bb4d9c8b347c5e535e28c94b0668986fe6661dcf4863"
           }
         },
         {
           "org_id": "local-proof",
-          "run_id": "18dbb1e7-b3a0-4576-9a42-97944b2dd6e4",
+          "run_id": "fc660968-3237-48ed-835f-5824769f8fe2",
           "ordinal": 2,
-          "action_id": "2fee8d6d-b026-48ac-a800-beac42caf05a",
+          "action_id": "2ceef841-76ce-47ca-bb74-2fd38064f0b2",
           "agent_id": "email-agent",
           "connector": "email",
           "payload": {
@@ -191,10 +191,10 @@
           "evidence": {
             "detail": "Simulated provider accepted the approved message. This is not proof of real delivery.",
             "outcome": "verified",
-            "reference": "f63d5650-9768-4bff-851f-b4fe7cc623c5"
+            "reference": "41b6fffb-fa4e-4cfc-a9c1-f479dd29e12e"
           },
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:24:47.288Z",
+          "approval_until": "2026-10-07T02:28:12.658Z",
           "proposedRequest": {
             "method": "POST",
             "resource": "Email acknowledgement",
@@ -213,16 +213,16 @@
     },
     {
       "org_id": "local-proof",
-      "id": "59070dc7-1652-4043-b078-256f540ebace",
+      "id": "811322f8-c552-4423-b5f3-9af3743e3266",
       "state": "active",
       "created_by": "requester@example.test",
-      "created_at": "2026-10-07T02:09:52.564Z",
+      "created_at": "2026-10-07T02:13:17.850Z",
       "steps": [
         {
           "org_id": "local-proof",
-          "run_id": "59070dc7-1652-4043-b078-256f540ebace",
+          "run_id": "811322f8-c552-4423-b5f3-9af3743e3266",
           "ordinal": 1,
-          "action_id": "28eefac9-6ab9-4ff6-898a-c3b5c28737c2",
+          "action_id": "a3938a67-3145-4534-b1c5-9c1136695d30",
           "agent_id": "crm-agent",
           "connector": "crm",
           "payload": {
@@ -230,17 +230,17 @@
           },
           "state": "uncertain",
           "reason": "Provider response unavailable. No automatic retry.",
-          "payload_hash": "c7a3c49f5e634ac3f991d28e827b24dd9e88ffdf9c4203fd550ba38be6f02011",
+          "payload_hash": "31378456a28d252e0fe611cb2e6a9e5a39e199d34cf800447fbdaedd60255afe",
           "approved_payload": {
             "lifecycle": "lead",
-            "sourceVersion": "503633d0b8e2b22a942c97de53c8d0dfedd7ffaab86279c0b99933ffb0787113"
+            "sourceVersion": "385067fa444f00847b97fdc6388bd153911bc850c49f6bf4268ea8fa9f91c5db"
           },
           "evidence": {
             "detail": "Provider response unavailable. No automatic retry.",
             "outcome": "unknown"
           },
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:24:52.925Z",
+          "approval_until": "2026-10-07T02:28:18.216Z",
           "proposedRequest": {
             "method": "PATCH",
             "resource": "CRM contact 1001",
@@ -249,14 +249,14 @@
                 "lifecyclestage": "lead"
               }
             },
-            "approvedSourceVersion": "503633d0b8e2b22a942c97de53c8d0dfedd7ffaab86279c0b99933ffb0787113"
+            "approvedSourceVersion": "385067fa444f00847b97fdc6388bd153911bc850c49f6bf4268ea8fa9f91c5db"
           }
         },
         {
           "org_id": "local-proof",
-          "run_id": "59070dc7-1652-4043-b078-256f540ebace",
+          "run_id": "811322f8-c552-4423-b5f3-9af3743e3266",
           "ordinal": 2,
-          "action_id": "c35031ee-13ed-4f34-bae7-eeda115cd7ec",
+          "action_id": "99bc0581-ed26-4d87-b7a0-61807240189f",
           "agent_id": "email-agent",
           "connector": "email",
           "payload": {
@@ -270,7 +270,7 @@
           },
           "evidence": null,
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:24:52.975Z",
+          "approval_until": "2026-10-07T02:28:18.265Z",
           "proposedRequest": {
             "method": "POST",
             "resource": "Email acknowledgement",
@@ -289,8 +289,8 @@
     }
   ],
   "providerEffects": {
-    "a540b69c-acab-44bf-bf4b-15036e758894": {
-      "actionId": "a540b69c-acab-44bf-bf4b-15036e758894",
+    "f2986e3b-ce8c-4954-89b2-d81fa0b48464": {
+      "actionId": "f2986e3b-ce8c-4954-89b2-d81fa0b48464",
       "connector": "crm",
       "body": {
         "properties": {
@@ -298,7 +298,7 @@
         }
       },
       "reference": "1001",
-      "observedVersion": "9be1eca84023708747b6c68bcdc1323da3d4cc4d51733674d433ddde2176ce49",
+      "observedVersion": "54367a6059068e722268bb4d9c8b347c5e535e28c94b0668986fe6661dcf4863",
       "response": {
         "id": "1001",
         "properties": {
@@ -310,8 +310,8 @@
         "archived": false
       }
     },
-    "47dadca6-7a1a-4364-9ee6-3da82ddb13a4": {
-      "actionId": "47dadca6-7a1a-4364-9ee6-3da82ddb13a4",
+    "dd791afd-1911-45d0-98ba-11ef55a026ff": {
+      "actionId": "dd791afd-1911-45d0-98ba-11ef55a026ff",
       "connector": "email",
       "body": {
         "from": "LoopLabs <support@looplabs.example>",
@@ -321,10 +321,10 @@
         "subject": "We received your case",
         "text": "Your request was received. A team member will review it."
       },
-      "reference": "c313024c-a7b9-41b8-8555-85078346b2fb",
+      "reference": "137d1386-500a-4342-b162-0ef2d1a73824",
       "observedVersion": null,
       "response": {
-        "id": "c313024c-a7b9-41b8-8555-85078346b2fb",
+        "id": "137d1386-500a-4342-b162-0ef2d1a73824",
         "from": "LoopLabs <support@looplabs.example>",
         "to": [
           "customer@example.test"
@@ -333,8 +333,8 @@
         "text": "Your request was received. A team member will review it."
       }
     },
-    "614dcd98-66b7-45db-b9aa-2a074ee1017e": {
-      "actionId": "614dcd98-66b7-45db-b9aa-2a074ee1017e",
+    "b67c587c-e7fb-4473-a778-ef9ed3852269": {
+      "actionId": "b67c587c-e7fb-4473-a778-ef9ed3852269",
       "connector": "crm",
       "body": {
         "properties": {
@@ -342,7 +342,7 @@
         }
       },
       "reference": "1001",
-      "observedVersion": "503633d0b8e2b22a942c97de53c8d0dfedd7ffaab86279c0b99933ffb0787113",
+      "observedVersion": "385067fa444f00847b97fdc6388bd153911bc850c49f6bf4268ea8fa9f91c5db",
       "response": {
         "id": "1001",
         "properties": {
@@ -350,12 +350,12 @@
           "lifecyclestage": "lead"
         },
         "createdAt": "2026-10-04T00:00:00Z",
-        "updatedAt": "9be1eca84023708747b6c68bcdc1323da3d4cc4d51733674d433ddde2176ce49",
+        "updatedAt": "54367a6059068e722268bb4d9c8b347c5e535e28c94b0668986fe6661dcf4863",
         "archived": false
       }
     },
-    "2fee8d6d-b026-48ac-a800-beac42caf05a": {
-      "actionId": "2fee8d6d-b026-48ac-a800-beac42caf05a",
+    "2ceef841-76ce-47ca-bb74-2fd38064f0b2": {
+      "actionId": "2ceef841-76ce-47ca-bb74-2fd38064f0b2",
       "connector": "email",
       "body": {
         "from": "LoopLabs <support@looplabs.example>",
@@ -365,10 +365,10 @@
         "subject": "We received your case",
         "text": "Your request was received. A team member will review it."
       },
-      "reference": "f63d5650-9768-4bff-851f-b4fe7cc623c5",
+      "reference": "41b6fffb-fa4e-4cfc-a9c1-f479dd29e12e",
       "observedVersion": null,
       "response": {
-        "id": "f63d5650-9768-4bff-851f-b4fe7cc623c5",
+        "id": "41b6fffb-fa4e-4cfc-a9c1-f479dd29e12e",
         "from": "LoopLabs <support@looplabs.example>",
         "to": [
           "customer@example.test"
@@ -377,8 +377,8 @@
         "text": "Your request was received. A team member will review it."
       }
     },
-    "9f72c465-30c5-49ec-af5c-3b8297c92ffa": {
-      "actionId": "9f72c465-30c5-49ec-af5c-3b8297c92ffa",
+    "28908026-1e02-4b20-8934-520698549c0d": {
+      "actionId": "28908026-1e02-4b20-8934-520698549c0d",
       "connector": "crm",
       "body": {
         "properties": {
@@ -386,7 +386,7 @@
         }
       },
       "reference": "1001",
-      "observedVersion": "d341f270d5631083cc8ea01578cca8fcf108b1407c7458e289458903c1a88ac8",
+      "observedVersion": "a34e31d6d4768da4b3b36158056ca30119541d49a26734bbb7f637fce9cfb40b",
       "response": {
         "id": "1001",
         "properties": {
@@ -394,7 +394,7 @@
           "lifecyclestage": "customer"
         },
         "createdAt": "2026-10-04T00:00:00Z",
-        "updatedAt": "503633d0b8e2b22a942c97de53c8d0dfedd7ffaab86279c0b99933ffb0787113",
+        "updatedAt": "385067fa444f00847b97fdc6388bd153911bc850c49f6bf4268ea8fa9f91c5db",
         "archived": false
       }
     }
@@ -402,27 +402,27 @@
   "managedRuns": [
     {
       "org_id": "local-proof",
-      "id": "4260985a-e4dc-451d-9c0f-e6ac244c8492",
+      "id": "f8d0d838-698f-4227-b723-c5ef9acd5528",
       "state": "completed",
       "created_by": "requester@example.test",
-      "created_at": "2026-10-07T02:09:56.261Z",
+      "created_at": "2026-10-07T02:13:21.709Z",
       "steps": [
         {
           "org_id": "local-proof",
-          "run_id": "4260985a-e4dc-451d-9c0f-e6ac244c8492",
+          "run_id": "f8d0d838-698f-4227-b723-c5ef9acd5528",
           "ordinal": 1,
-          "action_id": "ff1a2d0b-1345-43b3-92ad-415c22dbead1",
-          "agent_id": "ack-crm-4260985a-e4dc-451d-9c0f-e6ac244c8492",
+          "action_id": "16470824-3be0-4003-80b7-a686c2cdcd47",
+          "agent_id": "ack-crm-f8d0d838-698f-4227-b723-c5ef9acd5528",
           "connector": "crm",
           "payload": {
             "lifecycle": "customer"
           },
           "state": "succeeded",
           "reason": "Exact contact update verified by read-back from the simulated CRM.",
-          "payload_hash": "681970e863fae10d835d1fdda742cf48242ad0e5f2de42f8738393ef99cca418",
+          "payload_hash": "3d4d104f5bdaad59245bac0b9d36fe72f9fc956444286b32c8d3642e66289f73",
           "approved_payload": {
             "lifecycle": "customer",
-            "sourceVersion": "d341f270d5631083cc8ea01578cca8fcf108b1407c7458e289458903c1a88ac8"
+            "sourceVersion": "a34e31d6d4768da4b3b36158056ca30119541d49a26734bbb7f637fce9cfb40b"
           },
           "evidence": {
             "detail": "Exact contact update verified by read-back from the simulated CRM.",
@@ -430,7 +430,7 @@
             "reference": "1001"
           },
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:24:56.490Z",
+          "approval_until": "2026-10-07T02:28:21.961Z",
           "proposedRequest": {
             "method": "PATCH",
             "resource": "CRM contact 1001",
@@ -439,32 +439,32 @@
                 "lifecyclestage": "customer"
               }
             },
-            "approvedSourceVersion": "d341f270d5631083cc8ea01578cca8fcf108b1407c7458e289458903c1a88ac8"
+            "approvedSourceVersion": "a34e31d6d4768da4b3b36158056ca30119541d49a26734bbb7f637fce9cfb40b"
           }
         },
         {
           "org_id": "local-proof",
-          "run_id": "4260985a-e4dc-451d-9c0f-e6ac244c8492",
+          "run_id": "f8d0d838-698f-4227-b723-c5ef9acd5528",
           "ordinal": 2,
-          "action_id": "17751cc2-9bdb-487b-b3b4-6a7d72b32941",
-          "agent_id": "ack-email-4260985a-e4dc-451d-9c0f-e6ac244c8492",
+          "action_id": "284bbbe2-e58f-4d6d-99c1-f49a1d037dec",
+          "agent_id": "ack-email-f8d0d838-698f-4227-b723-c5ef9acd5528",
           "connector": "email",
           "payload": {
             "template": "case_received"
           },
           "state": "succeeded",
           "reason": "Simulated provider accepted the approved message. This is not proof of real delivery.",
-          "payload_hash": "4e6e4a28bfd04b74836fdef15681f36f60eda72e74fe5af7f513ab1bfa158afc",
+          "payload_hash": "f183e3169b37ce80362ba115085fe81f2301a7f497a58df5b7dfa95de37e4af7",
           "approved_payload": {
             "template": "case_received"
           },
           "evidence": {
             "detail": "Simulated provider accepted the approved message. This is not proof of real delivery.",
             "outcome": "verified",
-            "reference": "fb58a5a6-b704-476d-91fe-783f05be8c22"
+            "reference": "def59d55-cc47-4fa8-81d4-89007fe0f374"
           },
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:24:57.395Z",
+          "approval_until": "2026-10-07T02:28:22.870Z",
           "proposedRequest": {
             "method": "POST",
             "resource": "Email acknowledgement",
@@ -483,27 +483,27 @@
     },
     {
       "org_id": "local-proof",
-      "id": "eae3ce0c-5ae9-4bb9-896f-fbcd59aecde1",
+      "id": "e3a6c9aa-bb12-40f6-a831-9a76b80e188c",
       "state": "completed",
       "created_by": "requester@example.test",
-      "created_at": "2026-10-07T02:10:01.871Z",
+      "created_at": "2026-10-07T02:13:27.239Z",
       "steps": [
         {
           "org_id": "local-proof",
-          "run_id": "eae3ce0c-5ae9-4bb9-896f-fbcd59aecde1",
+          "run_id": "e3a6c9aa-bb12-40f6-a831-9a76b80e188c",
           "ordinal": 1,
-          "action_id": "ff727bcc-bc69-4407-b8af-c4ff5ad4b471",
-          "agent_id": "ack-crm-eae3ce0c-5ae9-4bb9-896f-fbcd59aecde1",
+          "action_id": "35e3d19e-a695-4d55-b66a-dc117c595b58",
+          "agent_id": "ack-crm-e3a6c9aa-bb12-40f6-a831-9a76b80e188c",
           "connector": "crm",
           "payload": {
             "lifecycle": "customer"
           },
           "state": "succeeded",
           "reason": "Exact contact update verified by read-back from the simulated CRM.",
-          "payload_hash": "e9908863d9ef522ea00dfd24928b8bc0e6a5ee218c2ad02cf6fe0eaf3390907a",
+          "payload_hash": "1d80a2066dd885a7859297c74a24cbf370a20c33946a6c3cc93bb50d292587c0",
           "approved_payload": {
             "lifecycle": "customer",
-            "sourceVersion": "0f20d57d17af9a0ee43b044fb415a924fcc21f245459a9abf20814f38076a6de"
+            "sourceVersion": "254a01a60ded15daa23b66a293856710bdba0fd88e8bb082a401058c9e809560"
           },
           "evidence": {
             "detail": "Exact contact update verified by read-back from the simulated CRM.",
@@ -511,7 +511,7 @@
             "reference": "1001"
           },
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:25:02.061Z",
+          "approval_until": "2026-10-07T02:28:27.427Z",
           "proposedRequest": {
             "method": "PATCH",
             "resource": "CRM contact 1001",
@@ -520,32 +520,32 @@
                 "lifecyclestage": "customer"
               }
             },
-            "approvedSourceVersion": "0f20d57d17af9a0ee43b044fb415a924fcc21f245459a9abf20814f38076a6de"
+            "approvedSourceVersion": "254a01a60ded15daa23b66a293856710bdba0fd88e8bb082a401058c9e809560"
           }
         },
         {
           "org_id": "local-proof",
-          "run_id": "eae3ce0c-5ae9-4bb9-896f-fbcd59aecde1",
+          "run_id": "e3a6c9aa-bb12-40f6-a831-9a76b80e188c",
           "ordinal": 2,
-          "action_id": "1d884541-754a-4acb-a787-1bb24d3597c8",
-          "agent_id": "ack-email-eae3ce0c-5ae9-4bb9-896f-fbcd59aecde1",
+          "action_id": "e097acc6-4abb-4055-a272-9f6927407893",
+          "agent_id": "ack-email-e3a6c9aa-bb12-40f6-a831-9a76b80e188c",
           "connector": "email",
           "payload": {
             "template": "case_received"
           },
           "state": "succeeded",
           "reason": "Simulated provider accepted the approved message. This is not proof of real delivery.",
-          "payload_hash": "39a5d6c94f1376546bc91cb380ac06446544977f04a2535279e8495df9554de5",
+          "payload_hash": "005d939cea32d2bf2aa8d94aa553a6e17b09e84aea2602d9ffb3c852d6206bae",
           "approved_payload": {
             "template": "case_received"
           },
           "evidence": {
             "detail": "Simulated provider accepted the approved message. This is not proof of real delivery.",
             "outcome": "verified",
-            "reference": "3ea4609e-af22-4df2-8e94-850bfd119762"
+            "reference": "aa920206-489d-4124-9256-05219eca5484"
           },
           "approved_by": "reviewer@example.test",
-          "approval_until": "2026-10-07T02:25:02.469Z",
+          "approval_until": "2026-10-07T02:28:28.342Z",
           "proposedRequest": {
             "method": "POST",
             "resource": "Email acknowledgement",
@@ -564,8 +564,8 @@
     }
   ],
   "managedProviderEffects": {
-    "a540b69c-acab-44bf-bf4b-15036e758894": {
-      "actionId": "a540b69c-acab-44bf-bf4b-15036e758894",
+    "f2986e3b-ce8c-4954-89b2-d81fa0b48464": {
+      "actionId": "f2986e3b-ce8c-4954-89b2-d81fa0b48464",
       "connector": "crm",
       "body": {
         "properties": {
@@ -573,7 +573,7 @@
         }
       },
       "reference": "1001",
-      "observedVersion": "9be1eca84023708747b6c68bcdc1323da3d4cc4d51733674d433ddde2176ce49",
+      "observedVersion": "54367a6059068e722268bb4d9c8b347c5e535e28c94b0668986fe6661dcf4863",
       "response": {
         "id": "1001",
         "properties": {
@@ -585,8 +585,8 @@
         "archived": false
       }
     },
-    "47dadca6-7a1a-4364-9ee6-3da82ddb13a4": {
-      "actionId": "47dadca6-7a1a-4364-9ee6-3da82ddb13a4",
+    "dd791afd-1911-45d0-98ba-11ef55a026ff": {
+      "actionId": "dd791afd-1911-45d0-98ba-11ef55a026ff",
       "connector": "email",
       "body": {
         "from": "LoopLabs <support@looplabs.example>",
@@ -596,10 +596,10 @@
         "subject": "We received your case",
         "text": "Your request was received. A team member will review it."
       },
-      "reference": "c313024c-a7b9-41b8-8555-85078346b2fb",
+      "reference": "137d1386-500a-4342-b162-0ef2d1a73824",
       "observedVersion": null,
       "response": {
-        "id": "c313024c-a7b9-41b8-8555-85078346b2fb",
+        "id": "137d1386-500a-4342-b162-0ef2d1a73824",
         "from": "LoopLabs <support@looplabs.example>",
         "to": [
           "customer@example.test"
@@ -608,8 +608,8 @@
         "text": "Your request was received. A team member will review it."
       }
     },
-    "614dcd98-66b7-45db-b9aa-2a074ee1017e": {
-      "actionId": "614dcd98-66b7-45db-b9aa-2a074ee1017e",
+    "b67c587c-e7fb-4473-a778-ef9ed3852269": {
+      "actionId": "b67c587c-e7fb-4473-a778-ef9ed3852269",
       "connector": "crm",
       "body": {
         "properties": {
@@ -617,7 +617,7 @@
         }
       },
       "reference": "1001",
-      "observedVersion": "503633d0b8e2b22a942c97de53c8d0dfedd7ffaab86279c0b99933ffb0787113",
+      "observedVersion": "385067fa444f00847b97fdc6388bd153911bc850c49f6bf4268ea8fa9f91c5db",
       "response": {
         "id": "1001",
         "properties": {
@@ -625,12 +625,12 @@
           "lifecyclestage": "lead"
         },
         "createdAt": "2026-10-04T00:00:00Z",
-        "updatedAt": "9be1eca84023708747b6c68bcdc1323da3d4cc4d51733674d433ddde2176ce49",
+        "updatedAt": "54367a6059068e722268bb4d9c8b347c5e535e28c94b0668986fe6661dcf4863",
         "archived": false
       }
     },
-    "2fee8d6d-b026-48ac-a800-beac42caf05a": {
-      "actionId": "2fee8d6d-b026-48ac-a800-beac42caf05a",
+    "2ceef841-76ce-47ca-bb74-2fd38064f0b2": {
+      "actionId": "2ceef841-76ce-47ca-bb74-2fd38064f0b2",
       "connector": "email",
       "body": {
         "from": "LoopLabs <support@looplabs.example>",
@@ -640,10 +640,10 @@
         "subject": "We received your case",
         "text": "Your request was received. A team member will review it."
       },
-      "reference": "f63d5650-9768-4bff-851f-b4fe7cc623c5",
+      "reference": "41b6fffb-fa4e-4cfc-a9c1-f479dd29e12e",
       "observedVersion": null,
       "response": {
-        "id": "f63d5650-9768-4bff-851f-b4fe7cc623c5",
+        "id": "41b6fffb-fa4e-4cfc-a9c1-f479dd29e12e",
         "from": "LoopLabs <support@looplabs.example>",
         "to": [
           "customer@example.test"
@@ -652,8 +652,8 @@
         "text": "Your request was received. A team member will review it."
       }
     },
-    "9f72c465-30c5-49ec-af5c-3b8297c92ffa": {
-      "actionId": "9f72c465-30c5-49ec-af5c-3b8297c92ffa",
+    "28908026-1e02-4b20-8934-520698549c0d": {
+      "actionId": "28908026-1e02-4b20-8934-520698549c0d",
       "connector": "crm",
       "body": {
         "properties": {
@@ -661,7 +661,7 @@
         }
       },
       "reference": "1001",
-      "observedVersion": "d341f270d5631083cc8ea01578cca8fcf108b1407c7458e289458903c1a88ac8",
+      "observedVersion": "a34e31d6d4768da4b3b36158056ca30119541d49a26734bbb7f637fce9cfb40b",
       "response": {
         "id": "1001",
         "properties": {
@@ -669,12 +669,12 @@
           "lifecyclestage": "customer"
         },
         "createdAt": "2026-10-04T00:00:00Z",
-        "updatedAt": "503633d0b8e2b22a942c97de53c8d0dfedd7ffaab86279c0b99933ffb0787113",
+        "updatedAt": "385067fa444f00847b97fdc6388bd153911bc850c49f6bf4268ea8fa9f91c5db",
         "archived": false
       }
     },
-    "ff1a2d0b-1345-43b3-92ad-415c22dbead1": {
-      "actionId": "ff1a2d0b-1345-43b3-92ad-415c22dbead1",
+    "16470824-3be0-4003-80b7-a686c2cdcd47": {
+      "actionId": "16470824-3be0-4003-80b7-a686c2cdcd47",
       "connector": "crm",
       "body": {
         "properties": {
@@ -682,7 +682,7 @@
         }
       },
       "reference": "1001",
-      "observedVersion": "0f20d57d17af9a0ee43b044fb415a924fcc21f245459a9abf20814f38076a6de",
+      "observedVersion": "254a01a60ded15daa23b66a293856710bdba0fd88e8bb082a401058c9e809560",
       "response": {
         "id": "1001",
         "properties": {
@@ -690,12 +690,12 @@
           "lifecyclestage": "customer"
         },
         "createdAt": "2026-10-04T00:00:00Z",
-        "updatedAt": "d341f270d5631083cc8ea01578cca8fcf108b1407c7458e289458903c1a88ac8",
+        "updatedAt": "a34e31d6d4768da4b3b36158056ca30119541d49a26734bbb7f637fce9cfb40b",
         "archived": false
       }
     },
-    "17751cc2-9bdb-487b-b3b4-6a7d72b32941": {
-      "actionId": "17751cc2-9bdb-487b-b3b4-6a7d72b32941",
+    "284bbbe2-e58f-4d6d-99c1-f49a1d037dec": {
+      "actionId": "284bbbe2-e58f-4d6d-99c1-f49a1d037dec",
       "connector": "email",
       "body": {
         "from": "LoopLabs <support@looplabs.example>",
@@ -705,10 +705,10 @@
         "subject": "We received your case",
         "text": "Your request was received. A team member will review it."
       },
-      "reference": "fb58a5a6-b704-476d-91fe-783f05be8c22",
+      "reference": "def59d55-cc47-4fa8-81d4-89007fe0f374",
       "observedVersion": null,
       "response": {
-        "id": "fb58a5a6-b704-476d-91fe-783f05be8c22",
+        "id": "def59d55-cc47-4fa8-81d4-89007fe0f374",
         "from": "LoopLabs <support@looplabs.example>",
         "to": [
           "customer@example.test"
@@ -717,8 +717,8 @@
         "text": "Your request was received. A team member will review it."
       }
     },
-    "ff727bcc-bc69-4407-b8af-c4ff5ad4b471": {
-      "actionId": "ff727bcc-bc69-4407-b8af-c4ff5ad4b471",
+    "35e3d19e-a695-4d55-b66a-dc117c595b58": {
+      "actionId": "35e3d19e-a695-4d55-b66a-dc117c595b58",
       "connector": "crm",
       "body": {
         "properties": {
@@ -726,7 +726,7 @@
         }
       },
       "reference": "1001",
-      "observedVersion": "688181e87b363617f1a3e9f654f8061046088da8af2b74d31286aa4288d08f73",
+      "observedVersion": "d9bc59cf259dd95e9e0c4b67ef10ac0223896b0aa820bd87a4188b12c205d633",
       "response": {
         "id": "1001",
         "properties": {
@@ -734,12 +734,12 @@
           "lifecyclestage": "customer"
         },
         "createdAt": "2026-10-04T00:00:00Z",
-        "updatedAt": "0f20d57d17af9a0ee43b044fb415a924fcc21f245459a9abf20814f38076a6de",
+        "updatedAt": "254a01a60ded15daa23b66a293856710bdba0fd88e8bb082a401058c9e809560",
         "archived": false
       }
     },
-    "1d884541-754a-4acb-a787-1bb24d3597c8": {
-      "actionId": "1d884541-754a-4acb-a787-1bb24d3597c8",
+    "e097acc6-4abb-4055-a272-9f6927407893": {
+      "actionId": "e097acc6-4abb-4055-a272-9f6927407893",
       "connector": "email",
       "body": {
         "from": "LoopLabs <support@looplabs.example>",
@@ -749,10 +749,10 @@
         "subject": "We received your case",
         "text": "Your request was received. A team member will review it."
       },
-      "reference": "3ea4609e-af22-4df2-8e94-850bfd119762",
+      "reference": "aa920206-489d-4124-9256-05219eca5484",
       "observedVersion": null,
       "response": {
-        "id": "3ea4609e-af22-4df2-8e94-850bfd119762",
+        "id": "aa920206-489d-4124-9256-05219eca5484",
         "from": "LoopLabs <support@looplabs.example>",
         "to": [
           "customer@example.test"
@@ -763,24 +763,25 @@
     }
   },
   "sourceFingerprints": {
+    "lib/durable/service.ts": "dd6eb90fa65a9393a6eae0388b2e58925adc4ad0828a22208bfca8882e295c80",
     "lib/enquiries/chat.ts": "a5a96ac7c7f99a8572fa7d3cfbc5fc6fe64598f53f0e117175ec56c67f0e4b8a",
     "lib/enquiries/chat-contract.ts": "56a0571860e42a57ddb0b8a08bee617f54e7f63969ab1c596d7fe308769cde38",
     "lib/enquiries/service.ts": "43e670d41b8cf7d7094ae2c157deecfeb7c689c59cf1ea439b199d28dd522124",
     "app/api/workspace/enquiries/route.ts": "0d614cf9499d70ab0690e5f849d38bd6d64a8376105ceb3642f0cf93a21536ae",
     "components/control-plane/enquiry-workspace.tsx": "180dc92ef0c7d3665531d593021b660a896a47f30df084f7159185d5866d2e20",
     "components/control-plane/workflow-workspace.tsx": "872c99f1a981274f0362f3fb72813c4e2e2ac2d494b76a737e404db33ed84b01",
-    "lib/workflows/service.ts": "572947c9eb67d1065619cccf8e60851ebcaf20a2eb72612f887e649cf60cb44b",
+    "lib/workflows/service.ts": "11c1ea67cb8d212d705f37975b6a5a62bc1df6d2deff86b204f9968b71f431b4",
     "app/control-plane/control-plane.css": "00300f14b4974e499fa57f5407560a0e5f20a721bec45aebaae47b894c6037ad",
     "components/marketing/chrome.tsx": "d79a124fbb4fba22a777539b21b987f472eb518fb004f8e24ca210d847b3f0ab",
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
-    "scripts/chat-ui-proof.ts": "bdab0a60b5cc1eec323499ed1009a1ee61a6fbb8f43536c76c6737ffcca8a0fe",
+    "scripts/chat-ui-proof.ts": "4e6b9066171ae86fd571f5d910534b0005386644084931728a5c693d4b5c6f6f",
     "lib/enquiries/dispatch.ts": "17b292b2595e42eb5b408955f1ffc7ce5add1c5df68de1309e05e9ff128321fa",
     "lib/enquiries/runner.ts": "effcc722142fa61b3f2638657e3c379999ac8505faa8ec1cd9ff35fe157eca7f",
     "lib/enquiries/managed-schema.sql": "88818301d4bff0dbfc6d61740f12abe0b0c080045dde7785766b870ac74c92be",
     "components/control-plane/enquiry-progress.tsx": "1db42c900c7f013c6144450e90a44ccb1da0ab40a21ded6f14c4ce4b4ae5cd61",
     "scripts/enquiry-worker.ts": "f67bdfe35d17d3e839eadf9a80a1bcaade0678f66cade7eef935d4f689d1a6b6",
     "lib/workspace/agents.ts": "a7dc16a213f2699679593dc11a2e8aead7533d4832df6180372a9133ea810fe2",
-    "lib/connectors/service.ts": "1fecbf7c3b19b5844f8af2c1fce0f4012d061f622d96ac766743a6f8fc6e4473"
+    "lib/connectors/service.ts": "18e19ba67767f8f0acf94bc60a0f0e0968ced82bff8a386364edae13895f2f75"
   },
   "unsupported": [
     "Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.",

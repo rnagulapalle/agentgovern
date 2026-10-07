@@ -26,7 +26,7 @@ export class ConnectorControl {
         403,
         "Connector is not assigned to this workspace.",
       );
-    await authorize(c, actor, roles);
+    await authorize(c, actor, roles, actor.role === "worker" && actor.subject === "enquiry-runner" ? "enquiries" : undefined);
   }
   async get(c: PoolClient, actor: Actor, id: string): Promise<ConnectorAction> {
     const a = (
@@ -382,6 +382,7 @@ export class ConnectorControl {
   async read(actor: Actor, id: string) {
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["agent", "operator", "worker"]);
+      if (actor.role === "worker" && actor.subject === "enquiry-runner") await managedWorker(c, actor, id, true);
       return { ...(await this.get(c, actor, id)), lease_token: null };
     });
   }

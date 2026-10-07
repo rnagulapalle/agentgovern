@@ -66,6 +66,10 @@ async function main() {
     for (let i = 0; i < 100; i++) { if (api.exitCode !== null || api.signalCode !== null) throw Error("LoopLabs HTTP handlers failed to start"); const match = output.match(/\{"port":(\d+)\}/); if (match) { origin = `http://127.0.0.1:${match[1]}`; break; } await delay(100); }
     assert(origin, "LoopLabs HTTP readiness missing");
     async function apiCall(path: string, subject: string, value?: object) { return call(origin, path, actors[subject], value); }
+    const managed = await apiCall("/api/workspace/enquiries", "reviewer", { operation: "rehearse", id: randomUUID(), planHash: "a".repeat(64) });
+    assert.equal(managed.status, 409); assert(managed.data.error.includes("atomic approval-version"));
+    assert.equal((await db.query("SELECT count(*) FROM ll_connector_actions")).rows[0].count, "0");
+    check("Managed hosted rehearsal refuses the missing atomic CRM guarantee before submitting any action");
     async function proposeEmail() {
       const id = randomUUID(); const proposed = await apiCall("/api/durable/connectors", "email-agent", { operation: "propose", actionId: id, agentId: "email-agent", connector: "email", payload: { template: "case_received" } });
       assert.equal(proposed.status, 200);
@@ -115,7 +119,7 @@ async function main() {
     assert.equal((await apiCall("/api/durable/connectors", "executor", { operation: "execute", actionId: email.action_id })).status, 409);
     assert.equal((await rows(email.action_id)).length, 0);
     check("Unsupported atomic CRM version guard keeps the complete workflow held; no downstream email or false green");
-    const files = ["lib/connectors/hosted.ts", "lib/connectors/twin.ts", "lib/connectors/service.ts", "app/api/durable/connectors/route.ts", "app/api/durable/workflows/route.ts", "scripts/hosted-connector-proof.ts", "scripts/workflow-http-proof-server.ts"];
+    const files = ["lib/durable/service.ts", "lib/workflows/service.ts", "lib/enquiries/dispatch.ts", "lib/connectors/hosted.ts", "lib/connectors/twin.ts", "lib/connectors/service.ts", "app/api/durable/connectors/route.ts", "app/api/durable/workflows/route.ts", "scripts/hosted-connector-proof.ts", "scripts/workflow-http-proof-server.ts"];
     const fingerprints: Record<string, string> = {};
     for (const file of files) fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
     await writeFile("docs/evidence/hosted-connector-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.", checks, acceptedResponseLossEvidence: lossEvidence, sourceFingerprints: fingerprints, limitations: ["CRM update cannot satisfy existing atomic approval-version invariant with this provider binding; downstream work stays held.", "Not a completed CRM-to-email workflow acceptance.", "No hosted provider restart/durable-session proof or production readiness claim."] }, null, 2) + "\n");

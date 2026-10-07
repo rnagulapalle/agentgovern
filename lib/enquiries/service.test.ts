@@ -3,7 +3,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { NextRequest } from "next/server";
 import { beforeAll, afterAll, beforeEach, it, expect, vi } from "vitest";
-import { authenticate, tokenHash } from "../durable/service";
+import { authenticate, tokenHash, DurableControl } from "../durable/service";
 import type { Actor } from "../durable/contracts";
 import type { ConnectorAction, ConnectorProvider } from "../connectors/contracts";
 import { ConnectorControl } from "../connectors/service";
@@ -267,6 +267,9 @@ it("worker scope, plan staleness, revocation, paused work and unrelated runs rem
   await expect(connector.execute(worker, run.steps[0].action_id)).rejects.toThrow("paused");
   const q = await prepared(); await service.start(operator, q.id, q.plan_hash, "crm", "email");
   const otherRun = await workflow.read(operator, q.id);
+  await expect(new DurableControl(db).execute(worker, randomUUID())).rejects.toThrow("scoped to reviewed");
+  await expect(workflow.read(worker, q.id)).rejects.toThrow("not requested");
+  await expect(connector.read(worker, otherRun.steps[0].action_id)).rejects.toThrow("not requested");
   await expect(workflow.verify(worker, q.id)).rejects.toThrow("not requested");
   await expect(connector.reconcile(worker, otherRun.steps[0].action_id)).rejects.toThrow("not requested");
   await expect(connector.execute(worker, otherRun.steps[0].action_id)).rejects.toThrow("not requested");
@@ -296,4 +299,20 @@ it("does not adopt a pre-existing agent with broader or mismatched boundaries", 
   await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('one',$1,ARRAY['twin.crm','twin.email'],100)", [id]);
   await expect(service.rehearse(operator, p.id, p.plan_hash)).rejects.toThrow("boundaries do not match");
   expect(await workflow.list(operator)).toHaveLength(0); expect(writes).toBe(0);
+});
+it("rotates the durable cursor so held older work cannot starve a newer approved enquiry", async () => {
+  let latest = "";
+  for (let n = 1; n <= 12; n++) {
+    latest = `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+    const saved = await service.prepare(operator, latest, "service") as { saved: { plan_hash: string } };
+    await service.rehearse(operator, latest, saved.saved.plan_hash);
+  }
+  const run = await workflow.read(operator, latest);
+  for (const step of run.steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+  const worker = await workerActor(), runner = new EnquiryRunner(db, workflow);
+  expect(await runner.tick(worker)).toBe(0); // First ten held runs.
+  expect(await runner.tick(worker)).toBe(2);
+  expect((await workflow.read(operator, latest)).state).toBe("completed");
+  expect(writes).toBe(2);
+  expect((await workflow.list(operator)).filter(r => r.state === "active")).toHaveLength(11);
 });
