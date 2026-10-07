@@ -73,6 +73,7 @@ beforeAll(async () => {
     "lib/workspace/schema.sql",
     "lib/connectors/schema.sql",
     "lib/workflows/schema.sql",
+    "lib/enquiries/schema.sql",
   ])
     await db.query(await readFile(file, "utf8"));
 }, 20000);

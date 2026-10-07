@@ -24,10 +24,13 @@
     "refund:proof": "tsx --env-file=.env.local scripts/refund-proof.ts",
     "workspace:setup": "tsx --env-file=.env.local scripts/workspace-setup.ts",
     "connectors:setup": "tsx --env-file=.env.local scripts/connector-setup.ts",
+    "enquiries:setup": "tsx --env-file=.env.local scripts/enquiry-setup.ts",
     "connectors:twin": "bash scripts/connector-twin.sh",
-    "connectors:proof": "tsx --env-file=.env.local scripts/connector-proof.ts"
+    "connectors:proof": "tsx --env-file=.env.local scripts/connector-proof.ts",
+    "chat:proof": "node --env-file=.env.local --import tsx scripts/chat-ui-proof.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1147.0",
     "clsx": "^2.1.1",
     "geist": "^1.7.2",
     "lucide-react": "^0.471.1",
@@ -40,6 +43,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.10.7",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.0.7",

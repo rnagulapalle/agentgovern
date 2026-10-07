@@ -87,6 +87,7 @@ async function main() {
       "lib/workspace/schema.sql",
       "lib/connectors/schema.sql",
       "lib/workflows/schema.sql",
+      "lib/enquiries/schema.sql",
     ])
       await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
@@ -724,6 +725,47 @@ async function main() {
         },
         "A LoopLabs agent key is not a provider credential. This is fixture enforcement, not a customer network audit.",
       );
+      await check(
+        "enquiry: saved plan, independent approvals, lost response and restart through HTTP",
+        async () => {
+          const enquiryKeys: string[] = [];
+          for (const [id, tool] of [["enquiry-crm", "twin.crm"], ["enquiry-email", "twin.email"]]) {
+            const key = randomBytes(32).toString("base64url"); enquiryKeys.push(key);
+            await db!.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof',$1,ARRAY[$2]::text[],20)", [id, tool]);
+            await db!.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'agent')", [tokenHash(key), id]);
+          }
+          const id = randomUUID();
+          const endpoint = "/api/workspace/enquiries";
+          for (const fixtureId of ["missing", "unmatched", "pricing"]) {
+            const r = await http(endpoint, actorKeys.reviewer, { operation: "prepare", id: randomUUID(), fixtureId });
+            assert.equal(r.status, 200); assert.ok(r.data.clarification);
+          }
+          const request = { operation: "prepare", id, fixtureId: "service" };
+          const draft = await http(endpoint, actorKeys.reviewer, request);
+          assert.equal(draft.status, 200);
+          assert.equal((await http(endpoint, actorKeys.reviewer, request)).data.saved.plan_hash, draft.data.saved.plan_hash);
+          const start = { operation: "start", id, planHash: draft.data.saved.plan_hash, crmAgent: "enquiry-crm", emailAgent: "enquiry-email" };
+          assert.equal((await http(endpoint, actorKeys.reviewer, { ...start, planHash: "0".repeat(64) })).status, 409);
+          assert.equal((await http(endpoint, actorKeys.reviewer, start)).status, 200);
+          const run = (await http(`/api/durable/workflows?run=${id}`, actorKeys.reviewer)).data;
+          for (const [index, step] of run.steps.entries()) {
+            const a = await http("/api/durable/connectors", enquiryKeys[index], { operation: "propose", actionId: step.action_id, agentId: step.agent_id, connector: step.connector, payload: step.payload });
+            assert.equal(a.status, 200);
+            assert.equal((await http("/api/durable/connectors", actorKeys.reviewer, { operation: "approve", actionId: step.action_id, payloadHash: a.data.payload_hash })).status, 200);
+          }
+          const execute = (index: number, lostResponse = false) => http("/api/durable/connectors", workerToken, { operation: "execute", actionId: run.steps[index].action_id, lostResponse });
+          assert.equal((await execute(1)).status, 409);
+          assert.equal((await execute(0, true)).data.state, "uncertain");
+          await stopApi(); await startApi();
+          assert.equal((await http(endpoint, actorKeys.reviewer, start)).data.runId, id);
+          assert.equal((await execute(1)).status, 409);
+          assert.equal((await http("/api/durable/connectors", actorKeys.reviewer, { operation: "reconcile", actionId: run.steps[0].action_id })).data.state, "succeeded");
+          assert.equal((await execute(1)).data.state, "succeeded");
+          assert.equal((await http("/api/durable/workflows", actorKeys.reviewer, { operation: "verify", runId: id })).status, 200);
+          assert.equal((await db!.query("SELECT count(*)::int AS n FROM ll_workflow_runs WHERE id=$1", [id])).rows[0].n, 1);
+        },
+        "Real PostgreSQL and FetchSandbox HTTP. A reviewed sample enquiry survives API restart; response loss is reconciled without resending and the acknowledgement stays held until its predecessor is verified. No real delivery or model is used.",
+      );
     } finally {
       await stopApi();
     }
@@ -745,6 +787,7 @@ async function main() {
             "SELECT id,state,payload_hash FROM ll_connector_actions ORDER BY id",
           )
         ).rows;
+        const expectedEnquiries = (await db!.query("SELECT id,plan_hash,run_id FROM ll_enquiry_plans ORDER BY id")).rows;
         const backup = `${dir}/database.dump`;
         await execFileAsync(
           "pg_dump",
@@ -780,11 +823,17 @@ async function main() {
           ).rows,
           expected,
         );
+        assert.deepEqual((await db!.query("SELECT id,plan_hash,run_id FROM ll_enquiry_plans ORDER BY id")).rows, expectedEnquiries);
       },
       "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA.",
     );
     const fingerprintFiles = [
       "lib/workflows/guard.ts",
+      "lib/enquiries/contracts.ts",
+      "lib/enquiries/service.ts",
+      "lib/enquiries/schema.sql",
+      "app/api/workspace/enquiries/route.ts",
+      "scripts/workflow-http-proof-server.ts",
       "lib/workflows/service.ts",
       "app/api/durable/workflows/route.ts",
       "scripts/workflow-agent.mjs",
@@ -792,6 +841,7 @@ async function main() {
       "lib/connectors/contracts.ts",
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
+      "lib/connectors/hosted.ts",
       "lib/connectors/schema.sql",
       "lib/workflows/schema.sql",
       "app/api/durable/connectors/route.ts",

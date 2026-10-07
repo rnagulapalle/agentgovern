@@ -81,7 +81,7 @@ network=$(sudo docker inspect --format '{{range $name, $_ := .NetworkSettings.Ne
 python3 - "$app/.env" "$backup/candidate-runtime.env" <<'PYENV'
 import sys
 from pathlib import Path
-allowed = {"LOOPLABS_DURABLE_ORIGIN", "LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN", "LOOPLABS_CONNECTOR_TWIN_URL", "LOOPLABS_CONNECTOR_TWIN_TOKEN"}
+allowed = {"LOOPLABS_DURABLE_ORIGIN", "LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN", "LOOPLABS_CONNECTOR_TWIN_URL", "LOOPLABS_CONNECTOR_TWIN_TOKEN", "LOOPLABS_FETCHSANDBOX_BINDING", "LOOPLABS_CHAT_MODEL", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"}
 source = Path(sys.argv[1])
 values = [line for line in source.read_text().splitlines() if line.split("=", 1)[0] in allowed] if source.exists() else []
 target = Path(sys.argv[2]); target.touch(mode=0o600); target.write_text("\n".join(values) + "\n")
@@ -108,6 +108,8 @@ check_app() {
           if (!result.rows.some(row => row.version === 2)) throw new Error("Refund schema missing");
           if (!result.rows.some(row => row.version === 3)) throw new Error("Workspace membership schema missing");
           if (!result.rows.some(row => row.version === 4)) throw new Error("Connector action schema missing");
+          if (!result.rows.some(row => row.version === 5)) throw new Error("Workflow schema missing");
+          if (!result.rows.some(row => row.version === 7)) throw new Error("Saved enquiry schema missing; apply enquiries:setup before release");
         } finally { await pool.end(); }
         const evidence = await fetch(process.env.LOOPLABS_REFUND_TWIN_URL + "/v1/charges/ch_looplabs_refund_demo", {
           headers: { Authorization: "Bearer " + process.env.LOOPLABS_REFUND_TWIN_TOKEN },

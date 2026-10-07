@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
 import { authorize } from "../durable/service";
 import { ControlError, type Actor } from "../durable/contracts";
 import { ConnectorControl } from "../connectors/service";
+import { connectorBody } from "../connectors/twin";
 export class WorkflowControl {
   constructor(
     readonly db: Pool,
@@ -14,9 +15,13 @@ export class WorkflowControl {
     crmAgent: string,
     emailAgent: string,
     runId: string,
+    lifecycle: "lead" | "customer" = "customer",
+    client?: PoolClient,
   ) {
-    return transaction(this.db, actor.orgId, async (c) => {
+    const create = async (c: PoolClient) => {
       await this.connectors.authority(c, actor, ["operator"]);
+      if (!["lead", "customer"].includes(lifecycle))
+        throw new ControlError(400, "Choose a supported contact lifecycle.");
       if (
         typeof runId !== "string" ||
         !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -36,14 +41,15 @@ export class WorkflowControl {
       if (existing) {
         const steps = (
           await c.query(
-            "SELECT agent_id FROM ll_workflow_steps WHERE org_id=$1 AND run_id=$2 ORDER BY ordinal",
+            "SELECT agent_id,payload FROM ll_workflow_steps WHERE org_id=$1 AND run_id=$2 ORDER BY ordinal",
             [actor.orgId, runId],
           )
         ).rows;
         if (
           steps.length !== 2 ||
           steps[0].agent_id !== crmAgent ||
-          steps[1].agent_id !== emailAgent
+          steps[1].agent_id !== emailAgent ||
+          steps[0].payload.lifecycle !== lifecycle
         )
           throw new ControlError(
             409,
@@ -83,7 +89,7 @@ export class WorkflowControl {
         [actor.orgId, id, actor.subject],
       );
       for (const [ordinal, agent, connector, payload] of [
-        [1, crmAgent, "crm", { lifecycle: "customer" }],
+        [1, crmAgent, "crm", { lifecycle }],
         [2, emailAgent, "email", { template: "case_received" }],
       ] as const)
         await c.query(
@@ -103,7 +109,8 @@ export class WorkflowControl {
         [actor.orgId, id, actor.subject],
       );
       return id;
-    });
+    };
+    return client ? create(client) : transaction(this.db, actor.orgId, create);
   }
   async read(actor: Actor, id: string) {
     if (!/^[0-9a-f-]{36}$/i.test(id))
@@ -122,7 +129,7 @@ export class WorkflowControl {
       ).rows[0];
       const steps = (
         await c.query(
-          "SELECT s.*,a.state,a.reason,a.payload_hash FROM ll_workflow_steps s LEFT JOIN ll_connector_actions a ON a.org_id=s.org_id AND a.id=s.action_id WHERE s.org_id=$1 AND s.run_id=$2 ORDER BY s.ordinal",
+          "SELECT s.*,a.state,a.reason,a.payload_hash,a.payload AS approved_payload,a.evidence,a.approved_by,a.approval_until FROM ll_workflow_steps s LEFT JOIN ll_connector_actions a ON a.org_id=s.org_id AND a.id=s.action_id WHERE s.org_id=$1 AND s.run_id=$2 ORDER BY s.ordinal",
           [actor.orgId, id],
         )
       ).rows;
@@ -138,7 +145,7 @@ export class WorkflowControl {
         steps:
           actor.role === "agent"
             ? steps.filter((s) => s.agent_id === actor.subject)
-            : steps,
+            : steps.map(s => ({ ...s, proposedRequest: { method: s.connector === "crm" ? "PATCH" : "POST", resource: s.connector === "crm" ? "CRM contact 1001" : "Email acknowledgement", body: connectorBody(s), approvedSourceVersion: s.approved_payload?.sourceVersion || null } })),
       };
     });
   }

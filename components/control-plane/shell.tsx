@@ -19,6 +19,7 @@ import {
   History,
   LayoutGrid,
   Menu,
+  MessageSquare,
   Network,
   Search,
   Settings2,
@@ -34,6 +35,7 @@ const groups = [
     name: "WORKSPACE",
     items: [
       { key: "overview", label: "Overview", icon: LayoutGrid },
+      { key: "work", label: "Work with agents", icon: MessageSquare },
       { key: "agents", label: "Agents and boundaries", icon: Bot },
       { key: "connectors", label: "Connectors", icon: Database },
       { key: "actions", label: "Actions", icon: SlidersHorizontal },
@@ -66,6 +68,7 @@ export function ControlShell({
   const section = pathname.split("/")[2] || "overview";
   const durable = [
     "overview",
+    "work",
     "actions",
     "agents",
     "connectors",

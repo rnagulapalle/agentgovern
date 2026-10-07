@@ -4,7 +4,7 @@ import { authenticate } from "@/lib/durable/service";
 import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
 import { ControlError } from "@/lib/durable/contracts";
 import { ConnectorControl } from "@/lib/connectors/service";
-import { FetchSandboxConnectors } from "@/lib/connectors/twin";
+import { connectorProvider } from "@/lib/connectors/hosted";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 async function context(request: NextRequest) {
@@ -12,7 +12,7 @@ async function context(request: NextRequest) {
   const actor = await authenticate(db, credential(request));
   return {
     actor,
-    service: new ConnectorControl(db, new FetchSandboxConnectors()),
+    service: new ConnectorControl(db, connectorProvider()),
   };
 }
 export async function GET(request: NextRequest) {

@@ -11,7 +11,7 @@ import {
   type Observation,
 } from "./contracts";
 
-import { workflowProposal, workflowDispatch } from "../workflows/guard";
+import { workflowProposal, workflowDispatch, enquirySource } from "../workflows/guard";
 
 // Only the isolated fixture workspace is supported by these provider contracts.
 export class ConnectorControl {
@@ -141,6 +141,7 @@ export class ConnectorControl {
       p.connector === "crm" ? { ...p.payload, sourceVersion } : p.payload;
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["agent", "operator"]);
+      await enquirySource(c, actor.orgId, p.actionId, sourceVersion);
       await workflowProposal(c, actor.orgId, p);
       if (actor.role === "agent" && actor.subject !== p.agentId)
         throw new ControlError(403, "Agent identity must match the request.");

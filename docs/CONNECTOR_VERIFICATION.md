@@ -72,3 +72,43 @@ Sanitized evidence is recorded in `docs/evidence/connector-proof.json`. Private 
 - Model execution and general multi-step orchestration remain separate, unconnected features.
 
 These proofs improve evidence for specific contracts. They do not establish an industry-grade control plane for every connector or regulated industry.
+
+
+## Hosted binding rehearsal (October 6)
+
+An opt-in server-only `LOOPLABS_FETCHSANDBOX_BINDING` connects the existing
+connector/workflow HTTP handlers to owned FetchSandbox environments. The binding
+contains the FetchSandbox origin, private owner API key, workspace identity,
+contact ID and separate CRM/email environment IDs and credentials. Keep it in
+server configuration; never expose it to an agent, browser or committed file.
+Absent configuration retains the private fixture. Malformed configuration fails
+closed, rather than falling back to a different provider.
+
+The hosted email path preserves named approval and stable logical action keys.
+Reconciliation reads a correlated provider acceptance from the owner-only archive
+and independently retrieves the email, comparing the exact approved content and
+recipient. Provider acceptance is distinct from inbox delivery. Actual delayed
+responses and disconnects are recorded by the existing transport observer.
+
+CRM writes are deliberately unsupported by this binding: the ordinary provider
+contract does not implement the fixture's atomic approved-version guard. A CRM
+update returns uncertainty without issuing the write, so its downstream email
+stays held. Reading a contact or matching its final fields cannot establish the
+missing concurrent-write safety. Do not call this a completed CRM-to-email
+workflow proof or live HubSpot compatibility.
+
+The isolated proof serves the actual LoopLabs HTTP handlers, native FetchSandbox
+API-key identity, validation/fixture APIs, provider HTTP routes and archive. It
+uses a dedicated PostgreSQL schema and temporary SQLite/provider state, then
+cleans them up. It also injects a deliberately wrong-recipient acceptance and
+requires reconciliation to turn the apparent success into conflict.
+
+```sh
+FETCHSANDBOX_BACKEND_PATH=/path/to/sandbox/backend \
+  node --env-file=.env.local --import tsx scripts/hosted-connector-proof.ts
+```
+
+Recorded results: `docs/evidence/hosted-connector-proof.json`. This is a bounded
+local execution of the hosted API contract, not a stage/production deployment,
+provider restart certificate or completed conversational workflow-builder pilot.
+The existing fixture proof and quality gates remain required.

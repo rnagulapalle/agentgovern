@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { NextRequest } from "next/server";
 import * as workflows from "../app/api/durable/workflows/route";
 import * as connectors from "../app/api/durable/connectors/route";
+import * as enquiries from "../app/api/workspace/enquiries/route";
 const server = createServer(async (req, res) => {
   try {
     const chunks: Buffer[] = [];
@@ -33,7 +34,7 @@ const server = createServer(async (req, res) => {
       ? workflows
       : req.url?.startsWith("/api/durable/connectors")
         ? connectors
-        : null;
+        : req.url?.startsWith("/api/workspace/enquiries") ? enquiries : null;
     if (!handler) {
       res.writeHead(404);
       res.end();

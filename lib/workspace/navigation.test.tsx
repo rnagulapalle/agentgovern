@@ -37,6 +37,7 @@ it("keeps private navigation available without speculative requests exhausting t
   );
   expect(html).toContain("Control plane navigation");
   expect(links.some((l) => l.href === "/control-plane/agents")).toBe(true);
+  expect(links.some((l) => l.href === "/control-plane/work")).toBe(true);
   expect(links.some((l) => l.href === "/control-plane/verification")).toBe(
     true,
   );

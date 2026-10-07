@@ -1,0 +1,401 @@
+{
+  "at": "2026-10-07T00:36:29.238Z",
+  "scope": "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.",
+  "checks": [
+    {
+      "name": "Typed natural-language request calls the real model, asks for the missing customer and saves an exact plan without effects",
+      "passed": true
+    },
+    {
+      "name": "Repeated typed intent and reviewed-plan creation reuse the same saved plan and run without authorizing execution",
+      "passed": true
+    },
+    {
+      "name": "Two independent named approvals, actual CRM/email HTTP effects and UI verification receipt complete the normal rehearsal",
+      "passed": true
+    },
+    {
+      "name": "Lost CRM response holds email; killing/restarting the real app preserves the run and read-back recovers without a second CRM write",
+      "passed": true
+    },
+    {
+      "name": "Customer data changed after approval: the atomic version check rejects the stale write and no downstream message executes",
+      "passed": true
+    },
+    {
+      "name": "Unsupported extra actions stop in chat without creating a plan or workflow",
+      "passed": true
+    },
+    {
+      "name": "390px mobile conversation has no horizontal overflow",
+      "passed": true
+    }
+  ],
+  "typedRequest": "When a customer asks about our service, check their CRM record, prepare an acknowledgement, and ask me before sending. Rehearse it with FetchSandbox first.",
+  "observedRuns": [
+    {
+      "org_id": "local-proof",
+      "id": "ed9d611b-125a-40cc-a620-3ec42a64f68c",
+      "state": "completed",
+      "created_by": "requester@example.test",
+      "created_at": "2026-10-07T00:36:14.990Z",
+      "steps": [
+        {
+          "org_id": "local-proof",
+          "run_id": "ed9d611b-125a-40cc-a620-3ec42a64f68c",
+          "ordinal": 1,
+          "action_id": "1833aaf3-4c38-4967-a6b0-b87329f64393",
+          "agent_id": "crm-agent",
+          "connector": "crm",
+          "payload": {
+            "lifecycle": "lead"
+          },
+          "state": "succeeded",
+          "reason": "Exact contact update verified by read-back from the simulated CRM.",
+          "payload_hash": "6ee7aa7f624628a26f248e29b85b5d1a2563fa4f147c6e5840c536336e516d49",
+          "approved_payload": {
+            "lifecycle": "lead",
+            "sourceVersion": "2026-10-04T00:00:00Z"
+          },
+          "evidence": {
+            "detail": "Exact contact update verified by read-back from the simulated CRM.",
+            "outcome": "verified",
+            "reference": "1001"
+          },
+          "approved_by": "reviewer@example.test",
+          "approval_until": "2026-10-07T00:51:16.253Z",
+          "proposedRequest": {
+            "method": "PATCH",
+            "resource": "CRM contact 1001",
+            "body": {
+              "properties": {
+                "lifecyclestage": "lead"
+              }
+            },
+            "approvedSourceVersion": "2026-10-04T00:00:00Z"
+          }
+        },
+        {
+          "org_id": "local-proof",
+          "run_id": "ed9d611b-125a-40cc-a620-3ec42a64f68c",
+          "ordinal": 2,
+          "action_id": "b01b8b69-476b-4276-968c-d7e908cbd91c",
+          "agent_id": "email-agent",
+          "connector": "email",
+          "payload": {
+            "template": "case_received"
+          },
+          "state": "succeeded",
+          "reason": "Simulated provider accepted the approved message. This is not proof of real delivery.",
+          "payload_hash": "cba35457013c16f202adb5fc0e9389cb091ec29680ca918c5efcbaef484c7d89",
+          "approved_payload": {
+            "template": "case_received"
+          },
+          "evidence": {
+            "detail": "Simulated provider accepted the approved message. This is not proof of real delivery.",
+            "outcome": "verified",
+            "reference": "aad8f580-ad49-415e-8345-573469bb10a6"
+          },
+          "approved_by": "reviewer@example.test",
+          "approval_until": "2026-10-07T00:51:16.301Z",
+          "proposedRequest": {
+            "method": "POST",
+            "resource": "Email acknowledgement",
+            "body": {
+              "from": "LoopLabs <support@looplabs.example>",
+              "to": [
+                "customer@example.test"
+              ],
+              "subject": "We received your case",
+              "text": "Your request was received. A team member will review it."
+            },
+            "approvedSourceVersion": null
+          }
+        }
+      ]
+    },
+    {
+      "org_id": "local-proof",
+      "id": "ea3d8c7a-821d-4308-8f2b-7a2a18426b72",
+      "state": "completed",
+      "created_by": "requester@example.test",
+      "created_at": "2026-10-07T00:36:20.278Z",
+      "steps": [
+        {
+          "org_id": "local-proof",
+          "run_id": "ea3d8c7a-821d-4308-8f2b-7a2a18426b72",
+          "ordinal": 1,
+          "action_id": "5b34e029-fb62-4622-ac43-13c7ea445845",
+          "agent_id": "crm-agent",
+          "connector": "crm",
+          "payload": {
+            "lifecycle": "lead"
+          },
+          "state": "succeeded",
+          "reason": "Exact contact update verified by read-back from the simulated CRM.",
+          "payload_hash": "ffa109bcc5cd4a7f666ec8e722cfa373e12f78b77bfeec7120b84a465d1294ea",
+          "approved_payload": {
+            "lifecycle": "lead",
+            "sourceVersion": "1b300e25b380f85548be14905577f4838307b1b892f28105aeb0a941992a8066"
+          },
+          "evidence": {
+            "detail": "Exact contact update verified by read-back from the simulated CRM.",
+            "outcome": "verified",
+            "reference": "1001"
+          },
+          "approved_by": "reviewer@example.test",
+          "approval_until": "2026-10-07T00:51:20.609Z",
+          "proposedRequest": {
+            "method": "PATCH",
+            "resource": "CRM contact 1001",
+            "body": {
+              "properties": {
+                "lifecyclestage": "lead"
+              }
+            },
+            "approvedSourceVersion": "1b300e25b380f85548be14905577f4838307b1b892f28105aeb0a941992a8066"
+          }
+        },
+        {
+          "org_id": "local-proof",
+          "run_id": "ea3d8c7a-821d-4308-8f2b-7a2a18426b72",
+          "ordinal": 2,
+          "action_id": "ccbda359-74ba-4c7e-8129-d4e70dd25109",
+          "agent_id": "email-agent",
+          "connector": "email",
+          "payload": {
+            "template": "case_received"
+          },
+          "state": "succeeded",
+          "reason": "Simulated provider accepted the approved message. This is not proof of real delivery.",
+          "payload_hash": "cba35457013c16f202adb5fc0e9389cb091ec29680ca918c5efcbaef484c7d89",
+          "approved_payload": {
+            "template": "case_received"
+          },
+          "evidence": {
+            "detail": "Simulated provider accepted the approved message. This is not proof of real delivery.",
+            "outcome": "verified",
+            "reference": "e19bbde9-eefe-446c-886f-0102cb9a5b9c"
+          },
+          "approved_by": "reviewer@example.test",
+          "approval_until": "2026-10-07T00:51:20.657Z",
+          "proposedRequest": {
+            "method": "POST",
+            "resource": "Email acknowledgement",
+            "body": {
+              "from": "LoopLabs <support@looplabs.example>",
+              "to": [
+                "customer@example.test"
+              ],
+              "subject": "We received your case",
+              "text": "Your request was received. A team member will review it."
+            },
+            "approvedSourceVersion": null
+          }
+        }
+      ]
+    },
+    {
+      "org_id": "local-proof",
+      "id": "82e891ad-11ef-4134-9a71-4c63dfe38545",
+      "state": "active",
+      "created_by": "requester@example.test",
+      "created_at": "2026-10-07T00:36:27.483Z",
+      "steps": [
+        {
+          "org_id": "local-proof",
+          "run_id": "82e891ad-11ef-4134-9a71-4c63dfe38545",
+          "ordinal": 1,
+          "action_id": "d3505726-7c72-41a4-ae0f-bc0dcd686c7b",
+          "agent_id": "crm-agent",
+          "connector": "crm",
+          "payload": {
+            "lifecycle": "lead"
+          },
+          "state": "uncertain",
+          "reason": "Provider response unavailable. No automatic retry.",
+          "payload_hash": "fb51e9c87ea304cf93ed459767d94b6c62e8a71b54d5f05bdfc68b61da2b21a8",
+          "approved_payload": {
+            "lifecycle": "lead",
+            "sourceVersion": "228f79bf313d08c331c643db9d4553e505ac89c13389a3cc0988e64eea243a71"
+          },
+          "evidence": {
+            "detail": "Provider response unavailable. No automatic retry.",
+            "outcome": "unknown"
+          },
+          "approved_by": "reviewer@example.test",
+          "approval_until": "2026-10-07T00:51:27.811Z",
+          "proposedRequest": {
+            "method": "PATCH",
+            "resource": "CRM contact 1001",
+            "body": {
+              "properties": {
+                "lifecyclestage": "lead"
+              }
+            },
+            "approvedSourceVersion": "228f79bf313d08c331c643db9d4553e505ac89c13389a3cc0988e64eea243a71"
+          }
+        },
+        {
+          "org_id": "local-proof",
+          "run_id": "82e891ad-11ef-4134-9a71-4c63dfe38545",
+          "ordinal": 2,
+          "action_id": "f31567f3-103e-4085-974f-01a2bdf1f402",
+          "agent_id": "email-agent",
+          "connector": "email",
+          "payload": {
+            "template": "case_received"
+          },
+          "state": "ready",
+          "reason": "Exact request approved for 15 minutes.",
+          "payload_hash": "cba35457013c16f202adb5fc0e9389cb091ec29680ca918c5efcbaef484c7d89",
+          "approved_payload": {
+            "template": "case_received"
+          },
+          "evidence": null,
+          "approved_by": "reviewer@example.test",
+          "approval_until": "2026-10-07T00:51:27.862Z",
+          "proposedRequest": {
+            "method": "POST",
+            "resource": "Email acknowledgement",
+            "body": {
+              "from": "LoopLabs <support@looplabs.example>",
+              "to": [
+                "customer@example.test"
+              ],
+              "subject": "We received your case",
+              "text": "Your request was received. A team member will review it."
+            },
+            "approvedSourceVersion": null
+          }
+        }
+      ]
+    }
+  ],
+  "providerEffects": {
+    "1833aaf3-4c38-4967-a6b0-b87329f64393": {
+      "actionId": "1833aaf3-4c38-4967-a6b0-b87329f64393",
+      "connector": "crm",
+      "body": {
+        "properties": {
+          "lifecyclestage": "lead"
+        }
+      },
+      "reference": "1001",
+      "observedVersion": "1b300e25b380f85548be14905577f4838307b1b892f28105aeb0a941992a8066",
+      "response": {
+        "id": "1001",
+        "properties": {
+          "email": "customer@example.test",
+          "lifecyclestage": "lead"
+        },
+        "createdAt": "2026-10-04T00:00:00Z",
+        "updatedAt": "2026-10-04T00:00:00Z",
+        "archived": false
+      }
+    },
+    "b01b8b69-476b-4276-968c-d7e908cbd91c": {
+      "actionId": "b01b8b69-476b-4276-968c-d7e908cbd91c",
+      "connector": "email",
+      "body": {
+        "from": "LoopLabs <support@looplabs.example>",
+        "to": [
+          "customer@example.test"
+        ],
+        "subject": "We received your case",
+        "text": "Your request was received. A team member will review it."
+      },
+      "reference": "aad8f580-ad49-415e-8345-573469bb10a6",
+      "observedVersion": null,
+      "response": {
+        "id": "aad8f580-ad49-415e-8345-573469bb10a6",
+        "from": "LoopLabs <support@looplabs.example>",
+        "to": [
+          "customer@example.test"
+        ],
+        "subject": "We received your case",
+        "text": "Your request was received. A team member will review it."
+      }
+    },
+    "5b34e029-fb62-4622-ac43-13c7ea445845": {
+      "actionId": "5b34e029-fb62-4622-ac43-13c7ea445845",
+      "connector": "crm",
+      "body": {
+        "properties": {
+          "lifecyclestage": "lead"
+        }
+      },
+      "reference": "1001",
+      "observedVersion": "228f79bf313d08c331c643db9d4553e505ac89c13389a3cc0988e64eea243a71",
+      "response": {
+        "id": "1001",
+        "properties": {
+          "email": "customer@example.test",
+          "lifecyclestage": "lead"
+        },
+        "createdAt": "2026-10-04T00:00:00Z",
+        "updatedAt": "1b300e25b380f85548be14905577f4838307b1b892f28105aeb0a941992a8066",
+        "archived": false
+      }
+    },
+    "ccbda359-74ba-4c7e-8129-d4e70dd25109": {
+      "actionId": "ccbda359-74ba-4c7e-8129-d4e70dd25109",
+      "connector": "email",
+      "body": {
+        "from": "LoopLabs <support@looplabs.example>",
+        "to": [
+          "customer@example.test"
+        ],
+        "subject": "We received your case",
+        "text": "Your request was received. A team member will review it."
+      },
+      "reference": "e19bbde9-eefe-446c-886f-0102cb9a5b9c",
+      "observedVersion": null,
+      "response": {
+        "id": "e19bbde9-eefe-446c-886f-0102cb9a5b9c",
+        "from": "LoopLabs <support@looplabs.example>",
+        "to": [
+          "customer@example.test"
+        ],
+        "subject": "We received your case",
+        "text": "Your request was received. A team member will review it."
+      }
+    },
+    "6048f4b7-2518-4aa9-ab64-5ade11394974": {
+      "actionId": "6048f4b7-2518-4aa9-ab64-5ade11394974",
+      "connector": "crm",
+      "body": {
+        "properties": {
+          "lifecyclestage": "customer"
+        }
+      },
+      "reference": "1001",
+      "observedVersion": "02545446bbaf8334a5a3788a60942e8f847b834ae8546c3010dfb5b0d39c0e32",
+      "response": {
+        "id": "1001",
+        "properties": {
+          "email": "customer@example.test",
+          "lifecyclestage": "customer"
+        },
+        "createdAt": "2026-10-04T00:00:00Z",
+        "updatedAt": "228f79bf313d08c331c643db9d4553e505ac89c13389a3cc0988e64eea243a71",
+        "archived": false
+      }
+    }
+  },
+  "sourceFingerprints": {
+    "lib/enquiries/chat.ts": "a5a96ac7c7f99a8572fa7d3cfbc5fc6fe64598f53f0e117175ec56c67f0e4b8a",
+    "lib/enquiries/chat-contract.ts": "56a0571860e42a57ddb0b8a08bee617f54e7f63969ab1c596d7fe308769cde38",
+    "lib/enquiries/service.ts": "3705218829b221eea0ef67f93e1f6e97710b444c3f323695643796e4dc54d632",
+    "app/api/workspace/enquiries/route.ts": "9e831ce64efd9bf8f06530df22d5cdf0685913ffe79bf2f645a4f846c0920c01",
+    "components/control-plane/enquiry-workspace.tsx": "3f145e4af628427a2b4622ff60181f85e9e73f93af041b3c362b9cc96ce0d150",
+    "components/control-plane/workflow-workspace.tsx": "872c99f1a981274f0362f3fb72813c4e2e2ac2d494b76a737e404db33ed84b01",
+    "lib/workflows/service.ts": "00c3628ab2d61c92a968e24dc3c97921157d4883845447455c8dd7db42d249ed",
+    "app/control-plane/control-plane.css": "a9b5ed609bf931d5399cb8763b656d841bfdd340f3865a2a9b858db1aaf58c14",
+    "scripts/chat-ui-proof.ts": "bea9700bfe3f1ff4edc505b3783bf336c02b2be391b82476966589fd603ef9dd"
+  },
+  "unsupported": [
+    "Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.",
+    "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."
+  ]
+}

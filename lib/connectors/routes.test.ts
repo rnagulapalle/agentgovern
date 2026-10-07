@@ -15,7 +15,8 @@ vi.mock("../durable/database", async (original) => ({
   ...(await original<typeof import("../durable/database")>()),
   database: () => db,
 }));
-vi.mock("./twin", () => ({
+vi.mock("./twin", async original => ({
+  ...(await original<typeof import("./twin")>()),
   FetchSandboxConnectors: class {
     readonly workspaceId = "http";
     async source() {
@@ -68,6 +69,7 @@ beforeAll(async () => {
     "lib/workspace/schema.sql",
     "lib/connectors/schema.sql",
     "lib/workflows/schema.sql",
+    "lib/enquiries/schema.sql",
   ])
     await db.query(await readFile(file, "utf8"));
   await db.query("INSERT INTO ll_orgs(id) VALUES('http')");
