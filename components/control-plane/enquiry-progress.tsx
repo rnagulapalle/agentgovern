@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, CirclePause, Mail, ContactRound, ShieldCheck } from "lucide-react";
 import { approvedReply } from "@/lib/enquiries/contracts";
 import { WorkflowWorkspace } from "./workflow-workspace";
-type Step = { ordinal: number; action_id: string; agent_id: string; connector: string; state: string | null; payload_hash: string; reason: string; proposed_by?: string; approved_by: string | null; evidence?: { outcome: string; detail: string; reference?: string }; proposedRequest?: { method: string; resource: string; body: object } };
+type Step = { ordinal: number; action_id: string; agent_id: string; connector: string; payload: { lifecycle?: string }; state: string | null; payload_hash: string; reason: string; proposed_by?: string; approved_by: string | null; evidence?: { outcome: string; detail: string; reference?: string }; proposedRequest?: { method: string; resource: string; body: object } };
 type Run = { id: string; created_by: string; state: string; steps: Step[] };
 async function api(url: string, payload?: object) {
   const response = await fetch(url, { cache: "no-store", ...(payload ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) } : {}) });
@@ -28,7 +28,7 @@ export function EnquiryProgress({ id }: { id: string }) {
       <div className="cp-enquiry-step-icon">{s.state === "succeeded" ? <CheckCircle2 /> : s.ordinal === 1 ? <ContactRound /> : <Mail />}</div>
       <div><h3>{s.ordinal === 1 ? "Check and update the customer record" : "Send the approved acknowledgement"}</h3><p role="status"><strong>{names[s.state || ""] || "Submission incomplete · reopen and retry rehearsal"}</strong></p><p>{s.ordinal === 2 && run.steps[0].state !== "succeeded" ? "Sending waits until the customer record effect is verified." : s.reason}</p>
       {s.ordinal === 2 && s.state === "held" && <article className="cp-durable-scope"><strong>To: {approvedReply.recipient}</strong><p>{approvedReply.subject}</p><p>{approvedReply.text}</p><p>Approved information: {approvedReply.reference}</p></article>}
-      {s.ordinal === 1 && s.state === "held" && <p>Only the reviewed contact lifecycle value is retained. No new contact, notes or additional fields are written. Inspect the exact payload below before approving.</p>}
+      {s.ordinal === 1 && s.state === "held" && <p>Retain the reviewed lifecycle: <strong>{s.payload.lifecycle}</strong>. No new contact, notes or additional fields are written. Inspect the exact payload below before approving.</p>}
       {s.approved_by && <p>Approved by {s.approved_by}</p>}
       {s.evidence && <p>Observed: {s.evidence.detail}</p>}
       {s.state === "held" && run.state === "active" && <div className="cp-enquiry-decisions">{member === run.created_by ? <p>A different workspace member must approve. Ask them to open this saved enquiry; you cannot approve your own actions.</p> : <><button className="cp-button cp-button-dark" disabled={busy || !member} onClick={() => decide(s, true)}>Approve {s.connector === "crm" ? "CRM update" : "acknowledgement"}</button><button className="cp-button" disabled={busy || !member} onClick={() => decide(s, false)}>Decline action</button></>}</div>}
