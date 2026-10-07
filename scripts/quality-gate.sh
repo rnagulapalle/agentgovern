@@ -12,6 +12,7 @@ run "Repository policy and claim gate" pnpm check:repo
 run "Lint" pnpm lint
 run "TypeScript" pnpm typecheck
 run "Adversarial tests and coverage" pnpm test:coverage
+run "Background runner bundle" node scripts/build-enquiry-worker.mjs
 run "Production build" pnpm build
 run "Rendered internal links" pnpm check:links
 run "Diff hygiene" git diff --check

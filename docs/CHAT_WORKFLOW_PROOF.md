@@ -8,9 +8,11 @@ Invited members sign in and open `/control-plane/work` (Work with agents).
 
 1. Type: “When a customer asks about our service, check their CRM record, prepare an acknowledgement, and ask me before sending. Rehearse it with FetchSandbox first.”
 2. Answer the missing-customer question with `customer@example.test`. Confirm ask-first and rehearsal if asked. Only this sample contact is available.
-3. Review the exact recipient, fixed reply, reference and CRM lifecycle preservation. Select two active, scoped CRM/messaging agents, then create the reviewed workflow. This creates saved work; neither action is approved or executed.
-4. Submit both prepared actions. A different invited member approves each exact payload. The requester cannot approve their own work.
-5. Execute CRM, then messaging. Inspect each proposed HTTP request and its recorded provider evidence. Verify and complete to see the stored rehearsal receipt.
+3. Check connections, then review the exact recipient, fixed reply, reference and CRM lifecycle preservation. Choose **Rehearse this plan**. LoopLabs assigns two single-action scoped assistants and submits held actions; neither action is approved or executed.
+4. A different invited member opens the saved enquiry and approves each exact action using its inline card. The requester cannot approve their own work.
+5. The separate background runner executes CRM, verifies its effect, then dispatches messaging and verifies the whole run. Both browsers may leave. Inspect request details and the saved receipt in the same workspace.
+
+The advanced registered-agent path remains available for integration/debugging. See [managed experience](ENQUIRY_MANAGED_EXPERIENCE.md) and [FetchSandbox handoff](FETCHSANDBOX_ENQUIRY_HANDOFF.md).
 
 The CRM step retains the existing lifecycle through a version-checked PATCH; it does not write enquiry notes. Messages are recorded by the twin, not delivered to an inbox. A receipt is database evidence, not a cryptographically signed certificate or real-world delivery guarantee. Agent enrollment restricts standalone work and is not reversible; paused runs cannot resume yet.
 
@@ -22,11 +24,11 @@ Amazon Bedrock Nova Lite interprets up to six user turns into a strict intent sc
 
 Use a dedicated `LOOPLABS_TEST_DATABASE_URL`, connector twin Python environment and a model-only AWS identity. Set `LOOPLABS_CHAT_MODEL=us.amazon.nova-lite-v1:0` and provision Bedrock `InvokeModel` for this inference profile and its foundation-model destinations. Keep credentials in ignored private environment files, never Git.
 
-Run `pnpm build`, then `pnpm chat:proof` with the private environment configured. The proof launches Chromium, signs in as two isolated sample members, types the request and clarification, runs the real model API and application UI, and records actual HTTP twin effects against a temporary PostgreSQL schema. It kills/restarts the application during recovery. Temporary credentials and data are cleaned up.
+Run `pnpm build`, then `pnpm chat:proof` with the private environment configured. The proof launches Chromium, signs in as two isolated sample members, types the request and clarification, runs the real model API and application UI, and records actual HTTP twin effects against a temporary PostgreSQL schema. It kills/restarts the application and separate background worker during recovery. Temporary credentials and data are cleaned up.
 
 Recorded outputs: [browser evidence](evidence/chat-ui-proof.json), [completed UI](evidence/chat-ui-completed.png), [mobile UI](evidence/chat-ui-mobile.png), [connector proof](evidence/connector-proof.json), [hosted contract proof](evidence/hosted-connector-proof.json). Fingerprint tests reject evidence stale for its covered implementation.
 
-Passed browser cases: normal completion; duplicate plan/start replay without extra effects; two independent named approvals; lost CRM response holding email; process restart and read-back without a second write; customer version change after approval refusing stale dispatch and downstream email; unsupported work refusing plan creation; mobile layout containment.
+Passed browser cases: normal completion; duplicate plan/start replay without extra effects; two independent named approvals; lost CRM response holding email; process restart and read-back without a second write; customer version change after approval refusing stale dispatch and downstream email; unsupported work refusing plan creation; mobile layout containment; automatic scoped-assistant assignment; background completion while both browsers are away; automatic read-back recovery after a real app/worker restart.
 
 ## Hosted blocker and unsupported work
 

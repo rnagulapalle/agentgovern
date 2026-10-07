@@ -51,7 +51,7 @@ async function main() {
     for (const key of ["", keys.otherKey]) assert([401, 403].includes((await call(base, `/api/sandboxes/${binding.legs.email.sandboxId}/archive`, key)).status));
     check("Native owner API keys provision isolated paired environments; other owners cannot inspect evidence");
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql"]) await db.query(await readFile(f, "utf8"));
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
     await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof','crm-agent',ARRAY['twin.crm'],100),('local-proof','email-agent',ARRAY['twin.email'],100)");

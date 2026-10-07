@@ -1,3 +1,4 @@
+import { managedWorker } from "../enquiries/dispatch";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
@@ -186,8 +187,8 @@ export class WorkflowControl {
   }
   async verify(actor: Actor, id: string) {
     const run = await this.read(actor, id);
-    if (actor.role !== "operator")
-      throw new ControlError(403, "A named operator must verify the run.");
+    if (actor.role !== "operator" && actor.role !== "worker") throw new ControlError(403, "A named operator must verify the run.");
+    if (actor.role === "worker") await transaction(this.db, actor.orgId, c => managedWorker(c, actor, id));
     if (run.state !== "active")
       throw new ControlError(
         409,
@@ -202,7 +203,8 @@ export class WorkflowControl {
       await this.connectors.reconcile(actor, step.action_id);
     }
     return transaction(this.db, actor.orgId, async (c) => {
-      await this.connectors.authority(c, actor, ["operator"]);
+      await this.connectors.authority(c, actor, ["operator", "worker"]);
+      if (actor.role === "worker") await managedWorker(c, actor, id);
       const state = (
         await c.query(
           "SELECT state FROM ll_workflow_runs WHERE org_id=$1 AND id=$2",

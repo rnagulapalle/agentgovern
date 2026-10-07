@@ -65,6 +65,13 @@ cleanup() {
     cp "$backup/docker-compose.yml" docker-compose.yml
     printf 'services:\n  web:\n    image: looplabs-web:rollback-%s\n' "$release" > "$backup/rollback.yml"
     sudo docker compose -f docker-compose.yml -f "$backup/rollback.yml" up -d --no-deps --no-build web
+    if sudo docker compose config --services | grep -qx enquiry-worker; then
+      printf '  enquiry-worker:\n    image: looplabs-web:rollback-%s\n' "$release" >> "$backup/rollback.yml"
+      sudo docker compose -f docker-compose.yml -f "$backup/rollback.yml" up -d --no-deps --no-build enquiry-worker
+    else
+      project=$(sudo docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$(sudo docker compose ps -q web)")
+      sudo docker ps -aq --filter "label=com.docker.compose.project=$project" --filter label=com.docker.compose.service=enquiry-worker | xargs -r sudo docker rm -f >/dev/null
+    fi
     sudo docker compose exec -T nginx nginx -t </dev/null
     sudo docker compose exec -T nginx nginx -s reload </dev/null
   fi
@@ -160,7 +167,7 @@ rsync -a --exclude '.env*' --exclude nginx/nginx.conf --exclude nginx/certs \
   --exclude certbot --exclude .local --exclude coverage "$stage/" "$app/"
 sudo docker tag "$image" looplabs-web:latest
 activated=1
-sudo env LOOPLABS_IMAGE="$image" docker compose up -d --no-deps --no-build web
+sudo env LOOPLABS_IMAGE="$image" docker compose up -d --no-deps --no-build web enquiry-worker
 web=$(sudo docker compose ps -q web)
 ready=0
 for attempt in $(seq 1 30); do
@@ -168,6 +175,22 @@ for attempt in $(seq 1 30); do
   sleep 2
 done
 [ "$ready" -eq 1 ]
+# A web-only release is incomplete: the separately deployed runner must publish
+# a fresh heartbeat after this container started, without borrowing a human session.
+worker=$(sudo docker compose ps -q enquiry-worker)
+test -n "$worker"
+worker_started=$(sudo docker inspect --format '{{.State.StartedAt}}' "$worker")
+worker_ready=0
+for attempt in $(seq 1 12); do
+  if [ "$(sudo docker inspect --format '{{.State.Running}}' "$worker")" = true ] && sudo docker exec "$web" node -e '
+    const { Pool } = require("pg");
+    const db = new Pool({connectionString:process.env.LOOPLABS_DATABASE_URL,connectionTimeoutMillis:3000});
+    db.query("SELECT 1 FROM ll_enquiry_worker_status WHERE last_tick>$1::timestamptz AND last_tick>now()-make_interval(secs=>30)", [process.argv[1]])
+      .then(r=>{if(!r.rows.length) process.exitCode=1;}).catch(()=>{process.exitCode=1;}).finally(()=>db.end());
+  ' "$worker_started"; then worker_ready=1; break; fi
+  sleep 5
+done
+[ "$worker_ready" -eq 1 ]
 # nginx resolves the Compose service when it loads its configuration.
 sudo docker compose exec -T nginx nginx -t </dev/null
 sudo docker compose exec -T nginx nginx -s reload </dev/null

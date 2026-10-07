@@ -17,6 +17,8 @@ async function main() {
   const schema = `chat_ui_${randomBytes(8).toString("hex")}`, token = randomBytes(32).toString("base64url"), password = randomBytes(24).toString("base64url");
   const admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
   const db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
+  let worker: ChildProcess | undefined;
+  const workerToken = randomBytes(32).toString("base64url");
   let app: ChildProcess | undefined, twin: ChildProcess | undefined, browser: Browser | undefined;
   const checks: { name: string; passed: boolean }[] = [], observed: object[] = [];
   const check = (name: string) => { checks.push({ name, passed: true }); console.log(`PASS ${name}`); };
@@ -25,6 +27,32 @@ async function main() {
     app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...process.env, LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
     for (let i = 0; i < 100; i++) { try { if ((await fetch(origin + "/sign-in")).ok) return; } catch {} await delay(100); }
     throw Error("UI app unavailable");
+  }
+  async function startWorker() {
+    worker = spawn("pnpm", ["exec", "tsx", "scripts/enquiry-worker.ts"], { detached: true, env: { ...process.env, LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_ENQUIRY_WORKER_TOKEN: workerToken, LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token }, stdio: ["ignore", "pipe", "pipe"] });
+    for (let i = 0; i < 100; i++) { if ((await db.query("SELECT 1 FROM ll_enquiry_worker_status WHERE last_tick>now()-interval '10 seconds'")).rows[0]) return; await delay(100); }
+    throw Error("Background worker unavailable");
+  }
+  async function stopWorker() { if (worker?.pid) { try { process.kill(-worker.pid, "SIGKILL"); } catch {} await delay(300); } }
+  async function managed(page: Page) {
+    await page.goto(origin + "/control-plane/work");
+    const result = await chat(page, enquiryRequest + " Use customer@example.test.");
+    assert(result.saved?.id);
+    await page.getByRole("checkbox").check();
+    const submitted = page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST");
+    await page.getByRole("button", { name: "Rehearse this plan", exact: true }).click();
+    assert.equal((await submitted).status(), 200);
+    await expect(page.getByRole("region", { name: "Rehearsal progress" })).toBeVisible();
+    return result.saved.id as string;
+  }
+  async function approveManaged(page: Page, id: string) {
+    await page.goto(origin + "/control-plane/work");
+    await page.getByRole("button", { name: new RegExp(id.slice(0, 8)) }).click();
+    for (const name of ["Approve CRM update", "Approve acknowledgement"]) await page.getByRole("button", { name, exact: true }).click();
+  }
+  async function completed(id: string) {
+    for (let i = 0; i < 150; i++) { if ((await db.query("SELECT state FROM ll_workflow_runs WHERE id=$1", [id])).rows[0]?.state === "completed") return; await delay(100); }
+    throw Error("Background run did not verify completion");
   }
   async function stopApp() { if (app?.pid) { try { process.kill(-app.pid, "SIGKILL"); } catch {} await delay(400); } }
   async function login(page: Page, email: string) {
@@ -59,6 +87,7 @@ async function main() {
     assert(saved?.id); assert.equal(saved.run_id, null);
     assert.equal((await db.query("SELECT count(*) FROM ll_workflow_runs WHERE id=$1", [saved.id])).rows[0].count, "0");
     await expect(page.getByRole("heading", { name: "2. Review this exact plan" })).toBeVisible();
+    await page.getByText("Advanced: use registered agents", { exact: true }).click();
     await page.getByLabel(/^CRM agent/).selectOption("crm-agent"); await page.getByLabel(/^Messaging agent/).selectOption("email-agent");
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Create this reviewed workflow" }).click();
@@ -86,7 +115,7 @@ async function main() {
   }
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql"]) await db.query(await readFile(file, "utf8"));
+    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(file, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     for (const [email, name] of [["requester@example.test", "Requester"], ["reviewer@example.test", "Reviewer"]]) await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,'local-proof',$2,$3)", [email, name, passwordHash(password)]);
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
@@ -94,6 +123,7 @@ async function main() {
       await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof',$1,$2,100)", [id, [tool]]);
       await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'agent')", [tokenHash(randomBytes(32).toString("base64url")), id]);
     }
+    await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','enquiry-runner','worker')", [tokenHash(workerToken)]);
     await writeFile(`${dir}/connector-twin-credentials.json`, JSON.stringify({ token }), { mode: 0o600 });
     const backend = process.env.FETCHSANDBOX_BACKEND_PATH || `${process.env.HOME}/sandbox/backend`;
     twin = spawn(`${backend}/.venv/bin/python`, ["scripts/connector-twin.py"], { env: { ...process.env, LOOPLABS_CONNECTOR_STATE_DIR: dir }, stdio: ["ignore", "pipe", "pipe"] });
@@ -138,12 +168,43 @@ async function main() {
     await page.setViewportSize({ width: 390, height: 844 }); await page.goto(origin + "/control-plane/work");
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && [...document.querySelectorAll(".cp-durable-card button")].every(b => b.getBoundingClientRect().right <= innerWidth)));
     await page.screenshot({ path: "docs/evidence/chat-ui-mobile.png", fullPage: true }); check("390px mobile conversation has no horizontal overflow");
+    const legacyEffects = await effects();
+    await startWorker();
+    const automatic = await managed(page);
+    const beforeManaged = await effects();
+    const savedManaged = await run(page, automatic);
+    assert(savedManaged.steps.every((s: { agent_id: string; state: string }) => s.agent_id.startsWith("ack-") && s.state === "held"));
+    const self = await page.request.post(origin + "/api/durable/connectors", { headers: { Origin: origin }, data: { operation: "approve", actionId: savedManaged.steps[0].action_id, payloadHash: savedManaged.steps[0].payload_hash } }); assert.equal(self.status(), 403);
+    const managedReplay = await page.request.post(origin + "/api/workspace/enquiries", { headers: { Origin: origin }, data: { operation: "rehearse", id: automatic, planHash: (await db.query("SELECT plan_hash FROM ll_enquiry_plans WHERE id=$1", [automatic])).rows[0].plan_hash } }); assert.equal(managedReplay.status(), 200);
+    assert.deepEqual(await effects(), beforeManaged);
+    await page.goto(origin + "/about"); // Initiator leaves the workspace; no browser executes work.
+    await approveManaged(reviewer, automatic); await reviewer.goto(origin + "/about");
+    await completed(automatic);
+    const afterManaged = await effects(); assert.equal(Object.keys(afterManaged).length, Object.keys(beforeManaged).length + 2);
+    check("Typed request automatically assigns single-action assistants; plan replay has no effects and separate-person approval completes in a real background worker with both browsers away");
+    await stopWorker();
+    const recovery = await managed(page); await approveManaged(reviewer, recovery);
+    const recoveryRun = await run(page, recovery);
+    const lose = await page.request.post(origin + "/api/durable/connectors", { headers: { Origin: origin }, data: { operation: "execute", actionId: recoveryRun.steps[0].action_id, lostResponse: true } }); assert.equal(lose.status(), 200);
+    const lostEffects = await effects();
+    await stopApp(); await startApp(); await startWorker(); await completed(recovery);
+    const recoveredEffects = await effects(); assert.equal(Object.keys(recoveredEffects).length, Object.keys(lostEffects).length + 1);
+    for (const id of Object.keys(lostEffects)) assert.deepEqual(recoveredEffects[id], lostEffects[id]);
+    check("Real app and worker restart automatically read back a lost CRM response, dispatch only the held email, and save a full verification receipt without another CRM write");
+    await page.goto(origin + "/control-plane/work"); await page.getByRole("button", { name: new RegExp(recovery.slice(0,8)) }).click();
+    await expect(page.getByRole("region", { name: "Verification receipt" })).toBeVisible();
+    await page.screenshot({ path: "docs/evidence/enquiry-managed-desktop.png", fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await page.screenshot({ path: "docs/evidence/enquiry-managed-mobile.png", fullPage: true });
+    check("Managed approval cards, connection setup and saved verification receipt remain readable at 390px without overflow");
+    const managedRuns = [await run(page, automatic), await run(page, recovery)];
     const fingerprints: Record<string, string> = {};
-    for (const file of ["lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts"])
+    for (const file of ["lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
       fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
-    await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
+    await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: legacyEffects, managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
   } finally {
-    await browser?.close(); await stopApp(); if (twin?.pid) { twin.kill("SIGTERM"); await delay(400); }
+    await browser?.close(); await stopWorker(); await stopApp(); if (twin?.pid) { twin.kill("SIGTERM"); await delay(400); }
     await db.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); await rm(dir, { recursive: true, force: true });
   }
 }

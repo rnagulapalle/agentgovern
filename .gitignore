@@ -35,3 +35,5 @@ nginx/certs/*.pem
 # os
 .DS_Store
 *.pem
+
+/.worker/

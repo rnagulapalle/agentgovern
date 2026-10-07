@@ -27,7 +27,9 @@
     "enquiries:setup": "tsx --env-file=.env.local scripts/enquiry-setup.ts",
     "connectors:twin": "bash scripts/connector-twin.sh",
     "connectors:proof": "tsx --env-file=.env.local scripts/connector-proof.ts",
-    "chat:proof": "node --env-file=.env.local --import tsx scripts/chat-ui-proof.ts"
+    "chat:proof": "node --env-file=.env.local --import tsx scripts/chat-ui-proof.ts",
+    "enquiries:managed-setup": "tsx --env-file=.env.local scripts/enquiry-managed-setup.ts",
+    "enquiries:worker": "tsx --env-file=.env.local scripts/enquiry-worker.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1147.0",
