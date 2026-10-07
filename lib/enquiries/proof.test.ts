@@ -3,8 +3,9 @@ import { createHash } from "node:crypto";
 import { expect, it } from "vitest";
 import proof from "../../docs/evidence/chat-ui-proof.json";
 it("requires fresh recorded UI/model/twin proof and keeps unsupported hosted execution explicit", async () => {
-  expect(proof.checks.length).toBeGreaterThanOrEqual(7);
+  expect(proof.checks.length).toBeGreaterThanOrEqual(8);
   expect(proof.checks.every(c => c.passed)).toBe(true);
+  expect(proof.checks.some(c => c.name.includes("no background route prefetch"))).toBe(true);
   expect(proof.scope).toContain("Real browser, real Amazon Bedrock");
   expect(proof.typedRequest).toContain("ask me before sending");
   expect(proof.observedRuns).toHaveLength(3);

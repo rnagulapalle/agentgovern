@@ -28,7 +28,13 @@ async function main() {
   }
   async function stopApp() { if (app?.pid) { try { process.kill(-app.pid, "SIGKILL"); } catch {} await delay(400); } }
   async function login(page: Page, email: string) {
+    const prefetched: string[] = [];
+    const observe = (r: import("@playwright/test").Request) => { if (r.headers()["next-router-prefetch"] === "1" || r.headers()["purpose"] === "prefetch") prefetched.push(r.url()); };
+    page.on("request", observe);
     await page.goto(origin + "/sign-in?next=/control-plane/work");
+    await page.waitForTimeout(700);
+    page.off("request", observe);
+    assert.equal(prefetched.length, 0, "Sign-in must not fan out background route prefetches");
     await page.getByLabel("Email", { exact: true }).fill(email); await page.getByLabel("Password").fill(password);
     const signedIn = page.waitForResponse(r => r.url().endsWith("/api/workspace/session") && r.request().method() === "POST");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -96,6 +102,7 @@ async function main() {
     const requester = await browser.newContext(), reviewerContext = await browser.newContext();
     const page = await requester.newPage(), reviewer = await reviewerContext.newPage();
     await login(page, "requester@example.test"); await login(reviewer, "reviewer@example.test");
+    check("Sign-in navigation generates no background route prefetch burst for either member");
     const normal = await prepare(page);
     await page.screenshot({ path: "docs/evidence/chat-ui-plan.png", fullPage: true });
     check("Typed natural-language request calls the real model, asks for the missing customer and saves an exact plan without effects");
@@ -132,7 +139,7 @@ async function main() {
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && [...document.querySelectorAll(".cp-durable-card button")].every(b => b.getBoundingClientRect().right <= innerWidth)));
     await page.screenshot({ path: "docs/evidence/chat-ui-mobile.png", fullPage: true }); check("390px mobile conversation has no horizontal overflow");
     const fingerprints: Record<string, string> = {};
-    for (const file of ["lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "scripts/chat-ui-proof.ts"])
+    for (const file of ["lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts"])
       fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
     await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
   } finally {

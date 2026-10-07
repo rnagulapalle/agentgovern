@@ -67,7 +67,7 @@ export function TeamSignIn({ next = "/control-plane" }: { next?: string }) {
       </button>
       <p>
         Access is by invitation.{" "}
-        <Link href="/contact-sales">Contact sales</Link> to explore your
+        <Link prefetch={false} href="/contact-sales">Contact sales</Link> to explore your
         workflow.
       </p>
     </form>

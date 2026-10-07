@@ -33,3 +33,7 @@ Passed browser cases: normal completion; duplicate plan/start replay without ext
 Hosted email binding acceptance/read-back is separately verified, including a response lost after acceptance. The complete hosted CRM-to-email path is **blocked**: its contract does not provide the required atomic contact-version guarantee. Read-before-write is not equivalent to compare-and-set. LoopLabs stops CRM dispatch and holds downstream messaging; no weakening or passing claim is made. Private fixture CAS proves the rehearsal only, not hosted or live HubSpot parity.
 
 Not supported: live customer connections or email delivery, general prompt-generated graphs, arbitrary recipients/replies, inbox triggers, schedules, durable chat memory, automatic human approval, organisation self-service and industry-grade availability/failover. Source changes require new reviewed work; previous approval never authorizes changed data.
+
+## Live sign-in regression
+
+Production dogfooding exposed a request burst from automatic marketing navigation prefetches. Shared marketing links now load routes on click, preserving the existing nginx limit. The browser proof checks that sign-in produces no background route prefetch requests for either member. This is a navigation fix, not a weakened request or authentication gate.
