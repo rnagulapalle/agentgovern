@@ -13,6 +13,7 @@ run "Lint" pnpm lint
 run "TypeScript" pnpm typecheck
 run "Adversarial tests and coverage" pnpm test:coverage
 run "Background runner bundle" node scripts/build-enquiry-worker.mjs
+run "Temporal service and workflow bundles" pnpm temporal:build
 run "Production build" pnpm build
 run "Rendered internal links" pnpm check:links
 run "Diff hygiene" git diff --check

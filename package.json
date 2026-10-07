@@ -33,7 +33,11 @@
     "temporal:proof": "node --env-file=.env.local --import tsx scripts/temporal-proof.ts",
     "temporal:version-proof": "node --env-file=.env.local --import tsx scripts/temporal-version-proof.ts",
     "temporal:dispatch-proof": "node --env-file=.env.local --import tsx scripts/temporal-dispatch-proof.ts",
-    "temporal:setup": "node --env-file=.env.local --import tsx scripts/temporal-setup.ts"
+    "temporal:setup": "node --env-file=.env.local --import tsx scripts/temporal-setup.ts",
+    "temporal:build": "node scripts/build-temporal-worker.mjs",
+    "temporal:worker": "node --env-file=.env.local --env-file=.local/temporal-worker.env .worker/temporal-service.cjs worker",
+    "temporal:scheduler": "node --env-file=.env.local --env-file=.local/temporal-worker.env .worker/temporal-service.cjs scheduler",
+    "temporal:load-proof": "node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1147.0",
