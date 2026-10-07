@@ -3,11 +3,12 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { NextRequest } from "next/server";
 import { beforeAll, afterAll, beforeEach, it, expect, vi } from "vitest";
-import { authenticate, tokenHash } from "../durable/service";
+import { authenticate, tokenHash, DurableControl } from "../durable/service";
 import type { Actor } from "../durable/contracts";
 import type { ConnectorAction, ConnectorProvider } from "../connectors/contracts";
 import { ConnectorControl } from "../connectors/service";
 import { WorkflowControl } from "../workflows/service";
+import { EnquiryRunner } from "./runner";
 import { EnquiryControl } from "./service";
 import { checkContact, enquiryFixture, validId, type Contact } from "./contracts";
 import { EnquiryChat, type Intent } from "./chat";
@@ -22,11 +23,12 @@ vi.mock("../connectors/twin", async original => ({ ...(await original<typeof imp
   workspaceId = "one";
   async request() { return { id: contact.id, properties: { email: contact.email, lifecyclestage: contact.lifecycle }, updatedAt: contact.version }; }
   async contact() { return this.request(); }
+  async source(connector: string) { return connector === "crm" ? contact.version : null; }
 } }));
 const provider: ConnectorProvider = {
   workspaceId: "one",
   source: async () => contact.version,
-  write: async (_action: ConnectorAction, lose: boolean) => { writes++; if (lose) throw new Error("Lost after effect"); return { outcome: "verified", detail: "Fixture effect confirmed" }; },
+  write: async (_action: ConnectorAction, lose: boolean) => { if (_action.connector === "crm" && (_action.payload as { sourceVersion: string }).sourceVersion !== contact.version) return { outcome: "conflict", detail: "Atomic source-version check refused a stale write" }; writes++; if (lose) throw new Error("Lost after effect"); return { outcome: "verified", detail: "Fixture effect confirmed" }; },
   inspect: async () => ({ outcome: "verified", detail: "Fixture read-back confirmed" }),
 };
 beforeAll(async () => {
@@ -34,13 +36,14 @@ beforeAll(async () => {
   admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
   await admin.query(`CREATE SCHEMA ${schema}`);
   db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
-  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql"])
+  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"])
     await db.query(await readFile(file, "utf8"));
 });
 beforeEach(async () => {
   await db.query("TRUNCATE ll_orgs CASCADE");
   await db.query("INSERT INTO ll_orgs(id) VALUES('one'),('two')");
   await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('one','crm',ARRAY['twin.crm'],100),('one','email',ARRAY['twin.email'],100)");
+  await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('operator','one','Operator','unused'),('reviewer','one','Reviewer','unused')");
   await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('one','crm'),('one','email')");
   const actors: Actor[] = [];
   for (const [subject, role, org] of [["operator", "operator", "one"], ["reviewer", "operator", "one"], ["crm", "agent", "one"], ["email", "agent", "one"], ["other", "operator", "two"]]) {
@@ -159,12 +162,19 @@ it("enforces authentication, origin, strict fields and sample-only inputs at the
   expect((await GET(get)).status).toBe(401);
   const req = (p: object, who = "operator", origin = "https://looplabs.run") => new NextRequest(get.url, { method: "POST", headers: { Authorization: `Bearer ${keys[who]}`, Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify(p) });
   const id = randomUUID();
+  expect((await POST(req({ operation: "checkConnections" }))).status).toBe(200);
+  expect((await POST(req({ operation: "checkConnections" }, "crm"))).status).toBe(403);
+  expect((await POST(req({ operation: "checkConnections", origin: "https://evil.test" }))).status).toBe(400);
   expect((await POST(req({ operation: "prepare", id, fixtureId: "service" }, "crm"))).status).toBe(403);
   expect((await POST(req({ operation: "prepare", id, fixtureId: "service" }, "operator", "https://evil.test"))).status).toBe(403);
   for (const p of [{ operation: "prepare", id, fixtureId: "service", message: "secret" }, { operation: "unknown" }, { operation: "prepare", id, fixtureId: "invalid" }, { operation: "start", id, planHash: "bad", crmAgent: "crm", emailAgent: "email" }]) expect((await POST(req(p))).status).toBe(400);
   const response = await POST(req({ operation: "prepare", id, fixtureId: "service" })); expect(response.status).toBe(200);
   const { saved } = await response.json();
   expect((await POST(req({ operation: "start", id, planHash: saved.plan_hash, crmAgent: "crm", emailAgent: "email" }))).status).toBe(200);
+  const automatic = (await (await POST(req({ operation: "prepare", id: randomUUID(), fixtureId: "service" }))).json()).saved;
+  expect((await POST(req({ operation: "rehearse", id: automatic.id, planHash: automatic.plan_hash, approve: true }))).status).toBe(400);
+  expect((await POST(req({ operation: "rehearse", id: automatic.id, planHash: automatic.plan_hash }, "reviewer"))).status).toBe(403);
+  expect((await POST(req({ operation: "rehearse", id: automatic.id, planHash: automatic.plan_hash }))).status).toBe(200);
   const list = await GET(new NextRequest(get.url, { headers: { Authorization: `Bearer ${keys.operator}` } }));
   expect(list.status).toBe(200); expect(list.headers.get("cache-control")).toBe("no-store");
 });
@@ -207,4 +217,115 @@ it("chat rechecks authority after model interpretation and limits calls persiste
   await db.query("UPDATE ll_access_attempts SET count=150");
   await expect(chat.respond(operator, randomUUID(), turns)).rejects.toThrow("limit reached");
   expect(await service.list(operator)).toHaveLength(0);
+});
+
+async function workerActor(subject = "enquiry-runner") {
+  const token = randomBytes(32).toString("base64url");
+  await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one',$2,'worker')", [tokenHash(token), subject]);
+  return authenticate(db, token);
+}
+it("automatically assigns scoped assistants, submits exact actions and resumes without extra identities or effects", async () => {
+  const p = await prepared();
+  const [a, b] = await Promise.all([service.rehearse(operator, p.id, p.plan_hash), service.rehearse(operator, p.id, p.plan_hash)]);
+  expect(a).toEqual(b); expect(writes).toBe(0);
+  const run = await workflow.read(operator, p.id);
+  expect(run.steps.every((s: { state: string }) => s.state === "held")).toBe(true);
+  expect((await db.query("SELECT count(*) FROM ll_agents WHERE id LIKE 'ack-%'")).rows[0].count).toBe("2");
+  expect((await db.query("SELECT tools,action_limit FROM ll_agents WHERE id LIKE 'ack-%'")).rows.every(a => a.tools.length === 1 && a.action_limit === 1)).toBe(true);
+  await expect(service.rehearse(reviewer, p.id, p.plan_hash)).rejects.toThrow("Only the plan owner");
+  await expect(service.rehearse(agent, p.id, p.plan_hash)).rejects.toThrow();
+  for (const step of run.steps) await expect(connector.review(operator, step.action_id, step.payload_hash, true)).rejects.toThrow();
+  const worker = await workerActor(), runner = new EnquiryRunner(db, workflow);
+  expect(await runner.tick(worker)).toBe(0); expect(writes).toBe(0);
+  for (const step of run.steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+  // No browser or human execution call is needed after independent approval.
+  expect(await runner.tick(worker)).toBe(2);
+  expect((await workflow.read(operator, p.id)).state).toBe("completed");
+  await new EnquiryRunner(db, new WorkflowControl(db, new ConnectorControl(db, provider))).tick(worker);
+  expect(writes).toBe(2);
+  await expect(connector.review(worker, run.steps[0].action_id, run.steps[0].payload_hash, true)).rejects.toThrow();
+});
+it("background execution contains uncertain effects, recovers by read-back and never repeats a write", async () => {
+  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
+  const run = await workflow.read(operator, p.id), worker = await workerActor();
+  for (const step of run.steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+  await connector.execute(worker, run.steps[0].action_id, true); expect(writes).toBe(1);
+  const unavailable = { ...provider, inspect: async () => ({ outcome: "unknown" as const, detail: "No reliable evidence" }) };
+  await new EnquiryRunner(db, new WorkflowControl(db, new ConnectorControl(db, unavailable))).tick(worker);
+  expect(writes).toBe(1); expect((await workflow.read(operator, p.id)).steps[1].state).toBe("ready");
+  await new EnquiryRunner(db, workflow).tick(worker);
+  expect(writes).toBe(2); expect((await workflow.read(operator, p.id)).state).toBe("completed");
+});
+it("worker scope, plan staleness, revocation, paused work and unrelated runs remain denied", async () => {
+  const p = await prepared(); contact.version = "v2";
+  await expect(service.rehearse(operator, p.id, p.plan_hash)).rejects.toThrow("record or policy changed");
+  expect((await db.query("SELECT count(*) FROM ll_agents WHERE id LIKE 'ack-%'")).rows[0].count).toBe("0");
+  contact.version = "v1"; await service.rehearse(operator, p.id, p.plan_hash);
+  const run = await workflow.read(operator, p.id), worker = await workerActor();
+  for (const step of run.steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+  await workflow.pause(operator, p.id); expect(await new EnquiryRunner(db, workflow).tick(worker)).toBe(0);
+  await expect(connector.execute(worker, run.steps[0].action_id)).rejects.toThrow("paused");
+  const q = await prepared(); await service.start(operator, q.id, q.plan_hash, "crm", "email");
+  const otherRun = await workflow.read(operator, q.id);
+  await expect(new DurableControl(db).execute(worker, randomUUID())).rejects.toThrow("scoped to reviewed");
+  await expect(workflow.read(worker, q.id)).rejects.toThrow("not requested");
+  await expect(connector.read(worker, otherRun.steps[0].action_id)).rejects.toThrow("not requested");
+  await expect(workflow.verify(worker, q.id)).rejects.toThrow("not requested");
+  await expect(connector.reconcile(worker, otherRun.steps[0].action_id)).rejects.toThrow("not requested");
+  await expect(connector.execute(worker, otherRun.steps[0].action_id)).rejects.toThrow("not requested");
+  await expect(new EnquiryRunner(db, workflow).tick(operator)).rejects.toThrow();
+  await expect(new EnquiryRunner(db, workflow).tick(await workerActor("generic-worker"))).rejects.toThrow("dedicated");
+  await db.query("UPDATE ll_tokens SET active=false WHERE subject='enquiry-runner'");
+  await expect(new EnquiryRunner(db, workflow).tick(worker)).rejects.toThrow();
+  expect(writes).toBe(0);
+});
+it("a stale or declined approved action never advances the background handoff", async () => {
+  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
+  const run = await workflow.read(operator, p.id), worker = await workerActor(), runner = new EnquiryRunner(db, workflow);
+  for (const step of run.steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+  contact.version = "v2";
+  await runner.tick(worker);
+  expect(writes).toBe(0); expect((await workflow.read(operator, p.id)).steps[0].state).not.toBe("succeeded");
+  contact.version = "v1";
+  const q = await prepared(); await service.rehearse(operator, q.id, q.plan_hash);
+  const next = await workflow.read(operator, q.id);
+  await connector.review(reviewer, next.steps[0].action_id, next.steps[0].payload_hash, false);
+  await connector.review(reviewer, next.steps[1].action_id, next.steps[1].payload_hash, true);
+  await runner.tick(worker); expect(writes).toBe(0);
+});
+
+it("does not adopt a pre-existing agent with broader or mismatched boundaries", async () => {
+  const p = await prepared(), id = `ack-crm-${p.id}`;
+  await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('one',$1,ARRAY['twin.crm','twin.email'],100)", [id]);
+  await expect(service.rehearse(operator, p.id, p.plan_hash)).rejects.toThrow("boundaries do not match");
+  expect(await workflow.list(operator)).toHaveLength(0); expect(writes).toBe(0);
+});
+it("rotates the durable cursor so held older work cannot starve a newer approved enquiry", async () => {
+  let latest = "";
+  for (let n = 1; n <= 12; n++) {
+    latest = `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+    const saved = await service.prepare(operator, latest, "service") as { saved: { plan_hash: string } };
+    await service.rehearse(operator, latest, saved.saved.plan_hash);
+  }
+  const run = await workflow.read(operator, latest);
+  for (const step of run.steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+  const worker = await workerActor(), runner = new EnquiryRunner(db, workflow);
+  expect(await runner.tick(worker)).toBe(0); // First ten held runs.
+  expect(await runner.tick(worker)).toBe(2);
+  expect((await workflow.read(operator, latest)).state).toBe("completed");
+  expect(writes).toBe(2);
+  expect((await workflow.list(operator)).filter(r => r.state === "active")).toHaveLength(11);
+});
+
+it("uses only the server-pinned hosted contact ID and refuses an unbound same-email record", async () => {
+  const privatePlan = await prepared();
+  contact.id = "1";
+  const hosted = new EnquiryControl(db, workflow, async () => contact, "1");
+  const saved = await hosted.prepare(operator, randomUUID(), "service") as { saved: { plan: { contact: { id: string } } } };
+  expect(saved.saved.plan.contact.id).toBe("1");
+  await expect(hosted.start(operator, privatePlan.id, privatePlan.plan_hash, "crm", "email")).rejects.toThrow("record or policy changed");
+  contact.id = "2";
+  await expect(hosted.prepare(operator, randomUUID(), "service")).rejects.toThrow("unique supported contact");
+  expect(() => checkContact(contact, "bad")).toThrow();
+  expect(writes).toBe(0);
 });

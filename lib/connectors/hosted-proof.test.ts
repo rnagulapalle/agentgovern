@@ -4,7 +4,8 @@ import { it, expect } from "vitest";
 import evidence from "../../docs/evidence/hosted-connector-proof.json";
 
 it("keeps hosted proof tied to its implementation and independently observed response loss", async () => {
-  expect(evidence.checks).toHaveLength(6);
+  expect(evidence.checks).toHaveLength(7);
+  expect(evidence.checks.some(check => check.name.includes("before submitting any action"))).toBe(true);
   expect(evidence.checks.every(check => check.passed)).toBe(true);
   expect(evidence.scope).toContain("No live provider or inbox delivery");
   expect(evidence.limitations).toContain("Not a completed CRM-to-email workflow acceptance.");

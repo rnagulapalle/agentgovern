@@ -1,5 +1,9 @@
 # LoopLabs agent control plane
 
+## Managed acknowledgement experience (October 6)
+
+See [ENQUIRY_MANAGED_EXPERIENCE.md](ENQUIRY_MANAGED_EXPERIENCE.md) for automatic scoped-assistant assignment, inline approval cards and a separate background runner. Migration 8 adds explicit background consent and worker heartbeat/cursor. The hosted CRM guarantee remains blocked; no live inbox listener, real delivery or broad Tasklet parity is claimed.
+
 ## Bounded external-agent workflow (October 4)
 
 The private `/control-plane/workflow-runs` route links a CRM update, a held customer acknowledgement and final outcome verification. External scoped agents can submit their own immutable steps over HTTP; PostgreSQL preserves run dependencies. See [WORKFLOW_ONBOARDING_PROOF.md](WORKFLOW_ONBOARDING_PROOF.md) for migration 5, proof and limitations. This is not general workflow onboarding or live-provider support.

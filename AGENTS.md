@@ -16,6 +16,8 @@ The private `/control-plane/workflow-runs` adds a fixed CRM-to-message workflow 
 
 The invited `/control-plane/work` additionally uses a bounded Amazon Bedrock planner for typed customer-enquiry requests and clarifications. It saves only the fixed sample acknowledgement plan, never conversational execution authority. Read `docs/CHAT_WORKFLOW_PROOF.md`. Private twin rehearsal is proved; hosted CRM-to-email stays blocked without atomic source-version enforcement. No live delivery, arbitrary workflow builder, inbox monitoring or durable chat memory is established.
 
+The managed customer acknowledgement in `/control-plane/work` automatically assigns single-action assistants and submits held actions after exact plan review. Migration 8 adds opt-in background dispatch and a worker heartbeat/cursor. A dedicated worker executes and verifies only independently approved, opted-in enquiry runs; raw chat is not persisted. Hosted managed execution stays blocked until atomic CRM source-version enforcement exists. Read `docs/ENQUIRY_MANAGED_EXPERIENCE.md` and `docs/FETCHSANDBOX_ENQUIRY_HANDOFF.md`. This is one private provider-twin rehearsal, not live inbox automation or arbitrary workflow building.
+
 ## Required workflow
 
 1. Inspect the affected route, its tests, and the relevant docs before editing.

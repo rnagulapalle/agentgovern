@@ -2,6 +2,8 @@
 
 Updated October 6, 2026. The typed chat entry now calls a bounded model planner. This remains a saved provider-twin workflow, not the complete conversational/live-connector product from the PRD. See [CHAT_WORKFLOW_PROOF.md](CHAT_WORKFLOW_PROOF.md) for real browser evidence and the hosted CRM blocker.
 
+The default UI now automatically assigns single-action assistants, submits held actions and shows independent approvals and background progress in one workspace. Migration 8 adds explicit dispatch consent and worker heartbeat/cursor. See [ENQUIRY_MANAGED_EXPERIENCE.md](ENQUIRY_MANAGED_EXPERIENCE.md). The manual registered-agent/API path below remains available for integration work.
+
 ## What works
 
 Invited operators open Work with agents and type their request. Chat asks for missing sample details and saves the same immutable plan used by the existing control APIs. Prepared sample enquiries remain available through the API and exercise a valid service request, a missing sender, an unsupported contact and a discount request requiring human judgment. Clarification cases create neither a saved plan nor executable work. The approved response is only the existing acknowledgement; no pricing or contractual commitments are inferred.

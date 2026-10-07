@@ -1,3 +1,4 @@
+import { managedWorker } from "../enquiries/dispatch";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
@@ -25,7 +26,7 @@ export class ConnectorControl {
         403,
         "Connector is not assigned to this workspace.",
       );
-    await authorize(c, actor, roles);
+    await authorize(c, actor, roles, actor.role === "worker" && actor.subject === "enquiry-runner" ? "enquiries" : undefined);
   }
   async get(c: PoolClient, actor: Actor, id: string): Promise<ConnectorAction> {
     const a = (
@@ -259,6 +260,7 @@ export class ConnectorControl {
   async execute(actor: Actor, id: string, loseResponse = false) {
     const claim = await transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["operator", "worker"]);
+      if (actor.role === "worker" && actor.subject === "enquiry-runner") await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
       if (
         a.state === "executing" &&
@@ -306,6 +308,7 @@ export class ConnectorControl {
     }
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["operator", "worker"]);
+      if (actor.role === "worker" && actor.subject === "enquiry-runner") await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
       if (a.lease_token !== claim.lease_token || a.state !== "executing")
         return { ...a, lease_token: null };
@@ -345,7 +348,8 @@ export class ConnectorControl {
   }
   async reconcile(actor: Actor, id: string) {
     const before = await transaction(this.db, actor.orgId, async (c) => {
-      await this.authority(c, actor, ["operator"]);
+      await this.authority(c, actor, ["operator", "worker"]);
+      if (actor.role === "worker") await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
       if (
         a.state === "executing" &&
@@ -367,7 +371,8 @@ export class ConnectorControl {
       };
     }
     return transaction(this.db, actor.orgId, async (c) => {
-      await this.authority(c, actor, ["operator"]);
+      await this.authority(c, actor, ["operator", "worker"]);
+      if (actor.role === "worker") await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
       if (!["executing", "uncertain", "succeeded"].includes(a.state))
         return { ...a, lease_token: null };
@@ -377,6 +382,7 @@ export class ConnectorControl {
   async read(actor: Actor, id: string) {
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["agent", "operator", "worker"]);
+      if (actor.role === "worker" && actor.subject === "enquiry-runner") await managedWorker(c, actor, id, true);
       return { ...(await this.get(c, actor, id)), lease_token: null };
     });
   }

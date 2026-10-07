@@ -17,3 +17,5 @@ certbot
 *.tsbuildinfo
 .local
 coverage
+
+.worker

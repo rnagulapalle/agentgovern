@@ -7,6 +7,7 @@ import type {
 } from "./contracts";
 export class FetchSandboxConnectors implements ConnectorProvider {
   readonly workspaceId = "local-proof";
+  readonly contactId = "1001";
   constructor(
     readonly base = process.env.LOOPLABS_CONNECTOR_TWIN_URL || "",
     readonly token = process.env.LOOPLABS_CONNECTOR_TWIN_TOKEN || "",

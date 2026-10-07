@@ -88,6 +88,7 @@ async function main() {
       "lib/connectors/schema.sql",
       "lib/workflows/schema.sql",
       "lib/enquiries/schema.sql",
+      "lib/enquiries/managed-schema.sql",
     ])
       await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
@@ -828,10 +829,13 @@ async function main() {
       "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA.",
     );
     const fingerprintFiles = [
+      "lib/durable/service.ts",
+      "lib/enquiries/dispatch.ts",
       "lib/workflows/guard.ts",
       "lib/enquiries/contracts.ts",
       "lib/enquiries/service.ts",
       "lib/enquiries/schema.sql",
+      "lib/enquiries/managed-schema.sql",
       "app/api/workspace/enquiries/route.ts",
       "scripts/workflow-http-proof-server.ts",
       "lib/workflows/service.ts",
