@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-07T18:43:30.463Z",
+  "scope": "Local pinned deployments and persisted SQLite dev-service restart; no production cutover",
+  "checks": [
+    "Current v2 routes new runs to v2 while pending v1 remains pinned to v1; no approval from rollout",
+    "Temporal service restart restores SQLite history and stable PostgreSQL action IDs",
+    "Approved v1 waits while only v2 polls after service restart; no implicit migration or duplicate effects",
+    "Restored retained v1 completes original exact approvals with two effects",
+    "Pinned recorded history replays without new effects or credentials",
+    "Unknown connector contract and mismatched immutable plan digest refuse dispatch",
+    "Pinned code does not pin authority: revoked owner still prevents execution"
+  ],
+  "sourceFingerprints": {
+    "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
+    "runtime/temporal/version-contract.ts": "c6d68ae5c43f8f0e02816a97b01f0d4350371da27d89f08e3e5a1a173ca30d1c",
+    "scripts/temporal-version-proof.ts": "8d990a64980b09c9cc3362a04651136bfbeab4d6741b0f6c7e335389c232dc6c"
+  },
+  "limitations": [
+    "Graceful service restart, not unclean host loss or high availability",
+    "One immutable acknowledgement plan and private twin connector contract",
+    "No retention expiry, production deployment or dispatch cutover proof"
+  ]
+}

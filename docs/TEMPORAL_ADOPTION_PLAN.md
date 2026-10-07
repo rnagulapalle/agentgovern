@@ -66,3 +66,40 @@ clock update in the isolated schema; Temporal activity timeout/retry remains rea
 Replay accepts the compatible patch and rejects an incompatible activity command.
 This does not establish server persistence across dev-service restart, worker
 pinning, production availability, UI cutover or a finished phase2 deployment.
+
+## Phase 2 local deployment proof
+
+`pnpm temporal:version-proof` exercises SDK worker deployment options with PINNED
+behavior and the server's current-version routing API. Both builds deliberately
+run the same compatible acknowledgement code; routing is measured per worker.
+No allow-no-pollers or missing-queue bypass is used. New runs use v2 while pending
+v1 runs stay v1. If v1 is offline, approved work waits; restoring v1 resumes it.
+The local Temporal service is stopped and reopened with the same SQLite database;
+history and deployment routing persist. PostgreSQL action IDs remain unchanged.
+This is graceful restart proof, not abrupt host failure or production HA.
+
+The new versioned entry point records only a run ID, immutable saved plan digest,
+`acknowledgement-1` plan representation and `private-twin-1` connector contract.
+Unsupported versions and mismatched saved digests fail before dispatch. These
+version names describe the bounded existing plan and private connector adapter;
+they do not negotiate arbitrary provider schemas or claim hosted parity. Each
+activity still checks current LoopLabs authority. The versioned adapter additionally
+checks that the plan creator remains active before dispatch; revocation refuses
+the next activity. This precheck is not an atomic fence against revocation during
+an in-flight connector request. Phase 3 must put dispatch authority and ownership
+in the same transaction and validate changes at completion. The existing
+production dispatcher has not acquired this new check.
+
+Keep a deployable old build and compatible activity adapter while any run pinned
+to it remains open. Before removing workers, inspect deployment draining status,
+open runs, retained-history query needs and the agreed rollback window. Keep
+workflow bundles/contract implementations for replay throughout the namespace's
+configured history retention and required audit period. Never automatically
+migrate approvals, rewrite saved plans or delete retained builds based only on
+new-version promotion. Unknown contracts stop; an intentional new plan requires
+fresh review. Retention expiry and production drain automation remain unproved.
+
+Results: `docs/evidence/temporal-version-proof.json`. The ordinary quality gate
+checks source fingerprints and regression coverage. Phase 3 must still establish
+exclusive dispatch ownership, persisted scheduling/outbox and concurrency before
+production cutover. Production continues to use its existing worker.

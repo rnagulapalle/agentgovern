@@ -30,7 +30,8 @@
     "chat:proof": "node --env-file=.env.local --import tsx scripts/chat-ui-proof.ts",
     "enquiries:managed-setup": "tsx --env-file=.env.local scripts/enquiry-managed-setup.ts",
     "enquiries:worker": "tsx --env-file=.env.local scripts/enquiry-worker.ts",
-    "temporal:proof": "node --env-file=.env.local --import tsx scripts/temporal-proof.ts"
+    "temporal:proof": "node --env-file=.env.local --import tsx scripts/temporal-proof.ts",
+    "temporal:version-proof": "node --env-file=.env.local --import tsx scripts/temporal-version-proof.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1147.0",
