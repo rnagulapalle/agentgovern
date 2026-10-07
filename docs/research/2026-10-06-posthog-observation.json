@@ -1,0 +1,49 @@
+{
+  "observed_utc": "2026-10-06T08:32:59.116060+00:00",
+  "window": [
+    "2026-10-04 07:00:00",
+    "2026-10-06 08:31:20"
+  ],
+  "project": 638636,
+  "query": "SELECT event,properties.utm_source AS source,properties.utm_campaign AS campaign,count() AS events,uniq(distinct_id) AS ids FROM events WHERE timestamp >= toDateTime('2026-10-04 07:00:00') AND timestamp < toDateTime('2026-10-06 08:31:20') AND coalesce(toString(properties.$is_test),'false') != 'true' AND event IN ('site_page_viewed','product_tour_cta_clicked','product_tour_started','run_simulated','recovery_step_completed','demo_booking_clicked','sales_request_submitted') GROUP BY event,source,campaign ORDER BY events DESC LIMIT 40",
+  "columns": [
+    "event",
+    "source",
+    "campaign",
+    "events",
+    "ids"
+  ],
+  "results": [
+    [
+      "site_page_viewed",
+      null,
+      null,
+      113,
+      22
+    ],
+    [
+      "product_tour_cta_clicked",
+      null,
+      null,
+      26,
+      2
+    ],
+    [
+      "recovery_step_completed",
+      null,
+      null,
+      1,
+      1
+    ]
+  ],
+  "limitations": "Aggregate events and anonymous IDs; not a sequential funnel or verified buyers. Only explicit test tags excluded; founder/QA traffic may remain.",
+  "supplier_control_campaign": {
+    "query": "SELECT event,count() AS events,uniq(distinct_id) AS ids FROM events WHERE timestamp >= toDateTime('2026-10-04 07:00:00') AND timestamp < toDateTime('2026-10-06 08:31:20') AND coalesce(toString(properties.$is_test),'false') != 'true' AND (properties.utm_campaign='supplier_control' OR properties.first_utm_campaign='supplier_control' OR properties.utm_source='x' OR properties.first_utm_source='x') GROUP BY event ORDER BY events DESC LIMIT 20",
+    "columns": [
+      "event",
+      "events",
+      "ids"
+    ],
+    "results": []
+  }
+}
