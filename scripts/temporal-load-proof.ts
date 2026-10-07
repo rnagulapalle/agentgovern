@@ -5,6 +5,7 @@ import { randomBytes, randomUUID, createHash } from "node:crypto";
 import { readFile, writeFile, mkdtemp, rm } from "node:fs/promises";
 import { spawn, type ChildProcess } from "node:child_process";
 import { resolve } from "node:path";
+import { createServer, connect, type Socket } from "node:net";
 import assert from "node:assert/strict";
 import { authenticate, tokenHash } from "../lib/durable/service";
 import { ConnectorControl } from "../lib/connectors/service";
@@ -24,6 +25,21 @@ async function main() {
   let env: TestWorkflowEnvironment | undefined, twin: ChildProcess | undefined;
   const children: ChildProcess[] = [];
   let workerKey="";
+  // Transparent TCP fault boundary for packaged roles only. The independent
+  // assertion pool stays connected to the real dedicated database.
+  const upstream = new URL(url), sockets = new Set<Socket>();
+  let databaseAvailable = true;
+  const proxy = createServer(client => {
+    client.on("error", () => {});
+    if (!databaseAvailable) { client.destroy(); return; }
+    const remote = connect({ host: upstream.hostname, port: Number(upstream.port || 5432) });
+    for (const socket of [client, remote]) {
+      sockets.add(socket);
+      socket.on("error", () => { client.destroy(); remote.destroy(); });
+      socket.on("close", () => { sockets.delete(socket); client.destroy(); remote.destroy(); });
+    }
+    client.pipe(remote); remote.pipe(client);
+  });
   const checks: string[] = [];
   const pass = (s: string) => { checks.push(s); console.log("PASS", s); };
   const token = randomBytes(32).toString("base64url");
@@ -60,7 +76,12 @@ async function main() {
     const buildId=JSON.parse(await readFile(".worker/temporal-manifest.json", "utf8")).buildId;
     env = await TestWorkflowEnvironment.createLocal({ server:{ dbFilename:`${dir}/temporal.sqlite` } });
     const taskQueue=`load-${randomUUID()}`, outbox=new TemporalOutbox(db);
-    const databaseUrl=new URL(url); databaseUrl.searchParams.set("options", `-c search_path=${schema}`);
+    await new Promise<void>((ok, fail) => { proxy.once("error", fail); proxy.listen(0, "127.0.0.1", ok); });
+    const address = proxy.address();
+    assert(address && typeof address !== "string");
+    const databaseUrl=new URL(url);
+    databaseUrl.hostname="127.0.0.1"; databaseUrl.port=String(address.port);
+    databaseUrl.searchParams.set("options", `-c search_path=${schema}`);
     const spawnService = (role: "worker" | "scheduler") => {
       const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{ env:{...process.env,
         LOOPLABS_DATABASE_URL:databaseUrl.href, LOOPLABS_TEMPORAL_WORKER_TOKEN:workerKey,
@@ -110,6 +131,26 @@ async function main() {
     assert.equal(health.pending,0);assert.equal(health.ready,true);assert(!JSON.stringify(health).includes(workerKey));
     assert.equal((await fetch("http://127.0.0.1:19421/health/ready",{method:"POST"})).status,405);
     pass("Local readiness and backlog metrics recover and expose no workload credential");
+    const savedIds = (await db.query("SELECT run_id,ordinal,action_id FROM ll_workflow_steps ORDER BY run_id,ordinal")).rows;
+    databaseAvailable=false;
+    for (const socket of sockets) socket.destroy();
+    await until(async()=>!(await ready(19420))&&!(await ready(19421)),"database outage makes both roles unready");
+    assert.equal(await effects(),0);
+    assert.deepEqual((await db.query("SELECT run_id,ordinal,action_id FROM ll_workflow_steps ORDER BY run_id,ordinal")).rows,savedIds);
+    pass("Actual database connection interruption makes both packaged roles unready; held work preserves action IDs and zero effects");
+    databaseAvailable=true;
+    // Idle pg disconnects intentionally stop these roles. Model the staging
+    // supervisor explicitly; do not pretend readiness alone restarts a process.
+    for (const child of [worker,scheduler]) if (child.exitCode===null&&!child.signalCode) await kill(child,"SIGTERM");
+    worker=spawnService("worker");scheduler=spawnService("scheduler");
+    await until(async()=>(await ready(19420))&&(await ready(19421)),"database restored and supervisor replacement ready");
+    assert.deepEqual((await db.query("SELECT run_id,ordinal,action_id FROM ll_workflow_steps ORDER BY run_id,ordinal")).rows,savedIds);
+    for(const p of plans) {
+      const h=await env.client.workflow.getHandle(`looplabs:local-proof:ack:${p.runId}`).fetchHistory();
+      assert.equal(h.events!.filter(e=>e.workflowExecutionStartedEventAttributes).length,1);
+    }
+    assert.equal(await effects(),0);
+    pass("Database connectivity restoration and supervisor replacement resume the same 25 histories without approval bypass or replacement actions");
     await kill(worker,"SIGKILL");assert.equal(await ready(19420),false);
     const restartStart=performance.now();worker=spawnService("worker");await until(()=>ready(19420),"replacement worker ready");
     const workerRestartMs=Math.round(performance.now()-restartStart);
@@ -137,9 +178,11 @@ async function main() {
     const fingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/temporal-load-proof.json",JSON.stringify({at:new Date().toISOString(),scope:"Local packaged pinned worker/scheduler, actual Temporal, isolated PostgreSQL and one private HTTP twin; no production cutover",checks,
       measurements:{plans:25,concurrentTransferCalls:50,activitySlots:3,workflowSlots:6,enqueueMs,totalSchedulingMs,schedulerCrashToBacklogDrainMs:recoveryMs,workerRestartReadyMs:workerRestartMs,approvalToCompletionMs,shutdownMs,finalEffects:2},
-      sourceFingerprints:fingerprints,limitations:["One laptop sample, not capacity, percentile latency or availability SLO","25 concurrent held runs; one approved completion; remaining shared-contact plans contained","Scheduler and worker SIGKILL; no host/database failover","Authenticated TLS configuration validated; remote TLS handshake not exercised","No hosted atomic CRM guarantee or real provider delivery"]},null,2)+"\n");
+      sourceFingerprints:fingerprints,limitations:["One laptop sample, not capacity, percentile latency or availability SLO","25 concurrent held runs; one approved completion; remaining shared-contact plans contained","Scheduler and worker SIGKILL plus TCP database outage; no database-server crash, restore, host failover or data-loss proof","Authenticated TLS configuration validated; remote TLS handshake not exercised","No hosted atomic CRM guarantee or real provider delivery"]},null,2)+"\n");
   } finally {
     for(const child of children) if(child.exitCode===null&&!child.signalCode) { const done=new Promise<void>(r=>child.once("exit",()=>r()));child.kill("SIGKILL");await done; }
+    for (const socket of sockets) socket.destroy();
+    await new Promise<void>(r => { if (!proxy.listening) r(); else proxy.close(() => r()); });
     await env?.teardown();
     if(twin&&twin.exitCode===null) { const done=new Promise<void>(r=>twin!.once("exit",()=>r()));twin.kill("SIGTERM");await done; }
     await db.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);await admin.end();await rm(dir,{recursive:true,force:true});

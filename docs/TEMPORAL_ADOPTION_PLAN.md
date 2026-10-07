@@ -180,3 +180,18 @@ This closes the local package/backlog-recovery acceptance gate. It does not clos
 independent-customer capacity, remote TLS/namespace ACLs, alert delivery, UI cutover,
 real-provider acceptance or production HA. Existing workspace serialization stays
 in place. The single-contact fixture cannot prove parallel customer throughput.
+
+
+## Phase 3C: database connection outage acceptance
+
+The packaged-process proof now includes a real TCP boundary that closes existing
+PostgreSQL connections and refuses new worker/scheduler connections. Independent
+queries verify that held action IDs persist and no effects occur. Both roles become
+unready. After connectivity restoration and explicit process replacement, the same
+25 Temporal histories resume without replacement actions or approval bypass. The
+ordinary quality gate requires these evidence markers and source hashes.
+
+This closes one dependency-loss recovery case, not database crash/failover, backup
+restore, independent-customer load or production acceptance. The enterprise release
+matrix is `ENTERPRISE_ACCEPTANCE.md`; every open gate remains open until measured
+in its intended deployment environment.

@@ -37,7 +37,7 @@ it("requires packaged worker/scheduler crash and backlog evidence", () => {
   expect(proof.measurements.plans).toBe(25);
   expect(proof.measurements.concurrentTransferCalls).toBe(50);
   expect(proof.measurements.finalEffects).toBe(2);
-  for(const marker of ["scheduler SIGKILL", "worker SIGKILL", "one start event", "revocation"])
+  for(const marker of ["scheduler SIGKILL", "worker SIGKILL", "one start event", "revocation", "database connection interruption", "Database connectivity restoration"])
     expect(proof.checks.join(" ")).toContain(marker);
   for(const [file,hash] of Object.entries(proof.sourceFingerprints))
     expect(createHash("sha256").update(readFileSync(file)).digest("hex"),file).toBe(hash);
