@@ -165,3 +165,18 @@ Sources:
 - https://docs.temporal.io/activity-definition
 - https://docs.temporal.io/worker-versioning
 - https://community.temporal.io/t/what-is-recommended-approach-on-starting-workflow-in-transaction/16248
+
+## Phase 3B: packaged operations and bounded backlog drill
+
+See `TEMPORAL_OPERATIONS.md` for the separate versioned worker/scheduler package,
+authenticated-TLS configuration, content-bound build ID, local health signals,
+concurrency settings and staging runbook. `pnpm temporal:load-proof` uses actual
+packaged processes, Temporal, isolated PostgreSQL and HTTP twins. It exercises
+25 held runs from 50 concurrent transfer calls, scheduler and worker SIGKILL,
+natural scheduler lease expiry, restart recovery and workload revocation.
+Results and measured timings are in `docs/evidence/temporal-load-proof.json`.
+
+This closes the local package/backlog-recovery acceptance gate. It does not close
+independent-customer capacity, remote TLS/namespace ACLs, alert delivery, UI cutover,
+real-provider acceptance or production HA. Existing workspace serialization stays
+in place. The single-contact fixture cannot prove parallel customer throughput.

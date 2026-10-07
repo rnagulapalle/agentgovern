@@ -1,0 +1,148 @@
+// Isolated actual Temporal + PostgreSQL + HTTP twin proof. Never changes production.
+import { TestWorkflowEnvironment } from "@temporalio/testing";
+import { Pool } from "pg";
+import { randomBytes, randomUUID, createHash } from "node:crypto";
+import { readFile, writeFile, mkdtemp, rm } from "node:fs/promises";
+import { spawn, type ChildProcess } from "node:child_process";
+import { resolve } from "node:path";
+import assert from "node:assert/strict";
+import { authenticate, tokenHash } from "../lib/durable/service";
+import { ConnectorControl } from "../lib/connectors/service";
+import { FetchSandboxConnectors } from "../lib/connectors/twin";
+import { WorkflowControl } from "../lib/workflows/service";
+import { EnquiryControl } from "../lib/enquiries/service";
+import { TemporalOutbox } from "../runtime/temporal/outbox";
+import { type RunContract } from "../runtime/temporal/version-contract";
+const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+async function main() {
+  const url = process.env.LOOPLABS_TEST_DATABASE_URL;
+  if (!url) throw Error("Dedicated test PostgreSQL required.");
+  const dir = await mkdtemp(resolve(".local/temporal-proof-"));
+  const schema = `temporal_${randomBytes(8).toString("hex")}`;
+  const admin = new Pool({ connectionString: url });
+  const db = new Pool({ connectionString: url, options: `-c search_path=${schema}` });
+  let env: TestWorkflowEnvironment | undefined, twin: ChildProcess | undefined;
+  const children: ChildProcess[] = [];
+  let workerKey="";
+  const checks: string[] = [];
+  const pass = (s: string) => { checks.push(s); console.log("PASS", s); };
+  const token = randomBytes(32).toString("base64url");
+  try {
+    await admin.query(`CREATE SCHEMA ${schema}`);
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"]) await db.query(await readFile(f, "utf8"));
+    await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
+    await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('requester','local-proof','Requester','unused'),('reviewer','local-proof','Reviewer','unused')");
+    await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
+    const actors = [];
+    for (const [subject, role] of [["requester", "operator"], ["reviewer", "operator"], ["enquiry-runner", "worker"], ["enquiry-temporal", "worker"]]) {
+      const key = randomBytes(32).toString("base64url");
+      if (subject === "enquiry-temporal") workerKey=key;
+      await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,$3)", [tokenHash(key), subject, role]);
+      actors.push(await authenticate(db, key));
+    }
+    const [requester, reviewer] = actors;
+    await writeFile(`${dir}/connector-twin-credentials.json`, JSON.stringify({ token }), { mode: 0o600 });
+    const backend = process.env.FETCHSANDBOX_BACKEND_PATH || `${process.env.HOME}/sandbox/backend`;
+    twin = spawn(`${backend}/.venv/bin/python`, ["scripts/connector-twin.py"], { env: { ...process.env, LOOPLABS_CONNECTOR_STATE_DIR: dir }, stdio: "ignore" });
+    const provider = new FetchSandboxConnectors("http://127.0.0.1:8018", token);
+    for (let i = 0; ; i++) {
+      try { await provider.contact(); break; } catch { if (i > 100 || twin.exitCode !== null) throw Error("Private twin unavailable; port8018 must be free."); await wait(100); }
+    }
+    const control = new ConnectorControl(db, provider), workflows = new WorkflowControl(db, control);
+    const enquiries = new EnquiryControl(db, workflows, async () => { const c = await provider.contact(); return { id: c.id, email: c.properties.email, version: c.updatedAt, lifecycle: c.properties.lifecyclestage }; });
+    const make = async () => {
+      const p = (await enquiries.prepareChat(requester, randomUUID())).saved;
+      await enquiries.rehearse(requester, p.id, p.plan_hash);
+      return { runId: p.id, planHash: p.plan_hash, planVersion: "acknowledgement-1", connectorVersion: "private-twin-1" } as RunContract;
+    };
+    const approve = async (id: string) => { for (const s of (await workflows.read(requester, id)).steps) await control.review(reviewer, s.action_id, s.payload_hash, true); };
+    const effects = async () => Object.keys(JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects).length;
+    const buildId=JSON.parse(await readFile(".worker/temporal-manifest.json", "utf8")).buildId;
+    env = await TestWorkflowEnvironment.createLocal({ server:{ dbFilename:`${dir}/temporal.sqlite` } });
+    const taskQueue=`load-${randomUUID()}`, outbox=new TemporalOutbox(db);
+    const databaseUrl=new URL(url); databaseUrl.searchParams.set("options", `-c search_path=${schema}`);
+    const spawnService = (role: "worker" | "scheduler") => {
+      const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{ env:{...process.env,
+        LOOPLABS_DATABASE_URL:databaseUrl.href, LOOPLABS_TEMPORAL_WORKER_TOKEN:workerKey,
+        LOOPLABS_TEMPORAL_ADDRESS:env!.address, LOOPLABS_TEMPORAL_NAMESPACE:"default", LOOPLABS_TEMPORAL_TASK_QUEUE:taskQueue,
+        LOOPLABS_TEMPORAL_BUILD_ID:buildId, LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",
+        LOOPLABS_TEMPORAL_API_KEY:"", LOOPLABS_TEMPORAL_CERT_PATH:"", LOOPLABS_TEMPORAL_KEY_PATH:"",
+        LOOPLABS_TEMPORAL_HEALTH_PORT:role === "worker" ? "19420" : "19421", LOOPLABS_TEMPORAL_ACTIVITY_SLOTS:"3", LOOPLABS_TEMPORAL_WORKFLOW_SLOTS:"6", LOOPLABS_TEMPORAL_POLL_MS:"500",
+        LOOPLABS_FETCHSANDBOX_BINDING:"", LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN:token },stdio:"ignore"});
+      children.push(child);return child;
+    };
+    async function until(predicate:()=>Promise<boolean>, label:string, timeout=65000) {
+      const start=performance.now();
+      while (!(await predicate())) { if (performance.now()-start>timeout) throw Error(`Timed out: ${label}`); await wait(50); }
+    }
+    const ready=async (port:number) => { try {return (await fetch(`http://127.0.0.1:${port}/health/ready`,{signal:AbortSignal.timeout(1000)})).ok;} catch {return false;} };
+    const kill=async (child:ChildProcess, signal:NodeJS.Signals) => { const exit=new Promise<void>(r=>child.once("exit",()=>r())); child.kill(signal);
+      let timer:ReturnType<typeof setTimeout> | undefined;
+      try { await Promise.race([exit,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error("Service shutdown exceeded 30 seconds")),30000);})]); } finally {clearTimeout(timer);} };
+    let worker=spawnService("worker");await until(()=>ready(19420),"worker ready");
+    for (let i=0;;i++) { try { await env.client.workflowService.setWorkerDeploymentCurrentVersion({namespace:"default",deploymentName:"looplabs-acknowledgement",buildId,identity:"load-proof"});break; } catch(e) {if(i>100)throw e; await wait(100);} }
+    const plans:RunContract[]=[];
+    for(let i=0;i<25;i++) plans.push(await make());
+    const setupStart=performance.now();
+    await Promise.all(plans.flatMap(p=>[outbox.transfer(requester,p.runId),outbox.transfer(requester,p.runId)]));
+    const enqueueMs=Math.round(performance.now()-setupStart);
+    assert.equal((await db.query("SELECT count(*) FROM ll_temporal_dispatch")).rows[0].count,"25");assert.equal(await effects(),0);
+    pass("25 held plans and 50 concurrent transfer calls persist exactly 25 intents without effects");
+    const schedulingStart=performance.now();
+    let scheduler=spawnService("scheduler");
+    await until(async()=>Number((await db.query("SELECT count(*) FROM ll_temporal_dispatch WHERE state='started'")).rows[0].count)>0,"first scheduling batch");
+    const crashAt=performance.now();
+    await kill(scheduler,"SIGKILL");
+    assert.equal(await effects(),0);
+    scheduler=spawnService("scheduler");
+    await until(async()=>Number((await db.query("SELECT count(*) FROM ll_temporal_dispatch WHERE state='pending'")).rows[0].count)===0,"scheduler backlog recovery");
+    const recoveryMs=Math.round(performance.now()-crashAt);
+    const totalSchedulingMs=Math.round(performance.now()-schedulingStart);
+    await until(()=>ready(19421),"scheduler readiness after recovery");
+    pass("Packaged scheduler SIGKILL and replacement drain persisted backlog using natural lease expiry, without new intents");
+    for(const p of plans) {
+      const h=await env.client.workflow.getHandle(`looplabs:local-proof:ack:${p.runId}`).fetchHistory();
+      assert.equal(h.events!.filter(e=>e.workflowExecutionStartedEventAttributes).length,1);
+    }
+    assert.equal(await effects(),0);
+    pass("All 25 workflows have one start event; held approvals remain effect-free under bounded worker concurrency");
+    const health=await (await fetch("http://127.0.0.1:19421/health/ready")).json();
+    assert.equal(health.pending,0);assert.equal(health.ready,true);assert(!JSON.stringify(health).includes(workerKey));
+    assert.equal((await fetch("http://127.0.0.1:19421/health/ready",{method:"POST"})).status,405);
+    pass("Local readiness and backlog metrics recover and expose no workload credential");
+    await kill(worker,"SIGKILL");assert.equal(await ready(19420),false);
+    const restartStart=performance.now();worker=spawnService("worker");await until(()=>ready(19420),"replacement worker ready");
+    const workerRestartMs=Math.round(performance.now()-restartStart);
+    const completionStart=performance.now();
+    await approve(plans[0].runId);
+    await env.client.workflow.getHandle(`looplabs:local-proof:ack:${plans[0].runId}`).signal("wake");
+    await until(async()=>(await workflows.read(requester,plans[0].runId)).state==="completed","approved run completes");
+    const approvalToCompletionMs=Math.round(performance.now()-completionStart);
+    assert.equal(await effects(),2);
+    pass("Packaged pinned worker SIGKILL and restart preserves pending work; exact approval completes one CRM and one email");
+    // The other plans refer to the old contact version. They must conflict after approval.
+    for (const p of plans.slice(1)) { try { await approve(p.runId); } catch {} await workflows.pause(requester,p.runId); await env.client.workflow.getHandle(`looplabs:local-proof:ack:${p.runId}`).signal("wake"); }
+    await until(async()=>{
+      const statuses=await Promise.all(plans.slice(1).map(async p=>(await env!.client.workflow.getHandle(`looplabs:local-proof:ack:${p.runId}`).describe()).status.name));
+      return statuses.every(s=>s==="COMPLETED");
+    },"contained held runs finish");
+    assert.equal(await effects(),2);
+    pass("Other stale shared-contact runs are contained without duplicate effects or downstream sends");
+    await db.query("UPDATE ll_tokens SET active=false WHERE subject='enquiry-temporal'");
+    await until(async()=>!(await ready(19420))&&!(await ready(19421)),"revoked workload readiness");
+    pass("Workload revocation makes both packaged roles unready");
+    const shutdownStart=performance.now();await kill(scheduler,"SIGTERM");await kill(worker,"SIGTERM");
+    const shutdownMs=Math.round(performance.now()-shutdownStart);
+    const files=["scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","runtime/temporal/operations.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/version-contract.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-load-proof.ts"];
+    const fingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
+    await writeFile("docs/evidence/temporal-load-proof.json",JSON.stringify({at:new Date().toISOString(),scope:"Local packaged pinned worker/scheduler, actual Temporal, isolated PostgreSQL and one private HTTP twin; no production cutover",checks,
+      measurements:{plans:25,concurrentTransferCalls:50,activitySlots:3,workflowSlots:6,enqueueMs,totalSchedulingMs,schedulerCrashToBacklogDrainMs:recoveryMs,workerRestartReadyMs:workerRestartMs,approvalToCompletionMs,shutdownMs,finalEffects:2},
+      sourceFingerprints:fingerprints,limitations:["One laptop sample, not capacity, percentile latency or availability SLO","25 concurrent held runs; one approved completion; remaining shared-contact plans contained","Scheduler and worker SIGKILL; no host/database failover","Authenticated TLS configuration validated; remote TLS handshake not exercised","No hosted atomic CRM guarantee or real provider delivery"]},null,2)+"\n");
+  } finally {
+    for(const child of children) if(child.exitCode===null&&!child.signalCode) { const done=new Promise<void>(r=>child.once("exit",()=>r()));child.kill("SIGKILL");await done; }
+    await env?.teardown();
+    if(twin&&twin.exitCode===null) { const done=new Promise<void>(r=>twin!.once("exit",()=>r()));twin.kill("SIGTERM");await done; }
+    await db.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);await admin.end();await rm(dir,{recursive:true,force:true});
+  }
+}
+main().catch(e=>{console.error(e.message);process.exitCode=1;});

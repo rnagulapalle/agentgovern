@@ -1,0 +1,14 @@
+import { createRequire } from 'node:module';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+const require = createRequire(import.meta.url);
+const tsxRequire = createRequire(require.resolve('tsx'));
+const { build } = tsxRequire('esbuild');
+const { bundleWorkflowCode } = await import('@temporalio/worker');
+await mkdir('.worker', { recursive: true });
+const bundle = await bundleWorkflowCode({ workflowsPath: new URL('../runtime/temporal/pinned-workflow.ts', import.meta.url).pathname });
+await writeFile('.worker/temporal-workflow.cjs', bundle.code);
+await build({ entryPoints: ['scripts/temporal-service.ts'], bundle: true, platform: 'node', format: 'cjs', outfile: '.worker/temporal-service.cjs', external: ['pg-native', '@temporalio/worker', '@temporalio/client'] });
+const artifactHash = createHash('sha256').update(await readFile('.worker/temporal-service.cjs')).update(bundle.code).update(await readFile('pnpm-lock.yaml')).digest('hex');
+await writeFile('.worker/temporal-manifest.json', JSON.stringify({ version:1, artifactHash, buildId:`ack-${artifactHash}` })+'\n');
+console.log('Temporal service and deterministic workflow bundles built with content-bound deployment version.');
