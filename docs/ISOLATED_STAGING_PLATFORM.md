@@ -170,7 +170,8 @@ The separate `staging-temporal-service` CI job runs
 `node scripts/staging-temporal-service-proof.mjs` on a disposable runner. It uses
 the generated configuration unchanged, real PostgreSQL schemas, the public JWKS
 container and the pinned Temporal 1.31.0 service. The verification controller runs
-inside the internal network with temporary administrator material; no service port
+inside the internal network as the private-file owner UID/GID, with dropped
+capabilities and temporary administrator material; no service port
 is published to the host. Docker does not publish ports for internal networks, so
 a host-side client is not a valid test of this topology. It must prove namespace creation
 and repeat, scoped workload acceptance, invalid/expired/tampered and cross-namespace
