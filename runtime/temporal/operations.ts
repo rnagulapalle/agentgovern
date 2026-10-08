@@ -3,7 +3,7 @@ export interface OperationsConfig {
   role: "worker" | "scheduler";
   address: string; namespace: string; taskQueue: string; buildId: string;
   healthPort: number; activitySlots: number; workflowSlots: number; pollMs: number;
-  insecureLoopback: boolean; apiKey?: string; certPath?: string; keyPath?: string;
+  insecureLoopback: boolean; apiKey?: string; certPath?: string; keyPath?: string; caPath?: string;
 }
 export function operationsConfig(env: Record<string, string | undefined>, role: string): OperationsConfig {
   if (role !== "worker" && role !== "scheduler") throw Error("Choose worker or scheduler role");
@@ -22,8 +22,9 @@ export function operationsConfig(env: Record<string, string | undefined>, role: 
   const local = /^(localhost|127\.0\.0\.1):/.test(address);
   const certPath = env.LOOPLABS_TEMPORAL_CERT_PATH, keyPath = env.LOOPLABS_TEMPORAL_KEY_PATH;
   const apiKey = env.LOOPLABS_TEMPORAL_API_KEY;
+  const caPath = env.LOOPLABS_TEMPORAL_CA_PATH;
   if (Boolean(certPath) !== Boolean(keyPath)) throw Error("Both certificate and key paths required");
-  if (insecureLoopback && (!local || apiKey || certPath)) throw Error("Insecure transport allowed only for credential-free loopback proof");
+  if (insecureLoopback && (!local || apiKey || certPath || caPath)) throw Error("Insecure transport allowed only for credential-free loopback proof");
   if (!insecureLoopback && !apiKey && !certPath) throw Error("Authenticated TLS connection required");
   return {
     role, address, namespace: required("LOOPLABS_TEMPORAL_NAMESPACE", /^[a-zA-Z0-9_-]{1,128}$/),
@@ -33,7 +34,7 @@ export function operationsConfig(env: Record<string, string | undefined>, role: 
     activitySlots: integer("LOOPLABS_TEMPORAL_ACTIVITY_SLOTS", 5, 1, 20),
     workflowSlots: integer("LOOPLABS_TEMPORAL_WORKFLOW_SLOTS", 10, 1, 40),
     pollMs: integer("LOOPLABS_TEMPORAL_POLL_MS", 5000, 250, 30000),
-    insecureLoopback, apiKey, certPath, keyPath,
+    insecureLoopback, apiKey, certPath, keyPath, caPath,
   };
 }
 export class OperationsHealth {

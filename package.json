@@ -37,7 +37,8 @@
     "temporal:build": "node scripts/build-temporal-worker.mjs",
     "temporal:worker": "node --env-file=.env.local --env-file=.local/temporal-worker.env .worker/temporal-service.cjs worker",
     "temporal:scheduler": "node --env-file=.env.local --env-file=.local/temporal-worker.env .worker/temporal-service.cjs scheduler",
-    "temporal:load-proof": "node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts"
+    "temporal:load-proof": "node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts",
+    "temporal:container-proof": "LOOPLABS_TEMPORAL_CONTAINER_PROOF=1 node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1147.0",
