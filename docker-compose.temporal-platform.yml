@@ -138,7 +138,7 @@ services:
   connector-twin:
     <<: *hardening
     image: ${LOOPLABS_STAGING_TWIN_IMAGE:?Provide the reviewed private twin image}
-    environment: {LOOPLABS_CONNECTOR_STATE_DIR: /state}
+    environment: {LOOPLABS_CONNECTOR_STATE_DIR: /state, LOOPLABS_TWIN_CONTAINER: "1"}
     read_only: true
     tmpfs: [/tmp]
     mem_limit: 256m

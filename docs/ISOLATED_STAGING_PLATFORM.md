@@ -143,6 +143,38 @@ together on the allocated staging deployment.
 
 ## Verification and remaining work
 
+### Actual private provider container proof
+
+The Compose twin now explicitly sets `LOOPLABS_TWIN_CONTAINER=1`. Without this
+setting the fixture listened only on its own loopback, so other application
+containers could not reach it. The topology test preserves this setting.
+
+`Dockerfile.connector-twin` uses an explicit named `fetchsandbox` backend build
+context and copies application source plus HubSpot/Resend config/spec directories.
+It never copies the backend root, private stores, `.env` or its dependency runtime;
+it installs the recorded direct Python versions and runs as fixture UID 1000.
+It is a private two-provider fixture, not a FetchSandbox production service or
+provider API parity. Dependency/image identity is recorded, not independently
+attested; transitive dependency resolution and external source review remain
+operator responsibilities.
+
+Reproduce from a reviewed local FetchSandbox backend using
+`FETCHSANDBOX_BACKEND_PATH=<backend-source> node scripts/staging-twin-proof.mjs`.
+The trial builds its own image, seeds a dedicated private state directory, starts
+an internal network without published ports, and issues requests from a separate
+controller container. It checks credential/workspace refusal, changed retry
+refusal, duplicate CRM/email effect identity and readback across a twin SIGKILL.
+It removes only its generated containers, network, image and temporary directory.
+No existing provider process or volume is used. A build/proof failure refuses
+acceptance and prints only its stage, never credentials or raw command output.
+
+The October 8 actual local trial passed. Sanitized image identity and LoopLabs
+source fingerprints are retained in `docs/evidence/staging-twin-container-proof.json`.
+This closes fixture packaging/reachability/restart evidence only. It does not
+exercise application approvals, Temporal workers, the complete stack or remote
+staging. CI currently does not have the private FetchSandbox backend source;
+its topology/regression checks do not replace this actual image trial.
+
 The real Compose renderer passes topology tests for all eight services, project-local
 networks/volumes, resource declarations, secret-mount separation and absence of public
 database/provider/Temporal ports. Actual HTTP tests verify public key replacement and
