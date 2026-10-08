@@ -1,4 +1,7 @@
-// Real Next HTTP API + PostgreSQL + private HTTP twins; no mocked provider.
+// Real Next HTTP API + packaged Temporal roles + PostgreSQL + private HTTP twins.
+import type {WorkflowHandle} from "@temporalio/client";
+import {TestWorkflowEnvironment} from "@temporalio/testing";
+import {Worker} from "@temporalio/worker";
 import {Pool} from "pg";
 import {spawn,type ChildProcess} from "node:child_process";
 import {randomBytes,randomUUID,createHash} from "node:crypto";
@@ -16,19 +19,20 @@ import {recordActivities} from "../runtime/temporal/record-routing";
 import {chromium,expect,type Browser,type BrowserContext,type Page,type Response} from "@playwright/test";
 import {passwordHash} from "../lib/workspace/auth";
 const origin="http://localhost:3117",wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
-async function until(test:()=>Promise<boolean>,label:string){for(let i=0;i<150;i++){if(await test())return;await wait(100);}throw Error(`Unavailable: ${label}`);}
+async function until(test:()=>Promise<boolean>,label:string,timeout=15000){const start=Date.now();while(!(await test())){if(Date.now()-start>timeout)throw Error(`Unavailable: ${label}`);await wait(100);}}
 async function main(){
  const url=process.env.LOOPLABS_TEST_DATABASE_URL;if(!url)throw Error("Dedicated test PostgreSQL required");
  const schema=`tenant_proof_${randomBytes(8).toString("hex")}`,dir=await mkdtemp(resolve(".local/tenant-proof-")),token=randomBytes(32).toString("base64url");
  const admin=new Pool({connectionString:url}),db=new Pool({connectionString:url,options:`-c search_path=${schema}`});
  const records=[{version:"record-scope-1" as const,workspaceId:"company-a",contactId:"4001",recipient:"alice@example.test"},{version:"record-scope-1" as const,workspaceId:"company-b",contactId:"4002",recipient:"bob@example.test"}];
- let app:ChildProcess|undefined,twin:ChildProcess|undefined,browser:Browser|undefined;const checks:string[]=[];let denied=0;const password=randomBytes(24).toString("base64url"),hashedPassword=passwordHash(password);
+ let app:ChildProcess|undefined,twin:ChildProcess|undefined,browser:Browser|undefined,temporal:TestWorkflowEnvironment|undefined;const children:ChildProcess[]=[];const checks:string[]=[];let denied=0;const password=randomBytes(24).toString("base64url"),hashedPassword=passwordHash(password);
  const pass=(s:string)=>{checks.push(s);console.log("PASS",s);};
  const request=async(key:string,path:string,p?:object)=>{const response=await fetch(origin+path,{headers:{Authorization:`Bearer ${key}`,Origin:origin,...(p?{"Content-Type":"application/json"}:{})},...(p?{method:"POST",body:JSON.stringify(p)}:{})});return {status:response.status,data:await response.json()};};
  try{
   await admin.query(`CREATE SCHEMA ${schema}`);
   for(const f of ["lib/durable/schema.sql","lib/workspace/schema.sql","lib/refunds/schema.sql","lib/connectors/schema.sql","lib/workflows/schema.sql","lib/durable/proposal-schema.sql","lib/enquiries/schema.sql","lib/enquiries/managed-schema.sql","lib/enquiries/temporal-schema.sql","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql"])await db.query(await readFile(f,"utf8"));
   await writeFile(`${dir}/connector-twin-credentials.json`,JSON.stringify({token}),{mode:0o600});await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records}),{mode:0o600});
+  await writeFile(`${dir}/connector-twin-faults.json`,JSON.stringify({loseResponseRecords:["4001"]}),{mode:0o600});
   const backend=process.env.FETCHSANDBOX_BACKEND_PATH||`${process.env.HOME}/sandbox/backend`;
   twin=spawn(`${backend}/.venv/bin/python`,["scripts/connector-twin.py"],{env:{...process.env,LOOPLABS_CONNECTOR_STATE_DIR:dir},stdio:"ignore"});
   const base=new FetchSandboxConnectors("http://127.0.0.1:8018",token);
@@ -101,21 +105,41 @@ async function main(){
   assert.equal(await snapshot(),before);assert.equal(Object.keys(await effects()).length,0);
   pass("Real authenticated HTTP: each catalog/plan list exposes only its company; 64 cross-company member/agent/worker reads and mutations are denied with no state or effects changed");
   pass("Identical CRM/email agent IDs in two companies do not grant cross-company approval, record access or pinned worker routing");
-  for(const own of companies){
-   for(const step of own.run.steps){const r=await request(own.keys.reviewer,"/api/durable/connectors",{operation:"approve",actionId:step.action_id,payloadHash:step.payload_hash});assert.equal(r.status,200);}
-   assert.equal(await recordActivities(db,own.worker,s=>new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,s),build.buildId)(own.input),"completed");
-  }
+  temporal=await TestWorkflowEnvironment.createLocal({server:{dbFilename:`${dir}/temporal.sqlite`}});
+  const queues=companies.map(c=>`${c.scope.workspaceId}-${randomUUID()}`);assert.equal(new Set(queues).size,2);
+  const service=(index:number,role:"worker"|"scheduler")=>{
+   const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{env:{...process.env,LOOPLABS_DATABASE_URL:databaseUrl.toString(),LOOPLABS_TEMPORAL_WORKER_TOKEN:companies[index].keys.worker,LOOPLABS_TEMPORAL_ADDRESS:temporal!.address,LOOPLABS_TEMPORAL_NAMESPACE:"default",LOOPLABS_TEMPORAL_TASK_QUEUE:queues[index],LOOPLABS_TEMPORAL_BUILD_ID:build.buildId,LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",LOOPLABS_TEMPORAL_API_KEY:"",LOOPLABS_TEMPORAL_CERT_PATH:"",LOOPLABS_TEMPORAL_KEY_PATH:"",LOOPLABS_TEMPORAL_CA_PATH:"",LOOPLABS_TEMPORAL_POLL_MS:"250",LOOPLABS_TEMPORAL_HEALTH_PORT:String(19340+index*2+(role==="scheduler"?1:0)),LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:""},stdio:"ignore"});children.push(child);return child;
+  };
+  const ready=async(port:number)=>{try{return (await fetch(`http://127.0.0.1:${port}/health/ready`,{signal:AbortSignal.timeout(1000)})).ok;}catch{return false;}};
+  const crashed=service(0,"worker");service(0,"scheduler");service(1,"worker");service(1,"scheduler");
+  await until(async()=> (await Promise.all([19340,19341,19342,19343].map(ready))).every(Boolean),"two-company packaged readiness",90000);
+  await until(async()=> (await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch WHERE state='started'")).rows[0].n===2,"two scoped Temporal histories",90000);
+  await wait(1200);assert.equal(Object.keys(await effects()).length,0);
+  pass("Two company-scoped packaged workers and schedulers use separate task queues and start both pinned histories; held approvals remain effect-free");
+  crashed.kill("SIGKILL");await until(async()=>crashed.signalCode==="SIGKILL","confirmed company-a worker crash");
+  for(const own of companies)for(const step of own.run.steps){const r=await request(own.keys.reviewer,"/api/durable/connectors",{operation:"approve",actionId:step.action_id,payloadHash:step.payload_hash});assert.equal(r.status,200);}
+  await until(async()=> (await companies[1].flow.read(companies[1].owner,companies[1].plan.id)).state==="completed","company-b completes with company-a worker stopped",90000);
+  const whileStopped=await effects();assert.equal(Object.keys(whileStopped).length,2);assert(companies[0].run.steps.every((s:{action_id:string})=>!whileStopped[s.action_id]));assert.equal((await companies[0].flow.read(companies[0].owner,companies[0].plan.id)).state,"active");assert.equal(crashed.signalCode,"SIGKILL");
+  pass("Company-b independently approved workflow completes two correct effects while company-a worker is confirmed stopped; no company-a effect or replacement authority");
+  service(0,"worker");await until(()=>ready(19340),"company-a replacement worker",90000);
+  await until(async()=> (await companies[0].flow.read(companies[0].owner,companies[0].plan.id)).state==="completed","company-a recovered completion",90000);
   const completed=await effects();assert.equal(Object.keys(completed).length,4);
   for(const own of companies)for(const step of own.run.steps){assert.equal(completed[step.action_id].recordId,own.scope.contactId);if(step.connector==="email")assert.deepEqual(completed[step.action_id].body.to,[own.scope.recipient]);}
-  pass("Separate-company independent approvals and real record-aware activity execution produce exactly four intended HTTP effects; no cross-company destination");
+  assert((await db.query("SELECT 1 FROM ll_connector_events WHERE action_id=$1 AND kind='uncertain'",[companies[0].run.steps[0].action_id])).rows[0]);
+  pass("Replacement packaged worker preserves company-a original actions and recovers its actual lost CRM response; exactly four intended HTTP effects across companies and no cross-company destination");
+  const workflowIds:string[]=[];
+  for(const own of companies){const id=(await db.query("SELECT workflow_id FROM ll_temporal_dispatch WHERE org_id=$1 AND plan_id=$2",[own.scope.workspaceId,own.plan.id])).rows[0].workflow_id;assert(id.startsWith(`looplabs:${own.scope.workspaceId}:ack:`));workflowIds.push(id);const handle:WorkflowHandle=temporal.client.workflow.getHandle(id);assert.equal(await handle.result(),"completed");const history=await handle.fetchHistory();await Worker.runReplayHistory({workflowsPath:resolve("runtime/temporal/pinned-workflow.ts")},history);for(const secret of [token,...companies.flatMap(c=>Object.values(c.keys))])assert(!JSON.stringify(history).includes(secret));}
+  assert.deepEqual(await effects(),completed);
+  pass("Both actual company histories replay without new effects, credential leakage or replacement action identities");
   for(const own of companies)assert.equal(await recordActivities(db,own.worker,()=>own.provider,build.buildId)(own.input),"completed");
   assert.deepEqual(await effects(),completed);
-  pass("Repeated completed activity calls retain four effects and each company's original action identities");
-  const files=["scripts/tenant-isolation-proof.ts","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
+  pass("Repeated completed activity calls retain four effects and each company\'s original action identities");
+  const files=["scripts/tenant-isolation-proof.ts","scripts/temporal-service.ts","runtime/temporal/pinned-workflow.ts","runtime/temporal/version-contract.ts","scripts/build-temporal-worker.mjs","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
   const sourceFingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
-  await writeFile("docs/evidence/tenant-isolation-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,deniedBrowserRequests:deniedBrowser,effects:4},scope:"Local real browser, Next HTTP API, PostgreSQL and provider twins; activity function execution, not a new Temporal/container/remote or independent security audit"},null,2)+"\n");
+  await writeFile("docs/evidence/tenant-isolation-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,deniedBrowserRequests:deniedBrowser,effects:4,taskQueues:2,workerProcesses:3,schedulerProcesses:2,crashedWorkers:1,replayedHistories:2},workflowIds,buildId:build.buildId,scope:"Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"},null,2)+"\n");
  }finally{
-  await browser?.close();
+  for(const child of children)if(child.exitCode===null&&!child.signalCode){child.kill("SIGTERM");await until(async()=>child.exitCode!==null||Boolean(child.signalCode),"packaged tenant role shutdown",25000);}
+  await temporal?.teardown();await browser?.close();
   if(app?.pid){try{process.kill(-app.pid,"SIGKILL");}catch{}await wait(400);}
   if(twin&&twin.exitCode===null&&!twin.signalCode){twin.kill("SIGTERM");try{await until(async()=>twin!.exitCode!==null||Boolean(twin!.signalCode),"private twin graceful shutdown");}catch{twin.kill("SIGKILL");await until(async()=>twin!.exitCode!==null||Boolean(twin!.signalCode),"private twin forced shutdown");}}
   await db.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);await admin.end();await rm(dir,{recursive:true,force:true});

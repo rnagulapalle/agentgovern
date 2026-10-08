@@ -140,3 +140,7 @@ Read-only inspection of the existing server confirmed running web/legacy worker 
 ## Executable rollout prerequisite check
 
 `temporal:staging-preflight` and the combined-environment invocation in `TEMPORAL_OPERATIONS.md` now inspect staging configuration, exact schema digests, runtime database privileges, workload scope and independent named members without mutation. The actual existing-server snapshot confirms missing migrations 9/11/12/13 and staging configuration. This narrows the provisioning work; it does not establish artifact integrity, poller/provider health or any remote operational acceptance. Keep the production runner unchanged until the remaining gates above pass.
+
+## Two-company packaged execution increment
+
+The existing browser/API tenant proof now includes separate company-scoped packaged worker/scheduler pairs and two actual Temporal histories. One company's confirmed worker crash does not prevent the other correctly queued company's completion; replacement and a lost-response drill preserve exactly four targeted effects. Both histories replay. This closes a bounded correctly configured queue/fault-isolation check, not multi-tenant saturation, provider-side credential isolation, misconfigured shared-queue availability or remote acceptance.

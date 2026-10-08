@@ -1,14 +1,21 @@
 {
-  "at": "2026-10-08T08:43:07.167Z",
+  "at": "2026-10-08T10:13:38.841Z",
   "checks": [
     "Two real browser sessions keep company records separate; eight cross-company/origin attacks are denied, HttpOnly/Strict cookies hide credentials from scripts and expired sessions lose API access without effects",
     "Real authenticated HTTP: each catalog/plan list exposes only its company; 64 cross-company member/agent/worker reads and mutations are denied with no state or effects changed",
     "Identical CRM/email agent IDs in two companies do not grant cross-company approval, record access or pinned worker routing",
-    "Separate-company independent approvals and real record-aware activity execution produce exactly four intended HTTP effects; no cross-company destination",
+    "Two company-scoped packaged workers and schedulers use separate task queues and start both pinned histories; held approvals remain effect-free",
+    "Company-b independently approved workflow completes two correct effects while company-a worker is confirmed stopped; no company-a effect or replacement authority",
+    "Replacement packaged worker preserves company-a original actions and recovers its actual lost CRM response; exactly four intended HTTP effects across companies and no cross-company destination",
+    "Both actual company histories replay without new effects, credential leakage or replacement action identities",
     "Repeated completed activity calls retain four effects and each company's original action identities"
   ],
   "sourceFingerprints": {
-    "scripts/tenant-isolation-proof.ts": "30ebcc14054ff5782ec0c5e465445672fbf13b4bed9d05bccff1fece1ba37620",
+    "scripts/tenant-isolation-proof.ts": "3b49afd5ec516536690876361e49763eff3f905cb67251f503e28a0688e3976f",
+    "scripts/temporal-service.ts": "aabc50a89aa2087f8b3749b561674bf017a61540414d7de4c680cbc479c7fec5",
+    "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
+    "runtime/temporal/version-contract.ts": "80fd2948beed1f9f9c0318ed2ac24e59fb3c0820538b718891e179f047c3b921",
+    "scripts/build-temporal-worker.mjs": "c7c96a323aedd51e0544e50e050301ff1efab1cdb00bfaac690b01d25d109510",
     "lib/workspace/auth.ts": "d58f5bdeac77ef3bd5b86f8590b9c17e99508f74df690998439f6137f3541972",
     "lib/workspace/identity.ts": "0241e4ecaf3060788b8002fe9616ad3a90368dbb8199dbbff0cb7d24f92c86f7",
     "app/api/workspace/session/route.ts": "adf8e024c4fef51179fd3240e396a4d9f383dbd6b32f4c38508b27e2da439330",
@@ -36,7 +43,17 @@
     "companies": 2,
     "deniedHttpRequests": 64,
     "deniedBrowserRequests": 8,
-    "effects": 4
+    "effects": 4,
+    "taskQueues": 2,
+    "workerProcesses": 3,
+    "schedulerProcesses": 2,
+    "crashedWorkers": 1,
+    "replayedHistories": 2
   },
-  "scope": "Local real browser, Next HTTP API, PostgreSQL and provider twins; activity function execution, not a new Temporal/container/remote or independent security audit"
+  "workflowIds": [
+    "looplabs:company-a:ack:023c58d8-f11e-4842-b27f-07a33af83798",
+    "looplabs:company-b:ack:c7c9057d-2fbd-4c32-8293-dd98a3fd0461"
+  ],
+  "buildId": "ack-1cfac314a32ef6cb0ff45a022ea9480f35f676416788a9eee511c8611ea5a12b",
+  "scope": "Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"
 }
