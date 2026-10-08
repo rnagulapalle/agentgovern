@@ -92,3 +92,14 @@ edit retained v1 content or silently replace historical request displays. Downst
 steps must match current predecessor destination/request contracts as well as
 identity, policy and verified state. Changes require meaningful failure/replay
 tests and fresh application/worker/container plus actual proof suites.
+
+
+## Record-scoped connector work
+
+Read `docs/RECORD_SCOPED_CONNECTORS.md` before changing enrolled record scope or
+recipient routing. The private adapter's server-only `prepared-request-2` contract
+binds workspace/record/test-recipient; v1 remains unchanged. Extra records are
+fixture enrollment, not live provider/tenant authentication. Record-scoped managed
+submission and Temporal ownership transfer remain refused until compatible worker
+routing is proven. Never relabel a v2 request as a pinned v1 contract or treat the
+manual two-record proof as approved load or deployed background acceptance.
