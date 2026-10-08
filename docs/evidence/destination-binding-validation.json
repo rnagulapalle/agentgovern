@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-08T03:08:02.098614+00:00",
+  "observations": [
+    {
+      "check": "Initial post-effect revocation harness",
+      "result": "incomplete",
+      "evidence": "Saved CRM action was cancelled before dispatch because the harness wrapper omitted its required bindingId; its awaited callback was unreachable. Verified saved state, stopped only the identified local proof processes and removed their isolated schema/directory.",
+      "correction": "Wrapper now delegates the underlying bindingId and rejects a returned execution result or a 15-second post-effect wait timeout. Fresh dispatch proof passed all six checks."
+    },
+    {
+      "check": "Initial local Next build",
+      "result": "failed",
+      "evidence": "ENOSPC while copying standalone output; compilation completed. Removed only generated LoopLabs caches; scoped tracing to the checkout.",
+      "correction": "Scoped Next tracing to this checkout, removed generated caches, and reran the cache-disabled standalone build successfully. The real-browser proof then passed all 12 checks against fresh bundles."
+    },
+    {
+      "check": "Initial secure-container archive-restore drill",
+      "result": "failed",
+      "evidence": "Worker restore wait timed out; Docker container metadata writes and blob reads returned input/output errors. Host filesystem had 123 MiB available during the simultaneous build. Prior checks reached exactly two approved effects.",
+      "correction": "Freed generated cache space, removed only unused build cache older than 24 hours, and restarted Docker through its official CLI without resetting it. Cleaned only the failed isolated proof containers/network/volume. A fresh unchanged container drill passed all 17 checks with exactly two effects."
+    }
+  ],
+  "scope": "Sanitized validation history, not a production reliability claim."
+}

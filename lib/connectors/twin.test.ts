@@ -5,11 +5,9 @@ const token = "a".repeat(40);
 const a = (connector: "crm" | "email" = "crm") =>
   ({
     id: "proof-id",
+    org_id: "local-proof",
     connector,
-    payload:
-      connector === "crm"
-        ? { lifecycle: "customer" }
-        : { template: "case_received" },
+    payload: { ...(connector === "crm" ? { lifecycle: "customer" } : { template: "case_received" }), binding: new FetchSandboxConnectors("http://127.0.0.1:8018", token).bindingId },
   }) as ConnectorAction;
 afterEach(() => vi.restoreAllMocks());
 describe("Private connector adapter", () => {
@@ -161,4 +159,17 @@ describe("Private connector adapter", () => {
       );
     }
   });
+});
+
+it("treats approved private transport aliases as one fixture identity and refuses another fixture key", async () => {
+  const local = new FetchSandboxConnectors("http://127.0.0.1:8018", token);
+  const docker = new FetchSandboxConnectors("http://connector-twin:8018", token);
+  expect(local.bindingId).toBe(docker.bindingId);
+  const other = new FetchSandboxConnectors("http://127.0.0.1:8018", "b".repeat(40));
+  const request = vi.spyOn(globalThis, "fetch");
+  await expect(other.write(a(), false)).rejects.toThrow("destination changed");
+  await expect(other.inspect(a())).rejects.toThrow("destination changed");
+  await expect(local.write({ ...a(), org_id: "other" }, false)).rejects.toThrow();
+  await expect(local.write({ ...a(), payload: { lifecycle: "customer" } }, false)).rejects.toThrow();
+  expect(request).not.toHaveBeenCalled();
 });

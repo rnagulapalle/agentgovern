@@ -107,15 +107,16 @@ async function main() {
     const revoked = await make(); await outbox.transfer(requester, revoked.runId); await approve(revoked.runId);
     let entered!: () => void, release!: () => void;
     const effect = new Promise<void>(r => { entered=r; }), gate = new Promise<void>(r => { release=r; });
-    const slow = new ConnectorControl(db, { workspaceId: provider.workspaceId, source: (...args) => provider.source(...args), inspect: (...args) => provider.inspect(...args), async write(...args) { const observed = await provider.write(...args); entered(); await gate; return observed; } });
+    const slow = new ConnectorControl(db, { get bindingId() { return provider.bindingId; }, workspaceId: provider.workspaceId, source: (...args) => provider.source(...args), inspect: (...args) => provider.inspect(...args), async write(...args) { const observed = await provider.write(...args); entered(); await gate; return observed; } });
     const step = (await workflows.read(requester, revoked.runId)).steps[0];
     const pending = slow.execute(workerActor, step.action_id);
-    await effect; await db.query("UPDATE ll_members SET active=false WHERE email='requester'"); release();
+    await Promise.race([effect, pending.then(result => { throw Error(`Expected an in-flight effect, but execution returned ${result.state}`); }), new Promise<never>((_, reject) => { const t = setTimeout(() => reject(Error("Post-effect gate timed out")), 15000); t.unref(); })]);
+    await db.query("UPDATE ll_members SET active=false WHERE email='requester'"); release();
     assert.equal((await pending).state, "uncertain");
     await assert.rejects(() => activity.advanceContract(revoked), /owner/);
     assert.equal(await effects(), before+3);
     pass("Owner revoked after actual CRM HTTP effect leaves uncertainty and prevents all downstream email");
-    const files = ["lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/outbox.ts", "runtime/temporal/version-contract.ts", "runtime/temporal/activities.ts", "runtime/temporal/pinned-workflow.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/temporal-schema.sql", "lib/connectors/service.ts", "lib/workflows/service.ts", "lib/durable/service.ts", "scripts/temporal-dispatch-proof.ts"];
+    const files = ["lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/outbox.ts", "runtime/temporal/version-contract.ts", "runtime/temporal/activities.ts", "runtime/temporal/pinned-workflow.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/temporal-schema.sql", "lib/connectors/service.ts", "lib/workflows/service.ts", "lib/durable/service.ts", "scripts/temporal-dispatch-proof.ts"];
     const fingerprints = Object.fromEntries(await Promise.all(files.map(async f => [f, createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/temporal-dispatch-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Actual Temporal, isolated PostgreSQL and private HTTP twins; no production cutover", checks, sourceFingerprints: fingerprints, limitations: ["Scheduler lease expiry injected in isolated schema", "Workspace-wide transaction lock retained; no throughput or production HA claim", "External request already sent cannot be recalled; uncertainty contains downstream", "Hosted atomic CRM guard and actual provider test-mode acceptance remain blocked"] }, null, 2)+"\n");
   } finally {

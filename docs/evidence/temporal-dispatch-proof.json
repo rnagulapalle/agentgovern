@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T01:48:26.075Z",
+  "at": "2026-10-08T02:58:58.746Z",
   "scope": "Actual Temporal, isolated PostgreSQL and private HTTP twins; no production cutover",
   "checks": [
     "Atomic duplicate transfer excludes legacy polling and rejects legacy or human dispatch of Temporal-owned work",
@@ -10,6 +10,12 @@
     "Owner revoked after actual CRM HTTP effect leaves uncertainty and prevents all downstream email"
   ],
   "sourceFingerprints": {
+    "lib/connectors/contracts.ts": "c43565a05454715f0b9856f936862efef1b475c5ff20826358677a5f0c02967c",
+    "lib/connectors/service.ts": "05ecce016a058bc83139eaf49b551caaa18efb2728ff0f5bbbf816058ca30da2",
+    "lib/connectors/twin.ts": "03cf4743d1a4bed561482e87e28fe6e05f54947ccb97ceb1a3a99c77b863ffd7",
+    "lib/connectors/hosted.ts": "291a9bea0af976493ae5f758babe5b7d5c31f9a20009fea1451824ae1f0a941f",
+    "lib/enquiries/service.ts": "7737e2768aa2eb9415b699352dbad19ac2bf38908b6a30073275252b588497e4",
+    "lib/workflows/guard.ts": "77aaf900d33c8453f49ab6ac4332eb5fd0235af467c50ee76cc312e7eee91a07",
     "lib/durable/recovery.ts": "d030d0c17ebd09399ff63a1652f23bfbc7dc0296eb29386b14127a67e75bbae7",
     "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
     "runtime/temporal/outbox.ts": "babeec60f018055a70001abaade12ceadd734b584172d1d88e7f9ee87d31cd9b",
@@ -19,9 +25,8 @@
     "lib/enquiries/dispatch.ts": "4cc5701be853ae7c24e3092c8d9344eafb97f97844b7c29c8a8916ba27d09058",
     "lib/enquiries/runner.ts": "a0194d41b4bef270bcd5722a17d9058a07f61a873c73feb1842054ea104eb0e0",
     "lib/enquiries/temporal-schema.sql": "72705c41e2674baadeda22b7e324e9e232947e1a40a7d5717d0cf1280b3736da",
-    "lib/connectors/service.ts": "fcca20c506183ad9589572617f1cf07b9bec8f1222af4b59980f5b033046db69",
     "lib/workflows/service.ts": "8da7ab7684423f9221c22a7cf7af9611baadfbcc9e7f2563e4063a5ca6cebb9a",
-    "scripts/temporal-dispatch-proof.ts": "b4e65431e8fd95242854f8c59d3bcf7d6c294e358eb8968d3aa451d3de6234b1"
+    "scripts/temporal-dispatch-proof.ts": "fe809e297a64fa239c238275784364c76125e4625bab9ae3499f24f975a6dcf0"
   },
   "limitations": [
     "Scheduler lease expiry injected in isolated schema",

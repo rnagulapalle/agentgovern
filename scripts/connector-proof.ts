@@ -291,6 +291,16 @@ async function main() {
       },
       "The fixture enforces an exact source version at write time. This CAS extension is not a live HubSpot feature claim.",
     );
+    await check("destination binding: retargeting cannot reuse approval or rewrite a replay", async () => {
+      const approved = await ready("email");
+      const before = JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8"));
+      const changed = new ConnectorControl(db!, new FetchSandboxConnectors("http://127.0.0.1:8018", randomBytes(32).toString("base64url")));
+      const replay = await changed.propose(email, { actionId: approved.id, agentId: email.subject, connector: "email", payload: { template: "case_received" } });
+      assert.equal(replay.payload.binding, approved.payload.binding);
+      assert.equal(replay.payload_hash, approved.payload_hash);
+      assert.equal((await changed.execute(worker, approved.id)).state, "cancelled");
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects, before.effects);
+    }, "Real saved approval and adapter destination change; original ID/hash retained, dispatch cancelled and actual provider effect journal unchanged.");
     for (const stage of ["before", "after"])
       await check(
         `worker SIGKILL ${stage} effect`,

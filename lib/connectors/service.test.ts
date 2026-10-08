@@ -23,6 +23,7 @@ let admin: Pool,
   other: Actor;
 class Provider implements ConnectorProvider {
   readonly workspaceId = "one";
+  bindingId = "a".repeat(64);
   calls = 0;
   failWrite = false;
   failRead = false;
@@ -546,4 +547,37 @@ describe("durable workflow dependency boundary", () => {
       "Authority changed",
     );
   });
+});
+
+it("binds server-owned destinations to approvals and refuses retargeting without a write", async () => {
+  provider.bindingId = "a".repeat(64);
+  await expect(control.propose(agent, { ...p(), payload: { lifecycle: "customer", binding: provider.bindingId } })).rejects.toThrow();
+  const pending = await control.propose(agent, p());
+  expect(pending.payload.binding).toBe(provider.bindingId);
+  provider.bindingId = "b".repeat(64);
+  expect((await control.review(operator, pending.id, pending.payload_hash, true)).state).toBe("cancelled");
+  const approved = await ready();
+  provider.bindingId = "c".repeat(64);
+  expect((await control.execute(worker, approved.id)).state).toBe("cancelled");
+  expect(provider.calls).toBe(0);
+  provider.bindingId = "";
+  await expect(control.propose(agent, p())).rejects.toThrow("destination is unavailable");
+});
+it("contains a destination change during source lookup and after an in-flight effect", async () => {
+  provider.bindingId = "a".repeat(64);
+  const source = provider.source.bind(provider);
+  provider.source = async () => { provider.bindingId = "b".repeat(64); return "v1"; };
+  await expect(control.propose(agent, p())).rejects.toThrow("changed during preparation");
+  expect((await db.query("SELECT count(*)::integer AS n FROM ll_connector_actions")).rows[0].n).toBe(0);
+  provider.source = source;
+  const approved = await ready();
+  let release!: () => void;
+  provider.gate = new Promise<void>(r => { release = r; });
+  const executing = control.execute(worker, approved.id);
+  for (let i = 0; provider.calls === 0 && i < 50; i++) await new Promise(r => setTimeout(r, 5));
+  expect(provider.calls).toBe(1); provider.bindingId = "c".repeat(64); release();
+  expect((await executing).state).toBe("uncertain");
+  provider.failRead = true;
+  expect((await control.reconcile(operator, approved.id)).state).toBe("uncertain");
+  expect(provider.calls).toBe(1);
 });

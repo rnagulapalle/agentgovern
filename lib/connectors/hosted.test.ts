@@ -3,7 +3,7 @@ import { HostedFetchSandboxConnectors, connectorProvider, type HostedBinding } f
 import { FetchSandboxConnectors } from "./twin";
 import type { ConnectorAction } from "./contracts";
 const binding = (): HostedBinding => ({ origin: "http://127.0.0.1:8019", ownerKey: "fsk_" + "a".repeat(40), workspaceId: "local-proof", contactId: "1001", legs: { crm: { sandboxId: "a".repeat(10), apiKey: "c".repeat(40) }, email: { sandboxId: "b".repeat(10), apiKey: "e".repeat(40) } } });
-const action = (connector: "crm" | "email" = "email") => ({ id: "proof-id", org_id: "local-proof", connector, payload: connector === "crm" ? { lifecycle: "customer" } : { template: "case_received" } }) as ConnectorAction;
+const action = (connector: "crm" | "email" = "email") => ({ id: "proof-id", org_id: "local-proof", connector, payload: { ...(connector === "crm" ? { lifecycle: "customer" } : { template: "case_received" }), binding: new HostedFetchSandboxConnectors(binding()).bindingId } }) as ConnectorAction;
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 it.each([null, { origin: "https://api.resend.com" }, { origin: "https://fetchsandbox.com/" }, { ownerKey: "bad" }, { workspaceId: "" }, { contactId: "../escape" }, { legs: {} }])("rejects unsafe or incomplete binding %j", value => {
   expect(() => new HostedFetchSandboxConnectors(value === null ? value as unknown as HostedBinding : { ...binding(), ...value } as unknown as HostedBinding)).toThrow();
@@ -75,4 +75,20 @@ it.each(["id", "from", "to", "subject", "text"])("rejects mismatched %s in provi
   const p = new HostedFetchSandboxConnectors(binding()); const record = { id: "email_1", ...p.body(action()), [key]: "wrong" };
   vi.spyOn(p, "request").mockResolvedValueOnce({ events: [evidence(p)] }).mockResolvedValueOnce(record);
   expect((await p.inspect(action())).outcome).toBe("conflict");
+});
+
+it("freezes destination identity while allowing credentials to rotate within the same sandbox", async () => {
+  const b = binding(), p = new HostedFetchSandboxConnectors(b), a = action();
+  const fetch = vi.spyOn(globalThis, "fetch");
+  const original = p.bindingId;
+  b.ownerKey = "fsk_" + "z".repeat(40); b.legs.email.apiKey = "z".repeat(40);
+  expect(p.bindingId).toBe(original);
+  for (const changed of ["contact", "sandbox", "origin"] as const) {
+    if (changed === "contact") b.contactId = "1002";
+    else if (changed === "sandbox") b.legs.email.sandboxId = "c".repeat(10);
+    else b.origin = "https://stage.fetchsandbox.com";
+    await expect(p.write(a, false)).rejects.toThrow("destination changed");
+    await expect(p.inspect(a)).rejects.toThrow("destination changed");
+  }
+  expect(fetch).not.toHaveBeenCalled();
 });

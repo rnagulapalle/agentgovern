@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { bindingMatches } from "./contracts";
 import { ControlError } from "../durable/contracts";
 import type {
   Connector,
@@ -8,6 +10,8 @@ import type {
 export class FetchSandboxConnectors implements ConnectorProvider {
   readonly workspaceId = "local-proof";
   readonly contactId = "1001";
+  get bindingId() { return createHash("sha256").update(JSON.stringify(["private-twin-1", this.workspaceId, this.contactId, "customer@example.test", this.token])).digest("hex"); }
+  bound(a: ConnectorAction) { if (!bindingMatches(this, a) || a.org_id !== this.workspaceId) throw new ControlError(409, "Saved connector destination changed. No request was sent."); }
   constructor(
     readonly base = process.env.LOOPLABS_CONNECTOR_TWIN_URL || "",
     readonly token = process.env.LOOPLABS_CONNECTOR_TWIN_TOKEN || "",
@@ -47,6 +51,7 @@ export class FetchSandboxConnectors implements ConnectorProvider {
     return r.updatedAt as string;
   }
   async write(a: ConnectorAction, loseResponse: boolean): Promise<Observation> {
+    this.bound(a);
     await this.request(
       a.connector === "crm"
         ? "/crm/crm/v3/objects/contacts/1001"
@@ -70,6 +75,7 @@ export class FetchSandboxConnectors implements ConnectorProvider {
     return this.inspect(a);
   }
   async inspect(a: ConnectorAction): Promise<Observation> {
+    this.bound(a);
     const e = await this.request(`/proof/effects/${a.id}`);
     if (
       e.actionId !== a.id ||
