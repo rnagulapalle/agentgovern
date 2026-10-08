@@ -1,0 +1,58 @@
+// Actual private API/session/Temporal trial. Not a browser or fresh chat proof.
+import assert from "node:assert/strict";
+import {readFile,writeFile,access} from "node:fs/promises";
+import {randomUUID} from "node:crypto";
+import {parseEnv} from "node:util";
+import pg from "pg";
+import {Client,Connection} from "@temporalio/client";
+import {Worker} from "@temporalio/worker";
+const dir="/run/trial",origin="https://looplabs-staging.example.test",base="http://web:3000";
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(fn,label,seconds=120){for(const end=Date.now()+seconds*1000;Date.now()<end;){if(await fn())return;await wait(250);}throw Error(label);}
+async function main(){
+ const accounts=JSON.parse(await readFile(`${dir}/accounts.json`,"utf8")).accounts;
+ assert.equal(accounts.length,2);assert.notEqual(accounts[0].email,accounts[1].email);
+ const env=parseEnv(await readFile(`${dir}/worker.env`,"utf8"));
+ const db=new pg.Pool({connectionString:env.LOOPLABS_DATABASE_URL});let connection;
+ async function request(cookie,path,data,expected=200){const response=await fetch(base+path,{headers:{Origin:origin,...(cookie?{Cookie:cookie}:{}),...(data?{"Content-Type":"application/json"}:{})},...(data?{method:"POST",body:JSON.stringify(data)}:{})});assert.equal(response.status,expected,`HTTP contract ${path.split("?")[0]}`);return response;}
+ const json=async(cookie,path,data,expected)=> (await request(cookie,path,data,expected)).json();
+ async function login(account){const response=await request("","/api/workspace/session",{email:account.email,password:account.password});const cookies=response.headers.getSetCookie();assert(cookies.some(c=>c.includes("HttpOnly")&&c.includes("Secure")&&c.includes("SameSite=strict")));return cookies.map(c=>c.split(";")[0]).join("; ");}
+ try{
+  const owner=await login(accounts[0]),reviewer=await login(accounts[1]);assert.notEqual(owner,reviewer);
+  await request("","/api/workspace/records",undefined,401);
+  const candidates=(await json(owner,"/api/workspace/records")).candidates;assert.equal(candidates.length,1);
+  const scope=randomUUID();await json(owner,"/api/workspace/records",{operation:"enroll",id:scope,recordKey:candidates[0].key});
+  for(const [id,role,connector] of [["trial-crm","crm_agent","crm_twin"],["trial-email","email_agent","email_twin"]]){
+   await json(owner,"/api/workspace/agents",{id,name:id,owner:accounts[0].email,role,connector,actionLimit:4});
+   await json(owner,"/api/workspace/records",{operation:"grant",scopeId:scope,agentId:id});
+  }
+  const path=`/api/workspace/enquiries?scope=${scope}`,id=randomUUID();
+  const plan=(await json(owner,path,{operation:"prepare",id,fixtureId:"service"})).saved;assert.equal(plan.id,id);
+  const submit={operation:"submit",id,planHash:plan.plan_hash,crmAgent:"trial-crm",emailAgent:"trial-email"};
+  assert.equal((await json(owner,path,submit)).runId,id);assert.equal((await json(owner,path,submit)).runId,id);
+  const read=()=>json(owner,`/api/durable/workflows?run=${id}`);let run=await read();assert.equal(run.steps.length,2);
+  await json(owner,"/api/durable/connectors",{operation:"approve",actionId:run.steps[0].action_id,payloadHash:run.steps[0].payload_hash},403);
+  await wait(2000);assert.equal((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE state IN ('succeeded','uncertain')")).rows[0].n,0);
+  await writeFile(`${dir}/held.json`,JSON.stringify({held:true}),{mode:0o600});
+  await until(async()=>{try{await access(`${dir}/continue.json`);return true;}catch{return false;}},"Restart controller did not release trial",180);
+  // Cookies and saved work must survive the actual web/worker/twin restart.
+  await json(owner,"/api/workspace/session");run=await read();assert.equal(run.id,id);
+  for(const step of run.steps)await json(reviewer,"/api/durable/connectors",{operation:"approve",actionId:step.action_id,payloadHash:step.payload_hash});
+  await until(async()=>{run=await read();return run.state==="completed";},"Scoped workflow did not complete",180);
+  assert(run.steps.every(s=>s.approved_by===accounts[1].email&&s.state==="succeeded"));
+  const rows=(await db.query("SELECT workflow_id FROM ll_temporal_dispatch WHERE org_id='local-proof' AND plan_id=$1",[id])).rows;assert.equal(rows.length,1);
+  connection=await Connection.connect({address:env.LOOPLABS_TEMPORAL_ADDRESS,apiKey:env.LOOPLABS_TEMPORAL_API_KEY,tls:{serverRootCACertificate:await readFile(`${dir}/tls/ca.pem`),clientCertPair:{crt:await readFile(`${dir}/tls/client.pem`),key:await readFile(`${dir}/tls/client.key`)}}});
+  const client=new Client({connection,namespace:env.LOOPLABS_TEMPORAL_NAMESPACE}),handle=client.workflow.getHandle(rows[0].workflow_id);
+  assert.equal(await handle.result(),"completed");const history=await handle.fetchHistory();
+  const before=(await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE state='succeeded'")).rows[0].n;assert.equal(before,2);
+  assert((await db.query("SELECT 1 FROM ll_connector_events WHERE action_id=$1 AND kind='uncertain'",[run.steps[0].action_id])).rows.length>0);
+  await Worker.runReplayHistory({workflowBundle:{codePath:"/app/.worker/temporal-workflow.cjs"}},history);
+  assert.equal((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE state='succeeded'")).rows[0].n,before);
+  await writeFile(`${dir}/effects-ready.json`,"",{mode:0o600});
+  await until(async()=>{try{await access(`${dir}/provider-state.json`);return true;}catch{return false;}},"Independent provider readback unavailable");
+  const effects=JSON.parse(await readFile(`${dir}/provider-state.json`,"utf8")).effects;
+  assert.equal(Object.keys(effects).length,2);for(const step of run.steps)assert(effects[step.action_id]);
+  console.log(JSON.stringify({passed:true,scope:"assembled isolated API/runtime trial only",checks:["separate secure named sessions","unauthenticated and self-approval refusal","API enrollment and per-agent record grants","saved plan and duplicate-safe submission","held work and sessions survive runtime SIGKILL","named approval and two verified private effects","lost-response reconciliation without a duplicated effect","real authenticated Temporal history replay without new actions"],notVerified:["browser HTTPS and typed chat UX","remote persistent staging","sustained load, restore and operator alert acceptance","live provider guarantees"]}));
+ }finally{await connection?.close();await db.end();}
+}
+main().catch(()=>{console.error("Assembled API/runtime trial failed; no credential, payload or raw SDK error printed.");process.exitCode=1;});

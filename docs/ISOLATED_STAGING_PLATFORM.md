@@ -169,6 +169,34 @@ together on the allocated staging deployment.
 
 ## Verification and remaining work
 
+### Combined platform trial — execution pending
+
+`LOOPLABS_STAGING_PLATFORM_PROOF=isolated FETCHSANDBOX_BACKEND_PATH=<prepared-backend>
+node --import tsx scripts/staging-platform-proof.mjs` is the combined disposable
+Linux trial. It is **not yet executed or accepted**. It reuses the existing
+Compose topology, immutable database provisioners, Temporal configuration and
+namespace bootstrap, role-input assembler, private fixture and packaged workers.
+It builds all four images, checks fresh host admission for all eight services,
+creates only a random dedicated project and removes only that project's resources.
+Migration-owner and administrator material are mounted into temporary offline
+controllers, not application roles. The normal runtime uses the restricted database.
+
+The trial targets actual session/API enrollment, agent grants, saved-plan submission,
+duplicate refusal, self-approval refusal, held-work SIGKILL/restart, named approval,
+an injected lost CRM response, independent provider-journal readback, and replay
+of the real authenticated Temporal history. Its controller uses prepared fixture
+plans and manually handled cookies over the private application network; it is
+**not browser HTTPS, a typed chat experience, fresh model-planning proof, persistent
+remote staging, restore, sustained load or designated operator alert acceptance**.
+Those acceptance gates remain separate. No success is implied by this harness's
+presence, its refusal test, existing separate component proofs or green static CI.
+
+Use a fresh allocated runner with sufficient disk and memory. The local Docker VM
+cannot admit the full stack, and shared live workloads must not be resized/stopped
+to bypass host admission. Keep private source, specs, runtime credentials and raw
+provider state out of public CI artifacts. Until the actual complete trial succeeds,
+retain its failed stage and fix the real integration instead of narrowing assertions.
+
 ### Reproducible private fixture inputs
 
 A clean FetchSandbox checkout currently omits the ignored HubSpot OpenAPI file
