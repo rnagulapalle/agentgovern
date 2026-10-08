@@ -1,3 +1,4 @@
+import { requestMatches, savedRequest } from "./request";
 import { createHash } from "node:crypto";
 import { bindingMatches } from "./contracts";
 import { ControlError } from "../durable/contracts";
@@ -15,7 +16,7 @@ const unavailable = () => new ControlError(503, "Hosted connector evidence unava
 export class HostedFetchSandboxConnectors implements ConnectorProvider {
   readonly workspaceId: string;
   get bindingId() { return createHash("sha256").update(JSON.stringify(["hosted-twin-1", this.binding.origin, this.workspaceId, this.binding.contactId, this.binding.legs.crm.sandboxId, this.binding.legs.email.sandboxId, "customer@example.test"])).digest("hex"); }
-  bound(a: ConnectorAction) { if (!bindingMatches(this, a)) throw new ControlError(409, "Saved connector destination changed. No request was sent."); }
+  bound(a: ConnectorAction) { if (!bindingMatches(this, a) || !requestMatches(this,a)) throw new ControlError(409, "Saved connector request or destination changed. No request was sent."); }
   get contactId() { return this.binding.contactId; }
   constructor(readonly binding: HostedBinding, readonly timeout = 1500) {
     if (!binding || !["https://fetchsandbox.com", "https://stage.fetchsandbox.com", "http://127.0.0.1:8019"].includes(binding.origin)
@@ -55,20 +56,21 @@ export class HostedFetchSandboxConnectors implements ConnectorProvider {
     // Retain LoopLabs' current approval invariant rather than quietly weakening it.
     if (a.connector === "crm") return { outcome: "unknown", detail: "CRM update not supported by this binding: atomic approval-version enforcement is unavailable. No write was sent; downstream actions stay held." };
     if (loseResponse) throw new ControlError(400, "Arm controlled faults through FetchSandbox; caller headers cannot inject faults.");
-    await this.provider("email", "/emails", { method: "POST", headers: {
+    const snapshot = savedRequest(a);
+    await this.provider("email", snapshot.resource, { method: snapshot.method, headers: {
       "Content-Type": "application/json", "Idempotency-Key": `looplabs-${a.id}`, "X-Flow-Run-Id": `looplabs-${a.id}`,
-    }, body: JSON.stringify(this.body(a)) });
+    }, body: JSON.stringify(snapshot.body) });
     return this.inspect(a);
   }
   async inspect(a: ConnectorAction): Promise<Observation> {
     this.bound(a);
     if (a.org_id !== this.workspaceId) throw new ControlError(403, "Connector belongs to another workspace.");
     if (a.connector === "crm") return { outcome: "unknown", detail: "CRM atomic approval-version enforcement is not supported by this binding. State alone cannot certify this action." };
-    const leg = this.binding.legs.email;
+    const leg = this.binding.legs.email, snapshot = savedRequest(a);
     const archive = await this.request(`/api/sandboxes/${leg.sandboxId}/archive?kind=request&flow_run_id=looplabs-${encodeURIComponent(a.id)}&limit=101`, this.binding.ownerKey);
     if (!Array.isArray(archive.events) || archive.events.length >= 101) throw unavailable();
     const writes = archive.events.map((e: { payload: unknown }) => e.payload).filter((r: Record<string, unknown>) =>
-      r && r.flow_run_id === `looplabs-${a.id}` && r.method === "POST" && r.path === "/emails" && typeof r.response_status === "number" && r.response_status >= 200 && r.response_status < 300);
+      r && r.flow_run_id === `looplabs-${a.id}` && r.method === snapshot.method && r.path === snapshot.resource && typeof r.response_status === "number" && r.response_status >= 200 && r.response_status < 300);
     if (!writes.length) return { outcome: "unknown", detail: "No correlated provider acceptance was observed. Do not resend based on missing evidence." };
     if (writes.some((r: Record<string, unknown>) => JSON.stringify(r.request_body) !== JSON.stringify(this.body(a)))) return { outcome: "conflict", detail: "Provider request differs from the approved message." };
     const ids = new Set(writes.map((r: { response_body?: { id?: string } }) => r.response_body?.id));

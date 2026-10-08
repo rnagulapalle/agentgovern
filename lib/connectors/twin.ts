@@ -1,3 +1,4 @@
+import { requestMatches, savedRequest } from "./request";
 import { createHash } from "node:crypto";
 import { bindingMatches } from "./contracts";
 import { ControlError } from "../durable/contracts";
@@ -11,7 +12,7 @@ export class FetchSandboxConnectors implements ConnectorProvider {
   readonly workspaceId = "local-proof";
   readonly contactId = "1001";
   get bindingId() { return createHash("sha256").update(JSON.stringify(["private-twin-1", this.workspaceId, this.contactId, "customer@example.test", this.token])).digest("hex"); }
-  bound(a: ConnectorAction) { if (!bindingMatches(this, a) || a.org_id !== this.workspaceId) throw new ControlError(409, "Saved connector destination changed. No request was sent."); }
+  bound(a: ConnectorAction) { if (!bindingMatches(this, a) || !requestMatches(this,a) || a.org_id !== this.workspaceId) throw new ControlError(409, "Saved connector request or destination changed. No request was sent."); }
   constructor(
     readonly base = process.env.LOOPLABS_CONNECTOR_TWIN_URL || "",
     readonly token = process.env.LOOPLABS_CONNECTOR_TWIN_TOKEN || "",
@@ -52,24 +53,20 @@ export class FetchSandboxConnectors implements ConnectorProvider {
   }
   async write(a: ConnectorAction, loseResponse: boolean): Promise<Observation> {
     this.bound(a);
-    await this.request(
-      a.connector === "crm"
-        ? "/crm/crm/v3/objects/contacts/1001"
-        : "/email/emails",
-      {
-        method: a.connector === "crm" ? "PATCH" : "POST",
+    const snapshot = savedRequest(a);
+    await this.request(`/${a.connector}${snapshot.resource}`, {
+        method: snapshot.method,
         headers: {
           "Content-Type": "application/json",
           "Idempotency-Key": `looplabs-${a.id}`,
           ...(a.connector === "crm"
             ? {
-                "If-Match": (a.payload as { sourceVersion: string })
-                  .sourceVersion,
+                "If-Match": snapshot.sourceVersion!,
               }
             : {}),
           ...(loseResponse ? { "X-LoopLabs-Lose-Response": "true" } : {}),
         },
-        body: JSON.stringify(this.body(a)),
+        body: JSON.stringify(snapshot.body),
       },
     );
     return this.inspect(a);
@@ -142,17 +139,4 @@ export class FetchSandboxConnectors implements ConnectorProvider {
   }
 }
 
-export function connectorBody(a: ConnectorAction) {
-    return a.connector === "crm"
-      ? {
-          properties: {
-            lifecyclestage: (a.payload as { lifecycle: string }).lifecycle,
-          },
-        }
-      : {
-          from: "LoopLabs <support@looplabs.example>",
-          to: ["customer@example.test"],
-          subject: "We received your case",
-          text: "Your request was received. A team member will review it.",
-        };
-}
+export function connectorBody(a: ConnectorAction) { return savedRequest(a).body; }

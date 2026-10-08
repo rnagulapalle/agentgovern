@@ -5,7 +5,7 @@ import { transaction } from "../durable/database";
 import { authorize } from "../durable/service";
 import { ControlError, type Actor } from "../durable/contracts";
 import { ConnectorControl } from "../connectors/service";
-import { connectorBody } from "../connectors/twin";
+import { preparedRequest, requestForDisplay } from "../connectors/request";
 export class WorkflowControl {
   constructor(
     readonly db: Pool,
@@ -147,7 +147,10 @@ export class WorkflowControl {
         steps:
           actor.role === "agent"
             ? steps.filter((s) => s.agent_id === actor.subject)
-            : steps.map(s => ({ ...s, proposedRequest: { method: s.connector === "crm" ? "PATCH" : "POST", resource: s.connector === "crm" ? `CRM contact ${this.connectors.provider.contactId || "1001"}` : "Email acknowledgement", body: connectorBody(s), approvedSourceVersion: s.approved_payload?.sourceVersion || null } })),
+            : steps.map(s => {
+                const request = s.approved_payload ? requestForDisplay({...s,payload:s.approved_payload}) : preparedRequest(s.connector,s.payload,this.connectors.provider.contactId ?? "1001");
+                return { ...s, proposedRequest: request ? {method:request.method,resource:s.connector === "crm" ? `CRM contact ${request.resource.split("/").at(-1)}` : "Email acknowledgement",body:request.body,approvedSourceVersion:request.sourceVersion,requestVersion:request.version} : null };
+              }),
       };
     });
   }

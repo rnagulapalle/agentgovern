@@ -471,3 +471,12 @@ it("holds both steps if the destination changes after run creation but before pr
   expect(writes).toBe(0);
   provider.bindingId = "a".repeat(64);
 });
+
+it("freezes exact CRM/message requests in the reviewed plan and refuses older plans without them",async () => {
+  const p=await prepared();
+  expect(p.plan).toMatchObject({requests:{crm:{method:"PATCH",sourceVersion:"v1",body:{properties:{lifecyclestage:"lead"}}},email:{method:"POST",body:{to:["customer@example.test"],subject:"We received your case"}}}});
+  const old=randomUUID();
+  await db.query("INSERT INTO ll_enquiry_plans(org_id,id,fixture_id,source_version,policy_versions,plan,plan_hash,created_by) SELECT org_id,$2,fixture_id,source_version,policy_versions,plan-'requests',plan_hash,created_by FROM ll_enquiry_plans WHERE id=$1",[p.id,old]);
+  await expect(service.start(operator,old,p.plan_hash,"crm","email")).rejects.toThrow("record or policy changed");
+  expect(writes).toBe(0);expect(await workflow.list(operator)).toEqual([]);
+});

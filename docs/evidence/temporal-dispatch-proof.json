@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T04:40:37.500Z",
+  "at": "2026-10-08T05:13:41.525Z",
   "scope": "Actual Temporal, isolated PostgreSQL and private HTTP twins; no production cutover",
   "checks": [
     "Atomic duplicate transfer excludes legacy polling and rejects legacy or human dispatch of Temporal-owned work",
@@ -10,14 +10,16 @@
     "Owner revoked after actual CRM HTTP effect leaves uncertainty and prevents all downstream email"
   ],
   "sourceFingerprints": {
+    "lib/connectors/request.ts": "2b3ca7f9a98f639a1bd143cc295ebb383f24e5967537777c8ed2ddac7cd341ad",
+    "lib/connectors/content.ts": "b37017e9f6dc0fc44b6f3d80f9e1b74afd4bf1352719bd5bf62e8d5e80719291",
     "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
     "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
-    "lib/connectors/contracts.ts": "c43565a05454715f0b9856f936862efef1b475c5ff20826358677a5f0c02967c",
-    "lib/connectors/service.ts": "05ecce016a058bc83139eaf49b551caaa18efb2728ff0f5bbbf816058ca30da2",
-    "lib/connectors/twin.ts": "03cf4743d1a4bed561482e87e28fe6e05f54947ccb97ceb1a3a99c77b863ffd7",
-    "lib/connectors/hosted.ts": "291a9bea0af976493ae5f758babe5b7d5c31f9a20009fea1451824ae1f0a941f",
-    "lib/enquiries/service.ts": "7737e2768aa2eb9415b699352dbad19ac2bf38908b6a30073275252b588497e4",
-    "lib/workflows/guard.ts": "77aaf900d33c8453f49ab6ac4332eb5fd0235af467c50ee76cc312e7eee91a07",
+    "lib/connectors/contracts.ts": "53891823090bf8b3f4df14f2e1d58e0f79bbabd981146cac9deaefe5559de42c",
+    "lib/connectors/service.ts": "497f83772112ecc5b57f74809e9b742489f98994cf7136f17ce8823fb9c2208f",
+    "lib/connectors/twin.ts": "b93fe709df9f74c8995ffd2484f900b7d2302efec603155cc2e35c7817f16de2",
+    "lib/connectors/hosted.ts": "0f60d9f82f7e70bc095f0e98199129b1164cb79d5e70575351a935976c0b477b",
+    "lib/enquiries/service.ts": "62def19a7dc89d02bcfd8f6a13478d213273bb31c8cf1a4aa4f69f1fda5baddc",
+    "lib/workflows/guard.ts": "f594e174bfbdf9981fcb2892a9a7bf58640b4f8707d45eb1e38b2e129f85b6e0",
     "lib/durable/recovery.ts": "d030d0c17ebd09399ff63a1652f23bfbc7dc0296eb29386b14127a67e75bbae7",
     "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
     "runtime/temporal/outbox.ts": "babeec60f018055a70001abaade12ceadd734b584172d1d88e7f9ee87d31cd9b",
@@ -27,8 +29,8 @@
     "lib/enquiries/dispatch.ts": "4cc5701be853ae7c24e3092c8d9344eafb97f97844b7c29c8a8916ba27d09058",
     "lib/enquiries/runner.ts": "a0194d41b4bef270bcd5722a17d9058a07f61a873c73feb1842054ea104eb0e0",
     "lib/enquiries/temporal-schema.sql": "72705c41e2674baadeda22b7e324e9e232947e1a40a7d5717d0cf1280b3736da",
-    "lib/workflows/service.ts": "8da7ab7684423f9221c22a7cf7af9611baadfbcc9e7f2563e4063a5ca6cebb9a",
-    "scripts/temporal-dispatch-proof.ts": "ee38fc22b444f111c733f7155fc949fbe32a7ad5ed1b4fc406c88f7018ee7583"
+    "lib/workflows/service.ts": "3d03cee6503820855779d3d9a4d64bf5beb95c90c7c401367ebaf94fcd0c523c",
+    "scripts/temporal-dispatch-proof.ts": "9b9823f0a8d1d1f12b5dd0cdef2f88208f63c8f7629d0068b97f6dc1c12ab840"
   },
   "limitations": [
     "Scheduler lease expiry injected in isolated schema",
