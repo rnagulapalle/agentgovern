@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { bindingMatches } from "./contracts";
 import { ControlError } from "../durable/contracts";
 import type { Connector, ConnectorAction, ConnectorProvider, Observation } from "./contracts";
 import { FetchSandboxConnectors, connectorBody } from "./twin";
@@ -12,6 +14,8 @@ export interface HostedBinding {
 const unavailable = () => new ControlError(503, "Hosted connector evidence unavailable. No safe retry inferred.");
 export class HostedFetchSandboxConnectors implements ConnectorProvider {
   readonly workspaceId: string;
+  get bindingId() { return createHash("sha256").update(JSON.stringify(["hosted-twin-1", this.binding.origin, this.workspaceId, this.binding.contactId, this.binding.legs.crm.sandboxId, this.binding.legs.email.sandboxId, "customer@example.test"])).digest("hex"); }
+  bound(a: ConnectorAction) { if (!bindingMatches(this, a)) throw new ControlError(409, "Saved connector destination changed. No request was sent."); }
   get contactId() { return this.binding.contactId; }
   constructor(readonly binding: HostedBinding, readonly timeout = 1500) {
     if (!binding || !["https://fetchsandbox.com", "https://stage.fetchsandbox.com", "http://127.0.0.1:8019"].includes(binding.origin)
@@ -45,6 +49,7 @@ export class HostedFetchSandboxConnectors implements ConnectorProvider {
     return contact.updatedAt as string;
   }
   async write(a: ConnectorAction, loseResponse: boolean): Promise<Observation> {
+    this.bound(a);
     if (a.org_id !== this.workspaceId) throw new ControlError(403, "Connector belongs to another workspace.");
     // HubSpot does not supply the private fixture's atomic version guard.
     // Retain LoopLabs' current approval invariant rather than quietly weakening it.
@@ -56,6 +61,7 @@ export class HostedFetchSandboxConnectors implements ConnectorProvider {
     return this.inspect(a);
   }
   async inspect(a: ConnectorAction): Promise<Observation> {
+    this.bound(a);
     if (a.org_id !== this.workspaceId) throw new ControlError(403, "Connector belongs to another workspace.");
     if (a.connector === "crm") return { outcome: "unknown", detail: "CRM atomic approval-version enforcement is not supported by this binding. State alone cannot certify this action." };
     const leg = this.binding.legs.email;

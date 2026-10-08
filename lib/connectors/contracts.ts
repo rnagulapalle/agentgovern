@@ -1,9 +1,10 @@
 import { ControlError } from "../durable/contracts";
 export const CONNECTORS = ["crm", "email"] as const;
 export type Connector = (typeof CONNECTORS)[number];
-export type Payload =
+export type Payload = (
   | { lifecycle: "lead" | "customer"; sourceVersion?: string }
-  | { template: "case_received" };
+  | { template: "case_received" }
+) & { binding?: string };
 export interface ConnectorAction {
   id: string;
   org_id: string;
@@ -42,6 +43,7 @@ export interface Observation {
   detail: string;
 }
 export interface ConnectorProvider {
+  readonly bindingId: string;
   readonly contactId?: string;
   readonly workspaceId: string;
   source(connector: Connector): Promise<string | null>;
@@ -88,4 +90,10 @@ export function parseConnectorProposal(v: unknown): ConnectorProposal {
       "Only the prepared contact lifecycle and customer-message template are allowed.",
     );
   return p;
+}
+
+// Only server-created payloads contain this field; public proposals reject it.
+export function bindingMatches(provider: ConnectorProvider, action: Pick<ConnectorAction, "payload">) {
+  const current = provider.bindingId;
+  return typeof current === "string" && /^[a-f0-9]{64}$/.test(current) && action.payload.binding === current;
 }

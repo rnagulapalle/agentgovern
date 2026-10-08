@@ -19,6 +19,7 @@ vi.mock("./twin", async original => ({
   ...(await original<typeof import("./twin")>()),
   FetchSandboxConnectors: class {
     readonly workspaceId = "http";
+    readonly bindingId = "a".repeat(64);
     async source() {
       return "v1";
     }

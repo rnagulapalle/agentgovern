@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T02:12:24.172Z",
+  "at": "2026-10-08T02:59:50.142Z",
   "scope": "Local packaged pinned worker/scheduler, actual Temporal, isolated PostgreSQL and one private HTTP twin; no production cutover",
   "checks": [
     "25 held plans and 50 concurrent transfer calls persist exactly 25 intents without effects",
@@ -18,12 +18,12 @@
     "concurrentTransferCalls": 50,
     "activitySlots": 3,
     "workflowSlots": 6,
-    "enqueueMs": 41,
-    "totalSchedulingMs": 30255,
-    "schedulerCrashToBacklogDrainMs": 29997,
-    "workerRestartReadyMs": 313,
-    "approvalToCompletionMs": 10197,
-    "shutdownMs": 488,
+    "enqueueMs": 42,
+    "totalSchedulingMs": 30354,
+    "schedulerCrashToBacklogDrainMs": 30096,
+    "workerRestartReadyMs": 312,
+    "approvalToCompletionMs": 10215,
+    "shutdownMs": 447,
     "databaseReplacementAttempts": {
       "worker": 2,
       "scheduler": 2
@@ -31,6 +31,12 @@
     "finalEffects": 2
   },
   "sourceFingerprints": {
+    "lib/connectors/contracts.ts": "c43565a05454715f0b9856f936862efef1b475c5ff20826358677a5f0c02967c",
+    "lib/connectors/service.ts": "05ecce016a058bc83139eaf49b551caaa18efb2728ff0f5bbbf816058ca30da2",
+    "lib/connectors/twin.ts": "03cf4743d1a4bed561482e87e28fe6e05f54947ccb97ceb1a3a99c77b863ffd7",
+    "lib/connectors/hosted.ts": "291a9bea0af976493ae5f758babe5b7d5c31f9a20009fea1451824ae1f0a941f",
+    "lib/enquiries/service.ts": "7737e2768aa2eb9415b699352dbad19ac2bf38908b6a30073275252b588497e4",
+    "lib/workflows/guard.ts": "77aaf900d33c8453f49ab6ac4332eb5fd0235af467c50ee76cc312e7eee91a07",
     "lib/durable/recovery.ts": "d030d0c17ebd09399ff63a1652f23bfbc7dc0296eb29386b14127a67e75bbae7",
     "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
     "scripts/temporal-service.ts": "27d3c2443aa28c170a44aabb3b174be6b8cf2600935fafa2ffb2ab26dcdd13d4",
@@ -40,7 +46,7 @@
     "runtime/temporal/activities.ts": "9be7fd957c81efbfdc6d365ad583c89fe7cdfe9ed931627ec8690aa65e5d8ab0",
     "runtime/temporal/version-contract.ts": "c6d68ae5c43f8f0e02816a97b01f0d4350371da27d89f08e3e5a1a173ca30d1c",
     "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
-    "scripts/temporal-load-proof.ts": "ba65d9f0571933b6ce90ea199e7a6b57f2666cdd0bde0a2ac6ad429252caca00"
+    "scripts/temporal-load-proof.ts": "30c919038e5795ecc03c1a8368147dae15408a6a710a90e45920f715d6045ac4"
   },
   "limitations": [
     "One laptop sample, not capacity, percentile latency or availability SLO",

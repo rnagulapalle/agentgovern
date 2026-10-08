@@ -23,12 +23,14 @@ const keys: Record<string, string> = {};
 vi.mock("../durable/database", async (original) => ({ ...(await original<typeof import("../durable/database")>()), database: () => db }));
 vi.mock("../connectors/twin", async original => ({ ...(await original<typeof import("../connectors/twin")>()), FetchSandboxConnectors: class {
   workspaceId = "one";
+  bindingId = "a".repeat(64);
   async request() { return { id: contact.id, properties: { email: contact.email, lifecyclestage: contact.lifecycle }, updatedAt: contact.version }; }
   async contact() { return this.request(); }
   async source(connector: string) { return connector === "crm" ? contact.version : null; }
 } }));
-const provider: ConnectorProvider = {
+const provider: Omit<ConnectorProvider, "bindingId"> & { bindingId: string } = {
   workspaceId: "one",
+  bindingId: "a".repeat(64),
   source: async () => contact.version,
   write: async (_action: ConnectorAction, lose: boolean) => { if (_action.connector === "crm" && (_action.payload as { sourceVersion: string }).sourceVersion !== contact.version) return { outcome: "conflict", detail: "Atomic source-version check refused a stale write" }; writes++; if (lose) throw new Error("Lost after effect"); return { outcome: "verified", detail: "Fixture effect confirmed" }; },
   inspect: async () => ({ outcome: "verified", detail: "Fixture read-back confirmed" }),
@@ -56,6 +58,7 @@ beforeEach(async () => {
   [operator, reviewer, agent, , other] = actors;
   contact = { id: "1001", email: "customer@example.test", version: "v1", lifecycle: "lead" };
   writes = 0;
+  provider.bindingId = "a".repeat(64);
   connector = new ConnectorControl(db, provider); workflow = new WorkflowControl(db, connector);
   service = new EnquiryControl(db, workflow, async () => contact);
 });
@@ -440,4 +443,31 @@ it("gates staged execution transfer, isolates workspaces and never grants approv
     await workflow.pause(operator, p.id);
     expect((await POST(post())).status).toBe(403);
   } finally { if (original === undefined) delete process.env.LOOPLABS_TEMPORAL_WORKSPACE; else process.env.LOOPLABS_TEMPORAL_WORKSPACE = original; }
+});
+
+it("does not assign a changed connector destination to a reviewed saved plan", async () => {
+  provider.bindingId = "a".repeat(64);
+  const saved = (await service.prepareChat(operator, randomUUID())).saved;
+  expect(saved.plan.connectorBinding).toBe(provider.bindingId);
+  provider.bindingId = "b".repeat(64);
+  await expect(service.rehearse(operator, saved.id, saved.plan_hash)).rejects.toThrow("record or policy changed");
+  expect(writes).toBe(0);
+  provider.bindingId = "a".repeat(64);
+});
+
+it("refuses absent destination metadata instead of treating it as a legacy permission", async () => {
+  Object.defineProperty(provider, "bindingId", { value: undefined, writable: true, configurable: true });
+  await expect(service.prepareChat(operator, randomUUID())).rejects.toThrow("destination is unavailable");
+  provider.bindingId = "a".repeat(64);
+});
+it("holds both steps if the destination changes after run creation but before proposals", async () => {
+  const p = (await service.prepareChat(operator, randomUUID())).saved;
+  await service.start(operator, p.id, p.plan_hash, `ack-crm-${p.id}`, `ack-email-${p.id}`, true);
+  const run = await workflow.read(operator, p.id);
+  provider.bindingId = "b".repeat(64);
+  for (const step of run.steps)
+    await expect(connector.propose(operator, { actionId: step.action_id, agentId: step.agent_id, connector: step.connector, payload: step.payload })).rejects.toThrow("destination changed after plan review");
+  expect((await db.query("SELECT count(*)::integer AS n FROM ll_connector_actions")).rows[0].n).toBe(0);
+  expect(writes).toBe(0);
+  provider.bindingId = "a".repeat(64);
 });
