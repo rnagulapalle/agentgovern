@@ -12,6 +12,8 @@ export class TemporalOutbox {
       await authorize(c, actor, ["operator"]);
       const p = (await c.query("SELECT p.* FROM ll_enquiry_plans p JOIN ll_enquiry_dispatch d ON d.org_id=p.org_id AND d.plan_id=p.id JOIN ll_members m ON m.org_id=p.org_id AND m.email=p.created_by AND m.active=true JOIN ll_workflow_runs r ON r.org_id=p.org_id AND r.id=p.run_id WHERE p.org_id=$1 AND p.run_id=$2 AND p.created_by=$3 AND r.state='active'", [actor.orgId, runId, actor.subject])).rows[0];
       if (!p) throw new ControlError(403, "Only the active owner may transfer a reviewed run.");
+      if (p.plan?.requests?.crm?.version === "prepared-request-2" || p.plan?.requests?.email?.version === "prepared-request-2")
+        throw new ControlError(409,"Record-scoped workflows require a compatible worker contract. No dispatch ownership was transferred.");
       const old = (await c.query("SELECT workflow_id FROM ll_temporal_dispatch WHERE org_id=$1 AND plan_id=$2", [actor.orgId, p.id])).rows[0];
       if (old) return old.workflow_id as string;
       const steps = (await c.query("SELECT a.state FROM ll_workflow_steps s JOIN ll_connector_actions a ON a.org_id=s.org_id AND a.id=s.action_id WHERE s.org_id=$1 AND s.run_id=$2", [actor.orgId, runId])).rows;

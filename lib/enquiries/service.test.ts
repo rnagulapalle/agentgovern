@@ -480,3 +480,26 @@ it("freezes exact CRM/message requests in the reviewed plan and refuses older pl
   await expect(service.start(operator,old,p.plan_hash,"crm","email")).rejects.toThrow("record or policy changed");
   expect(writes).toBe(0);expect(await workflow.list(operator)).toEqual([]);
 });
+
+
+it("saves a server-scoped record/recipient and refuses another record, managed dispatch and v1 Temporal ownership",async()=>{
+ const scope={version:"record-scope-1" as const,workspaceId:"one",contactId:"2001",recipient:"alice@example.test"};
+ const scopedProvider={...provider,contactId:scope.contactId,recordScope:scope};
+ const control=new ConnectorControl(db,scopedProvider),flow=new WorkflowControl(db,control);
+ const scopedContact={...contact,id:"2001",email:scope.recipient};
+ const s=new EnquiryControl(db,flow,async()=>scopedContact),id=randomUUID();
+ await s.prepare(operator,id,"service"); const p=(await s.list(operator))[0];
+ expect(p.plan.reply.recipient).toBe(scope.recipient);expect(p.plan.enquiry.email).toBe(scope.recipient);
+ expect(p.plan.requests.email.version).toBe("prepared-request-2");
+ await expect(s.rehearse(operator,id,p.plan_hash)).rejects.toThrow("compatible worker");
+ expect((await db.query("SELECT count(*)::int n FROM ll_workflow_runs")).rows[0].n).toBe(0);
+ const otherProvider={...scopedProvider,recordScope:{...scope,workspaceId:"two"}};
+ await expect(new ConnectorControl(db,otherProvider).propose(operator,{actionId:randomUUID(),agentId:"crm",connector:"crm",payload:{lifecycle:"lead"}})).rejects.toThrow("another workspace");
+ await s.start(operator,id,p.plan_hash,"crm","email");
+ const run=await flow.read(operator,id);
+ for(const step of run.steps)await control.propose(operator,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});
+ await db.query("INSERT INTO ll_enquiry_dispatch(org_id,plan_id,created_by) VALUES('one',$1,'operator')",[id]);
+ await expect(new TemporalOutbox(db).transfer(operator,id)).rejects.toThrow("compatible worker");
+ expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(0);
+ await expect(new EnquiryControl(db,flow,async()=>({...scopedContact,email:"wrong@example.test"})).prepare(operator,randomUUID(),"service")).rejects.toThrow("unique supported");
+});

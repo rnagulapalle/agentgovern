@@ -148,7 +148,7 @@ export class WorkflowControl {
           actor.role === "agent"
             ? steps.filter((s) => s.agent_id === actor.subject)
             : steps.map(s => {
-                const request = s.approved_payload ? requestForDisplay({...s,payload:s.approved_payload}) : preparedRequest(s.connector,s.payload,this.connectors.provider.contactId ?? "1001");
+                const request = s.approved_payload ? requestForDisplay({...s,payload:s.approved_payload}) : preparedRequest(s.connector,s.payload,this.connectors.provider.contactId ?? "1001",this.connectors.provider.recordScope);
                 return { ...s, proposedRequest: request ? {method:request.method,resource:s.connector === "crm" ? `CRM contact ${request.resource.split("/").at(-1)}` : "Email acknowledgement",body:request.body,approvedSourceVersion:request.sourceVersion,requestVersion:request.version} : null };
               }),
       };

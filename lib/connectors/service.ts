@@ -104,6 +104,7 @@ export class ConnectorControl {
     );
   }
   async propose(actor: Actor, value: unknown) {
+    if (this.provider.recordScope && actor.orgId !== this.provider.recordScope.workspaceId) throw new ControlError(403,"Record scope belongs to another workspace.");
     const p = parseConnectorProposal(value);
     const sameRequest = (old: ConnectorAction) =>
       old.agent_id === p.agentId &&
@@ -145,7 +146,7 @@ export class ConnectorControl {
     )
       throw new ControlError(503, "Trusted contact version is unavailable.");
     const scoped = { ...p.payload, ...(p.connector === "crm" && typeof sourceVersion === "string" ? { sourceVersion } : {}), binding };
-    const payload = { ...scoped, request: preparedRequest(p.connector,scoped,this.provider.contactId ?? "1001") };
+    const payload = { ...scoped, request: preparedRequest(p.connector,scoped,this.provider.contactId ?? "1001",this.provider.recordScope) };
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["agent", "operator"]);
       if (binding !== this.provider.bindingId) throw new ControlError(409, "Connector destination changed during preparation. Prepare fresh work.");

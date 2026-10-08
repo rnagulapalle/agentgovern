@@ -10,6 +10,9 @@ import { Pool } from "pg";
 import { authenticate, tokenHash } from "../lib/durable/service";
 import { ConnectorControl } from "../lib/connectors/service";
 import { FetchSandboxConnectors } from "../lib/connectors/twin";
+import { WorkflowControl } from "../lib/workflows/service";
+import { EnquiryControl } from "../lib/enquiries/service";
+import type { RecordScope } from "../lib/connectors/record-scope";
 import type { Connector, ConnectorAction } from "../lib/connectors/contracts";
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function main() {
@@ -29,6 +32,12 @@ async function main() {
     JSON.stringify({ token }),
     { mode: 0o600 },
   );
+  const recordScopes:RecordScope[]=[
+    {version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"},
+    {version:"record-scope-1",workspaceId:"local-proof",contactId:"2002",recipient:"bob@example.test"},
+    {version:"record-scope-1",workspaceId:"other-proof",contactId:"2003",recipient:"carol@example.test"},
+  ];
+  await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records:recordScopes}),{mode:0o600});
   async function start() {
     const backend =
       process.env.FETCHSANDBOX_BACKEND_PATH ||
@@ -796,6 +805,52 @@ async function main() {
     } finally {
       await stopApi();
     }
+    const scoped = recordScopes.map(s=>new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,s));
+    const controls=scoped.map(p=>new ConnectorControl(db!,p));
+    const scopedRuns:{runId:string;crm:string;email:string}[]=[];
+    await check("record scope: two independent customers save exact plans and complete their own CRM/message effects",async()=>{
+      for(let index=0;index<2;index++){
+        const p=scoped[index],c=controls[index],flow=new WorkflowControl(db!,c);
+        const e=new EnquiryControl(db!,flow,async()=>{const r=await p.contact();return {id:r.id,email:r.properties.email,lifecycle:r.properties.lifecyclestage,version:r.updatedAt};});
+        const id=randomUUID();await e.prepare(operator,id,"service");const plan=(await e.list(operator)).find(r=>r.id===id);
+        assert.equal(plan.plan.reply.recipient,p.recipient);assert.equal(plan.plan.requests.email.version,"prepared-request-2");
+        await e.start(operator,id,plan.plan_hash,"crm-agent","email-agent");const run=await flow.read(operator,id);
+        for(const step of run.steps){
+          const agent=step.connector==="crm"?crm:email;
+          const a=await c.propose(agent,{actionId:step.action_id,agentId:agent.subject,connector:step.connector,payload:step.payload});
+          await c.review(operator,a.id,a.payload_hash,true);
+        }
+        scopedRuns.push({runId:id,crm:run.steps[0].action_id,email:run.steps[1].action_id});
+      }
+      await Promise.all(scopedRuns.map(async(r,index)=>{
+        const c=controls[index];assert.equal((await c.execute(worker,r.crm)).state,"succeeded");assert.equal((await c.execute(worker,r.email)).state,"succeeded");
+        const receipt=await new WorkflowControl(db!,c).verify(operator,r.runId);assert.equal(receipt.verified,true);
+      }));
+      const effects=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+      scopedRuns.forEach((r,index)=>{assert.equal(effects[r.crm].recordId,scoped[index].contactId);assert.deepEqual(effects[r.email].body.to,[scoped[index].recipient]);});
+    },"Actual saved plans, independent approvals, concurrent two-record runs and separate provider readback. This is not a capacity benchmark or background worker proof.");
+    await check("record scope: wrong record and tenant cannot exercise the original approval",async()=>{
+      const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+      const a=await controls[0].read(operator,scopedRuns[0].email);
+      await assert.rejects(()=>scoped[1].write(a,false));
+      await assert.rejects(()=>scoped[2].write(a,false));
+      await assert.rejects(()=>controls[2].propose(email,{actionId:randomUUID(),agentId:email.subject,connector:"email",payload:{template:"case_received"}}));
+      const response=await fetch("http://127.0.0.1:8018/email/emails",{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json","Idempotency-Key":`looplabs-${randomUUID()}`,"X-LoopLabs-Record-ID":"2003","X-LoopLabs-Workspace-ID":"local-proof"},body:JSON.stringify({...a.payload.request!.body,to:[scoped[2].recipient]})});assert.equal(response.status,403);
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+    },"Original record and another workspace refused by adapter/controller and actual fixture; no extra provider effects.");
+    await check("record scope: recipient change at the write boundary is refused atomically",async()=>{
+      const a=await controls[1].read(operator,scopedRuns[1].email),before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+      const response=await fetch("http://127.0.0.1:8018/email/emails",{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json","Idempotency-Key":`looplabs-${randomUUID()}`,"X-LoopLabs-Record-ID":scoped[1].contactId,"X-LoopLabs-Workspace-ID":scoped[1].workspaceId,"X-LoopLabs-Proof-Fault":"recipient_changed"},body:JSON.stringify(a.payload.request!.body)});assert.equal(response.status,409);
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+      await assert.rejects(()=>scoped[1].write(a,false));
+      assert.equal((await controls[1].reconcile(operator,scopedRuns[1].crm)).state,"conflict");
+    },"Fixture injects a record-to-recipient change inside the same synchronous provider write, then refuses the send. Earlier contact read alone is not proof.");
+    await check("record scope: restart preserves separate effects and original approvals do not resend",async()=>{
+      const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;await stop();await start();
+      for(let i=0;i<2;i++){await controls[i].execute(worker,scopedRuns[i].email);await controls[i].execute(worker,scopedRuns[i].crm);}
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+      assert.equal((await scoped[0].contact()).id,"2001");assert.equal((await scoped[1].contact()).properties.email,"changed@example.test");
+    },"Real process restart retains enrolled records, versions and changed recipient; completed action replay adds no effects.");
     let restoreMilliseconds = 0;
     await check(
       "isolated database backup and restore preserves actions and evidence",
@@ -855,7 +910,7 @@ async function main() {
       "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA.",
     );
     const fingerprintFiles = [
-      "lib/connectors/request.ts", "lib/connectors/content.ts",
+      "lib/connectors/request.ts", "lib/connectors/content.ts", "lib/connectors/record-scope.ts",
       "lib/durable/recovery.ts",
       "lib/durable/service.ts",
       "lib/enquiries/dispatch.ts",
@@ -894,7 +949,7 @@ async function main() {
       limits: [
         "Fixture action journal and contact version are LoopLabs extensions, not live provider parity.",
         "No SSO, failover, production load or real delivery proof.",
-        "Only one sample contact and one fixed message template/recipient.",
+        "Three offline-enrolled test records; two scoped manual runs. Record-scoped background routing, sustained load and live recipients remain unsupported.",
       ],
       providerEffects: Object.keys(
         JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8"))

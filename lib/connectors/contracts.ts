@@ -1,3 +1,4 @@
+import type { RecordScope } from "./record-scope";
 import type { RequestSnapshot } from "./request";
 import { ControlError } from "../durable/contracts";
 export const CONNECTORS = ["crm", "email"] as const;
@@ -46,6 +47,7 @@ export interface Observation {
 export interface ConnectorProvider {
   readonly bindingId: string;
   readonly contactId?: string;
+  readonly recordScope?: Readonly<RecordScope>;
   readonly workspaceId: string;
   source(connector: Connector): Promise<string | null>;
   write(action: ConnectorAction, loseResponse: boolean): Promise<Observation>;

@@ -88,3 +88,16 @@ Fresh actual connector, hosted, Temporal, secure-container, application-restore
 and real-model/browser proofs passed. This is local prototype acceptance only;
 older plans/actions without snapshots need reviewed handling before production
 cutover. It does not close independent-record capacity or real-provider gates.
+
+
+## Independent record foundation
+
+`docs/RECORD_SCOPED_CONNECTORS.md` describes the server-enrolled test-record
+contract. Two same-workspace customers now complete separate saved manual workflows
+with independent approvals and exact CRM/message effects in the actual fixture
+harness. Wrong-record/workspace calls and an atomic recipient change are refused,
+and restart preserves the effect journal. These close a bounded target-correctness
+gap, not the capacity gate: public selection, persistent enrollment, per-agent
+record grants, compatible background routing, sustained load and complete tenant
+security acceptance remain open. Current v1 worker transfer is refused for scoped
+requests. No customer production readiness follows from these local checks.

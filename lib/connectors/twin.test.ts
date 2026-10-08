@@ -185,3 +185,45 @@ it("refuses changed saved requests before any provider HTTP call",async () => {
   }
   expect(fetch).not.toHaveBeenCalled();
 });
+
+it("copies explicit test scopes, keeps v1 stable and refuses wrong record/workspace before HTTP",async()=>{
+ const scope={version:"record-scope-1" as const,workspaceId:"one",contactId:"2001",recipient:"alice@example.test"};
+ const p=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,scope);
+ const local=new FetchSandboxConnectors("http://connector-twin:8018",token,1500,scope);
+ expect(p.bindingId).toBe(local.bindingId);scope.recipient="changed@example.test";expect(p.recipient).toBe("alice@example.test");
+ const payload={template:"case_received" as const};const action={...a("email"),org_id:"one",payload:{...payload,binding:p.bindingId,request:preparedRequest("email",payload,"2001",p.recordScope)}};
+ const fetchMock=vi.fn();vi.spyOn(globalThis,"fetch").mockImplementation(fetchMock);
+ await expect(new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,{...p.recordScope!,contactId:"2002"}).write(action,false)).rejects.toThrow("changed");
+ await expect(p.write({...action,org_id:"two"},false)).rejects.toThrow("changed");expect(fetchMock).not.toHaveBeenCalled();
+});
+it("refuses a scoped recipient changed in the trusted record before sending",async()=>{
+ const p=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,{version:"record-scope-1",workspaceId:"one",contactId:"2001",recipient:"alice@example.test"});
+ const payload={template:"case_received" as const},action={...a("email"),org_id:"one",payload:{...payload,binding:p.bindingId,request:preparedRequest("email",payload,p.contactId,p.recordScope)}};
+ const fetchMock=vi.fn().mockResolvedValue(new Response(JSON.stringify({id:"2001",updatedAt:"v1",properties:{email:"other@example.test"}}),{status:200}));vi.spyOn(globalThis,"fetch").mockImplementation(fetchMock);
+ await expect(p.write(action,false)).rejects.toThrow("version");expect(fetchMock).toHaveBeenCalledTimes(1);
+});
+it("sends scoped snapshots with enrolled record headers and checks scoped readback",async()=>{
+ const p=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,{version:"record-scope-1",workspaceId:"one",contactId:"2001",recipient:"alice@example.test"});
+ for(const connector of ["crm","email"] as const){
+  const payload=connector==="crm"?{lifecycle:"customer" as const,sourceVersion:"v1"}:{template:"case_received" as const};
+  const action={...a(connector),org_id:"one",payload:{...payload,binding:p.bindingId,request:preparedRequest(connector,payload,p.contactId,p.recordScope)}};
+  const record={id:p.contactId,updatedAt:"v1",properties:{email:p.recipient,lifecyclestage:"customer"}};
+  const reference=connector==="crm"?p.contactId:"email-1";
+  const effect={actionId:action.id,connector,recordId:p.contactId,resource:action.payload.request.resource,body:action.payload.request.body,reference,observedVersion:"v1"};
+  const request=vi.spyOn(p,"request").mockImplementation(async(path,init)=>{
+   if(init?.method)return {id:reference};
+   if(path.startsWith("/proof/"))return effect;
+   if(path.startsWith("/crm/"))return record;
+   return {id:reference,...action.payload.request.body,last_event:"sent"};
+  });
+  expect((await p.write(action,false)).outcome).toBe("verified");
+  const write=request.mock.calls.find(([,init])=>init?.method)![1]!;
+  expect(write.headers).toMatchObject({"X-LoopLabs-Record-ID":"2001","X-LoopLabs-Workspace-ID":"one"});
+  if(connector==="crm")expect(write.headers).toMatchObject({"If-Match":"v1"});
+  effect.recordId="2002";expect((await p.inspect(action)).outcome).toBe("conflict");
+  effect.recordId=p.contactId;effect.resource="/other";expect((await p.inspect(action)).outcome).toBe("conflict");
+  effect.resource=action.payload.request.resource;
+  if(connector==="crm"){record.properties.email="changed@example.test";expect((await p.inspect(action)).outcome).toBe("conflict");}
+  request.mockRestore();
+ }
+});

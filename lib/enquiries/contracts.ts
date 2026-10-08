@@ -18,8 +18,8 @@ export function enquiryFixture(id: unknown) {
   if (!fixture) throw new ControlError(400, "Choose a supported sample enquiry.");
   return fixture;
 }
-export function checkContact(contact: Contact, expectedId = "1001") {
-  if (typeof expectedId !== "string" || !/^[0-9]{1,24}$/.test(expectedId) || !contact || contact.id !== expectedId || contact.email !== approvedReply.recipient || typeof contact.version !== "string" || !contact.version || contact.version.length > 256 || !["lead", "customer"].includes(contact.lifecycle))
+export function checkContact(contact: Contact, expectedId = "1001", expectedRecipient: string = approvedReply.recipient) {
+  if (typeof expectedId !== "string" || !/^[0-9]{1,24}$/.test(expectedId) || !contact || contact.id !== expectedId || contact.email !== expectedRecipient || typeof contact.version !== "string" || !contact.version || contact.version.length > 256 || !["lead", "customer"].includes(contact.lifecycle))
     throw new ControlError(409, "A unique supported contact and trusted version are required. Nothing was changed.");
 }
 export function validId(id: unknown): asserts id is string {
