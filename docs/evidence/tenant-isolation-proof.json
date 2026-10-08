@@ -1,6 +1,8 @@
 {
-  "at": "2026-10-08T10:13:38.841Z",
+  "at": "2026-10-08T12:45:27.414Z",
   "checks": [
+    "Actual LOGIN runtime uses 29 provisioner grants with no owner membership, schema creation, table ownership or privileged role flags",
+    "Thirteen actual restricted-database attacks refuse proposal rewrites, identity revocation, event mutation, deletion, truncation, trigger disabling and DDL without effects; shared role still reads both companies (no RLS claim)",
     "Two real browser sessions keep company records separate; eight cross-company/origin attacks are denied, HttpOnly/Strict cookies hide credentials from scripts and expired sessions lose API access without effects",
     "Real authenticated HTTP: each catalog/plan list exposes only its company; 64 cross-company member/agent/worker reads and mutations are denied with no state or effects changed",
     "Identical CRM/email agent IDs in two companies do not grant cross-company approval, record access or pinned worker routing",
@@ -11,7 +13,16 @@
     "Repeated completed activity calls retain four effects and each company's original action identities"
   ],
   "sourceFingerprints": {
-    "scripts/tenant-isolation-proof.ts": "3b49afd5ec516536690876361e49763eff3f905cb67251f503e28a0688e3976f",
+    "scripts/durable-runtime-role.ts": "bf20ebccb8fdd0d7474c4dd79e3e8fe054297d0bdd210463e40f4d59813438f8",
+    "scripts/workspace-setup.ts": "b39d8240cb47ae9a87e2f2e60c994f0e2b659226aeeba071b1efeee27d8b4a0b",
+    "scripts/refund-setup.ts": "8c52b756e56b11f130ddc9484c33293e0cdae0b92fc51d06e5e46c3fd6b20cae",
+    "scripts/connector-setup.ts": "4e20c2102d97cfbcbd2153c9ebe288003c0d553896eec68364b88b38c29a515f",
+    "scripts/enquiry-setup.ts": "59b76043752fb240b9da8ba4f0b123b44bfb21755fca8d877cb9d312d0cd22c5",
+    "scripts/enquiry-managed-setup.ts": "dfe02bf53de0a6fcb8ae507f3cdc91970e8a44b53da8b9228c5ea496faf738c0",
+    "scripts/temporal-setup.ts": "dea407444e81b7e99f5c0f5e7eb2bc2ff7479fb31c3a048a810dc8e15fe1a548",
+    "scripts/record-scope-setup.ts": "3ed2a61a9563b949598571f4c5388bfc5ef8dccdbd4aceec18dbbc642bf3b3a8",
+    "scripts/record-routing-setup.ts": "c98611bdf652fc76d66d641dbe20d606ab8ceb99bab4d42391e12235fd1498cc",
+    "scripts/tenant-isolation-proof.ts": "18b2e7436fe234e8abf32c31dbe6f97e078aa19ebcac9d3df5bcf478363ebb4b",
     "scripts/temporal-service.ts": "aabc50a89aa2087f8b3749b561674bf017a61540414d7de4c680cbc479c7fec5",
     "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
     "runtime/temporal/version-contract.ts": "80fd2948beed1f9f9c0318ed2ac24e59fb3c0820538b718891e179f047c3b921",
@@ -43,6 +54,10 @@
     "companies": 2,
     "deniedHttpRequests": 64,
     "deniedBrowserRequests": 8,
+    "deniedDatabaseRequests": 13,
+    "runtimeGrantStatements": 29,
+    "restrictedDatabaseLogin": true,
+    "databaseTenantRls": false,
     "effects": 4,
     "taskQueues": 2,
     "workerProcesses": 3,
@@ -51,8 +66,8 @@
     "replayedHistories": 2
   },
   "workflowIds": [
-    "looplabs:company-a:ack:023c58d8-f11e-4842-b27f-07a33af83798",
-    "looplabs:company-b:ack:c7c9057d-2fbd-4c32-8293-dd98a3fd0461"
+    "looplabs:company-a:ack:d84452b0-c586-4c78-90c0-6b8f80ecde1d",
+    "looplabs:company-b:ack:f0617a80-453c-4977-9678-a6277f9a544c"
   ],
   "buildId": "ack-1cfac314a32ef6cb0ff45a022ea9480f35f676416788a9eee511c8611ea5a12b",
   "scope": "Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"

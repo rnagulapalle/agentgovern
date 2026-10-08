@@ -24,6 +24,8 @@ async function main(){
  const url=process.env.LOOPLABS_TEST_DATABASE_URL;if(!url)throw Error("Dedicated test PostgreSQL required");
  const schema=`tenant_proof_${randomBytes(8).toString("hex")}`,dir=await mkdtemp(resolve(".local/tenant-proof-")),token=randomBytes(32).toString("base64url");
  const admin=new Pool({connectionString:url}),db=new Pool({connectionString:url,options:`-c search_path=${schema}`});
+ const runtimeRole=`ll_tenant_${randomBytes(8).toString("hex")}`,runtimePassword=randomBytes(32).toString("base64url");let runtime:Pool|undefined,roleCreated=false;
+ const provisioningFiles=["scripts/durable-runtime-role.ts","scripts/workspace-setup.ts","scripts/refund-setup.ts","scripts/connector-setup.ts","scripts/enquiry-setup.ts","scripts/enquiry-managed-setup.ts","scripts/temporal-setup.ts","scripts/record-scope-setup.ts","scripts/record-routing-setup.ts"];
  const records=[{version:"record-scope-1" as const,workspaceId:"company-a",contactId:"4001",recipient:"alice@example.test"},{version:"record-scope-1" as const,workspaceId:"company-b",contactId:"4002",recipient:"bob@example.test"}];
  let app:ChildProcess|undefined,twin:ChildProcess|undefined,browser:Browser|undefined,temporal:TestWorkflowEnvironment|undefined;const children:ChildProcess[]=[];const checks:string[]=[];let denied=0;const password=randomBytes(24).toString("base64url"),hashedPassword=passwordHash(password);
  const pass=(s:string)=>{checks.push(s);console.log("PASS",s);};
@@ -63,12 +65,54 @@ async function main(){
    const run=await flow.read(owner,plan.id),input={runId:plan.id,planHash:plan.plan_hash,planVersion:"acknowledgement-1",connectorVersion:"private-record-twin-2"};
    companies.push({scope,scopeId,keys,owner,reviewer,worker,agent,provider,control,flow,plan,run,input});
   }
-  const databaseUrl=new URL(url);databaseUrl.searchParams.set("options",`-c search_path=${schema}`);
-  app=spawn("pnpm",["exec","next","start","-p","3117"],{detached:true,env:{...process.env,LOOPLABS_DATABASE_URL:databaseUrl.toString(),LOOPLABS_DURABLE_ORIGIN:"",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:"",LOOPLABS_RECORD_CATALOG:JSON.stringify({records}),LOOPLABS_TEMPORAL_WORKSPACE:"staging",LOOPLABS_TEMPORAL_RECORD_BUILD_ID:build.buildId},stdio:"ignore"});
+  // Apply the literal GRANT statements from the actual provisioners, rather than
+  // silently replacing their permissions with an owner or ALL TABLES grant.
+  await admin.query(`CREATE ROLE ${runtimeRole} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${runtimePassword}'`);roleCreated=true;
+  let grantStatements=0;
+  for(const file of provisioningFiles){
+   const source=await readFile(file,"utf8");let found=0;
+   for(const match of source.matchAll(/c\.query\(\s*("(?:[^"\\]|\\.)*")/g)){
+    const sql=JSON.parse(match[1]) as string;if(!sql.startsWith("GRANT ")||!sql.endsWith(" TO ll_runtime"))continue;
+    await db.query(sql.replace("ON SCHEMA public",`ON SCHEMA ${schema}`).replace(" TO ll_runtime",` TO ${runtimeRole}`));found++;grantStatements++;
+   }
+   assert(found>0,`No literal runtime grants found in ${file}; update proof explicitly`);
+  }
+  const databaseUrl=new URL(url);databaseUrl.username=runtimeRole;databaseUrl.password=runtimePassword;databaseUrl.searchParams.set("options",`-c search_path=${schema}`);
+  runtime=new Pool({connectionString:databaseUrl.toString()});
+  const identity=(await runtime.query("SELECT current_user AS name,rolsuper,rolcreatedb,rolcreaterole,rolreplication,rolbypassrls FROM pg_roles WHERE rolname=current_user")).rows[0];
+  assert.equal(identity.name,runtimeRole);for(const flag of ["rolsuper","rolcreatedb","rolcreaterole","rolreplication","rolbypassrls"])assert.equal(identity[flag],false);
+  assert.equal((await runtime.query("SELECT count(*)::int n FROM pg_class t JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname=$1 AND t.relowner=(SELECT oid FROM pg_roles WHERE rolname=current_user)",[schema])).rows[0].n,0);
+  assert.equal((await runtime.query("SELECT has_schema_privilege(current_user,$1,'CREATE') AS permitted",[schema])).rows[0].permitted,false);
+  const ownerRole=(await admin.query("SELECT current_user AS name")).rows[0].name;
+  assert.equal((await runtime.query("SELECT pg_has_role(current_user,$1,'MEMBER') AS permitted",[ownerRole])).rows[0].permitted,false);
+  const runtimeEnv={...process.env,LOOPLABS_MIGRATION_DATABASE_URL:"",LOOPLABS_TEST_DATABASE_URL:""};
+  pass(`Actual LOGIN runtime uses ${grantStatements} provisioner grants with no owner membership, schema creation, table ownership or privileged role flags`);
+  app=spawn("pnpm",["exec","next","start","-p","3117"],{detached:true,env:{...runtimeEnv,LOOPLABS_DATABASE_URL:databaseUrl.toString(),LOOPLABS_DURABLE_ORIGIN:"",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:"",LOOPLABS_RECORD_CATALOG:JSON.stringify({records}),LOOPLABS_TEMPORAL_WORKSPACE:"staging",LOOPLABS_TEMPORAL_RECORD_BUILD_ID:build.buildId},stdio:"ignore"});
   await until(async()=>{try{return (await fetch(origin+"/sign-in")).ok;}catch{return false;}},"real application");
   const effects=async()=>JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
   const snapshot=async()=>JSON.stringify((await db.query("SELECT org_id,id,state,payload_hash,approved_by FROM ll_connector_actions ORDER BY org_id,id")).rows);
   const before=await snapshot();assert.equal(Object.keys(await effects()).length,0);
+  let deniedDatabase=0;
+  for(const [sql,params,code] of [
+   ["UPDATE ll_connector_actions SET payload_hash='tampered' WHERE id=$1",[companies[0].run.steps[0].action_id],"23514"],
+   ["UPDATE ll_connector_actions SET payload='{}'::jsonb WHERE id=$1",[companies[0].run.steps[0].action_id],"23514"],
+   ["UPDATE ll_connector_actions SET org_id='company-b' WHERE id=$1",[companies[0].run.steps[0].action_id],"23514"],
+   ["UPDATE ll_workflow_steps SET payload='{}'::jsonb",[],"42501"],
+   ["UPDATE ll_enquiry_plans SET plan_hash='tampered'",[],"42501"],
+   ["UPDATE ll_members SET active=false",[],"42501"],
+   ["UPDATE ll_tokens SET active=false",[],"42501"],
+   ["DELETE FROM ll_connector_actions",[],"42501"],
+   ["UPDATE ll_connector_events SET kind='tampered'",[],"42501"],
+   ["TRUNCATE ll_connector_events",[],"42501"],
+   ["ALTER TABLE ll_connector_actions DISABLE TRIGGER ALL",[],"42501"],
+   ["SET session_replication_role='replica'",[],"42501"],
+   ["CREATE TABLE runtime_unauthorized(id integer)",[],"42501"],
+  ] as [string,unknown[],string][]){await assert.rejects(()=>runtime!.query(sql,params),(error:{code?:string})=>error.code===code);deniedDatabase++;}
+  assert.equal(await snapshot(),before);assert.equal(Object.keys(await effects()).length,0);
+  // This shared application role can read both companies. That is an explicit
+  // remaining SQL-compromise boundary, not database tenant row-level isolation.
+  assert.equal((await runtime.query("SELECT count(DISTINCT org_id)::int n FROM ll_connector_actions")).rows[0].n,2);
+  pass("Thirteen actual restricted-database attacks refuse proposal rewrites, identity revocation, event mutation, deletion, truncation, trigger disabling and DDL without effects; shared role still reads both companies (no RLS claim)");
   browser=await chromium.launch({headless:true});let deniedBrowser=0;
   for(let i=0;i<companies.length;i++){
    const own=companies[i],other=companies[1-i];const context:BrowserContext=await browser.newContext();const page:Page=await context.newPage();
@@ -100,7 +144,7 @@ async function main(){
     ];
     for(const [path,p] of attempts){const r=await request(key,path,p);assert([403,404].includes(r.status),`${path}: ${r.status}`);const text=JSON.stringify(r.data);assert(!text.includes(other.scope.recipient));assert(!text.includes(other.plan.plan_hash));denied++;}
    }
-   await assert.rejects(()=>recordActivities(db,own.worker,()=>own.provider,build.buildId)(other.input));
+   await assert.rejects(()=>recordActivities(runtime!,own.worker,()=>own.provider,build.buildId)(other.input));
   }
   assert.equal(await snapshot(),before);assert.equal(Object.keys(await effects()).length,0);
   pass("Real authenticated HTTP: each catalog/plan list exposes only its company; 64 cross-company member/agent/worker reads and mutations are denied with no state or effects changed");
@@ -108,7 +152,7 @@ async function main(){
   temporal=await TestWorkflowEnvironment.createLocal({server:{dbFilename:`${dir}/temporal.sqlite`}});
   const queues=companies.map(c=>`${c.scope.workspaceId}-${randomUUID()}`);assert.equal(new Set(queues).size,2);
   const service=(index:number,role:"worker"|"scheduler")=>{
-   const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{env:{...process.env,LOOPLABS_DATABASE_URL:databaseUrl.toString(),LOOPLABS_TEMPORAL_WORKER_TOKEN:companies[index].keys.worker,LOOPLABS_TEMPORAL_ADDRESS:temporal!.address,LOOPLABS_TEMPORAL_NAMESPACE:"default",LOOPLABS_TEMPORAL_TASK_QUEUE:queues[index],LOOPLABS_TEMPORAL_BUILD_ID:build.buildId,LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",LOOPLABS_TEMPORAL_API_KEY:"",LOOPLABS_TEMPORAL_CERT_PATH:"",LOOPLABS_TEMPORAL_KEY_PATH:"",LOOPLABS_TEMPORAL_CA_PATH:"",LOOPLABS_TEMPORAL_POLL_MS:"250",LOOPLABS_TEMPORAL_HEALTH_PORT:String(19340+index*2+(role==="scheduler"?1:0)),LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:""},stdio:"ignore"});children.push(child);return child;
+   const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{env:{...runtimeEnv,LOOPLABS_DATABASE_URL:databaseUrl.toString(),LOOPLABS_TEMPORAL_WORKER_TOKEN:companies[index].keys.worker,LOOPLABS_TEMPORAL_ADDRESS:temporal!.address,LOOPLABS_TEMPORAL_NAMESPACE:"default",LOOPLABS_TEMPORAL_TASK_QUEUE:queues[index],LOOPLABS_TEMPORAL_BUILD_ID:build.buildId,LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",LOOPLABS_TEMPORAL_API_KEY:"",LOOPLABS_TEMPORAL_CERT_PATH:"",LOOPLABS_TEMPORAL_KEY_PATH:"",LOOPLABS_TEMPORAL_CA_PATH:"",LOOPLABS_TEMPORAL_POLL_MS:"250",LOOPLABS_TEMPORAL_HEALTH_PORT:String(19340+index*2+(role==="scheduler"?1:0)),LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:""},stdio:"ignore"});children.push(child);return child;
   };
   const ready=async(port:number)=>{try{return (await fetch(`http://127.0.0.1:${port}/health/ready`,{signal:AbortSignal.timeout(1000)})).ok;}catch{return false;}};
   const crashed=service(0,"worker");service(0,"scheduler");service(1,"worker");service(1,"scheduler");
@@ -131,18 +175,18 @@ async function main(){
   for(const own of companies){const id=(await db.query("SELECT workflow_id FROM ll_temporal_dispatch WHERE org_id=$1 AND plan_id=$2",[own.scope.workspaceId,own.plan.id])).rows[0].workflow_id;assert(id.startsWith(`looplabs:${own.scope.workspaceId}:ack:`));workflowIds.push(id);const handle:WorkflowHandle=temporal.client.workflow.getHandle(id);assert.equal(await handle.result(),"completed");const history=await handle.fetchHistory();await Worker.runReplayHistory({workflowsPath:resolve("runtime/temporal/pinned-workflow.ts")},history);for(const secret of [token,...companies.flatMap(c=>Object.values(c.keys))])assert(!JSON.stringify(history).includes(secret));}
   assert.deepEqual(await effects(),completed);
   pass("Both actual company histories replay without new effects, credential leakage or replacement action identities");
-  for(const own of companies)assert.equal(await recordActivities(db,own.worker,()=>own.provider,build.buildId)(own.input),"completed");
+  for(const own of companies)assert.equal(await recordActivities(runtime!,own.worker,()=>own.provider,build.buildId)(own.input),"completed");
   assert.deepEqual(await effects(),completed);
   pass("Repeated completed activity calls retain four effects and each company\'s original action identities");
-  const files=["scripts/tenant-isolation-proof.ts","scripts/temporal-service.ts","runtime/temporal/pinned-workflow.ts","runtime/temporal/version-contract.ts","scripts/build-temporal-worker.mjs","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
+  const files=[...provisioningFiles,"scripts/tenant-isolation-proof.ts","scripts/temporal-service.ts","runtime/temporal/pinned-workflow.ts","runtime/temporal/version-contract.ts","scripts/build-temporal-worker.mjs","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
   const sourceFingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
-  await writeFile("docs/evidence/tenant-isolation-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,deniedBrowserRequests:deniedBrowser,effects:4,taskQueues:2,workerProcesses:3,schedulerProcesses:2,crashedWorkers:1,replayedHistories:2},workflowIds,buildId:build.buildId,scope:"Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"},null,2)+"\n");
+  await writeFile("docs/evidence/tenant-isolation-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,deniedBrowserRequests:deniedBrowser,deniedDatabaseRequests:deniedDatabase,runtimeGrantStatements:grantStatements,restrictedDatabaseLogin:true,databaseTenantRls:false,effects:4,taskQueues:2,workerProcesses:3,schedulerProcesses:2,crashedWorkers:1,replayedHistories:2},workflowIds,buildId:build.buildId,scope:"Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"},null,2)+"\n");
  }finally{
   for(const child of children)if(child.exitCode===null&&!child.signalCode){child.kill("SIGTERM");await until(async()=>child.exitCode!==null||Boolean(child.signalCode),"packaged tenant role shutdown",25000);}
   await temporal?.teardown();await browser?.close();
   if(app?.pid){try{process.kill(-app.pid,"SIGKILL");}catch{}await wait(400);}
   if(twin&&twin.exitCode===null&&!twin.signalCode){twin.kill("SIGTERM");try{await until(async()=>twin!.exitCode!==null||Boolean(twin!.signalCode),"private twin graceful shutdown");}catch{twin.kill("SIGKILL");await until(async()=>twin!.exitCode!==null||Boolean(twin!.signalCode),"private twin forced shutdown");}}
-  await db.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);await admin.end();await rm(dir,{recursive:true,force:true});
+  await runtime?.end();await db.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);if(roleCreated){await admin.query(`DROP OWNED BY ${runtimeRole}`);await admin.query(`DROP ROLE ${runtimeRole}`);}await admin.end();await rm(dir,{recursive:true,force:true});
  }
 }
 main().catch(e=>{console.error(e.message);process.exitCode=1;});

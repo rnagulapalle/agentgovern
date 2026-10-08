@@ -3,8 +3,12 @@ import {createHash} from "node:crypto";
 import {expect,it} from "vitest";
 import proof from "../../docs/evidence/tenant-isolation-proof.json";
 it("requires actual source-bound two-company HTTP refusal and correctly targeted effect proof",async()=>{
- expect(proof.measurements).toEqual({companies:2,deniedHttpRequests:64,deniedBrowserRequests:8,effects:4,taskQueues:2,workerProcesses:3,schedulerProcesses:2,crashedWorkers:1,replayedHistories:2});
- expect(proof.checks).toHaveLength(8);
+ expect(proof.measurements).toEqual({companies:2,deniedHttpRequests:64,deniedBrowserRequests:8,deniedDatabaseRequests:13,runtimeGrantStatements:29,restrictedDatabaseLogin:true,databaseTenantRls:false,effects:4,taskQueues:2,workerProcesses:3,schedulerProcesses:2,crashedWorkers:1,replayedHistories:2});
+ expect(proof.checks).toHaveLength(10);
+ expect(proof.checks.some(c=>c.includes("Actual LOGIN runtime uses 29 provisioner grants"))).toBe(true);
+ expect(proof.checks.some(c=>c.includes("Thirteen actual restricted-database attacks"))).toBe(true);
+ expect(proof.checks.some(c=>c.includes("shared role still reads both companies (no RLS claim)"))).toBe(true);
+ expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["scripts/durable-runtime-role.ts","scripts/workspace-setup.ts","scripts/refund-setup.ts","scripts/connector-setup.ts","scripts/enquiry-setup.ts","scripts/enquiry-managed-setup.ts","scripts/temporal-setup.ts","scripts/record-scope-setup.ts","scripts/record-routing-setup.ts"]));
  expect(proof.checks.some(c=>c.includes("expired sessions lose API access without effects"))).toBe(true);
  expect(proof.checks.some(c=>c.includes("no state or effects changed"))).toBe(true);
  expect(proof.checks.some(c=>c.includes("Identical CRM/email agent IDs"))).toBe(true);
