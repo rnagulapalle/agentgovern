@@ -97,6 +97,50 @@ database container, network and private temporary installation. This proof now r
 as a required step in `pnpm quality`; unavailable Docker or proof failure is fatal.
 Reproduce with `node --import tsx scripts/staging-database-proof.mjs`.
 
+## Temporal credentials and namespace preparation
+
+`node scripts/staging-temporal-config.mjs <new-private-directory>
+looplabs-staging-<installation-name>` exclusively creates the separate Temporal
+configuration. It refuses an existing directory instead of silently rotating an
+issuer or overwriting credentials. A partial failure leaves private output for
+inspection. Do not delete/recreate the issuer for an already running installation.
+
+The generator creates a dedicated persistence password, public JWKS, client/server
+certificates, explicit mTLS/default-authorizer server configuration, and a signed
+namespace-scoped workload JWT. Default JWT lifetime is one hour; certificates last
+seven days. This is intentionally bounded staging material, not a production key
+lifecycle or automated rotation service. Expiry stops bootstrap/authorized access;
+reviewed refresh, overlap/drain and revocation procedures are still required.
+
+Mount only `server.yaml`, `server-tls`, `client-tls`, and `jwks.json` into the exact
+services described by Compose. Never mount `offline/`, which contains the CA private
+key, JWT signer, administrator credential and schema-tool password. `temporal-auth.env`
+contains only the scoped Temporal workload credential/TLS paths and must be combined
+with the separate database/workload outputs and required build/record configuration;
+it is not a complete worker environment. Runtime key/config files are readable by
+their non-root containers inside a 0700 installation parent; do not expose that
+parent to other host users or containers. File permission choices do not protect
+against compromise of the authorized runtime or host.
+
+Initialize the two isolated Temporal SQL schemas using the reviewed 1.31.0 schema
+tool and offline schema credential before starting the service. This initialization
+is not performed by the generator. Once authenticated Temporal is available, run
+`node scripts/staging-namespace-bootstrap.mjs <private-directory>` from inside the
+isolated network with `LOOPLABS_STAGING_BOOTSTRAP=isolated`. The command targets only
+`temporal:7233`, verifies the retained CA fingerprint and credential expiry, and
+creates the named namespace only on an actual NotFound response. Repeats require a
+registered namespace with the same one-day retention; changed policy or permission
+failure refuses rather than updating or recreating it. It does not start workers or
+approve/execute workflow actions.
+
+Tests generate actual certificates and verify a real mutual-TLS exchange (including
+missing certificate and wrong-host refusal), signed workload JWT scope and private
+file separation. Namespace RPC behavior currently has **mock** contract tests;
+these do not prove the new configuration against a running Temporal service. The
+prior secure-container engine proof remains separate. Full service configuration,
+namespace authorization/rotation and packaged execution must still be exercised
+together on the allocated staging deployment.
+
 ## Verification and remaining work
 
 The real Compose renderer passes topology tests for all eight services, project-local
