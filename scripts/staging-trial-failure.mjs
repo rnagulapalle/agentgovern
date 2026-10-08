@@ -6,6 +6,10 @@ export function safeTrialFailure(report){
  const kind=new Set(["catalog","provider","binding","source","service"]).has(report.errorKind)?` ${report.errorKind}`:"";
  return ` (${report.phase}${status}${kind})`;
 }
+export function safeBrowserFailure(report){
+ const allowed=new Set(["certificate-refusal","certificate-trust","named-sign-in","prepared-plan","record-opening","agent-selection","review-submit","self-approval","hostile-origin","independent-review","verified-completion","mobile-reload","http-refusal"]);
+ return report&&allowed.has(report.phase)?` (browser ${report.phase})`:"";
+}
 
 // Extract bounded process facts; never return raw container logs or error text.
 export function safeProviderFailure(state,logs=""){
