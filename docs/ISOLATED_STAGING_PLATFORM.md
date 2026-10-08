@@ -169,11 +169,17 @@ together on the allocated staging deployment.
 
 ## Verification and remaining work
 
-### Combined platform trial — execution pending
+### Combined platform trial — integration failure, acceptance pending
 
 `LOOPLABS_STAGING_PLATFORM_PROOF=isolated FETCHSANDBOX_BACKEND_PATH=<prepared-backend>
 node --import tsx scripts/staging-platform-proof.mjs` is the combined disposable
-Linux trial. It is **not yet executed or accepted**. It reuses the existing
+Linux trial. It has **executed but is not accepted**. The October 8 private CI
+run `37835464705` built and started all eight services, then refused the API
+journey at record enrollment with HTTP503. Named sign-in and the preceding
+infrastructure stages passed; approved execution, the injected crash, effect
+verification and replay were not reached. The earlier source-preparation failure
+was resolved by preserving the private sparse checkout's ephemeral read-only
+fetch credential. No success or enterprise readiness follows from reaching startup. It reuses the existing
 Compose topology, immutable database provisioners, Temporal configuration and
 namespace bootstrap, role-input assembler, private fixture and packaged workers.
 It builds all four images, checks fresh host admission for all eight services,
@@ -257,7 +263,7 @@ The October 8 actual local trial passed. Sanitized image identity and LoopLabs
 source fingerprints are retained in `docs/evidence/staging-twin-container-proof.json`.
 This closes fixture packaging/reachability/restart evidence only. It does not
 exercise application approvals, Temporal workers, the complete stack or remote
-staging. CI currently does not have the private FetchSandbox backend source;
+staging. Public CI does not have the private FetchSandbox backend source;
 its topology/regression checks do not replace this actual image trial.
 
 The real Compose renderer passes topology tests for all eight services, project-local

@@ -7,7 +7,7 @@ import pg from "pg";
 import {Client,Connection} from "@temporalio/client";
 import {Worker} from "@temporalio/worker";
 const dir="/run/trial",origin="https://looplabs-staging.example.test",base="http://web:3000";
-let phase="inputs",httpStatus=null;
+let phase="inputs",httpStatus=null,errorKind="unknown";
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,label,seconds=120){for(const end=Date.now()+seconds*1000;Date.now()<end;){if(await fn())return;await wait(250);}throw Error(label);}
 async function main(){
@@ -15,14 +15,14 @@ async function main(){
  assert.equal(accounts.length,2);assert.notEqual(accounts[0].email,accounts[1].email);
  const env=parseEnv(await readFile(`${dir}/worker.env`,"utf8"));
  const db=new pg.Pool({connectionString:env.LOOPLABS_DATABASE_URL});let connection;
- async function request(cookie,path,data,expected=200){const response=await fetch(base+path,{headers:{Origin:origin,...(cookie?{Cookie:cookie}:{}),...(data?{"Content-Type":"application/json"}:{})},...(data?{method:"POST",body:JSON.stringify(data)}:{})});httpStatus=response.status;assert.equal(response.status,expected,`HTTP contract ${path.split("?")[0]}`);return response;}
+ async function request(cookie,path,data,expected=200){const response=await fetch(base+path,{headers:{Origin:origin,...(cookie?{Cookie:cookie}:{}),...(data?{"Content-Type":"application/json"}:{})},...(data?{method:"POST",body:JSON.stringify(data)}:{})});httpStatus=response.status;if(response.status!==expected){const failure=await response.clone().json().catch(()=>({}));errorKind=failure.error==="Supported customer records are unavailable."?"catalog":failure.error==="Connector evidence unavailable. No safe retry inferred."?"provider":failure.error==="Sample CRM and messaging connector is not configured."?"binding":failure.error==="Trusted contact version is unavailable."?"source":failure.error==="The durable service could not complete this request. State was not assumed successful; refresh and inspect the action."?"service":"unknown";}assert.equal(response.status,expected,`HTTP contract ${path.split("?")[0]}`);return response;}
  const json=async(cookie,path,data,expected)=> (await request(cookie,path,data,expected)).json();
  async function login(account){const response=await request("","/api/workspace/session",{email:account.email,password:account.password});const cookies=response.headers.getSetCookie();assert(cookies.some(c=>c.includes("HttpOnly")&&c.includes("Secure")&&c.includes("SameSite=strict")));return cookies.map(c=>c.split(";")[0]).join("; ");}
  try{
   phase="sessions";const owner=await login(accounts[0]),reviewer=await login(accounts[1]);assert.notEqual(owner,reviewer);
   phase="unauthenticated-refusal";await request("","/api/workspace/records",undefined,401);
-  phase="record-enrollment";const candidates=(await json(owner,"/api/workspace/records")).candidates;assert.equal(candidates.length,1);
-  const scope=randomUUID();await json(owner,"/api/workspace/records",{operation:"enroll",id:scope,recordKey:candidates[0].key});
+  phase="record-catalog";const candidates=(await json(owner,"/api/workspace/records")).candidates;assert.equal(candidates.length,1);
+  phase="record-enrollment";const scope=randomUUID();await json(owner,"/api/workspace/records",{operation:"enroll",id:scope,recordKey:candidates[0].key});
   phase="agent-grants";for(const [id,role,connector] of [["trial-crm","crm_agent","crm_twin"],["trial-email","email_agent","email_twin"]]){
    await json(owner,"/api/workspace/agents",{id,name:id,owner:accounts[0].email,role,connector,actionLimit:4});
    await json(owner,"/api/workspace/records",{operation:"grant",scopeId:scope,agentId:id});
@@ -56,4 +56,4 @@ async function main(){
   console.log(JSON.stringify({passed:true,scope:"assembled isolated API/runtime trial only",checks:["separate secure named sessions","unauthenticated and self-approval refusal","API enrollment and per-agent record grants","saved plan and duplicate-safe submission","held work and sessions survive runtime SIGKILL","named approval and two verified private effects","lost-response reconciliation without a duplicated effect","real authenticated Temporal history replay without new actions"],notVerified:["browser HTTPS and typed chat UX","remote persistent staging","sustained load, restore and operator alert acceptance","live provider guarantees"]}));
  }finally{await connection?.close();await db.end();}
 }
-main().catch(async()=>{await writeFile(`${dir}/failure.json`,JSON.stringify({phase,httpStatus}),{mode:0o600}).catch(()=>{});console.error("Assembled API/runtime trial failed; no credential, payload or raw SDK error printed.");process.exitCode=1;});
+main().catch(async()=>{await writeFile(`${dir}/failure.json`,JSON.stringify({phase,httpStatus,errorKind}),{mode:0o600}).catch(()=>{});console.error("Assembled API/runtime trial failed; no credential, payload or raw SDK error printed.");process.exitCode=1;});
