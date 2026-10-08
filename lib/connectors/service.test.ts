@@ -72,8 +72,8 @@ beforeAll(async () => {
   for (const file of [
     "lib/durable/schema.sql",
     "lib/workspace/schema.sql",
-    "lib/connectors/schema.sql",
-    "lib/workflows/schema.sql",
+    "lib/refunds/schema.sql", "lib/connectors/schema.sql",
+    "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql",
     "lib/enquiries/schema.sql",
   ])
     await db.query(await readFile(file, "utf8"));

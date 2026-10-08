@@ -31,7 +31,7 @@ async function main() {
   const token = randomBytes(32).toString("base64url");
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"]) await db.query(await readFile(f, "utf8"));
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"]) await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('requester','local-proof','Requester','unused'),('reviewer','local-proof','Reviewer','unused')");
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
@@ -116,7 +116,7 @@ async function main() {
     await assert.rejects(() => activity.advanceContract(revoked), /owner/);
     assert.equal(await effects(), before+3);
     pass("Owner revoked after actual CRM HTTP effect leaves uncertainty and prevents all downstream email");
-    const files = ["lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/outbox.ts", "runtime/temporal/version-contract.ts", "runtime/temporal/activities.ts", "runtime/temporal/pinned-workflow.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/temporal-schema.sql", "lib/connectors/service.ts", "lib/workflows/service.ts", "lib/durable/service.ts", "scripts/temporal-dispatch-proof.ts"];
+    const files = ["lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/outbox.ts", "runtime/temporal/version-contract.ts", "runtime/temporal/activities.ts", "runtime/temporal/pinned-workflow.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/temporal-schema.sql", "lib/connectors/service.ts", "lib/workflows/service.ts", "lib/durable/service.ts", "scripts/temporal-dispatch-proof.ts"];
     const fingerprints = Object.fromEntries(await Promise.all(files.map(async f => [f, createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/temporal-dispatch-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Actual Temporal, isolated PostgreSQL and private HTTP twins; no production cutover", checks, sourceFingerprints: fingerprints, limitations: ["Scheduler lease expiry injected in isolated schema", "Workspace-wide transaction lock retained; no throughput or production HA claim", "External request already sent cannot be recalled; uncertainty contains downstream", "Hosted atomic CRM guard and actual provider test-mode acceptance remain blocked"] }, null, 2)+"\n");
   } finally {

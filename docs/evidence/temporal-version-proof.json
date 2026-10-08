@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T02:58:55.865Z",
+  "at": "2026-10-08T04:40:35.054Z",
   "scope": "Local pinned deployments and persisted SQLite dev-service restart; no production cutover",
   "checks": [
     "Current v2 routes new runs to v2 while pending v1 remains pinned to v1; no approval from rollout",
@@ -11,6 +11,8 @@
     "Pinned code does not pin authority: revoked owner still prevents execution"
   ],
   "sourceFingerprints": {
+    "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
+    "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
     "lib/connectors/contracts.ts": "c43565a05454715f0b9856f936862efef1b475c5ff20826358677a5f0c02967c",
     "lib/connectors/service.ts": "05ecce016a058bc83139eaf49b551caaa18efb2728ff0f5bbbf816058ca30da2",
     "lib/connectors/twin.ts": "03cf4743d1a4bed561482e87e28fe6e05f54947ccb97ceb1a3a99c77b863ffd7",
@@ -21,7 +23,7 @@
     "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
     "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
     "runtime/temporal/version-contract.ts": "c6d68ae5c43f8f0e02816a97b01f0d4350371da27d89f08e3e5a1a173ca30d1c",
-    "scripts/temporal-version-proof.ts": "2bcccd0a27b44f08210012631612d66daa1686f295dccdefef69f2ddeca13db6"
+    "scripts/temporal-version-proof.ts": "836744ccc3de729e42991f3d593dbfbc37235d425cd273206f861e48104da2c8"
   },
   "limitations": [
     "Graceful service restart, not unclean host loss or high availability",

@@ -28,7 +28,7 @@ async function main() {
   const token = randomBytes(32).toString("base64url");
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(f, "utf8"));
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('requester','local-proof','Requester','unused'),('reviewer','local-proof','Reviewer','unused')");
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
@@ -115,7 +115,7 @@ async function main() {
     await (await createWorker()).runUntil(async () => { assert.equal(await stopped.result(), "contained"); });
     assert.equal(await effects(), before);
     pass("Paused run stays contained without effects");
-    const files = ["lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/activities.ts", "runtime/temporal/workflow.ts", "runtime/temporal/workflow-v2.ts", "scripts/temporal-proof.ts", "scripts/temporal-proof-worker.ts"];
+    const files = ["lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/activities.ts", "runtime/temporal/workflow.ts", "runtime/temporal/workflow-v2.ts", "scripts/temporal-proof.ts", "scripts/temporal-proof-worker.ts"];
     const fingerprints = Object.fromEntries(await Promise.all(files.map(async f => [f, createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/temporal-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Local Temporal dev service; isolated PostgreSQL and private HTTP twins; no production cutover", checks, sourceFingerprints: fingerprints, limitations: ["Compatible patch rollout, not deployment pinning", "Lease expiry shortened in isolated test; Temporal activity uses normal timeout/retry", "No UI cutover, production failover, real providers or scale proof"] }, null, 2) + "\n");
   } finally {

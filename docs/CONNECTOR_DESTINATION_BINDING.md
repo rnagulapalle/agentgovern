@@ -37,8 +37,10 @@ change does not remove that blocker or establish live provider delivery.
 
 The fingerprint is a binding/checksum in trusted application state, **not** a
 signature, independent certificate or defense against a database owner rewriting
-all authority/evidence. Approved database fields still require further immutable
-storage/least-privilege acceptance and independent security review.
+all authority/evidence. Migration 11 adds separate database protection for saved
+proposal fields; see [persisted proposal boundaries](PERSISTED_PROPOSAL_BOUNDARIES.md).
+Mutable approvals/state/evidence still require least-privilege acceptance and
+independent security review. Unmigrated deployments gain no new protection.
 
 ## Upgrade boundary
 
