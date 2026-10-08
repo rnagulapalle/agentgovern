@@ -41,6 +41,9 @@ try {
 } catch(error) {
  // Print only daemon diagnostic lines, never command strings, SDK errors or service logs.
  console.error(`Failure category: ${Number.isInteger(error.status)?"docker-exit-"+error.status:"assertion-or-rpc"}`);
+ for(const line of String(error.stdout??"").split("\n")) {
+  try {const d=JSON.parse(line);if(d.diagnostic==="bootstrap-refusal")console.error(JSON.stringify({diagnostic:d.diagnostic,code:d.code,hint:d.hint}));if(d.diagnostic==="namespace-contract")console.error(JSON.stringify({diagnostic:d.diagnostic,state:d.state,retentionSeconds:d.retentionSeconds}));}catch{}
+ }
  const daemon=String(error.stderr??"").split("\n").filter(line=>/^docker: Error response from daemon:|^Error response from daemon:/.test(line));
  for(const line of daemon)console.error(line.slice(0,500));
  if(["namespace-and-authorization","crash-recovery"].includes(stage)) {

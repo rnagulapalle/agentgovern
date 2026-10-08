@@ -7,8 +7,24 @@ import {Connection} from "@temporalio/client";
 import {bootstrapNamespace} from "./staging-namespace-bootstrap.mjs";
 const dir="/run/installation",address="temporal:7233",namespace="looplabs-staging-service-proof";
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-let ready=false;
-for(const deadline=Date.now()+90000;Date.now()<deadline;){try{await bootstrapNamespace(dir);ready=true;break;}catch{await sleep(1000);}}
+let ready=false,lastError;
+const connect=async options=>{
+ const c=await Connection.connect(options);
+ const describe=c.workflowService.describeNamespace.bind(c.workflowService);
+ c.workflowService.describeNamespace=async request=>{
+  const result=await describe(request);
+  if(result.namespaceInfo?.state!==1 || Number(result.config?.workflowExecutionRetentionTtl?.seconds)!==86400)
+   console.log(JSON.stringify({diagnostic:"namespace-contract",state:result.namespaceInfo?.state,retentionSeconds:Number(result.config?.workflowExecutionRetentionTtl?.seconds)}));
+  return result;
+ };
+ return c;
+};
+for(const deadline=Date.now()+90000;Date.now()<deadline;){try{await bootstrapNamespace(dir,{connect});ready=true;break;}catch(error){lastError=error;await sleep(1000);}}
+if(!ready) {
+ const message=String(lastError?.message??"");
+ const hint=["Existing namespace differs","Staging credentials are expired","Staging trust root changed","Administrator credential does not match","certificate","handshake","Permission","UNAVAILABLE"].find(value=>message.includes(value))??"unclassified";
+ console.log(JSON.stringify({diagnostic:"bootstrap-refusal",code:lastError?.code??lastError?.cause?.code??null,hint}));
+}
 assert(ready,"Actual namespace bootstrap did not become ready");
 assert.equal((await bootstrapNamespace(dir)).retentionSeconds,86400);
  const env=parseEnv(await readFile(resolve(dir,"temporal-auth.env"),"utf8"));
