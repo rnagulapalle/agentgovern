@@ -148,3 +148,17 @@ The existing browser/API tenant proof now includes separate company-scoped packa
 ## Restricted runtime increment
 
 The two-company browser/API/packaged-worker crash and replay proof now runs the application and worker/scheduler processes with a real restricted PostgreSQL LOGIN role using 29 grants extracted from the current provisioners. Thirteen direct SQL attacks fail before any effects; both independently approved workflows still complete four intended effects, including crash replacement and lost-response reconciliation. Role flags, table ownership, migration-owner membership and test-schema CREATE privilege are checked. This closes the owner-connection shortcut in that local execution proof, not database tenant isolation: the shared role can read both companies' rows and can update operational state. Broader privilege, row-security, compromised-service, remote deployment and independent security acceptance remain open. See `TENANT_BOUNDARY_PROOF.md` and its fingerprinted evidence.
+
+## Host allocation prerequisite — October 8
+
+A read-only inspection of the second existing 8 GiB host found active GTM
+containers, about 6.0 GiB currently available, about 5.1 GiB of declared container
+limits and one unbounded container. The new `temporal:host-preflight` refused that
+actual inventory: an illustrative complete staging budget of 4.375 GiB plus a
+1 GiB host reserve exceeds physical memory when added to existing reservations.
+The illustrative budget is not measured sizing or a recommendation. A momentary
+free-memory reading is insufficient permission or evidence for safe co-location.
+No service was capped, stopped or deployed. Host allocation remains pending;
+dedicated staging or explicitly reviewed co-location must precede remote trials.
+The check covers declared memory admission only, not CPU, network isolation,
+actual resource enforcement, sustained capacity or enterprise acceptance.

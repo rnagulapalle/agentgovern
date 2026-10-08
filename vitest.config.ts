@@ -23,6 +23,7 @@ export default defineConfig({
         "runtime/temporal/outbox.ts",
         "runtime/temporal/operations.ts",
         "runtime/temporal/staging-preflight.ts",
+        "runtime/temporal/staging-host.ts",
         "runtime/temporal/alert-monitor.ts",
         "lib/control-plane/model.ts",
         "lib/durable/contracts.ts",

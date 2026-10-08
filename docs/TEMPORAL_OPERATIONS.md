@@ -1,5 +1,33 @@
 # Temporal staging operations
 
+## Host allocation before provisioning
+
+Run `python3 scripts/staging-host-inventory.py` on the intended Linux Docker host
+and retain its sanitized JSON privately. It reads only host memory, running
+container IDs and declared memory limits; it refuses changing membership and
+does not read container environments. This needs access to Docker, which itself
+is privileged; do not expose the socket to an untrusted caller.
+
+Create a private JSON resource plan with `hostReserveBytes` (at least 1 GiB for
+host processes) and `services`: one `{role,memoryBytes}` entry for each of
+`web`, `application-database`, `temporal-database`, `temporal-service`, `worker`,
+`scheduler`, `provider-twin`, and `authorization`. Declare the full stack, not
+only the workers. Choose budgets from measured requirements; the gate provides
+no sizing recommendation. Every budget must be a positive integer byte limit.
+
+`pnpm temporal:host-preflight <inventory.json> <resource-plan.json>` refuses
+observations older than ten minutes, missing/duplicate container inventory,
+unbounded existing containers, incomplete plans, reserved-memory overcommit and
+insufficient currently available memory. It never changes an existing service
+or grants permission to co-locate. Allocate the host explicitly before deployment,
+then set and verify every declared limit on the actual running stack. Do not fix
+a refusal by silently capping or stopping another product's service.
+
+Passing is a conservative memory prerequisite, not deployment acceptance or an
+atomic resource reservation. CPU, disk, network, host-process growth, changes
+after inspection, actual limit enforcement and the remote security/fault/load
+checks still require validation. Reinspect immediately before starting the stack.
+
 October 7, 2026. Phase 3D isolated container acceptance; production remains on the existing
 worker. Read `TEMPORAL_ADOPTION_PLAN.md` for ownership and open release gates.
 
