@@ -1,3 +1,4 @@
+import { currentScopeGrant, scopedGrantMatches } from "./scopes";
 import { preparedRequest, requestMatches } from "./request";
 import { managedWorker, dispatchOwnership, managedOwnerActive } from "../enquiries/dispatch";
 import { randomUUID } from "node:crypto";
@@ -76,7 +77,7 @@ export class ConnectorControl {
     a: ConnectorAction,
     approval = true,
   ) {
-    if (!bindingMatches(this.provider, a) || !requestMatches(this.provider, a)) return false;
+    if (!bindingMatches(this.provider, a) || !requestMatches(this.provider, a) || !(await scopedGrantMatches(c,actor.orgId,a,this.provider))) return false;
     if (!(await managedOwnerActive(c, actor.orgId, a.id))) return false;
     const row = (
       await c.query(
@@ -146,11 +147,14 @@ export class ConnectorControl {
     )
       throw new ControlError(503, "Trusted contact version is unavailable.");
     const scoped = { ...p.payload, ...(p.connector === "crm" && typeof sourceVersion === "string" ? { sourceVersion } : {}), binding };
-    const payload = { ...scoped, request: preparedRequest(p.connector,scoped,this.provider.contactId ?? "1001",this.provider.recordScope) };
+    const request = preparedRequest(p.connector,scoped,this.provider.contactId ?? "1001",this.provider.recordScope);
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["agent", "operator"]);
       if (binding !== this.provider.bindingId) throw new ControlError(409, "Connector destination changed during preparation. Prepare fresh work.");
-      await enquirySource(c, actor.orgId, p.actionId, sourceVersion, binding, payload.request);
+      const scopeGrant = this.provider.recordScope ? await currentScopeGrant(c,actor.orgId,p.agentId,this.provider) : null;
+      if (this.provider.recordScope && !scopeGrant) throw new ControlError(403,"An active enrolled record grant is required for this agent.");
+      const payload = {...scoped,request,...(scopeGrant?{scopeGrant}:{})};
+      await enquirySource(c, actor.orgId, p.actionId, sourceVersion, binding, request, scopeGrant);
       await workflowProposal(c, actor.orgId, p);
       if (actor.role === "agent" && actor.subject !== p.agentId)
         throw new ControlError(403, "Agent identity must match the request.");
@@ -251,7 +255,7 @@ export class ConnectorControl {
           actor,
           a,
           "cancelled",
-          "Agent authority or policy changed.",
+          "Agent, record grant or policy changed.",
         );
       await c.query(
         "UPDATE ll_connector_actions SET approved_by=$3,approval_until=clock_timestamp()+interval '15 minutes' WHERE org_id=$1 AND id=$2",
@@ -362,7 +366,7 @@ export class ConnectorControl {
       if (actor.role === "worker") await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
       if (!["executing", "uncertain", "succeeded"].includes(a.state)) return { ...a, lease_token: null };
-      if (!bindingMatches(this.provider, a) || !requestMatches(this.provider,a)) return this.state(c, actor, a, "uncertain", "Saved request or destination changed. Restore the original reviewed contract before verifying the effect; do not resend.");
+      if (!bindingMatches(this.provider, a) || !requestMatches(this.provider,a) || !(await scopedGrantMatches(c,actor.orgId,a,this.provider))) return this.state(c, actor, a, "uncertain", "Saved request, record grant or destination changed. Restore the original reviewed contract before verifying the effect; do not resend.");
       if (
         a.state === "executing" &&
         a.lease_until &&
@@ -388,7 +392,7 @@ export class ConnectorControl {
       const a = await this.get(c, actor, id);
       if (!["executing", "uncertain", "succeeded"].includes(a.state))
         return { ...a, lease_token: null };
-      if (!bindingMatches(this.provider, a) || !requestMatches(this.provider,a)) return this.state(c, actor, a, "uncertain", "Request or destination changed during effect verification. Do not resend.");
+      if (!bindingMatches(this.provider, a) || !requestMatches(this.provider,a) || !(await scopedGrantMatches(c,actor.orgId,a,this.provider))) return this.state(c, actor, a, "uncertain", "Request, record grant or destination changed during effect verification. Do not resend.",o);
       return this.observed(c, actor, a, o);
     });
   }

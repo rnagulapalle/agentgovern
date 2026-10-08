@@ -65,3 +65,5 @@ During harness development, Python import shadowing, an incorrect assertion of t
 existing verification return type and a misplaced pre-fault conflict assertion
 failed before being corrected. The completed run additionally detects the changed
 recipient/version in CRM readback as a conflict. No gate was weakened or skipped.
+
+Persistent enrollment and per-agent revocation are described in [PERSISTED_RECORD_GRANTS.md](PERSISTED_RECORD_GRANTS.md). Background routing remains unproved.

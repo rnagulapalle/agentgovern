@@ -101,3 +101,7 @@ gap, not the capacity gate: public selection, persistent enrollment, per-agent
 record grants, compatible background routing, sustained load and complete tenant
 security acceptance remain open. Current v1 worker transfer is refused for scoped
 requests. No customer production readiness follows from these local checks.
+
+## Persistent record authority foundation
+
+Migration 12 and `ScopeControl` now persist immutable record enrollment and versioned per-agent grants, with named-owner checks and stale approval refusal across approval, dispatch, readback and predecessor checks. Archive quarantine revokes restored grants. See [PERSISTED_RECORD_GRANTS.md](PERSISTED_RECORD_GRANTS.md). This closes a local authority-persistence gap; invited enrollment UX/API, compatible scoped Temporal routing and independent-record capacity remain open. A storage-failure drill also exposed and fixed false verification from volatile fixture state; failed persistence now blocks further evidence and automatic resend. Production was not changed.

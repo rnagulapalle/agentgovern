@@ -1,3 +1,4 @@
+import { scopeEnrollment, currentScopeGrant } from "../connectors/scopes";
 import { preparedRequest, sameRequestSnapshot } from "../connectors/request";
 import type { Pool, PoolClient } from "pg";
 import { ControlError, type Actor } from "../durable/contracts";
@@ -48,7 +49,9 @@ export class EnquiryControl {
         if (old.fixture_id !== fixtureId) throw new ControlError(409, "This enquiry ID already belongs to different work.");
         return { saved: old };
       }
-      const plan = { requests: { crm: preparedRequest("crm",{lifecycle:contact.lifecycle,sourceVersion:contact.version},this.contactId,this.workflows.connectors.provider.recordScope), email:preparedRequest("email",{template:"case_received"},this.contactId,this.workflows.connectors.provider.recordScope) }, connectorBinding: binding, enquiry: {...fixture,email:contact.email}, contact: { id: contact.id, email: contact.email }, crm: { lifecycle: contact.lifecycle }, reply: {...approvedReply,recipient:contact.email}, approval: "Independent named approval for each effect", scope: "Private provider twins; no real delivery" };
+      const enrollment = this.workflows.connectors.provider.recordScope ? await scopeEnrollment(c,actor.orgId,this.workflows.connectors.provider) : null;
+      if(this.workflows.connectors.provider.recordScope && !enrollment)throw new ControlError(403,"An active enrolled record is required before preparing work.");
+      const plan = { ...(enrollment?{recordEnrollment:{id:enrollment.id,version:enrollment.version}}:{}), requests: { crm: preparedRequest("crm",{lifecycle:contact.lifecycle,sourceVersion:contact.version},this.contactId,this.workflows.connectors.provider.recordScope), email:preparedRequest("email",{template:"case_received"},this.contactId,this.workflows.connectors.provider.recordScope) }, connectorBinding: binding, enquiry: {...fixture,email:contact.email}, contact: { id: contact.id, email: contact.email }, crm: { lifecycle: contact.lifecycle }, reply: {...approvedReply,recipient:contact.email}, approval: "Independent named approval for each effect", scope: "Private provider twins; no real delivery" };
       const hash = digest(JSON.stringify([plan, contact.version, versions]));
       const saved = (await c.query("INSERT INTO ll_enquiry_plans(org_id,id,fixture_id,source_version,policy_versions,plan,plan_hash,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *", [actor.orgId, id, fixtureId, contact.version, JSON.stringify(versions), JSON.stringify(plan), hash, actor.subject])).rows[0];
       return { saved };
@@ -78,6 +81,11 @@ export class EnquiryControl {
       const plan = (await c.query("SELECT * FROM ll_enquiry_plans WHERE org_id=$1 AND id=$2", [actor.orgId, id])).rows[0];
       if (!plan) throw new ControlError(404, "Enquiry plan not found.");
       if (plan.plan_hash !== hash) throw new ControlError(409, "The plan changed. Review it again before starting work.");
+      if(this.workflows.connectors.provider.recordScope){
+        const enrollment=await scopeEnrollment(c,actor.orgId,this.workflows.connectors.provider);
+        if(!enrollment || plan.plan.recordEnrollment?.id!==enrollment.id || plan.plan.recordEnrollment?.version!==enrollment.version)throw new ControlError(409,"Record enrollment changed. Prepare fresh reviewed work.");
+        for(const agent of [crm,email])if(!(await currentScopeGrant(c,actor.orgId,agent,this.workflows.connectors.provider)))throw new ControlError(403,"Each agent needs an active record grant before starting work.");
+      }
       // A response lost after commit must resume the same immutable run, not
       // reject solely because that run has since changed the provider version.
       if (!plan.run_id && (!sameRequestSnapshot(plan.plan.requests, {crm:preparedRequest("crm",{lifecycle:contact.lifecycle,sourceVersion:contact.version},this.contactId,this.workflows.connectors.provider.recordScope),email:preparedRequest("email",{template:"case_received"},this.contactId,this.workflows.connectors.provider.recordScope)}) || plan.plan.connectorBinding !== binding || plan.plan.contact.id !== contact.id || plan.plan.contact.email !== contact.email || plan.source_version !== contact.version || JSON.stringify(plan.policy_versions) !== JSON.stringify(versions)))

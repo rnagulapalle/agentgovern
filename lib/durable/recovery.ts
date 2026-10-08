@@ -33,6 +33,10 @@ export async function quarantineRestore(db: Pool, org: string, epoch: string, ba
     counts.agents = (await c.query("UPDATE ll_agents SET active=false WHERE org_id=$1 AND active=true", [org])).rowCount || 0;
     await c.query("UPDATE ll_orgs SET policy_version=policy_version+1 WHERE id=$1", [org]);
     await c.query("UPDATE ll_connector_policies SET active=false,version=version+1 WHERE org_id=$1", [org]);
+    for(const table of ["ll_connector_scopes","ll_connector_scope_grants"]){
+      if((await c.query("SELECT to_regclass($1) AS present",[table])).rows[0].present)
+        counts[table]=(await c.query(`UPDATE ${table} SET active=false,version=version+1 WHERE org_id=$1 AND active=true`,[org])).rowCount||0;
+    }
     counts.runs = (await c.query("UPDATE ll_workflow_runs SET state='paused' WHERE org_id=$1 AND state='active'", [org])).rowCount || 0;
     // Even a held action in an old archive may have taken effect after backup.
     // Keep IDs, budgets and payloads; erase authority, not evidence.
