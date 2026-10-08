@@ -68,3 +68,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: node scripts/staging-database-container-proof.mjs
+      # The dependency target contains no private FetchSandbox source or spec.
+      - run: docker build --target dependencies -f Dockerfile.connector-twin -t looplabs-twin-dependencies:ci .
+      - run: docker run --rm --network none --read-only --memory 128m --cap-drop ALL --security-opt no-new-privileges looplabs-twin-dependencies:ci python /app/check-dependencies.py /app/requirements.txt
+      - run: docker image rm looplabs-twin-dependencies:ci
