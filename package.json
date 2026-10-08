@@ -49,7 +49,8 @@
     "temporal:alert-proof": "node --import tsx scripts/temporal-alert-proof.ts",
     "workspace:record-routing": "node --env-file=.env.local --import tsx scripts/record-routing-setup.ts",
     "workspace:record-scopes": "node --env-file=.env.local --import tsx scripts/record-scope-setup.ts",
-    "workspace:proposal-boundaries": "node --env-file=.env.local --import tsx scripts/proposal-boundary-setup.ts"
+    "workspace:proposal-boundaries": "node --env-file=.env.local --import tsx scripts/proposal-boundary-setup.ts",
+    "temporal:staging-preflight": "node --env-file=.env.local --import tsx scripts/staging-preflight.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1147.0",
