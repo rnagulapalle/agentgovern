@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-08T02:34:09.303Z",
+  "scope": "Local independent monitor process and controlled HTTP health/alert receivers; no designated operator notification, no production cutover or availability claim. Receiver deduplication is required for at-least-once delivery.",
+  "checks": [
+    "Stopped HTTP health endpoint opens only after three failures",
+    "Receiver accepted alert and lost response; protected pending journal survives process restart",
+    "Retry retains signed payload and idempotency ID; receiver records one incident",
+    "Recovery emits one resolved transition without repeated healthy notifications",
+    "Backlog opens and resolves separately for both roles",
+    "Malformed journal refuses startup without sending alerts"
+  ],
+  "measurements": {
+    "deliveryAttempts": 7,
+    "uniqueTransitions": 6,
+    "lostResponseAttempts": 2
+  },
+  "sourceFingerprints": {
+    "runtime/temporal/alert-monitor.ts": "aab9a74fc19fe55be720039bf3087530c28564668951231575b3486805ad828f",
+    "scripts/temporal-alert-monitor.ts": "40018145cc16497b0ffeb8f8f182ff9df48e44b8d3f67f9a908e1693307ad4de",
+    "scripts/temporal-alert-proof.ts": "742e362f6f37de22b7bac8c68e53daf5af3709c4b47307beb1049e3748ad5095"
+  }
+}
