@@ -32,6 +32,7 @@ try {
  run(auth,"--network-alias","authorization","--memory","128m","--cpus","0.1","--pids-limit","256","--read-only","--cap-drop","ALL","--security-opt","no-new-privileges","--user","node","--mount",`type=bind,src=${resolve("scripts/staging-authorization.mjs")},dst=/run/staging/authorization.mjs,readonly`,"--mount",`type=bind,src=${resolve(dir,"jwks.json")},dst=/run/staging/jwks.json,readonly`,"node:22-bookworm-slim","node","/run/staging/authorization.mjs");
  stage="temporal-service";
  run(server,"--network-alias","temporal","--memory","1536m","--cpus","1","--pids-limit","256","--read-only","--tmpfs","/tmp","--cap-drop","ALL","--security-opt","no-new-privileges","--mount",`type=bind,src=${resolve(dir,"server.yaml")},dst=/run/staging/server.yaml,readonly`,"--mount",`type=bind,src=${resolve(dir,"server-tls")},dst=/run/server-tls,readonly`,"-p","127.0.0.1::7233","--entrypoint","temporal-server","temporalio/server:1.31.0","--config-file","/run/staging/server.yaml","start");
+ stage="frontend-port";
  const address=`localhost:${docker("port",server,"7233").split(":").pop()}`;
  const options={address,loopbackProof:true};
  stage="namespace-bootstrap";await until(()=>bootstrapNamespace(dir,options));
@@ -54,11 +55,15 @@ try {
  docker("kill","--signal","KILL",server);docker("kill","--signal","KILL",pg);docker("start",pg);await until(async()=>docker("exec",pg,"pg_isready","-U","temporal"));docker("start",server);
  await until(()=>bootstrapNamespace(dir,options));await rpc(key,s=>s.describeNamespace({namespace}));await deny(key,"temporal-system");
  console.log(JSON.stringify({passed:true,scope:"disposable PostgreSQL-backed staging Temporal service configuration",checks:["generated mTLS and JWKS configuration accepted","namespace creation and idempotent repeat","namespace workload accepted","other namespace, invalid, tampered and expired JWT refused","reader cannot start workflow","namespace and authorization survive service/database SIGKILL"],images:["postgres:16","temporalio/server:1.31.0","temporalio/admin-tools:1.31.0","node:22-bookworm-slim"].map(image=>({image,id:docker("image","inspect",image,"--format","{{.Id}}")})),notVerified:["complete eight-service deployment","application workflows and browser UX","remote allocated staging","sustained capacity, restore and operator alerts"]},null,2));
-} catch {
+} catch(error) {
+ // Print only daemon diagnostic lines, never command strings, SDK errors or service logs.
+ console.error(`Failure category: ${Number.isInteger(error.status)?"docker-exit-"+error.status:"assertion-or-rpc"}`);
+ const daemon=String(error.stderr??"").split("\n").filter(line=>/^docker: Error response from daemon:|^Error response from daemon:/.test(line));
+ for(const line of daemon)console.error(line.slice(0,500));
  // Deliberately do not print raw Docker/SDK errors: their inputs can contain credentials.
  console.error(`Actual staging Temporal service proof failed at ${stage}; no acceptance claimed.`);process.exitCode=1;
 } finally {
- for(const name of owned.reverse())try{docker("rm","-f",name);}catch{}
+ for(const name of owned.reverse())try{docker("rm","-f","-v",name);}catch{}
  if(networkCreated)try{docker("network","rm",network);}catch{}
  await rm(parent,{recursive:true,force:true});
 }
