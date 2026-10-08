@@ -1,12 +1,14 @@
 {
-  "at": "2026-10-08T09:10:30.424Z",
+  "at": "2026-10-08T09:09:33.065Z",
   "checks": [
+    "Three concurrent customer submissions compete for the final shared-agent allowance: one admitted, two denied without actions or Temporal ownership; both agents retain exactly ten reservations",
     "Ten independently enrolled customer plans and twenty concurrent transfer requests save ten immutable routes without effects",
     "Actual packaged worker and scheduler start ten explicitly pinned record histories; held approvals remain effect-free",
     "SIGKILL and replacement preserve nine approved customer routes; each CRM and email effect belongs only to its enrolled record and recipient",
     "Real lost CRM HTTP response is read back by the packaged scoped worker; exactly one CRM and one intended email effect are retained",
-    "Revoked tenth enrollment cannot execute after restart; other customers continue and denied authority never falls back to the sample record",
-    "All nine completed pinned histories replay without new effects or provider secrets in history"
+    "Revoked final admitted enrollment cannot execute after restart; rejected contenders and revoked work have no effects",
+    "All nine completed pinned histories replay without new effects or provider secrets in history",
+    "Shared-agent reservations remain capped after execution and replay; revoked work does not silently refund lifetime authority"
   ],
   "sourceFingerprints": {
     "lib/connectors/scopes.ts": "bb5b7eb5b80011b1d487a8c59246e25a3f047eca1f6d65a590aeaa6ef404cfee",
@@ -35,6 +37,12 @@
     "contained": 1,
     "effects": 18
   },
+  "sharedAgents": 2,
+  "perAgentAllowance": 10,
+  "enrolledCustomers": 12,
+  "concurrentFinalSlotCandidates": 3,
+  "admittedFinalSlotCandidates": 1,
+  "deniedFinalSlotCandidates": 2,
   "buildId": "ack-1cfac314a32ef6cb0ff45a022ea9480f35f676416788a9eee511c8611ea5a12b",
   "scope": "Local packaged processes and private HTTP twins; no production cutover, sustained load SLA or live provider guarantee"
 }

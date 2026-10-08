@@ -132,3 +132,7 @@ Read-only inspection of the existing server confirmed running web/legacy worker 
 ## Paced independent-customer measurement
 
 `APPROVED_RECORD_LOAD_PROOF.md` extends local packaged execution to forty enrolled customers, with thirty-nine approved completions/seventy-eight targeted effects and one revoked customer. Four paced approval waves retain later holds; duplicate approvals and four actual lost responses retain idempotency. Per-customer observed timing is recorded without an SLO claim. Single-action agents, one workspace and a paced laptop sample do not close shared-agent contention, multi-tenant saturation, remote sustained capacity or provider-rate-limit acceptance.
+
+## Shared-agent contention increment
+
+`SHARED_AGENT_CONTENTION_PROOF.md` reuses two agents across twelve explicitly granted customers. Three concurrent submissions compete for the last allowance slot: one is admitted and two are refused without actions or Temporal ownership. Actual packaged restart, independent approvals, lost-response recovery and replay retain eighteen intended effects and both lifetime reservation caps. This closes a bounded last-slot race, not fairness, saturation, every interleaving or remote capacity acceptance.

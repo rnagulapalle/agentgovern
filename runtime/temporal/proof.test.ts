@@ -102,3 +102,13 @@ it("requires actual paced approved-record load and measured completion observati
  expect(proof.sampleLimits).toContain("not steady-state throughput");
  for(const [file,hash] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(readFileSync(file)).digest("hex"),file).toBe(hash);
 });
+
+it("requires actual shared-agent last-slot contention without overspend or rejected execution",()=>{
+ const proof=JSON.parse(readFileSync("docs/evidence/temporal-shared-agent-proof.json","utf8"));
+ expect(proof.measurements).toEqual({records:10,transferCalls:20,completed:9,contained:1,effects:18});
+ expect(proof.sharedAgents).toBe(2);expect(proof.perAgentAllowance).toBe(10);expect(proof.enrolledCustomers).toBe(12);
+ expect(proof.concurrentFinalSlotCandidates).toBe(3);expect(proof.admittedFinalSlotCandidates).toBe(1);expect(proof.deniedFinalSlotCandidates).toBe(2);
+ for(const marker of ["one admitted, two denied", "exactly ten reservations", "SIGKILL", "lost CRM HTTP response", "rejected contenders", "histories replay", "remain capped after execution"])expect(proof.checks.join(" ")).toContain(marker);
+ for(const [file,hash] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(readFileSync(file)).digest("hex"),file).toBe(hash);
+ expect(proof.scope).toContain("no production cutover");
+});
