@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T12:45:27.414Z",
+  "at": "2026-10-08T18:54:54.461Z",
   "checks": [
     "Actual LOGIN runtime uses 29 provisioner grants with no owner membership, schema creation, table ownership or privileged role flags",
     "Thirteen actual restricted-database attacks refuse proposal rewrites, identity revocation, event mutation, deletion, truncation, trigger disabling and DDL without effects; shared role still reads both companies (no RLS claim)",
@@ -30,7 +30,7 @@
     "lib/workspace/auth.ts": "d58f5bdeac77ef3bd5b86f8590b9c17e99508f74df690998439f6137f3541972",
     "lib/workspace/identity.ts": "0241e4ecaf3060788b8002fe9616ad3a90368dbb8199dbbff0cb7d24f92c86f7",
     "app/api/workspace/session/route.ts": "adf8e024c4fef51179fd3240e396a4d9f383dbd6b32f4c38508b27e2da439330",
-    "lib/durable/http.ts": "d2280a735ac2cb75c03679754385d487a77b96d1147807c73e92e3cc0c326641",
+    "lib/durable/http.ts": "b1c0813e3b094e5b40c9e51adf99d1074851e00b2287af61cb7ec95a7f38bcce",
     "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
     "lib/durable/database.ts": "ad8feee5de5b98415ab7ebd0c3459e7b6a3f6f80c34729c564e4786facdcc625",
     "lib/connectors/routing.ts": "0cf3e90dabf348fbb4443bb5ec841237d33cdb53b1394c88939d9198457c9e02",
@@ -66,8 +66,8 @@
     "replayedHistories": 2
   },
   "workflowIds": [
-    "looplabs:company-a:ack:d84452b0-c586-4c78-90c0-6b8f80ecde1d",
-    "looplabs:company-b:ack:f0617a80-453c-4977-9678-a6277f9a544c"
+    "looplabs:company-a:ack:8d41bd96-7f03-4ad4-9865-ab95c93f9ca3",
+    "looplabs:company-b:ack:c2052c2d-cc6a-49d1-a67a-13cbfbe95ae6"
   ],
   "buildId": "ack-1cfac314a32ef6cb0ff45a022ea9480f35f676416788a9eee511c8611ea5a12b",
   "scope": "Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"

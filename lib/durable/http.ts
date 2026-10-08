@@ -14,12 +14,22 @@ export function browserOrigin(request: NextRequest) {
   const configured = process.env.LOOPLABS_DURABLE_ORIGIN;
   if (!configured) return new URL(request.url).origin;
   // Server-owned origin, never inferred from caller-controlled proxy headers.
-  if (!["https://looplabs.run", "https://agentgovern.ai"].includes(configured))
-    throw new ControlError(
-      503,
-      "Durable browser origin is not configured correctly.",
-    );
-  return configured;
+  if (["https://looplabs.run", "https://agentgovern.ai"].includes(configured))
+    return configured;
+  // A dedicated staging deployment needs its own server-owned TLS origin.
+  // Never infer it from Origin, Host or forwarded headers, and never enable
+  // additional production origins merely because a URL parses successfully.
+  if (process.env.LOOPLABS_TEMPORAL_WORKSPACE === "staging") {
+    try {
+      const staging = new URL(configured);
+      if (staging.protocol === "https:" && staging.origin === configured)
+        return configured;
+    } catch { /* Refuse malformed configuration below. */ }
+  }
+  throw new ControlError(
+    503,
+    "Durable browser origin is not configured correctly.",
+  );
 }
 export function sameOrigin(request: NextRequest, requireOrigin = false) {
   const origin = request.headers.get("origin");
