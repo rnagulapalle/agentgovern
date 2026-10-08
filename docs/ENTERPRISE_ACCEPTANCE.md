@@ -25,7 +25,7 @@ arbitrary agents, arbitrary graphs and connectors are outside this acceptance.
 | Capacity and isolation | 25 held plans and 50 concurrent transfers; one approved completion; workspace serialization | Independent customer records; multiple tenants; sustained approved load, bursts, quotas and backpressure; report latency/error/backlog distributions under an agreed workload |
 | Monitoring and response | Local readiness/backlog/failure signals; no external alerts | Alert reaches the designated operator during an injected fault; traces correlate run/action/provider reference; reviewed incident and rollback procedures |
 | Human and workload security | Invited member authentication and scoped workload checks | SSO/MFA requirement agreed with pilot organization; adversarial tenant/role/API tests and independent security review; rotation and revocation drill |
-| Deployed user experience | Existing invited managed rehearsal path; Temporal transfer is service-only | Explicit opt-in through the invited workflow UI; ownership/status visible; plan review never grants action execution; reproduce using the user's typed request |
+| Deployed user experience | Local real-browser typed request, staging-only opt-in, independent approvals and Temporal completion; saved ownership survives reload | Repeat in isolated remote staging and the approved provider binding; production remains on the legacy runner |
 
 Local evidence files under `docs/evidence/temporal-*.json` are measured test records
 with source fingerprints. They are not signed certificates, independent audits or

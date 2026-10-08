@@ -399,3 +399,45 @@ it("treats the SDK closed-execution duplicate as delivered intent without schedu
   expect(await outbox.tick(await workerActor("enquiry-temporal"), { workflow: { start } } as unknown as Client, "queue")).toBe(1);
   expect(writes).toBe(0);
 });
+
+
+it("gates staged execution transfer, isolates workspaces and never grants approval", async () => {
+  const { GET, POST } = await import("@/app/api/workspace/enquiries/execution/route");
+  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
+  const url = "https://looplabs.run/api/workspace/enquiries/execution";
+  const get = (id = p.id, who = "operator") => new NextRequest(`${url}?run=${id}`, { headers: { Authorization: `Bearer ${keys[who]}` } });
+  const post = (payload: object = { operation: "transfer", runId: p.id }, who = "operator", origin = "https://looplabs.run") => new NextRequest(url, { method: "POST", headers: { Authorization: `Bearer ${keys[who]}`, Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const original = process.env.LOOPLABS_TEMPORAL_WORKSPACE;
+  try {
+    delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;
+    expect(await (await GET(get())).json()).toEqual({ available: false });
+    expect((await POST(post())).status).toBe(409);
+    process.env.LOOPLABS_TEMPORAL_WORKSPACE = "true";
+    expect((await POST(post())).status).toBe(409);
+    process.env.LOOPLABS_TEMPORAL_WORKSPACE = "staging";
+    expect((await GET(new NextRequest(url))).status).toBe(401);
+    expect((await GET(get("bad"))).status).toBe(400);
+    expect((await GET(get(p.id, "other"))).status).toBe(403);
+    expect((await GET(get(p.id, "crm"))).status).toBe(403);
+    expect(await (await GET(get())).json()).toMatchObject({ available: true, owned: false, canTransfer: true });
+    expect(await (await GET(get(p.id, "reviewer"))).json()).toHaveProperty("canTransfer", false);
+    expect((await POST(post(undefined, "reviewer"))).status).toBe(403);
+    expect((await POST(post(undefined, "operator", "https://evil.test"))).status).toBe(403);
+    for (const payload of [{ operation: "execute", runId: p.id }, { operation: "transfer", runId: p.id, approve: true }, { operation: "transfer", runId: "bad" }]) expect((await POST(post(payload))).status).toBe(400);
+    const responses = await Promise.all([POST(post()), POST(post())]);
+    expect(responses.map(r => r.status)).toEqual([200, 200]);
+    expect(responses[0].headers.get("cache-control")).toBe("no-store");
+    expect(await (await GET(get())).json()).toEqual({ available: true, owned: true, dispatch: "pending", canTransfer: false });
+    expect((await db.query("SELECT count(*)::int AS n FROM ll_temporal_dispatch")).rows[0].n).toBe(1);
+    expect((await workflow.read(operator, p.id)).steps.map((s: { state: string }) => s.state)).toEqual(["held", "held"]);
+    expect(writes).toBe(0);
+    const hosted = await import("../connectors/hosted");
+    const binding = vi.spyOn(hosted, "connectorProvider").mockReturnValue(Object.assign(Object.create(hosted.HostedFetchSandboxConnectors.prototype), { workspaceId: "one", binding: { contactId: "1001" } }));
+    expect((await POST(post())).status).toBe(409);
+    binding.mockRestore();
+    await db.query("UPDATE ll_temporal_dispatch SET state='started',started_at=now()");
+    expect(await (await GET(get())).json()).toHaveProperty("dispatch", "started");
+    await workflow.pause(operator, p.id);
+    expect((await POST(post())).status).toBe(403);
+  } finally { if (original === undefined) delete process.env.LOOPLABS_TEMPORAL_WORKSPACE; else process.env.LOOPLABS_TEMPORAL_WORKSPACE = original; }
+});

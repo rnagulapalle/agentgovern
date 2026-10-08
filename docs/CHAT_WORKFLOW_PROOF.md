@@ -39,3 +39,28 @@ Not supported: live customer connections or email delivery, general prompt-gener
 ## Live sign-in regression
 
 Production dogfooding exposed a request burst from automatic marketing navigation prefetches. Shared marketing links now load routes on click, preserving the existing nginx limit. The browser proof checks that sign-in produces no background route prefetch requests for either member. This is a navigation fix, not a weakened request or authentication gate.
+
+## Staging durable execution handoff (October 7)
+
+The server-only `LOOPLABS_TEMPORAL_WORKSPACE=staging` switch exposes **Use durable
+execution** inside a saved managed rehearsal. It is off by default. Migration 9
+and the separately provisioned Temporal scheduler/worker must exist in that isolated
+environment. This is not a production cutover switch or a worker readiness signal.
+
+The active requester explicitly selects the one-way handoff while both actions
+are unexecuted. The existing transactional outbox prevents legacy dispatch after
+transfer; a race with already-started execution refuses transfer. Another member
+still approves each action. No review, chat message or scheduling choice grants
+execution authority. Hosted CRM remains refused. Scheduling status distinguishes
+saved/pending from accepted by the engine; it does not claim the engine is currently
+healthy or that connector effects happened. The existing step evidence supplies
+the actual outcome.
+
+`chat:proof` now types the request through the real model, transfers via the invited
+UI, checks both actions remain held, starts a real isolated Temporal service/worker,
+approves through the second browser account, measures exactly two HTTP twin effects,
+and reloads to verify ownership and completion. The original legacy, stale-source,
+lost-response and restart cases are retained. HTTP tests additionally cover disabled
+and malformed configuration, origin, roles, tenant isolation, extra fields, duplicate
+transfers, hosted refusal and paused-run refusal. Remote deployment, durable runner
+health in the workspace and customer-provider acceptance remain open.

@@ -8,6 +8,15 @@ import { resolve } from "node:path";
 import assert from "node:assert/strict";
 import { passwordHash } from "../lib/workspace/auth";
 import { tokenHash } from "../lib/durable/service";
+import { TestWorkflowEnvironment } from "@temporalio/testing";
+import { Worker } from "@temporalio/worker";
+import { authenticate } from "../lib/durable/service";
+import { ConnectorControl } from "../lib/connectors/service";
+import { FetchSandboxConnectors } from "../lib/connectors/twin";
+import { WorkflowControl } from "../lib/workflows/service";
+import { activities } from "../runtime/temporal/activities";
+import { versionedActivities } from "../runtime/temporal/version-contract";
+import { TemporalOutbox } from "../runtime/temporal/outbox";
 import { enquiryRequest } from "../lib/enquiries/chat-contract";
 const origin = "http://localhost:3107", delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 async function main() {
@@ -17,6 +26,7 @@ async function main() {
   const schema = `chat_ui_${randomBytes(8).toString("hex")}`, token = randomBytes(32).toString("base64url"), password = randomBytes(24).toString("base64url");
   const admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
   const db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
+  let temporal: TestWorkflowEnvironment | undefined;
   let worker: ChildProcess | undefined;
   const workerToken = randomBytes(32).toString("base64url");
   let app: ChildProcess | undefined, twin: ChildProcess | undefined, browser: Browser | undefined;
@@ -24,7 +34,7 @@ async function main() {
   const check = (name: string) => { checks.push({ name, passed: true }); console.log(`PASS ${name}`); };
   const url = new URL(process.env.LOOPLABS_TEST_DATABASE_URL); url.searchParams.set("options", `-c search_path=${schema}`);
   async function startApp() {
-    app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...process.env, LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
+    app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...process.env, LOOPLABS_TEMPORAL_WORKSPACE: "staging", LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
     for (let i = 0; i < 100; i++) { try { if ((await fetch(origin + "/sign-in")).ok) return; } catch {} await delay(100); }
     throw Error("UI app unavailable");
   }
@@ -115,7 +125,7 @@ async function main() {
   }
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(file, "utf8"));
+    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"]) await db.query(await readFile(file, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     for (const [email, name] of [["requester@example.test", "Requester"], ["reviewer@example.test", "Reviewer"]]) await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,'local-proof',$2,$3)", [email, name, passwordHash(password)]);
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
@@ -193,18 +203,52 @@ async function main() {
     check("Real app and worker restart automatically read back a lost CRM response, dispatch only the held email, and save a full verification receipt without another CRM write");
     await page.goto(origin + "/control-plane/work"); await page.getByRole("button", { name: new RegExp(recovery.slice(0,8)) }).click();
     await expect(page.getByRole("region", { name: "Verification receipt" })).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 900 });
     await page.screenshot({ path: "docs/evidence/enquiry-managed-desktop.png", fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.screenshot({ path: "docs/evidence/enquiry-managed-mobile.png", fullPage: true });
     check("Managed approval cards, connection setup and saved verification receipt remain readable at 390px without overflow");
     const managedRuns = [await run(page, automatic), await run(page, recovery)];
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const durable = await managed(page);
+    const ownership = page.getByRole("region", { name: "Saved execution ownership" });
+    await expect(ownership).toBeVisible();
+    await ownership.getByRole("checkbox").check();
+    await ownership.getByRole("button", { name: "Use durable execution", exact: true }).click();
+    await expect(ownership.getByText("Durable execution selected", { exact: true })).toBeVisible();
+    assert.deepEqual((await db.query("SELECT a.state FROM ll_workflow_steps s JOIN ll_connector_actions a ON a.org_id=s.org_id AND a.id=s.action_id WHERE s.run_id=$1 ORDER BY s.ordinal", [durable])).rows.map(r => r.state), ["held", "held"]);
+    const effectsBeforeDurable = await effects();
+    temporal = await TestWorkflowEnvironment.createLocal();
+    const temporalToken = randomBytes(32).toString("base64url");
+    await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','enquiry-temporal','worker')", [tokenHash(temporalToken)]);
+    const actor = await authenticate(db, temporalToken);
+    const queue = `ui-${randomUUID()}`;
+    const workflows = new WorkflowControl(db, new ConnectorControl(db, new FetchSandboxConnectors("http://127.0.0.1:8018", token)));
+    const outbox = new TemporalOutbox(db);
+    assert.equal(await outbox.tick(actor, temporal.client, queue), 1);
+    const intent = (await db.query("SELECT workflow_id FROM ll_temporal_dispatch WHERE plan_id=$1", [durable])).rows[0];
+    const executor = await Worker.create({ connection: temporal.nativeConnection, taskQueue: queue, workflowsPath: resolve("runtime/temporal/pinned-workflow.ts"), activities: versionedActivities(db, actor, activities(workflows, actor)), shutdownGraceTime: "1 second" });
+    await executor.runUntil(async () => {
+      await approveManaged(reviewer, durable);
+      assert.equal(await temporal!.client.workflow.getHandle(intent.workflow_id).result(), "completed");
+    });
+    assert.equal(Object.keys(await effects()).length, Object.keys(effectsBeforeDurable).length + 2);
+    await page.reload();
+    await page.getByRole("button", { name: new RegExp(durable.slice(0, 8)) }).click();
+    await expect(page.getByRole("heading", { name: "Acknowledgement verified", exact: true })).toBeVisible();
+    await expect(page.getByText("Durable execution selected", { exact: true })).toBeVisible();
+    await page.screenshot({ path: "docs/evidence/enquiry-temporal-desktop.png", fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await page.screenshot({ path: "docs/evidence/enquiry-temporal-mobile.png", fullPage: true });
+    check("Typed chat and invited UI transfer one saved run to Temporal without granting approval; second-member approvals complete exactly two effects and reload preserves ownership");
     const fingerprints: Record<string, string> = {};
-    for (const file of ["lib/durable/service.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
+    for (const file of ["lib/durable/service.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
       fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
     await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: legacyEffects, managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
   } finally {
-    await browser?.close(); await stopWorker(); await stopApp(); if (twin?.pid) { twin.kill("SIGTERM"); await delay(400); }
+    await temporal?.teardown(); await browser?.close(); await stopWorker(); await stopApp(); if (twin?.pid) { twin.kill("SIGTERM"); await delay(400); }
     await db.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); await rm(dir, { recursive: true, force: true });
   }
 }
