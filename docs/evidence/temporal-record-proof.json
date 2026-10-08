@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T06:55:32.365Z",
+  "at": "2026-10-08T07:31:04.018Z",
   "checks": [
     "Ten independently enrolled customer plans and twenty concurrent transfer requests save ten immutable routes without effects",
     "Actual packaged worker and scheduler start ten explicitly pinned record histories; held approvals remain effect-free",
@@ -9,7 +9,7 @@
     "All nine completed pinned histories replay without new effects or provider secrets in history"
   ],
   "sourceFingerprints": {
-    "lib/connectors/scopes.ts": "bb3f7fbb683409dac0ad643da2da967b9c34cc37332965e3888e20d9a73d6915",
+    "lib/connectors/scopes.ts": "bb5b7eb5b80011b1d487a8c59246e25a3f047eca1f6d65a590aeaa6ef404cfee",
     "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
     "lib/connectors/request.ts": "37584ef57721d52bc77995e97c68a6b69f06f69e63da73c7ea67408a92c0344c",
     "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",

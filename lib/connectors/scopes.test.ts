@@ -167,3 +167,31 @@ it("refuses absent routes, tenant substitution, provider changes and revoked sco
  await scopes.setActive(operator,scopeId,false);await expect(next(input)).rejects.toThrow("unavailable");await scopes.setActive(operator,scopeId,true);await expect(next(input)).rejects.toThrow("unavailable");
  expect(factories).toBe(0);expect(writes).toBe(0);expect((await flow.read(operator,plan.id)).steps[0].state).toBe("held");
 });
+
+it("onboards only trusted catalog records and requires explicit non-stale record authority changes",async()=>{
+ const {RecordOnboarding,providerForScope}=await import("./catalog");const old=process.env.LOOPLABS_RECORD_CATALOG,hosted=process.env.LOOPLABS_FETCHSANDBOX_BINDING;
+ process.env.LOOPLABS_RECORD_CATALOG=JSON.stringify({records:[scope]});delete process.env.LOOPLABS_FETCHSANDBOX_BINDING;
+ try{
+ const service=new RecordOnboarding(db,()=>provider),id=randomUUID();
+ const list=await service.list(operator);expect(list.available).toBe(true);expect(list.records).toEqual([]);expect(list.grants).toEqual([]);expect(JSON.stringify(list)).not.toContain(provider.bindingId);
+ await expect(service.list(agent)).rejects.toThrow();expect((await service.list(other)).candidates).toEqual([]);
+ await expect(service.change(agent,{operation:"enroll",id,recordKey:list.candidates[0].key})).rejects.toThrow();
+ await expect(service.change(operator,{operation:"enroll",id,recordKey:"forged"})).rejects.toThrow("supported record");
+ for(const p of [{operation:"enroll",id,recordKey:list.candidates[0].key,recipient:"forged@example.test"},{operation:"unknown"},{operation:"grant",scopeId:"bad",agentId:"agent"}])await expect(service.change(operator,p)).rejects.toThrow();
+ await service.change(operator,{operation:"enroll",id,recordKey:list.candidates[0].key});await service.change(operator,{operation:"enroll",id,recordKey:list.candidates[0].key});
+ await expect(providerForScope(db,other,id,()=>provider)).rejects.toThrow("not found");await expect(providerForScope(db,operator,id,()=>({...provider,bindingId:"b".repeat(64)}))).rejects.toThrow("differs");
+ await service.change(operator,{operation:"grant",scopeId:id,agentId:"agent"});await service.change(operator,{operation:"grant",scopeId:id,agentId:"agent"});
+ expect((await service.list(operator)).grants).toHaveLength(1);expect(writes).toBe(0);
+ await service.change(operator,{operation:"setGrantActive",scopeId:id,agentId:"agent",active:false,expectedVersion:1});
+ await expect(service.change(operator,{operation:"setGrantActive",scopeId:id,agentId:"agent",active:true,expectedVersion:1})).rejects.toThrow("Refresh");
+ await service.change(operator,{operation:"setGrantActive",scopeId:id,agentId:"agent",active:true,expectedVersion:2});
+ await service.change(operator,{operation:"setScopeActive",scopeId:id,active:false,expectedVersion:1});
+ await expect(service.change(operator,{operation:"setScopeActive",scopeId:id,active:true,expectedVersion:1})).rejects.toThrow("Refresh");
+ await service.change(operator,{operation:"setScopeActive",scopeId:id,active:true,expectedVersion:2});
+ for(const version of [0,NaN,1.2])await expect(scopes.setActive(operator,id,false,undefined,version)).rejects.toThrow("valid");
+ for(const p of [{operation:"setScopeActive",scopeId:id,active:true,expectedVersion:0},{operation:"grant",scopeId:id,agentId:"agent",extra:true},{operation:"setGrantActive",scopeId:id,active:true,expectedVersion:3}])await expect(service.change(operator,p)).rejects.toThrow("supported record operation");
+ process.env.LOOPLABS_FETCHSANDBOX_BINDING="configured";expect((await service.list(operator)).available).toBe(false);expect((await service.list(operator)).candidates).toEqual([]);await expect(service.change(operator,{operation:"grant",scopeId:id,agentId:"agent"})).rejects.toThrow("does not support");
+ delete process.env.LOOPLABS_FETCHSANDBOX_BINDING;
+ await db.query("ALTER TABLE ll_connector_scopes RENAME TO hidden_scopes");try{expect((await service.list(operator)).available).toBe(false);await expect(providerForScope(db,operator,id,()=>provider)).rejects.toThrow("unavailable");}finally{await db.query("ALTER TABLE hidden_scopes RENAME TO ll_connector_scopes");}
+ }finally{if(old===undefined)delete process.env.LOOPLABS_RECORD_CATALOG;else process.env.LOOPLABS_RECORD_CATALOG=old;if(hosted===undefined)delete process.env.LOOPLABS_FETCHSANDBOX_BINDING;else process.env.LOOPLABS_FETCHSANDBOX_BINDING=hosted;}
+});

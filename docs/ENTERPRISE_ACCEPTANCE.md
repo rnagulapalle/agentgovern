@@ -109,3 +109,7 @@ Migration 12 and `ScopeControl` now persist immutable record enrollment and vers
 ## Latest scoped background routing proof
 
 The earlier sections record phase snapshots. `SCOPED_TEMPORAL_ROUTING.md` now records ten independent customer plans running in actual packaged Temporal worker/scheduler processes. Nine approved workflows complete exactly eighteen correctly targeted effects across worker restart; an actual lost CRM response is reconciled and the revoked tenth record produces no effects. Completed histories replay without effects. Immutable routes pin a compatible worker build and never fall back to v1 or hosted execution. This closes a local background record-routing gap. Invited scope onboarding/selection, remote TLS operational acceptance, independent tenant security, sustained capacity, live provider guarantees and production cutover remain open.
+
+## Invited onboarding increment
+
+`RECORD_ONBOARDING_WORKSPACE.md` adds a private record/access screen and authenticated catalog-backed enrollment API. It exposes the existing versioned permission foundation without conversational execution authority. Arbitrary-record selection through chat remains a separate integration step. Actual-source proof and release gates must pass before this increment is merged; this does not change the external-provider or remote-operations acceptance requirements above.

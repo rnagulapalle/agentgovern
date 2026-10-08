@@ -63,8 +63,8 @@ export class ScopeControl {
    const row=(await c.query("INSERT INTO ll_connector_scope_grants(org_id,scope_id,agent_id,created_by) VALUES($1,$2,$3,$4) RETURNING *",[actor.orgId,id,agent,actor.subject])).rows[0];await this.event(c,actor,id,"agent_granted",agent);return row;
   });
  }
- async setActive(actor:Actor,id:string,active:boolean,agent?:string){
-  validId(id);if(typeof active!=="boolean" || (agent!==undefined && (typeof agent!=="string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(agent))))throw new ControlError(400,"Choose a valid scope authority change.");
+ async setActive(actor:Actor,id:string,active:boolean,agent?:string,expectedVersion?:number){
+  validId(id);if((expectedVersion!==undefined && (!Number.isInteger(expectedVersion) || expectedVersion<1)) || typeof active!=="boolean" || (agent!==undefined && (typeof agent!=="string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(agent))))throw new ControlError(400,"Choose a valid scope authority change.");
   return transaction(this.db,actor.orgId,async c=>{
    await this.authority(c,actor);
    const enrolled=(await c.query("SELECT * FROM ll_connector_scopes WHERE org_id=$1 AND id=$2 AND binding_id=$3",[actor.orgId,id,this.provider.bindingId])).rows[0];
@@ -72,6 +72,7 @@ export class ScopeControl {
    const table=agent===undefined?"ll_connector_scopes":"ll_connector_scope_grants",where=agent===undefined?"id=$2":"scope_id=$2 AND agent_id=$3",params=agent===undefined?[actor.orgId,id]:[actor.orgId,id,agent];
    const old=(await c.query(`SELECT * FROM ${table} WHERE org_id=$1 AND ${where}`,params)).rows[0];if(!old)throw new ControlError(404,"Grant not found.");
    if(old.active===active)return old;
+   if(expectedVersion!==undefined && expectedVersion!==old.version)throw new ControlError(409,"Record authority changed. Refresh before changing access.");
    const row=(await c.query(`UPDATE ${table} SET active=$${params.length+1},version=version+1 WHERE org_id=$1 AND ${where} RETURNING *`,[...params,active])).rows[0];await this.event(c,actor,id,active?"reactivated":"revoked",agent??null);return row;
   });
  }

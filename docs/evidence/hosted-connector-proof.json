@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T06:58:23.351Z",
+  "at": "2026-10-08T07:27:32.583Z",
   "scope": "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.",
   "checks": [
     {
@@ -32,14 +32,14 @@
     }
   ],
   "acceptedResponseLossEvidence": {
-    "acceptedRequestId": "90b042fc0f89",
+    "acceptedRequestId": "df8b3791593a",
     "acceptedStatus": 200,
     "transport": {
       "state": "delay_completed",
       "delay_ms": 15000,
-      "delay_started_at": "2026-10-08T06:58:07.970662+00:00",
-      "client_disconnected_at": "2026-10-08T06:58:09.470886+00:00",
-      "delay_completed_at": "2026-10-08T06:58:22.973431+00:00"
+      "delay_started_at": "2026-10-08T07:27:17.493198+00:00",
+      "client_disconnected_at": "2026-10-08T07:27:18.992282+00:00",
+      "delay_completed_at": "2026-10-08T07:27:32.498527+00:00"
     },
     "providerWritesAfterReconciliation": 1
   },
@@ -47,7 +47,7 @@
     "lib/connectors/request.ts": "37584ef57721d52bc77995e97c68a6b69f06f69e63da73c7ea67408a92c0344c",
     "lib/connectors/content.ts": "b37017e9f6dc0fc44b6f3d80f9e1b74afd4bf1352719bd5bf62e8d5e80719291",
     "lib/connectors/record-scope.ts": "d84de98f4e00e4a0d50ae3b8ecf6f30d3286c62d3d64546145d8d1a2b8dd04f7",
-    "lib/connectors/scopes.ts": "bb3f7fbb683409dac0ad643da2da967b9c34cc37332965e3888e20d9a73d6915",
+    "lib/connectors/scopes.ts": "bb5b7eb5b80011b1d487a8c59246e25a3f047eca1f6d65a590aeaa6ef404cfee",
     "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
     "lib/enquiries/record-routing-schema.sql": "05c2c214c09e14b9567402206a1efe6b4fb1f064d07203386f7a7e23947e8267",
     "runtime/temporal/record-routing.ts": "cfca7823cefedcfd561460332c56871afb9e34d9fa1697ba3525c02ae3396536",

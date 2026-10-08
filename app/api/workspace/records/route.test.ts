@@ -1,0 +1,14 @@
+import {NextRequest} from "next/server";
+import {beforeEach,expect,it,vi} from "vitest";
+import {ControlError} from "@/lib/durable/contracts";
+const mocks=vi.hoisted(()=>({authenticate:vi.fn(),list:vi.fn(),change:vi.fn()}));
+vi.mock("@/lib/durable/database",()=>({database:()=>({})}));
+vi.mock("@/lib/durable/service",()=>({authenticate:mocks.authenticate}));
+vi.mock("@/lib/connectors/catalog",()=>({RecordOnboarding:class{list=mocks.list;change=mocks.change;}}));
+import {GET,POST} from "./route";
+const req=(content?:string,origin="https://looplabs.run")=>new NextRequest("https://looplabs.run/api/workspace/records",{method:content===undefined?"GET":"POST",headers:{origin,authorization:"Bearer named-member","Content-Type":"application/json"},...(content===undefined?{}:{body:content})});
+beforeEach(()=>{vi.resetAllMocks();mocks.authenticate.mockResolvedValue({role:"operator",orgId:"one",subject:"member"});mocks.list.mockResolvedValue({available:true,records:[],grants:[]});mocks.change.mockResolvedValue({active:false,version:2});});
+it("authenticates before reading records and forbids caching private authority",async()=>{const r=await GET(req());expect(r.status).toBe(200);expect(r.headers.get("Cache-Control")).toBe("no-store");expect(mocks.list).toHaveBeenCalledWith({role:"operator",orgId:"one",subject:"member"});});
+it("never reads or changes records when authentication fails",async()=>{mocks.authenticate.mockRejectedValue(new ControlError(401,"Sign in"));expect((await GET(req())).status).toBe(401);expect((await POST(req('{}'))).status).toBe(401);expect(mocks.list).not.toHaveBeenCalled();expect(mocks.change).not.toHaveBeenCalled();});
+it("denies cross-site changes and malformed bodies before dispatch",async()=>{expect((await POST(req('{}','https://evil.example'))).status).toBe(403);expect(mocks.authenticate).not.toHaveBeenCalled();for(const body of ['bad','[]','null'])expect((await POST(req(body))).status).toBe(400);expect(mocks.change).not.toHaveBeenCalled();});
+it("passes exact input through the authority service and sanitizes failures",async()=>{const p={operation:"setScopeActive",scopeId:"id",active:false,expectedVersion:1};const r=await POST(req(JSON.stringify(p)));expect(r.status).toBe(200);expect(r.headers.get("Cache-Control")).toBe("no-store");expect(mocks.change.mock.calls[0][1]).toEqual(p);mocks.change.mockRejectedValue(new ControlError(409,"Refresh access"));expect((await POST(req(JSON.stringify(p)))).status).toBe(409);mocks.list.mockRejectedValue(new Error("private SQL credential"));const failed=await GET(req());expect(failed.status).toBe(503);expect(await failed.text()).not.toContain("private SQL");});

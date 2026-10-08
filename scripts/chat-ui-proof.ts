@@ -34,7 +34,7 @@ async function main() {
   const check = (name: string) => { checks.push({ name, passed: true }); console.log(`PASS ${name}`); };
   const url = new URL(process.env.LOOPLABS_TEST_DATABASE_URL); url.searchParams.set("options", `-c search_path=${schema}`);
   async function startApp() {
-    app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...process.env, LOOPLABS_TEMPORAL_WORKSPACE: "staging", LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
+    app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...process.env, LOOPLABS_TEMPORAL_WORKSPACE: "staging", LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_RECORD_CATALOG: JSON.stringify({records:[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"}]}), LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
     for (let i = 0; i < 100; i++) { try { if ((await fetch(origin + "/sign-in")).ok) return; } catch {} await delay(100); }
     throw Error("UI app unavailable");
   }
@@ -125,7 +125,7 @@ async function main() {
   }
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"]) await db.query(await readFile(file, "utf8"));
+    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/connectors/scope-schema.sql"]) await db.query(await readFile(file, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     for (const [email, name] of [["requester@example.test", "Requester"], ["reviewer@example.test", "Reviewer"]]) await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,'local-proof',$2,$3)", [email, name, passwordHash(password)]);
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
@@ -133,6 +133,8 @@ async function main() {
       await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof',$1,$2,100)", [id, [tool]]);
       await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'agent')", [tokenHash(randomBytes(32).toString("base64url")), id]);
     }
+    await db.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES('local-proof','crm-agent','CRM agent','requester@example.test','crm_agent','crm_twin'),('local-proof','email-agent','Email agent','requester@example.test','email_agent','email_twin')");
+    await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records:[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"}]}),{mode:0o600});
     await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','enquiry-runner','worker')", [tokenHash(workerToken)]);
     await writeFile(`${dir}/connector-twin-credentials.json`, JSON.stringify({ token }), { mode: 0o600 });
     const backend = process.env.FETCHSANDBOX_BACKEND_PATH || `${process.env.HOME}/sandbox/backend`;
@@ -143,6 +145,26 @@ async function main() {
     const page = await requester.newPage(), reviewer = await reviewerContext.newPage();
     await login(page, "requester@example.test"); await login(reviewer, "reviewer@example.test");
     check("Sign-in navigation generates no background route prefetch burst for either member");
+    await page.goto(origin + "/control-plane/records");
+    await expect(page.getByRole("heading", {name:"Records and access",exact:true})).toBeVisible();
+    const enrollmentResponse=page.waitForResponse(r=>r.url().endsWith("/api/workspace/records") && r.request().method()==="POST");
+    await page.getByRole("button",{name:"Add customer record",exact:true}).click();
+    const enrolled=await enrollmentResponse;assert.equal(enrolled.status(),200);const record=await enrolled.json();
+    await page.getByLabel("Agent to grant access").selectOption("crm-agent");
+    await page.getByRole("button",{name:"Grant record access",exact:true}).click();
+    await expect(page.getByRole("button",{name:"Revoke agent access",exact:true})).toBeVisible();
+    await page.getByRole("button",{name:"Revoke agent access",exact:true}).click();
+    await expect(page.getByRole("button",{name:"Restore agent access",exact:true})).toBeVisible();
+    const staleAccess=await page.request.post(origin+"/api/workspace/records",{headers:{Origin:origin},data:{operation:"setGrantActive",scopeId:record.id,agentId:"crm-agent",active:true,expectedVersion:1}});assert.equal(staleAccess.status(),409);
+    await page.getByRole("button",{name:"Restore agent access",exact:true}).click();
+    await expect(page.getByRole("button",{name:"Revoke agent access",exact:true})).toBeVisible();
+    await page.reload();await expect(page.getByText("Accountable owner: requester@example.test",{exact:true})).toBeVisible();
+    assert.equal((await db.query("SELECT count(*) FROM ll_connector_actions")).rows[0].count,"0");
+    assert.equal((await db.query("SELECT count(*) FROM ll_workflow_runs")).rows[0].count,"0");
+    await page.screenshot({path:"docs/evidence/record-onboarding-desktop.png",fullPage:true});
+    await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await page.screenshot({path:"docs/evidence/record-onboarding-mobile.png",fullPage:true});await page.setViewportSize({width:1280,height:900});
+    check("Invited browser enrolls configured record, explicitly grants/revokes/restores agent access, denies stale restoration and reloads saved owner; no actions or workflow created; 390px layout has no overflow");
     const normal = await prepare(page);
     await page.screenshot({ path: "docs/evidence/chat-ui-plan.png", fullPage: true });
     check("Typed natural-language request calls the real model, asks for the missing customer and saves an exact plan without effects");
@@ -244,7 +266,7 @@ async function main() {
     await page.screenshot({ path: "docs/evidence/enquiry-temporal-mobile.png", fullPage: true });
     check("Typed chat and invited UI transfer one saved run to Temporal without granting approval; second-member approvals complete exactly two effects and reload preserves ownership");
     const fingerprints: Record<string, string> = {};
-    for (const file of ["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/service.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
+    for (const file of ["lib/connectors/catalog.ts","app/api/workspace/records/route.ts","components/control-plane/records-workspace.tsx","app/control-plane/records/page.tsx","components/control-plane/shell.tsx","lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/service.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
       fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
     await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: legacyEffects, managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
   } finally {
