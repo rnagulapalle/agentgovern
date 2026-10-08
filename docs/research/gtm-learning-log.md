@@ -238,3 +238,11 @@ Copy this block for each material experiment or weekly synthesis.
 - Worked: authenticated Chrome remains usable, fresh anonymous sessions and actual citation inventory enabled reproducible observations. Failed/incomplete: remaining26 prompts and other engines, authoritative booking attribution still pending; tenth video remains consent-blocked and PH canceled.
 - Lesson: durable execution is already an incumbent answer; prove the specific action/approval/effect boundary rather than claiming a generic workflow builder or Temporal superiority. Local merged reliability proof is not remote production proof.
 - Next experiment: finish remaining benchmark; implement verified booking correlation under release gates; five independent operators explain held customer messages and name a current-stack gap. Do not create a broad article from this selective sample. See `2026-10-08-aeo-recovery.md`.
+
+## October 8 — account follow-through completes Perplexity prompt coverage
+
+- Evidence/result: recovered all remaining26 fixed prompts in fresh incognito sessions; prior4 preserved. All30 have observed responses/source inventories; no LoopLabs name/domain observed. AUD-02 remained truncated on revisit; marked explicitly. New rows retain three-source samples with total observed counts; private references/sample evidence retained, not full transcripts. Other engines unmeasured.
+- Persona/pain/channel: provisional customer-operations/RevOps; consequential CRM writes and dependent messages; answer-engine discovery, not owner interviews.
+- Worked/failed: authenticated Chrome extension usable despite native Mac lock. Streaming required observation of the existing response rather than duplicate submissions. One answer truncated; no cross-engine or traffic conclusion.
+- Lesson/confidence: high confidence in observed rendered absence, low in longitudinal visibility and commercial fit. Category/approval answers overlap incumbent control/runtime/SDK material; avoid generic approval claims or a broad new article.
+- Next experiment: finish cross-engine baseline; implement confirmed-booking measurement and collect independent operator comprehension. PH canceled; YouTube action-time consent remains pending without another upload attempt. No bookings or customer demand fabricated.
