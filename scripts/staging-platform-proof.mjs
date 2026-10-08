@@ -1,5 +1,5 @@
 // One disposable eight-service trial; never uses or deploys a production project.
-import {execFileSync,spawn} from "node:child_process";
+import {execFileSync,spawn,spawnSync} from "node:child_process";
 import {randomBytes} from "node:crypto";
 import {mkdtemp,mkdir,writeFile,readFile,cp,access,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import {generateTemporalConfiguration} from "./staging-temporal-config.mjs";
 import {assembleRuntimeInputs} from "./staging-runtime-inputs.mjs";
 import {stagingHostAdmission} from "../runtime/temporal/staging-host.ts";
-import {safeTrialFailure} from "./staging-trial-failure.mjs";
+import {safeTrialFailure,safeProviderFailure} from "./staging-trial-failure.mjs";
 const docker=(...args)=>execFileSync("docker",args,{encoding:"utf8",timeout:600000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const backend=process.env.FETCHSANDBOX_BACKEND_PATH;
@@ -87,7 +87,9 @@ try{
 }catch{
  let detail="";
  try {const report=JSON.parse(await readFile(resolve(trial,"failure.json"),"utf8"));detail=safeTrialFailure(report);}catch{}
- console.error(`Complete isolated platform trial failed at ${stage}${detail}; no acceptance, raw logs or credentials printed.`);process.exitCode=1;
+ let provider="";
+ try {const id=container("connector-twin");if(id)provider=safeProviderFailure(JSON.parse(docker("inspect","--format","{{json .State}}",id)),(()=>{const r=spawnSync("docker",["logs","--tail","80",id],{encoding:"utf8",timeout:10000,maxBuffer:65536,stdio:["ignore","pipe","pipe"]});return `${r.stdout||""}\n${r.stderr||""}`;})());}catch{}
+ console.error(`Complete isolated platform trial failed at ${stage}${detail}${provider}; no acceptance, raw logs or credentials printed.`);process.exitCode=1;
 }
 finally{
  for(const name of owned.reverse())try{docker("rm","-f",name);}catch{}

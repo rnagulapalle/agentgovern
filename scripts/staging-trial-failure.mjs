@@ -6,3 +6,13 @@ export function safeTrialFailure(report){
  const kind=new Set(["catalog","provider","binding","source","service"]).has(report.errorKind)?` ${report.errorKind}`:"";
  return ` (${report.phase}${status}${kind})`;
 }
+
+// Extract bounded process facts; never return raw container logs or error text.
+export function safeProviderFailure(state,logs=""){
+ if(!state || typeof state!=="object")return "";
+ const status=new Set(["running","restarting","exited","dead","created"]).has(state.Status)?state.Status:"unknown";
+ const exit=Number.isInteger(state.ExitCode)&&state.ExitCode>=0&&state.ExitCode<=255?state.ExitCode:"unknown";
+ const errors=["ModuleNotFoundError","ImportError","PermissionError","FileNotFoundError","ValueError","OSError"];
+ const kind=typeof logs==="string"?errors.find(e=>new RegExp(`(?:^|\\n)${e}:`).test(logs)):undefined;
+ return ` provider ${status} exit ${exit}${state.OOMKilled===true?" oom":""}${kind?` ${kind}`:""}`;
+}

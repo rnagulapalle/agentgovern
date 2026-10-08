@@ -1,7 +1,7 @@
 import {test} from "vitest";
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
-import {mkdtemp,mkdir,writeFile,readFile,rm,access,symlink} from "node:fs/promises";
+import {mkdtemp,mkdir,writeFile,readFile,rm,access,symlink,stat} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {resolve} from "node:path";
 import {createHash} from "node:crypto";
@@ -16,6 +16,7 @@ test("source assembly selects the pinned commit and refuses mutable or escaping 
   await writeFile(resolve(repo,"backend/app/input.txt"),"dirty-current-source");await writeFile(resolve(repo,"backend/app/untracked.env"),"must-not-copy");
   await writeFile(spec,"openapi: 3.0.1\n");const digest=createHash("sha256").update(await readFile(spec)).digest("hex"),out=resolve(root,"prepared");
   const result=await prepareFixtureSource(repo,commit,spec,digest,out);assert.equal(result.commit,commit);assert.equal(result.trackedFiles,4);
+  assert.equal((await stat(resolve(out,"backend/specs/hubspot/openapi.yaml"))).mode & 0o777,0o600,"Prepared private spec must remain owner-only; the runtime image must set its owner");
   const previous=process.env.GIT_DIR;
   try{process.env.GIT_DIR=resolve(root,"wrong-repository");assert.equal((await prepareFixtureSource(repo,commit,spec,digest,resolve(root,"hooked"))).commit,commit);}
   finally{if(previous===undefined)delete process.env.GIT_DIR;else process.env.GIT_DIR=previous;}
