@@ -1,5 +1,10 @@
 # Temporal staging operations
 
+The complete independent service topology is in
+[`ISOLATED_STAGING_PLATFORM.md`](ISOLATED_STAGING_PLATFORM.md). It is prepared
+packaging, not a bootstrapped remote environment. The worker-only file below remains
+unchanged and must not be confused with the full footprint.
+
 ## Host allocation before provisioning
 
 Run `python3 scripts/staging-host-inventory.py` on the intended Linux Docker host
