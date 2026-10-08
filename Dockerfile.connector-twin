@@ -8,13 +8,17 @@ COPY scripts/check-twin-dependencies.py /app/check-dependencies.py
 RUN python /app/check-dependencies.py /app/requirements.txt
 
 FROM dependencies AS fixture
-COPY --from=fetchsandbox app /app/backend/app
-COPY --from=fetchsandbox configs/hubspot /app/backend/configs/hubspot
-COPY --from=fetchsandbox configs/resend /app/backend/configs/resend
-COPY --from=fetchsandbox specs/hubspot /app/backend/specs/hubspot
-COPY --from=fetchsandbox specs/resend /app/backend/specs/resend
+COPY --from=fetchsandbox --chown=1000:1000 app /app/backend/app
+COPY --from=fetchsandbox --chown=1000:1000 configs/hubspot /app/backend/configs/hubspot
+COPY --from=fetchsandbox --chown=1000:1000 configs/resend /app/backend/configs/resend
+COPY --from=fetchsandbox --chown=1000:1000 specs/hubspot /app/backend/specs/hubspot
+COPY --from=fetchsandbox --chown=1000:1000 specs/resend /app/backend/specs/resend
 COPY scripts/connector-twin.py /app/scripts/connector-twin.py
+COPY scripts/check-connector-health.py /app/scripts/check-connector-health.py
 RUN useradd --uid 1000 --no-create-home fixture
 ENV FETCHSANDBOX_BACKEND_PATH=/app/backend LOOPLABS_CONNECTOR_STATE_DIR=/state LOOPLABS_TWIN_CONTAINER=1 PYTHONDONTWRITEBYTECODE=1
 USER fixture
+# Fail during image construction if the non-root runtime cannot read its exact
+# prepared inputs. Preserve private source modes instead of making them public.
+RUN python -c "import os; from pathlib import Path; assert os.getuid()==1000; [Path('/app/backend/'+p).read_bytes() for p in ['configs/hubspot/sandbox_config.yaml','configs/resend/sandbox_config.yaml','specs/hubspot/openapi.yaml','specs/resend/openapi.yaml']]"
 CMD ["sh", "-c", "python /app/check-dependencies.py /app/requirements.txt && exec python /app/scripts/connector-twin.py"]

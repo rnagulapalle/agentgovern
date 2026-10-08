@@ -176,3 +176,30 @@ the actual CI result. This closes the mock-only namespace integration gap for
 these configuration sources. Full application workers/browser execution, complete
 eight-service staging, remote operational acceptance and production cutover remain
 open.
+
+
+## Assembled disposable integration — October 8
+
+Private CI run `37841114978` passed the complete eight-service trial after fixing
+non-root access to the private prepared provider spec. The exact overlay also
+passed the full quality gate with 393 tests. Named sessions, API record enrollment
+and grants, duplicate submission, self-approval refusal, held-work runtime
+SIGKILL/restart, independent approvals, two verified effects, actual lost-response
+reconciliation and real Temporal history replay all passed together. Artifact and
+host-admission measurements are in `docs/evidence/staging-platform-proof.json`.
+This advances the earlier separate component proofs into one disposable integrated
+runtime proof. The controller used prepared plans and manually handled secure
+cookies over a private HTTP network; it did not prove browser HTTPS or fresh typed
+chat. Persistent staging, sustained independent-tenant load, restore/alert/operator
+acceptance, live-provider guarantees and production cutover remain open. The Mac's
+Docker/disk failure still prevents the mandatory local pre-push gate; the public
+branch and production have not received the local ownership-fix commit.
+
+
+The readiness increment subsequently passed private CI run `37844156496` with
+394 quality tests and the same complete runtime assertions. Provider startup and
+post-crash initialization now require bounded authenticated GET/readback health;
+no business record is changed by that check. Health GETs may create request-archive
+entries. Retained artifact: `docs/evidence/staging-platform-readiness-proof.json`.
+The original proof and its limits remain preserved; this adds no browser/HTTPS,
+live-provider, capacity, restore or persistent staging acceptance.

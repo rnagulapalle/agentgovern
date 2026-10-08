@@ -146,6 +146,11 @@ services:
     volumes: [provider-data:/state]
     networks: [application]
     # Seed credentials/enrolled test records in this dedicated volume first.
+    healthcheck:
+      test: [CMD, python, /app/scripts/check-connector-health.py]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
 networks:
   application: {internal: true}

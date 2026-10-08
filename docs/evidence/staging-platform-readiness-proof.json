@@ -1,0 +1,110 @@
+{
+  "passed": true,
+  "scope": "assembled isolated API/runtime trial only",
+  "checks": [
+    "separate secure named sessions",
+    "unauthenticated and self-approval refusal",
+    "API enrollment and per-agent record grants",
+    "saved plan and duplicate-safe submission",
+    "held work and sessions survive runtime SIGKILL",
+    "named approval and two verified private effects",
+    "lost-response reconciliation without a duplicated effect",
+    "real authenticated Temporal history replay without new actions"
+  ],
+  "notVerified": [
+    "browser HTTPS and typed chat UX",
+    "remote persistent staging",
+    "sustained load, restore and operator alert acceptance",
+    "live provider guarantees"
+  ],
+  "buildId": "ack-f6890babe76de4d6bdef2c948f3d75372558c0d88cb623c05c19c62f04b7ee58",
+  "sourceCommit": "08372aadbaa6fb8f37368c6900323b8619c10f2c",
+  "images": [
+    {
+      "role": "web",
+      "id": "sha256:f7fc990fae902043c69e6f057354048beeea735f8697abd4040b3613f5abf481"
+    },
+    {
+      "role": "worker",
+      "id": "sha256:4d299a83e6ba3c2d91fc7370a0a8ecfa97deb25e9a4650aa9a950d34ee5c8baf"
+    },
+    {
+      "role": "twin",
+      "id": "sha256:ea52644ac46c7ab0ad17ececaf4f6f87a355e907e75de768979feae080b0bab4"
+    },
+    {
+      "role": "provisioner",
+      "id": "sha256:5e7b5e7a8c9485a509eb74144bc60508bda5156bd6f7f5b03125e9db760143f1"
+    }
+  ],
+  "services": [
+    {
+      "memoryBytes": 536870912,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 536870912,
+      "readOnly": false,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 536870912,
+      "readOnly": false,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 1610612736,
+      "readOnly": true,
+      "pids": 256,
+      "health": "not-configured"
+    },
+    {
+      "memoryBytes": 805306368,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 268435456,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 268435456,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 134217728,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    }
+  ],
+  "admission": {
+    "admitted": true,
+    "blockers": [],
+    "existingBytes": 536870912,
+    "plannedBytes": 4697620480,
+    "hostReserveBytes": 1073741824,
+    "totalBytes": 8323969024,
+    "availableBytes": 6467276800
+  },
+  "executionEvidence": {
+    "runId": 37844156496,
+    "privateWorkflowCommit": "d8f11c3c0efa56b3d273ab00860459f3b2945027",
+    "quality": "success",
+    "scope": "readiness-enabled eight-service trial",
+    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37844156496",
+    "publicBaseCommit": "a00e9420baec8b887c0a93fffb58b55ac515b202",
+    "exactOverlaySha256": "f27dce021987d098076f442675b9fd3e674a903aae41dd50996b61c6c3b4a733",
+    "qualityTests": 394,
+    "productionChanged": false
+  }
+}

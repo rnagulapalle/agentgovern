@@ -1,7 +1,8 @@
 # Isolated staging platform packaging
 
-October 8, 2026. Prepared topology, **not a bootstrapped deployment or remote
-enterprise acceptance**. Production and its legacy runner are unchanged.
+October 8, 2026. The complete disposable eight-service API/runtime trial has
+passed. This is **not persistent remote staging or enterprise acceptance**.
+Production and its legacy runner are unchanged.
 
 `docker-compose.temporal-platform.yml` describes the complete eight-role footprint:
 web, application PostgreSQL, Temporal PostgreSQL, Temporal service, public-key
@@ -169,6 +170,49 @@ together on the allocated staging deployment.
 
 ## Verification and remaining work
 
+### Combined platform trial — disposable integration passed
+
+`LOOPLABS_STAGING_PLATFORM_PROOF=isolated FETCHSANDBOX_BACKEND_PATH=<prepared-backend>
+node --import tsx scripts/staging-platform-proof.mjs` completed in private CI run
+`37841114978` on October 8. The exact reviewed overlay on public base `a00e942`
+passed `pnpm quality` (393 tests), built all four images, started the complete
+isolated eight-service topology and completed the actual API/runtime assertions.
+Sanitized artifact identities, admission measurements, checks and explicit limits
+are retained in `docs/evidence/staging-platform-proof.json`. The run uses a private
+FetchSandbox commit plus a digest-pinned reviewed spec; it exposes no source,
+credentials, customer data or raw provider journal in public artifacts.
+
+The prior diagnostic run `37840765706` reached enrollment and reported a provider
+`PermissionError`. The prepared spec retained mode `0600` but the image had copied
+it as root before running the provider as UID 1000. The fix assigns copied private
+inputs to UID 1000 and requires the required inputs to be readable as that user
+during image construction. Host file modes, non-root execution, read-only runtime,
+exact approvals and all original trial assertions remain intact. The earlier
+sparse-checkout fetch problem was also resolved without changing source pins.
+ It reuses the existing
+Compose topology, immutable database provisioners, Temporal configuration and
+namespace bootstrap, role-input assembler, private fixture and packaged workers.
+It builds all four images, checks fresh host admission for all eight services,
+creates only a random dedicated project and removes only that project's resources.
+Migration-owner and administrator material are mounted into temporary offline
+controllers, not application roles. The normal runtime uses the restricted database.
+
+The trial targets actual session/API enrollment, agent grants, saved-plan submission,
+duplicate refusal, self-approval refusal, held-work SIGKILL/restart, named approval,
+an injected lost CRM response, independent provider-journal readback, and replay
+of the real authenticated Temporal history. Its controller uses prepared fixture
+plans and manually handled cookies over the private application network; it is
+**not browser HTTPS, a typed chat experience, fresh model-planning proof, persistent
+remote staging, restore, sustained load or designated operator alert acceptance**.
+Those acceptance gates remain separate. No success is implied by this harness's
+presence, its refusal test, existing separate component proofs or green static CI.
+
+Use a fresh allocated runner with sufficient disk and memory. The local Docker VM
+cannot admit the full stack, and shared live workloads must not be resized/stopped
+to bypass host admission. Keep private source, specs, runtime credentials and raw
+provider state out of public CI artifacts. Preserve failed stages and fix actual integration defects rather than narrowing
+assertions. A successful disposable trial does not authorize production cutover.
+
 ### Reproducible private fixture inputs
 
 A clean FetchSandbox checkout currently omits the ignored HubSpot OpenAPI file
@@ -229,7 +273,7 @@ The October 8 actual local trial passed. Sanitized image identity and LoopLabs
 source fingerprints are retained in `docs/evidence/staging-twin-container-proof.json`.
 This closes fixture packaging/reachability/restart evidence only. It does not
 exercise application approvals, Temporal workers, the complete stack or remote
-staging. CI currently does not have the private FetchSandbox backend source;
+staging. Public CI does not have the private FetchSandbox backend source;
 its topology/regression checks do not replace this actual image trial.
 
 The real Compose renderer passes topology tests for all eight services, project-local
@@ -308,3 +352,21 @@ source fingerprints are retained in
 fixed controller file-owner access without changing private permissions. Existing
 quality gates and the final PR checks remain required before merging. It does not exercise application workers, the browser or the complete
 eight-service platform and cannot replace allocated remote staging acceptance.
+
+
+### Provider readiness increment — disposable trial passed
+
+The private provider healthcheck issues an authenticated GET to its configured
+first test record (or the legacy prepared sample when no extra records are
+configured). It requires a matching record, recipient and nonempty source version,
+refuses redirects and bounds timeout/response size. It does not mutate business
+records, create approvals, deliver messages or disclose response/credential data;
+ordinary provider request-archive entries may still be written for a health GET.
+The combined trial now waits for provider health before enrollment and after the
+runtime SIGKILL/restart. Private CI run `37844156496` passed the complete updated trial and the full
+quality gate (394 tests), with provider health required before enrollment and
+after runtime restart. `docs/evidence/staging-platform-readiness-proof.json`
+records the exact overlay, worker/provider identities and observed health states.
+The earlier successful trial record above remains preserved for its earlier source.
+This is a disposable fixture initialization/readback check, not provider write
+availability, live API parity or persistent enterprise operational acceptance.
