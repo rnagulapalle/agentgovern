@@ -169,6 +169,25 @@ together on the allocated staging deployment.
 
 ## Verification and remaining work
 
+### Reproducible private fixture inputs
+
+A clean FetchSandbox checkout currently omits the ignored HubSpot OpenAPI file
+used by the local fixture. Its presence in a developer checkout is not CI proof.
+`node scripts/staging-fixture-source.mjs <private-repository> <exact-commit>
+<reviewed-hubspot-spec> <sha256> <new-private-output>` assembles only the committed
+application, HubSpot/Resend configuration and committed Resend spec, plus the
+explicitly reviewed HubSpot file. It refuses mutable refs, changed spec content,
+committed links/special files and existing output directories. Dirty/untracked
+source and root environment/data stores are excluded. Partial output is retained
+on refusal for inspection; source preparation does not authorize execution.
+
+The manifest records both the exact Git commit and source-archive/spec digests.
+Keep the prepared backend and any image private; do not upload FetchSandbox
+source or credentials to this public repository or public artifacts. Private CI
+must obtain that exact reviewed HubSpot input separately and verify its digest.
+Do not substitute a downloaded current spec or silently copy a dirty backend.
+The image trial and complete runtime proof remain required after preparation.
+
 ### Actual private provider container proof
 
 The Compose twin now explicitly sets `LOOPLABS_TWIN_CONTAINER=1`. Without this
