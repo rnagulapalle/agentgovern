@@ -3,7 +3,7 @@ import { Pool } from "pg";
 import { randomBytes, randomUUID, createHash } from "node:crypto";
 import { spawn, execFile, type ChildProcess } from "node:child_process";
 import { promisify } from "node:util";
-import { readFile, writeFile, mkdtemp, rm, chmod } from "node:fs/promises";
+import { readFile, writeFile, mkdtemp, rm, chmod, mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import assert from "node:assert/strict";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
@@ -22,6 +22,7 @@ async function main() {
   const url = process.env.LOOPLABS_TEST_DATABASE_URL;
   if (!url) throw Error("Dedicated test PostgreSQL required.");
   const originalEpoch = process.env.LOOPLABS_RECOVERY_EPOCH;
+  await mkdir(".local", { recursive: true, mode: 0o700 });
   const dir = await mkdtemp(resolve(".local/workspace-restore-")); await chmod(dir, 0o700);
   const schema = `restore_${randomBytes(8).toString("hex")}`, initial = randomUUID(), next = randomUUID();
   const admin = new Pool({ connectionString: url }), db = new Pool({ connectionString: url, options: `-c search_path=${schema}` });
