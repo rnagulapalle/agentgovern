@@ -128,3 +128,7 @@ The incremental real-browser proof also signs in through the form in separate Ch
 ## Remote staging inventory — October 8
 
 Read-only inspection of the existing server confirmed running web/legacy worker and healthy proof PostgreSQL. The server has no configured Temporal address, namespace, API key/client certificate, workload token, staging mode, record build pin or record catalog; no private Temporal staging environment file exists. This is missing provisioning, not a successful remote trial. The inspected host has about 3.8 GiB total memory and shares production/preview workloads. A dedicated staging service/namespace, isolated application database/provider binding, authenticated transport and matching workers must be provisioned and measured before remote acceptance. Nothing was enabled or cut over during this inventory.
+
+## Paced independent-customer measurement
+
+`APPROVED_RECORD_LOAD_PROOF.md` extends local packaged execution to forty enrolled customers, with thirty-nine approved completions/seventy-eight targeted effects and one revoked customer. Four paced approval waves retain later holds; duplicate approvals and four actual lost responses retain idempotency. Per-customer observed timing is recorded without an SLO claim. Single-action agents, one workspace and a paced laptop sample do not close shared-agent contention, multi-tenant saturation, remote sustained capacity or provider-rate-limit acceptance.
