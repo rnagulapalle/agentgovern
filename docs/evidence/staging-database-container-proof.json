@@ -1,0 +1,48 @@
+{
+  "passed": true,
+  "scope": "internal-network offline provisioner only",
+  "checks": [
+    "actual internal application-db service bootstrap",
+    "restricted runtime passes exact migration/workload/member inspection",
+    "member rewrite refused",
+    "repeat preserves authority and named-member credentials",
+    "no record grants or actions created"
+  ],
+  "migrations": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11,
+    12,
+    13
+  ],
+  "imageId": "sha256:c44d48415c953d8747bbe40b5b8c8ab000735b4037c295468674359aac104439",
+  "sources": [
+    {
+      "file": "Dockerfile.staging-provisioner",
+      "sha256": "135d0bd0544efd3a9c3dd82c07d9e47a57241513ab8add93159c3d216a6a49d4"
+    },
+    {
+      "file": "scripts/staging-database-container-proof.mjs",
+      "sha256": "51fc4d1826201c2945a416e9d7f2758a7facb9ed9b9dded3a76c63fb3f13fe23"
+    },
+    {
+      "file": "scripts/staging-database-container-controller.mjs",
+      "sha256": "2b2f5bc8a0a65942fd1a4d10121ce30ba19ca537953959fe14792e79e16f1a42"
+    },
+    {
+      "file": "scripts/staging-database-bootstrap.mjs",
+      "sha256": "b8d240236a686d29bf7e699ef0efb2416cd08684807ee80f70e6dd454296900a"
+    }
+  ],
+  "notVerified": [
+    "complete eight-service bootstrap/startup",
+    "provider enrollment and approved execution",
+    "browser experience and remote acceptance"
+  ]
+}

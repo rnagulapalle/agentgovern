@@ -60,3 +60,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: node scripts/staging-temporal-service-proof.mjs
+
+  staging-database-container:
+    name: staging-database-container
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/staging-database-container-proof.mjs

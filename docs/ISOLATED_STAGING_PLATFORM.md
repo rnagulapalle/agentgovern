@@ -97,6 +97,32 @@ database container, network and private temporary installation. This proof now r
 as a required step in `pnpm quality`; unavailable Docker or proof failure is fatal.
 Reproduce with `node --import tsx scripts/staging-database-proof.mjs`.
 
+### Offline provisioner container
+
+`Dockerfile.staging-provisioner` separately packages the bootstrap sources and
+dependencies. It copies no repository `.env`, private installation, web build or
+member credential. It is an offline migration role, never a runtime web/worker
+image. Mount its private output directory and scoped owner input only while
+explicitly provisioning the isolated database; remove the owner-bearing container
+before normal application operation. The existing bootstrap refuses other target
+names and preserves released migration digests and repeat credentials.
+
+`node scripts/staging-database-container-proof.mjs` builds a disposable image,
+starts private PostgreSQL on an internal network without a published port, and
+runs the actual bootstrap inside a read-only provisioner as the private-file
+owner UID/GID. Database initialization uses the same bounded capabilities as the
+staging topology. The trial verifies restricted runtime/schema/workload/member
+inspection, member-write refusal and identical repeat credentials. It does not
+enroll records, grant agents or create actions. Only the generated containers,
+network, image and private directory are removed. Failure output names the stage
+without dumping credentials or raw Docker errors.
+
+The separate `staging-database-container` CI job continuously executes this path.
+Its success covers internal-network provisioning, not complete eight-service
+startup, credential rotation, web/worker integration or remote acceptance. Actual
+trial image identity and source fingerprints are retained in
+`docs/evidence/staging-database-container-proof.json` once the trial passes.
+
 ## Temporal credentials and namespace preparation
 
 `node scripts/staging-temporal-config.mjs <new-private-directory>
