@@ -12,6 +12,7 @@ run "Repository policy and claim gate" pnpm check:repo
 run "Lint" pnpm lint
 run "TypeScript" pnpm typecheck
 run "Adversarial tests and coverage" pnpm test:coverage
+run "Isolated staging database bootstrap and refusal proof" node --import tsx scripts/staging-database-proof.mjs
 run "Background runner bundle" node scripts/build-enquiry-worker.mjs
 run "Temporal service and workflow bundles" pnpm temporal:build
 run "Production build" pnpm build
