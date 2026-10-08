@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, CirclePause, Mail, ContactRound, ShieldCheck } from "lucide-react";
 import { approvedReply } from "@/lib/enquiries/contracts";
 import { WorkflowWorkspace } from "./workflow-workspace";
+import { EnquiryExecution } from "./enquiry-execution";
 type Step = { ordinal: number; action_id: string; agent_id: string; connector: string; payload: { lifecycle?: string }; state: string | null; payload_hash: string; reason: string; proposed_by?: string; approved_by: string | null; evidence?: { outcome: string; detail: string; reference?: string }; proposedRequest?: { method: string; resource: string; body: object } };
 type Run = { id: string; created_by: string; state: string; steps: Step[] };
 async function api(url: string, payload?: object) {
@@ -24,6 +25,7 @@ export function EnquiryProgress({ id }: { id: string }) {
     <div className="cp-enquiry-heading"><div><span className="cp-eyebrow">SAVED REHEARSAL</span><h2>{run.state === "completed" ? "Acknowledgement verified" : run.state === "paused" ? "Work paused" : "Customer acknowledgement"}</h2></div><ShieldCheck aria-hidden="true" /></div>
     <p>{run.state === "completed" ? "The CRM update and acknowledgement were read back from the provider twins." : "Approve the exact actions here. The background runner handles execution and verification; you can close this tab."}</p>
     {error && <p className="cp-durable-error" role="alert">{error}</p>}
+    <EnquiryExecution key={id} id={id} />
     <ol className="cp-enquiry-timeline">{run.steps.map(s => <li key={s.action_id}>
       <div className="cp-enquiry-step-icon">{s.state === "succeeded" ? <CheckCircle2 /> : s.ordinal === 1 ? <ContactRound /> : <Mail />}</div>
       <div><h3>{s.ordinal === 1 ? "Check and update the customer record" : "Send the approved acknowledgement"}</h3><p role="status"><strong>{names[s.state || ""] || "Submission incomplete · reopen and retry rehearsal"}</strong></p><p>{s.ordinal === 2 && run.steps[0].state !== "succeeded" ? "Sending waits until the customer record effect is verified." : s.reason}</p>
