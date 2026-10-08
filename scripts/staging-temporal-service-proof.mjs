@@ -60,6 +60,18 @@ try {
  console.error(`Failure category: ${Number.isInteger(error.status)?"docker-exit-"+error.status:"assertion-or-rpc"}`);
  const daemon=String(error.stderr??"").split("\n").filter(line=>/^docker: Error response from daemon:|^Error response from daemon:/.test(line));
  for(const line of daemon)console.error(line.slice(0,500));
+ if(stage==="frontend-port") {
+  try {
+   const privateValues=[...Object.values(parseEnv(await readFile(resolve(dir,"temporal-db.env"),"utf8"))),JSON.parse(await readFile(resolve(dir,"offline/administrator.json"),"utf8")).token].filter(value=>value.length>=16);
+   for(const line of docker("logs",server).split("\n").slice(-30)) {
+    let entry;try{entry=JSON.parse(line);}catch{continue;}
+    if(!["error","fatal"].includes(entry.level))continue;
+    let message=JSON.stringify({level:entry.level,msg:entry.msg,error:entry.error});
+    for(const secret of privateValues)message=message.replaceAll(secret,"[redacted]");
+    if(!/BEGIN |PRIVATE KEY|eyJ[a-zA-Z0-9_-]+\./.test(message))console.error(message.slice(0,1000));
+   }
+  }catch{}
+ }
  // Deliberately do not print raw Docker/SDK errors: their inputs can contain credentials.
  console.error(`Actual staging Temporal service proof failed at ${stage}; no acceptance claimed.`);process.exitCode=1;
 } finally {
