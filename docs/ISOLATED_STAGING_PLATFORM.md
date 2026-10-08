@@ -188,6 +188,18 @@ must obtain that exact reviewed HubSpot input separately and verify its digest.
 Do not substitute a downloaded current spec or silently copy a dirty backend.
 The image trial and complete runtime proof remain required after preparation.
 
+The image's separate `dependencies` target and fixture startup import the actual runtime symbols
+and verifies each direct pinned distribution against its installed wheel RECORD
+hashes and sizes. It refuses empty/changed files, missing metadata or records and
+version mismatches. A disk-full diagnostic found a zero-byte FastAPI package in
+a locally cached layer; a successful cached install step was insufficient proof.
+The public container CI job can build this dependency-only target without any
+private backend context and check the exported image in an actual read-only,
+network-disabled container. The local diagnostic passed during build but failed
+after image export, so a build-only check is insufficient. Startup refuses before
+opening the provider listener. This detects damaged installation contents; it is not
+publisher authentication, an SBOM audit or full private fixture acceptance.
+
 ### Actual private provider container proof
 
 The Compose twin now explicitly sets `LOOPLABS_TWIN_CONTAINER=1`. Without this
