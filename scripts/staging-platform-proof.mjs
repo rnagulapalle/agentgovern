@@ -66,7 +66,7 @@ try{
  await cp(resolve(privateDir,"client-tls"),resolve(namespaceDir,"client-tls"),{recursive:true});
  const mounts=[`type=bind,src=${resolve("scripts")},dst=/app/scripts,readonly`,`type=bind,src=${namespaceDir},dst=/run/installation`];
  await until(()=>{try{runController(`${project}-namespace`,`${project}_orchestration`,images.worker,["node","scripts/staging-namespace-bootstrap.mjs","/run/installation"],mounts,[resolve(parent,"namespace.env")]);return true;}catch{return false;}},"Authenticated namespace unavailable");
- stage="eight-service-start";compose("up","-d");await ready(["web","temporal-worker","temporal-scheduler"]);
+ stage="eight-service-start";compose("up","-d");await ready(["web","temporal-worker","temporal-scheduler","connector-twin"]);
  const inspection=JSON.parse(docker("inspect",...Object.keys(roles).map(container)));
  assert.equal(inspection.length,8);for(const c of inspection){assert(c.HostConfig.Memory>0&&c.HostConfig.PidsLimit>0);if(!c.Name.endsWith("-web-1"))assert.equal(Object.keys(c.HostConfig.PortBindings||{}).length,0);}
  stage="api-execution";
@@ -78,12 +78,12 @@ try{
  await until(()=>{try{docker("network","connect",`${project}_orchestration`,controlName);return true;}catch{return false;}},"Trial controller unavailable",15);
  const checkpoint=async file=>until(async()=>{if(controllerExit!==null)throw Error("Trial controller exited");try{await access(resolve(trial,file));return true;}catch{return false;}},"Trial checkpoint unavailable",240);
  await checkpoint("held.json");
- stage="runtime-crash";compose("kill","-s","SIGKILL","web","temporal-worker","temporal-scheduler","connector-twin");compose("start","web","temporal-worker","temporal-scheduler","connector-twin");await ready(["web","temporal-worker","temporal-scheduler"]);
+ stage="runtime-crash";compose("kill","-s","SIGKILL","web","temporal-worker","temporal-scheduler","connector-twin");compose("start","web","temporal-worker","temporal-scheduler","connector-twin");await ready(["web","temporal-worker","temporal-scheduler","connector-twin"]);
  await writeFile(resolve(trial,"continue.json"),"",{mode:0o600});await checkpoint("effects-ready.json");
  await writeFile(resolve(trial,"provider-state.json"),docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"),{mode:0o600});
  await until(()=>controllerExit!==null,"Trial did not finish");assert.equal(controllerExit,0);
  const result=JSON.parse(output.trim());assert.equal(result.passed,true);
- console.log(JSON.stringify({...result,buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit})),admission},null,2));
+ console.log(JSON.stringify({...result,buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission},null,2));
 }catch{
  let detail="";
  try {const report=JSON.parse(await readFile(resolve(trial,"failure.json"),"utf8"));detail=safeTrialFailure(report);}catch{}
