@@ -371,7 +371,7 @@ The earlier successful trial record above remains preserved for its earlier sour
 This is a disposable fixture initialization/readback check, not provider write
 availability, live API parity or persistent enterprise operational acceptance.
 
-## Prepared-plan HTTPS browser trial (implementation awaiting actual acceptance)
+## Prepared-plan HTTPS browser trial — disposable acceptance passed
 
 `LOOPLABS_STAGING_BROWSER_PROOF=isolated` extends the disposable Linux CI trial
 with real Chromium. It raises the host reserve from 1 to 2 GiB for the browser,
@@ -391,18 +391,16 @@ the browser closes; private keys and installation files are removed with the tri
 Chromium's current NSS path rules are documented in its
 [Linux certificate guide](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/cert_management.md).
 
-The intended browser checks are two real form sign-ins, Secure/HttpOnly/Strict
+The browser checks are two real form sign-ins, Secure/HttpOnly/Strict
 cookies, anonymous and requester approval refusal, a real hostile-origin request
 using the reviewer's cookie, exact-plan review/scoped-agent selection/submission,
 independent approval buttons, verified completion and a 390px saved-outcome reload.
-A second prepared plan should produce exactly two additional private-twin effects,
+The successful trial below produced exactly two additional private-twin effects,
 read from the actual provider journal. Preparation uses the existing fixture API;
-this increment does **not** prove fresh typed chat/model interpretation. No browser
-acceptance is established until the full quality gate and actual combined trial
-pass. Persistent staging, live delivery, sustained tenant load and remote
+this increment does **not** prove fresh typed chat/model interpretation. The full quality gate and actual combined trial below passed these checks. Persistent staging, live delivery, sustained tenant load and remote
 restore/operator acceptance remain open.
 
-### Image-builder lifecycle — implementation awaiting trial
+### Image-builder lifecycle — disposable trial passed
 
 Browser trial runs `37853700287` and `37856164794` passed the full quality gate
 but refused runtime host admission before any browser actions. The second run
@@ -421,12 +419,12 @@ runtime service budgets or 2 GiB browser reserve. Failure to initialize, build o
 remove the owned builder refuses the trial; teardown retries only owned cleanup.
 [Docker documents this driver's memory controls and lifecycle](https://docs.docker.com/build/builders/drivers/docker-container/).
 
-This lifecycle increment is unproven until the actual image builds, capacity
-measurement and full browser/runtime trial complete. Command-contract tests prove
+The successful trial below verified the actual image builds, capacity measurement
+and complete browser/runtime journey. Command-contract tests alone prove
 refusal/cleanup decisions only; they do not prove Docker enforcement or available
 host capacity. Persistent staging and the broader enterprise gates remain open.
 
-### Bounded builder runtime observation — browser trial still failed
+### Earlier bounded-builder runtime observation — browser trial failed
 
 Private CI run `37857322795` passed the full quality gate (400 tests), built
 the images using the owned builder, verified its limits/removal, admitted the
@@ -440,7 +438,8 @@ contributes to the label. The existing prefix selector matched one. The proof no
 reuses the earlier chat proof's prefix selectors and separates record-opening,
 agent-selection and review/submission checkpoints. This fixes a known harness
 defect without bypassing exact approval, held-state or effect assertions. It is
-not evidence that the corrected full browser journey has passed; rerun it.
+not evidence that the corrected full browser journey passed; the later trial below
+records that result.
 
 A separate actual Chromium networking probe also confirmed that a CORS-blocked
 403 can suppress Playwright's response event. The browser attack remains a real
@@ -450,4 +449,40 @@ hostile test origin, a digest matching the reviewer's HttpOnly session, and the
 exact same-origin refusal. It exports no raw cookie, origin, headers or body;
 the actual TLS regression checks this evidence boundary. Held-state assertions
 still follow the attack. No CORS permission, certificate bypass or approval
-authority is introduced. Corrected combined browser acceptance remains pending.
+authority is introduced. At that diagnostic checkpoint, corrected combined browser
+acceptance remained pending; the later trial below passed.
+
+### Combined HTTPS browser acceptance — October 8
+
+Private CI run `37859172131` passed the full quality gate (400 tests) and the
+complete corrected trial on public source `fefcf32`. The owned builder's actual
+3 GiB memory/swap limits and removal passed; all eight runtime roles were admitted
+with the unchanged 2 GiB browser reserve. The measured available memory was
+7,027,818,496 bytes against 6,845,104,128 required bytes. This is one admission
+observation, not a sustained capacity or availability claim.
+
+Actual Chromium first rejected the untrusted CA, then validated the temporary
+trusted CA without certificate bypasses. Separate form sign-ins established
+Secure/HttpOnly/Strict sessions. Anonymous access, requester self-approval and
+a real hostile-origin POST carrying the reviewer's session were refused. The
+backend's exact same-origin denial was observed through the bounded passive relay;
+no CORS permission was added. Held actions remained held after the attack.
+
+The owner reviewed the exact saved plan, selected explicitly granted agents and
+submitted through the UI; another member approved both actions through the UI.
+Verified completion and the exact recipient survived a 390px saved-outcome reload
+without horizontal overflow. Actual plain-HTTP navigation received no authenticated
+session. The independent provider journal contained exactly four effects: two
+from the original crash/lost-response/replay API trial and two from the browser
+run, with both browser action IDs present. The complete trial returned success.
+Owned-builder absence was explicitly checked; this receipt does not independently
+inventory every final project resource.
+
+The sanitized artifact and runtime source fingerprints are retained in
+[evidence/staging-platform-browser-proof.json](evidence/staging-platform-browser-proof.json).
+Earlier failures above remain historical records. The implemented lifecycle and
+corrected browser checks are now verified in this disposable environment; this
+supersedes their earlier awaiting-trial status. Preparation still uses the fixture
+API, so fresh typed model planning is not established by this proof. Persistent
+remote staging, live delivery, sustained independent-tenant load, remote restore,
+operator alerts/security acceptance and production cutover remain open.

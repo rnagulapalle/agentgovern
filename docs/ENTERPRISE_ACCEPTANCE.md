@@ -203,3 +203,19 @@ no business record is changed by that check. Health GETs may create request-arch
 entries. Retained artifact: `docs/evidence/staging-platform-readiness-proof.json`.
 The original proof and its limits remain preserved; this adds no browser/HTTPS,
 live-provider, capacity, restore or persistent staging acceptance.
+
+
+## Disposable trusted-HTTPS user journey — October 8
+
+CI run `37859172131` passed the complete eight-service trial plus actual Chromium
+HTTPS sign-in, exact prepared-plan review, scoped agent selection, separate-member
+approvals, hostile-origin refusal, verified effects and 390px saved-outcome reload.
+The full quality gate passed with 400 tests. The private provider journal retained
+exactly four intended effects across the API/crash/replay and browser runs. See
+[evidence/staging-platform-browser-proof.json](evidence/staging-platform-browser-proof.json).
+
+This closes the manually handled-cookie/browser-transport gap for the disposable
+prepared-plan journey. It does not close fresh typed planning in that environment,
+persistent remote staging, sustained tenant load, restore/alert/operator acceptance,
+live-provider guarantees, independent security review or production ownership
+cutover. Production remains on the legacy runner; enterprise acceptance is incomplete.
