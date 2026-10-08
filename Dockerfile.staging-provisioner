@@ -1,0 +1,12 @@
+# Offline provisioning role, never mounted into a web or execution worker.
+FROM node:22-bookworm-slim
+WORKDIR /app
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --ignore-scripts
+COPY lib ./lib
+COPY runtime ./runtime
+COPY scripts ./scripts
+USER node
+CMD ["node", "--import", "tsx", "scripts/staging-database-bootstrap.mjs"]
