@@ -5,15 +5,17 @@ import {resolve} from "node:path";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 const paths=["backend/app","backend/configs/hubspot","backend/configs/resend","backend/specs/resend"];
+// Git hooks export their own repository/index. They must not retarget this read.
+const gitEnvironment=()=>Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith("GIT_")));
 export async function prepareFixtureSource(repository,commit,hubspotSpec,specDigest,output) {
  if(!/^[a-f0-9]{40}$/.test(commit)||!/^[a-f0-9]{64}$/.test(specDigest))throw Error("Exact reviewed commit and spec digest required");
  const spec=await readFile(hubspotSpec);
  if(createHash("sha256").update(spec).digest("hex")!==specDigest)throw Error("Reviewed HubSpot spec differs");
- const actual=execFileSync("git",["-C",repository,"rev-parse",`${commit}^{commit}`],{encoding:"utf8",stdio:["ignore","pipe","pipe"]}).trim();
+ const actual=execFileSync("git",["-C",repository,"rev-parse",`${commit}^{commit}`],{env:gitEnvironment(),encoding:"utf8",stdio:["ignore","pipe","pipe"]}).trim();
  if(actual!==commit)throw Error("Reviewed source commit unavailable");
- const tree=execFileSync("git",["-C",repository,"ls-tree","-rz",commit,"--",...paths],{encoding:"utf8",maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]});
+ const tree=execFileSync("git",["-C",repository,"ls-tree","-rz",commit,"--",...paths],{env:gitEnvironment(),encoding:"utf8",maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]});
  for(const entry of tree.split("\0").filter(Boolean))if(!/^(100644|100755) blob [a-f0-9]{40}\tbackend\//.test(entry))throw Error("Fixture source contains a link or special file");
- const archive=execFileSync("git",["-C",repository,"archive",commit,...paths],{maxBuffer:64*1024*1024,stdio:["ignore","pipe","pipe"]});
+ const archive=execFileSync("git",["-C",repository,"archive",commit,...paths],{env:gitEnvironment(),maxBuffer:64*1024*1024,stdio:["ignore","pipe","pipe"]});
  await mkdir(output,{mode:0o700}); // exclusive; preserve partial state on failure
  execFileSync("tar",["-x","-C",resolve(output)],{input:archive,stdio:["pipe","ignore","pipe"]});
  const files=[];
