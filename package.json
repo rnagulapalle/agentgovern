@@ -40,7 +40,9 @@
     "temporal:load-proof": "node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts",
     "temporal:container-proof": "LOOPLABS_TEMPORAL_CONTAINER_PROOF=1 node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts",
     "workspace:recovery": "node --env-file=.env.local --import tsx scripts/workspace-recovery.ts",
-    "workspace:restore-proof": "node --env-file=.env.local --import tsx scripts/workspace-restore-proof.ts"
+    "workspace:restore-proof": "node --env-file=.env.local --import tsx scripts/workspace-restore-proof.ts",
+    "temporal:alerts": "node --import tsx scripts/temporal-alert-monitor.ts",
+    "temporal:alert-proof": "node --import tsx scripts/temporal-alert-proof.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1147.0",

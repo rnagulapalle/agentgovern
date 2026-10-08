@@ -21,6 +21,7 @@ export default defineConfig({
         "runtime/temporal/version-contract.ts",
         "runtime/temporal/outbox.ts",
         "runtime/temporal/operations.ts",
+        "runtime/temporal/alert-monitor.ts",
         "lib/control-plane/model.ts",
         "lib/durable/contracts.ts",
         "lib/durable/service.ts",

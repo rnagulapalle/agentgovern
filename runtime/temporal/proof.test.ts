@@ -71,3 +71,12 @@ it("requires real authenticated container, namespace, rotation and persistence r
     expect(createHash("sha256").update(readFileSync(file)).digest("hex"),file).toBe(hash);
   expect(proof.scope).toContain("no production cutover");
 });
+
+it("requires actual monitor-process alert delivery and restart evidence", () => {
+  const proof = JSON.parse(readFileSync("docs/evidence/temporal-alert-proof.json", "utf8"));
+  expect(proof.checks).toHaveLength(6);
+  expect(proof.measurements).toEqual({ deliveryAttempts: 7, uniqueTransitions: 6, lostResponseAttempts: 2 });
+  expect(proof.scope).toContain("no designated operator notification");
+  for (const [file, hash] of Object.entries(proof.sourceFingerprints))
+    expect(createHash("sha256").update(readFileSync(file)).digest("hex"), file).toBe(hash);
+});
