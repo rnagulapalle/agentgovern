@@ -185,6 +185,10 @@ internal frontend required by the secure single-service configuration. Both the
 Compose definition and trial now explicitly start frontend, matching, history,
 worker and internal frontend; a topology assertion preserves that selection.
 
-This gate is not yet recorded as passed. Its result must be observed in CI before
-merging. It does not exercise application workers, the browser or the complete
+The actual service gate passed on commit `e29ab43` in CI run
+`37808859411`, job `113420185335`. The sanitized image identities, checks and
+source fingerprints are retained in
+`docs/evidence/staging-temporal-service-proof.json`. The trial also exposed and
+fixed controller file-owner access without changing private permissions. Existing
+quality gates and the final PR checks remain required before merging. It does not exercise application workers, the browser or the complete
 eight-service platform and cannot replace allocated remote staging acceptance.

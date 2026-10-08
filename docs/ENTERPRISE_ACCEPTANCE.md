@@ -162,3 +162,17 @@ No service was capped, stopped or deployed. Host allocation remains pending;
 dedicated staging or explicitly reviewed co-location must precede remote trials.
 The check covers declared memory admission only, not CPU, network isolation,
 actual resource enforcement, sustained capacity or enterprise acceptance.
+
+## Generated staging service integration — October 8
+
+The new staging configuration has now run against real PostgreSQL-backed Temporal
+1.31.0 and the isolated JWKS endpoint on a disposable CI runner. Namespace creation
+and repeat, valid scoped access, cross-namespace/invalid/expired/tampered JWT
+refusal, reader write refusal and namespace/authorization persistence after service
+and database SIGKILL passed. The temporary controller runs as the private-file
+owner inside the internal network, with no published service port. See
+`docs/evidence/staging-temporal-service-proof.json` for source/image identities and
+the actual CI result. This closes the mock-only namespace integration gap for
+these configuration sources. Full application workers/browser execution, complete
+eight-service staging, remote operational acceptance and production cutover remain
+open.
