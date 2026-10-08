@@ -13,7 +13,7 @@ describe("isolated staging platform",()=>{
   try{
    for(const f of ["web.env","worker.env","application-db.env","temporal-db.env"])await writeFile(join(dir,f),"");
    const env={...process.env,LOOPLABS_STAGING_PRIVATE_DIR:dir,LOOPLABS_STAGING_WEB_IMAGE:"looplabs-web:config-test",LOOPLABS_STAGING_WORKER_IMAGE:"looplabs-worker:config-test",LOOPLABS_STAGING_TWIN_IMAGE:"looplabs-twin:config-test",LOOPLABS_STAGING_WEB_PORT:"13007"};
-   const c=JSON.parse(execFileSync("docker",["compose","-p","ll-isolated-config-test","-f","docker-compose.temporal-platform.yml","config","--format","json"],{env,encoding:"utf8",stdio:["ignore","pipe","pipe"]}));
+   const c=JSON.parse(execFileSync("docker",["compose","-p","ll-isolated-config-test","-f","docker-compose.temporal-platform.yml","config","--format","json"],{env,encoding:"utf8",timeout:15000,stdio:["ignore","pipe","pipe"]}));
    expect(Object.keys(c.services)).toHaveLength(8);
    for(const [name,s] of Object.entries(c.services)){
     expect(Number(s.mem_limit)).toBeGreaterThan(0);expect(Number(s.cpus)).toBeGreaterThan(0);expect(s.pids_limit).toBe(256);
@@ -34,9 +34,11 @@ describe("isolated staging platform",()=>{
    expect(Object.keys(c.services["temporal-db"].networks)).toEqual(["orchestration"]);
    expect(c.services["temporal-worker"].volumes.every(v=>!v.source.includes("server-tls"))).toBe(true);
    const missing={...env};delete missing.LOOPLABS_STAGING_PRIVATE_DIR;
-   expect(()=>execFileSync("docker",["compose","-f","docker-compose.temporal-platform.yml","config"],{env:missing,stdio:"pipe"})).toThrow();
+   expect(()=>execFileSync("docker",["compose","-f","docker-compose.temporal-platform.yml","config"],{env:missing,timeout:15000,stdio:"pipe"})).toThrow(/LOOPLABS_STAGING_PRIVATE_DIR/);
   }finally{await rm(dir,{recursive:true,force:true});}
- });
+ // CI's Docker/Compose startup exceeded Vitest's default 5s (observed 9.8s).
+ // Bound each external render at 15s and retain both renders/all assertions.
+ },35000);
  it("accepts only strong public RSA verification keys, never private signing material",()=>{
   expect(JSON.parse(publicJwks(JSON.stringify({keys:[publicKey]}))).keys).toHaveLength(1);
   const weak=generateKeyPairSync("rsa",{modulusLength:1024}).publicKey.export({format:"jwk"});
