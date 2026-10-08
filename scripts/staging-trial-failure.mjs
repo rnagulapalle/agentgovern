@@ -7,7 +7,7 @@ export function safeTrialFailure(report){
  return ` (${report.phase}${status}${kind})`;
 }
 export function safeBrowserFailure(report){
- const allowed=new Set(["certificate-refusal","certificate-trust","named-sign-in","prepared-plan","review-submit","self-approval","hostile-origin","independent-review","verified-completion","mobile-reload","http-refusal"]);
+ const allowed=new Set(["certificate-refusal","certificate-trust","named-sign-in","prepared-plan","record-opening","agent-selection","review-submit","self-approval","hostile-origin","independent-review","verified-completion","mobile-reload","http-refusal"]);
  return report&&allowed.has(report.phase)?` (browser ${report.phase})`:"";
 }
 

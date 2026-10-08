@@ -425,3 +425,29 @@ This lifecycle increment is unproven until the actual image builds, capacity
 measurement and full browser/runtime trial complete. Command-contract tests prove
 refusal/cleanup decisions only; they do not prove Docker enforcement or available
 host capacity. Persistent staging and the broader enterprise gates remain open.
+
+### Bounded builder runtime observation — browser trial still failed
+
+Private CI run `37857322795` passed the full quality gate (400 tests), built
+the images using the owned builder, verified its limits/removal, admitted the
+unchanged eight-service budget, completed the preceding API/runtime assertions
+and reached the real HTTPS browser trial. The overall trial failed at
+`browser-https` / `review-submit`; no full browser acceptance is claimed.
+
+A separate real Chromium DOM check reproduced a selector defect: an exact
+`CRM agent` label matched zero controls because the wrapped select's option text
+contributes to the label. The existing prefix selector matched one. The proof now
+reuses the earlier chat proof's prefix selectors and separates record-opening,
+agent-selection and review/submission checkpoints. This fixes a known harness
+defect without bypassing exact approval, held-state or effect assertions. It is
+not evidence that the corrected full browser journey has passed; rerun it.
+
+A separate actual Chromium networking probe also confirmed that a CORS-blocked
+403 can suppress Playwright's response event. The browser attack remains a real
+credentialed hostile-origin POST. Its assertion now uses the fixed TLS relay to
+passively observe the actual backend status, whether the origin is the expected
+hostile test origin, a digest matching the reviewer's HttpOnly session, and the
+exact same-origin refusal. It exports no raw cookie, origin, headers or body;
+the actual TLS regression checks this evidence boundary. Held-state assertions
+still follow the attack. No CORS permission, certificate bypass or approval
+authority is introduced. Corrected combined browser acceptance remains pending.

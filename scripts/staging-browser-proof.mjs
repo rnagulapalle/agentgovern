@@ -5,14 +5,14 @@ import {execFileSync} from "node:child_process";
 import {readFile,writeFile,mkdir,access} from "node:fs/promises";
 import {join} from "node:path";
 import {homedir} from "node:os";
-import {randomBytes,randomUUID} from "node:crypto";
+import {randomBytes,randomUUID,createHash} from "node:crypto";
 import {chromium,expect} from "@playwright/test";
 import {createServer} from "node:https";
 import {browserCertificates,browserTLSBridge,browserOrigin as origin} from "./staging-browser-tls.mjs";
 export async function stagingBrowserProof(directory){
  assert(process.platform==="linux"&&process.env.GITHUB_ACTIONS==="true"&&process.env.LOOPLABS_STAGING_BROWSER_PROOF==="isolated","Fresh isolated Linux CI browser opt-in required");
  const tls=await browserCertificates(join(directory,"browser-tls"));
- const relay=browserTLSBridge(tls);await new Promise((resolve,reject)=>{relay.once("error",reject);relay.listen(3443,"127.0.0.1",resolve);});
+ const decisions=[];const relay=browserTLSBridge(tls,{observeDecision:record=>decisions.push(record)});await new Promise((resolve,reject)=>{relay.once("error",reject);relay.listen(3443,"127.0.0.1",resolve);});
  let browser,hostile,imported=false,phase="certificate-refusal";const nickname=`ll-browser-proof-${randomBytes(10).toString("hex")}`;let nss;
  const certutil=(...args)=>execFileSync("certutil",["-d",`sql:${nss}`,...args],{stdio:"ignore",timeout:15000});
  const launch=()=>chromium.launch({headless:true,args:["--no-proxy-server","--host-resolver-rules=MAP looplabs-staging.example.test 127.0.0.1"]});
@@ -50,9 +50,10 @@ export async function stagingBrowserProof(directory){
   const id=randomUUID(),path=`/api/workspace/enquiries?scope=${saved.scope}`;
   phase="prepared-plan";const prepared=await json(ownerPage,path,{operation:"prepare",id,fixtureId:"service"});assert.equal(prepared.status,200);
   async function open(page){await page.goto(origin+"/control-plane/work");await page.getByLabel("Customer record for this conversation").selectOption(saved.scope);await page.getByRole("button",{name:new RegExp(id.slice(0,8))}).click();}
-  phase="review-submit";await open(ownerPage);
-  await ownerPage.getByLabel("CRM agent",{exact:true}).selectOption("trial-crm");await ownerPage.getByLabel("Messaging agent",{exact:true}).selectOption("trial-email");
-  await ownerPage.getByRole("checkbox").check();
+  phase="record-opening";await open(ownerPage);
+  phase="agent-selection";
+  await ownerPage.getByLabel(/^CRM agent/).selectOption("trial-crm");await ownerPage.getByLabel(/^Messaging agent/).selectOption("trial-email");
+  phase="review-submit";await ownerPage.getByRole("checkbox").check();
   const submitted=ownerPage.waitForResponse(r=>r.url().includes("/api/workspace/enquiries")&&r.request().method()==="POST");
   await ownerPage.getByRole("button",{name:"Submit for independent approval",exact:true}).click();assert.equal((await submitted).status(),200);
   await expect(ownerPage.getByText("A different workspace member must approve.",{exact:false}).first()).toBeVisible();
@@ -63,10 +64,15 @@ export async function stagingBrowserProof(directory){
   const attack={operation:"approve",actionId:held.steps[0].action_id,payloadHash:held.steps[0].payload_hash};
   hostile=createServer({...tls,minVersion:"TLSv1.2"},(_req,res)=>{res.setHeader("Content-Type","text/html");res.end(`<script>fetch(${JSON.stringify(origin+"/api/durable/connectors")},{method:"POST",credentials:"include",headers:{"Content-Type":"text/plain"},body:${JSON.stringify(JSON.stringify(attack))}}).catch(()=>{})</script>`);});
   await new Promise((resolve,reject)=>{hostile.once("error",reject);hostile.listen(3444,"127.0.0.1",resolve);});
-  const hostilePage=await reviewer.newPage(),refused=hostilePage.waitForResponse(r=>r.url()===origin+"/api/durable/connectors"&&r.request().method()==="POST");
-  await hostilePage.goto("https://looplabs-staging.example.test:3444");const refusal=await refused;assert.equal(refusal.status(),403);
-  const sent=await refusal.request().allHeaders();assert.equal(sent.origin,"https://looplabs-staging.example.test:3444");assert(sent.cookie?.includes("looplabs_workspace_session="));
-  assert.equal((await refusal.json()).error,"Same-origin requests are required for browser operations.");
+  const hostilePage=await reviewer.newPage();
+  const reviewerCookie=(await reviewer.cookies()).find(c=>c.name==="looplabs_workspace_session");assert(reviewerCookie);
+  const sessionDigest=createHash("sha256").update(reviewerCookie.value).digest("hex");
+  await hostilePage.goto("https://looplabs-staging.example.test:3444");
+  // CORS correctly hides the response from page JavaScript and may suppress the
+  // browser response event. Observe the actual backend reply through the fixed
+  // TLS relay; do not add CORS permission or weaken the authenticated-origin gate.
+  await expect.poll(()=>decisions.some(r=>r.hostileOrigin&&r.sessionDigest===sessionDigest),{timeout:15000}).toBe(true);
+  const refusal=decisions.find(r=>r.hostileOrigin&&r.sessionDigest===sessionDigest);assert.equal(refusal.status,403);assert.equal(refusal.sameOriginDenied,true);
   assert((await json(ownerPage,`/api/durable/workflows?run=${id}`)).value.steps.every(s=>s.state==="held"));await hostilePage.close();
   phase="independent-review";await open(reviewerPage);
   for(const name of ["Approve CRM update","Approve acknowledgement"]){const r=reviewerPage.waitForResponse(r=>r.url().endsWith("/api/durable/connectors")&&r.request().method()==="POST");await reviewerPage.getByRole("button",{name,exact:true}).click();assert.equal((await r).status(),200);}

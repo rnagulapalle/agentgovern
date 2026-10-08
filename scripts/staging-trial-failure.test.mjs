@@ -1,7 +1,7 @@
 import {test,expect} from "vitest";
 import {safeTrialFailure,safeProviderFailure,safeBrowserFailure} from "./staging-trial-failure.mjs";
 test("browser diagnostics cannot expose arbitrary page content or credentials",()=>{
- expect(safeBrowserFailure({phase:"named-sign-in",password:"secret",message:"private page"})).toBe(" (browser named-sign-in)");
+ for(const phase of ["named-sign-in","record-opening","agent-selection","review-submit"])expect(safeBrowserFailure({phase,password:"secret",message:"private page"})).toBe(` (browser ${phase})`);
  for(const report of [null,{phase:"secret"},{phase:{toString:()=>"named-sign-in"}}])expect(safeBrowserFailure(report)).toBe("");
 });
 test("trial diagnostics contain only known checkpoints and bounded statuses",()=>{
