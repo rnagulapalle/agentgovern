@@ -12,6 +12,24 @@ const request = (headers: Record<string, string> = {}, content = "{}") =>
   });
 afterEach(() => vi.unstubAllEnvs());
 describe("Durable HTTP boundary", () => {
+  it("permits only the explicit canonical HTTPS staging origin and ignores forged proxy headers", () => {
+    const staging = "https://staging.example.test:8443";
+    const proxy = (origin: string) => new NextRequest("http://0.0.0.0:3000/api/workspace/session", {
+      headers: { origin, "x-forwarded-host": "evil.example", "x-forwarded-proto": "http" },
+    });
+    vi.stubEnv("LOOPLABS_DURABLE_ORIGIN", staging);
+    vi.stubEnv("LOOPLABS_TEMPORAL_WORKSPACE", "production");
+    expect(() => browserOrigin(proxy(staging))).toThrow("not configured correctly");
+    vi.stubEnv("LOOPLABS_TEMPORAL_WORKSPACE", "staging");
+    expect(browserOrigin(proxy(staging))).toBe(staging);
+    expect(() => sameOrigin(proxy(staging), true)).not.toThrow();
+    for (const origin of ["https://looplabs.run", "https://evil.example", "http://0.0.0.0:3000", "https://staging.example.test", staging + ".evil"])
+      expect(() => sameOrigin(proxy(origin), true)).toThrow("Same-origin");
+    for (const bad of ["http://staging.example.test", "https://user:secret@staging.example.test", "https://staging.example.test/", "https://staging.example.test/path", "https://staging.example.test?q=1", "https://staging.example.test#fragment", "https://STAGING.example.test", "not-a-url"]){
+      vi.stubEnv("LOOPLABS_DURABLE_ORIGIN", bad);
+      expect(() => browserOrigin(proxy(staging))).toThrow("not configured correctly");
+    }
+  });
   it("uses the configured public origin behind TLS proxies without trusting forwarded headers", () => {
     vi.stubEnv("LOOPLABS_DURABLE_ORIGIN", "https://looplabs.run");
     const proxy = (origin: string) => new NextRequest("http://0.0.0.0:3000/api/durable/session", {

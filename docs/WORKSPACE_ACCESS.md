@@ -30,6 +30,15 @@ Migration 3 adds members, hashed sessions, persistent request throttles, agent p
 
 There is no public registration. Raj and Pratibha have separate founder accounts. Private initial passwords belong in an ignored mode-0600 credentials file, never this document, chat, Git or deployment output. This is basic invited-team authentication, **not** enterprise SSO, MFA, an account recovery service or an independently audited security product.
 
+An explicitly opted-in isolated staging deployment (`LOOPLABS_TEMPORAL_WORKSPACE=staging`)
+may set `LOOPLABS_DURABLE_ORIGIN` to its own canonical HTTPS origin. It must contain
+only the origin, without credentials, path, trailing slash, query or fragment.
+Browser mutations must match that exact server-owned value; Host/forwarded/Origin
+headers cannot change the configured target. Session cookies retain HTTPS Secure
+behavior through the same helper. Outside this staging opt-in, the existing two
+production origins remain the only supported configured values. This fixes staging
+configuration compatibility; it does not establish remote HTTPS/browser acceptance.
+
 Provision locally after durable/refund setup:
 
 ```sh
