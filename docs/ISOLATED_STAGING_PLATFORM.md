@@ -179,6 +179,11 @@ SIGKILL. Credentials are temporary, errors are sanitized, and only owned resourc
 are removed. A Docker memory floor refuses undersized hosts; do not change shared
 services to make the proof fit. Existing quality gates remain required.
 
+The initial actual trial found that starting the default service set omitted the
+internal frontend required by the secure single-service configuration. Both the
+Compose definition and trial now explicitly start frontend, matching, history,
+worker and internal frontend; a topology assertion preserves that selection.
+
 This gate is not yet recorded as passed. Its result must be observed in CI before
 merging. It does not exercise application workers, the browser or the complete
 eight-service platform and cannot replace allocated remote staging acceptance.
