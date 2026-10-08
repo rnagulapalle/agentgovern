@@ -97,7 +97,7 @@ export function EnquiryWorkspace() {
         })}>{plan.plan.recordEnrollment?"Submit for independent approval":"Create this reviewed workflow"}</button>{plan.plan.recordEnrollment && !connections?.recordDurableAvailable && <p role="status">A compatible durable runner must be configured before submission. Your plan is saved; no actions were submitted.</p>}</details>
       </>}
     </section>}
-    {plan?.run_id && <EnquiryProgress key={plan.run_id} id={plan.run_id} planHash={plan.plan_hash} />}
+    {plan?.run_id && <EnquiryProgress key={plan.run_id} id={plan.run_id} planHash={plan.plan_hash} recordScoped={Boolean(plan.plan.recordEnrollment)} />}
     </main><aside className="cp-panel cp-durable-card"><h2>Saved enquiries</h2><p>Open saved work after a refresh. Reusing an enquiry ID resumes its existing plan and run.</p>{plans.map((p) => <p key={p.id}><button className="cp-button" disabled={busy} onClick={() => { setPlan(p);setSelected(p.plan.recordEnrollment?.id||"");setTurns([]);setMessages([]);setInput(""); setReviewed(false); setReply(""); requestId.current = p.id; }}>{p.plan.enquiry.title} · {p.id.slice(0, 8)} · {p.run_id ? "Open run" : "Needs review"}</button></p>)}</aside></div>
   </div>;
 }
