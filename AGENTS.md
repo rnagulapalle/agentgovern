@@ -109,3 +109,5 @@ Read `docs/PERSISTED_RECORD_GRANTS.md` before changing migration 12, record enro
 ## Scoped background routing
 
 Read `docs/SCOPED_TEMPORAL_ROUTING.md` before changing migration 13 or record-aware Temporal dispatch. Applied migrations 1–12 must remain unchanged. Scoped transfers require an immutable record route and explicit content-bound worker build; no legacy, sample-record or hosted fallback is allowed. Legacy dispatch must exclude scoped runs before ownership transfer. Scoped managed runs use existing explicitly granted agents and cannot silently enroll authority. The private fixed acknowledgement workflow is not an arbitrary workflow builder or live integration.
+
+The invited `/control-plane/records` screen manages administrator-configured private test-record enrollment and versioned agent access. Read `docs/RECORD_ONBOARDING_WORKSPACE.md` before changing its catalog, API or UI. Enrollment/granting never authorizes execution. Chat selection of these enrolled records is not yet established. Missing schema or unsupported hosted bindings must fail closed.
