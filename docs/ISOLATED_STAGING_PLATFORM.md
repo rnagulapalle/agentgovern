@@ -163,3 +163,19 @@ image identities, run `temporal:staging-preflight`, then repeat real browser app
 restart, lost-response, replay, restore and operator-alert drills. Full remote proof
 and deployment/release authorization remain prerequisites; neither green topology
 tests nor this authorization-container check satisfies them.
+
+## Actual service configuration integration gate
+
+The separate `staging-temporal-service` CI job runs
+`node scripts/staging-temporal-service-proof.mjs` on a disposable runner. It uses
+the generated configuration unchanged, real PostgreSQL schemas, the public JWKS
+container and the pinned Temporal 1.31.0 service. It must prove namespace creation
+and repeat, scoped workload acceptance, invalid/expired/tampered and cross-namespace
+refusal, reader write refusal and namespace persistence across service/database
+SIGKILL. Credentials are temporary, errors are sanitized, and only owned resources
+are removed. A Docker memory floor refuses undersized hosts; do not change shared
+services to make the proof fit. Existing quality gates remain required.
+
+This gate is not yet recorded as passed. Its result must be observed in CI before
+merging. It does not exercise application workers, the browser or the complete
+eight-service platform and cannot replace allocated remote staging acceptance.
