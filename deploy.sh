@@ -88,7 +88,7 @@ network=$(sudo docker inspect --format '{{range $name, $_ := .NetworkSettings.Ne
 python3 - "$app/.env" "$backup/candidate-runtime.env" <<'PYENV'
 import sys
 from pathlib import Path
-allowed = {"LOOPLABS_DURABLE_ORIGIN", "LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN", "LOOPLABS_CONNECTOR_TWIN_URL", "LOOPLABS_CONNECTOR_TWIN_TOKEN", "LOOPLABS_FETCHSANDBOX_BINDING", "LOOPLABS_CHAT_MODEL", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"}
+allowed = {"LOOPLABS_DURABLE_ORIGIN", "LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN", "LOOPLABS_CONNECTOR_TWIN_URL", "LOOPLABS_CONNECTOR_TWIN_TOKEN", "LOOPLABS_FETCHSANDBOX_BINDING", "LOOPLABS_CHAT_MODEL", "LOOPLABS_RECORD_CATALOG", "LOOPLABS_TEMPORAL_WORKSPACE", "LOOPLABS_TEMPORAL_RECORD_BUILD_ID", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"}
 source = Path(sys.argv[1])
 values = [line for line in source.read_text().splitlines() if line.split("=", 1)[0] in allowed] if source.exists() else []
 target = Path(sys.argv[2]); target.touch(mode=0o600); target.write_text("\n".join(values) + "\n")

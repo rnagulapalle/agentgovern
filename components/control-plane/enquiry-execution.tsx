@@ -24,7 +24,7 @@ export function EnquiryExecution({ id }: { id: string }) {
   return <section className="cp-durable-scope" aria-label="Saved execution ownership">
     {error && <p role="alert">{error}</p>}
     {status?.available && <><strong>{status.owned ? "Durable execution selected" : "Use durable execution in staging"}</strong>
-      {status.owned ? <p>{status.dispatch === "started" ? "The execution engine accepted this saved run." : "This run is saved and waiting for the execution engine to accept it."} Independent action approvals are still required. This scheduling status does not establish worker availability or a verified outcome.</p> : <><p>Move this unexecuted rehearsal to the durable runner. The current runner will no longer dispatch it. This does not approve either action, and the transfer cannot be undone.</p>
+      {status.owned ? <p>{status.dispatch === "started" ? "The execution engine accepted this saved run." : "This run is saved and waiting for the execution engine to accept it."} Execution is subject to independent approval and effect verification. Scheduling alone does not establish worker availability or the outcome; follow the saved action results below.</p> : <><p>Move this unexecuted rehearsal to the durable runner. The current runner will no longer dispatch it. This does not approve either action, and the transfer cannot be undone.</p>
         {status.canTransfer && <><label className="cp-enquiry-review"><input type="checkbox" checked={consent} disabled={busy} onChange={e => setConsent(e.target.checked)} /> Use durable execution for this saved rehearsal.</label>
           <button className="cp-button" disabled={busy || !consent} onClick={async () => {
             setBusy(true); setError("");

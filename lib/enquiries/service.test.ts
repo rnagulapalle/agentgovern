@@ -421,7 +421,9 @@ it("gates staged execution transfer, isolates workspaces and never grants approv
     process.env.LOOPLABS_TEMPORAL_WORKSPACE = "staging";
     expect((await GET(new NextRequest(url))).status).toBe(401);
     expect((await GET(get("bad"))).status).toBe(400);
-    expect((await GET(get(p.id, "other"))).status).toBe(403);
+    // Resource lookup never falls back to the sample provider or reveals another tenant's saved run.
+    expect((await GET(get(p.id, "other"))).status).toBe(404);
+    expect((await GET(get(randomUUID()))).status).toBe(404);
     expect((await GET(get(p.id, "crm"))).status).toBe(403);
     expect(await (await GET(get())).json()).toMatchObject({ available: true, owned: false, canTransfer: true });
     expect(await (await GET(get(p.id, "reviewer"))).json()).toHaveProperty("canTransfer", false);

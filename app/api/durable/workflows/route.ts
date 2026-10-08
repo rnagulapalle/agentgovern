@@ -4,24 +4,26 @@ import { authenticate } from "@/lib/durable/service";
 import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
 import { ControlError } from "@/lib/durable/contracts";
 import { ConnectorControl } from "@/lib/connectors/service";
+import { savedProvider } from "@/lib/connectors/routing";
 import { connectorProvider } from "@/lib/connectors/hosted";
 import { WorkflowControl } from "@/lib/workflows/service";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-async function context(r: NextRequest) {
-  const db = database();
+async function context(r: NextRequest,id?:string|null,p?:Record<string,unknown>) {
+  const db = database(),actor=await authenticate(db, credential(r));
+  if(p){const keys=p.operation==="create"?["operation","runId","crmAgent","emailAgent"]:(p.operation==="pause"||p.operation==="verify")?["operation","runId"]:null;if(!keys || Object.keys(p).sort().join()!==keys.sort().join() || keys.some(k=>typeof p[k]!=="string"))throw new ControlError(400,"Choose a supported workflow operation.");}
   return {
-    actor: await authenticate(db, credential(r)),
+    actor,
     service: new WorkflowControl(
       db,
-      new ConnectorControl(db, connectorProvider()),
+      new ConnectorControl(db, id?await savedProvider(db,actor,"run",id):connectorProvider()),
     ),
   };
 }
 export async function GET(r: NextRequest) {
   try {
-    const { actor, service } = await context(r);
     const id = r.nextUrl.searchParams.get("run");
+    const { actor, service } = await context(r,id);
     return Response.json(
       id ? await service.read(actor, id) : await service.list(actor),
       { headers: { "Cache-Control": "no-store" } },
@@ -33,8 +35,8 @@ export async function GET(r: NextRequest) {
 export async function POST(r: NextRequest) {
   try {
     sameOrigin(r);
-    const { actor, service } = await context(r);
     const p = await body(r);
+    const { actor, service } = await context(r,p.operation!=="create" && typeof p.runId==="string"?p.runId:undefined,p);
     let result;
     if (
       p.operation === "create" &&

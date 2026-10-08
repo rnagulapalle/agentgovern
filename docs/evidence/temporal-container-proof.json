@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T07:30:04.788Z",
+  "at": "2026-10-08T08:14:12.552Z",
   "scope": "Isolated self-hosted PostgreSQL-backed Temporal with mTLS/JWT namespace authorization and actual worker containers; no production cutover",
   "checks": [
     "Actual PostgreSQL-backed Temporal service accepts trusted mTLS and signed namespace-scoped JWT credentials",
@@ -35,8 +35,8 @@
     }
   ],
   "workerImage": {
-    "image": "looplabs-temporal:onboarding-proof",
-    "id": "sha256:6339de04edcf5763e2bcf6b7952d6fa9d7b118bd46546fd3fc6360e1f63e5f71"
+    "image": "looplabs-temporal:scoped-chat-proof",
+    "id": "sha256:dd6fbe246503cc2a002cb44329d315d995939190b6e65bbb3c58a80834240f42"
   },
   "measurements": {
     "plans": 25,
@@ -44,17 +44,17 @@
     "activitySlots": 3,
     "workflowSlots": 6,
     "enqueueMs": 37,
-    "totalSchedulingMs": 1620,
-    "schedulerCrashToBacklogDrainMs": 1206,
-    "workerRestartReadyMs": 643,
-    "approvalToCompletionMs": 1874,
-    "shutdownMs": 480,
+    "totalSchedulingMs": 1653,
+    "schedulerCrashToBacklogDrainMs": 1240,
+    "workerRestartReadyMs": 641,
+    "approvalToCompletionMs": 297,
+    "shutdownMs": 506,
     "databaseReplacementAttempts": {
       "worker": 2,
       "scheduler": 2
     },
     "finalEffects": 2,
-    "snapshotRestoreToCompletedMs": 4186
+    "snapshotRestoreToCompletedMs": 4400
   },
   "sourceFingerprints": {
     "lib/connectors/request.ts": "37584ef57721d52bc77995e97c68a6b69f06f69e63da73c7ea67408a92c0344c",
@@ -72,7 +72,7 @@
     "lib/connectors/contracts.ts": "f1bf1c4431877f6beabb026e2df85fdf6e1feed5d21dd46ddbd7e8a3cc109394",
     "lib/connectors/service.ts": "adcce693094fe31f9ce75df459fba1d783b9620baf59c02c28d254b1a1b06aed",
     "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
-    "lib/connectors/hosted.ts": "799d415c110c7261e83fd295b44218939d2fdebc3950c7a322c289d617734a94",
+    "lib/connectors/hosted.ts": "72e67b5ae33fec3201641928bd7389abd98dc97b03de3b4990588d8e9063f79a",
     "lib/enquiries/service.ts": "a87d145adfd3809e5119fcf51f96002b4db6febb20de01431b1eee9e5d11ddc6",
     "lib/workflows/guard.ts": "3af43bf26bc065066a140e4e9e2fd2d601ef4089e4a22f6499b64072081a8d11",
     "lib/durable/recovery.ts": "82ab10eb57e625824260a2fa2b36e5a250610a41fa9f4077e72b7bc62b3f9c6d",
