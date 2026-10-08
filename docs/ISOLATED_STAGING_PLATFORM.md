@@ -370,3 +370,34 @@ records the exact overlay, worker/provider identities and observed health states
 The earlier successful trial record above remains preserved for its earlier source.
 This is a disposable fixture initialization/readback check, not provider write
 availability, live API parity or persistent enterprise operational acceptance.
+
+## Prepared-plan HTTPS browser trial (implementation awaiting actual acceptance)
+
+`LOOPLABS_STAGING_BROWSER_PROOF=isolated` extends the disposable Linux CI trial
+with real Chromium. It raises the host reserve from 1 to 2 GiB for the browser,
+temporary loopback TLS relay and control processes; this is an admission allowance,
+not enforced process memory or a capacity result. The eight application services
+retain their existing limits and isolation. Install Chromium with Playwright and
+`libnss3-tools` on that fresh runner. This option refuses non-CI use before trust
+setup; it is not a production ingress configuration.
+
+The relay serves only one fixed authority and forwards to the published loopback
+web port. It refuses forward-proxy targets, unknown hosts/methods and oversized
+bodies before forwarding; it preserves Origin/Cookie and removes caller-controlled
+proxy headers. A new short-lived private CA signs only the test hostname. Chromium
+must first reject the untrusted CA, then validate it through a temporary named NSS
+trust entry. No certificate-error bypass flags are used. The entry is removed when
+the browser closes; private keys and installation files are removed with the trial.
+Chromium's current NSS path rules are documented in its
+[Linux certificate guide](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/cert_management.md).
+
+The intended browser checks are two real form sign-ins, Secure/HttpOnly/Strict
+cookies, anonymous and requester approval refusal, a real hostile-origin request
+using the reviewer's cookie, exact-plan review/scoped-agent selection/submission,
+independent approval buttons, verified completion and a 390px saved-outcome reload.
+A second prepared plan should produce exactly two additional private-twin effects,
+read from the actual provider journal. Preparation uses the existing fixture API;
+this increment does **not** prove fresh typed chat/model interpretation. No browser
+acceptance is established until the full quality gate and actual combined trial
+pass. Persistent staging, live delivery, sustained tenant load and remote
+restore/operator acceptance remain open.

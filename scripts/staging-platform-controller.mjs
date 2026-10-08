@@ -6,7 +6,8 @@ import {parseEnv} from "node:util";
 import pg from "pg";
 import {Client,Connection} from "@temporalio/client";
 import {Worker} from "@temporalio/worker";
-const dir="/run/trial",origin="https://looplabs-staging.example.test",base="http://web:3000";
+const dir="/run/trial",origin=process.env.LOOPLABS_TRIAL_ORIGIN||"https://looplabs-staging.example.test",base="http://web:3000";
+assert(["https://looplabs-staging.example.test","https://looplabs-staging.example.test:3443"].includes(origin));
 let phase="inputs",httpStatus=null,errorKind="unknown";
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,label,seconds=120){for(const end=Date.now()+seconds*1000;Date.now()<end;){if(await fn())return;await wait(250);}throw Error(label);}
@@ -53,6 +54,7 @@ async function main(){
   await until(async()=>{try{await access(`${dir}/provider-state.json`);return true;}catch{return false;}},"Independent provider readback unavailable");
   const effects=JSON.parse(await readFile(`${dir}/provider-state.json`,"utf8")).effects;
   assert.equal(Object.keys(effects).length,2);for(const step of run.steps)assert(effects[step.action_id]);
+  await writeFile(`${dir}/browser-run.json`,JSON.stringify({id,scope}),{mode:0o600});
   console.log(JSON.stringify({passed:true,scope:"assembled isolated API/runtime trial only",checks:["separate secure named sessions","unauthenticated and self-approval refusal","API enrollment and per-agent record grants","saved plan and duplicate-safe submission","held work and sessions survive runtime SIGKILL","named approval and two verified private effects","lost-response reconciliation without a duplicated effect","real authenticated Temporal history replay without new actions"],notVerified:["browser HTTPS and typed chat UX","remote persistent staging","sustained load, restore and operator alert acceptance","live provider guarantees"]}));
  }finally{await connection?.close();await db.end();}
 }
