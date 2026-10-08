@@ -1,0 +1,200 @@
+{
+  "at": "2026-10-08T08:57:48.735Z",
+  "checks": [
+    "Forty independently enrolled customer plans and eighty paired concurrent transfers save forty immutable routes without effects",
+    "Actual packaged worker and scheduler start forty explicitly pinned record histories; held approvals remain effect-free",
+    "Four paced approval waves after confirmed SIGKILL complete thirty-nine routes and seventy-eight exact effects; later approvals stay held and duplicate approvals do not duplicate effects",
+    "Four real lost CRM HTTP responses are read back by the packaged scoped worker without resend or wrong-recipient messaging",
+    "Revoked fortieth enrollment cannot execute after restart; approved customers continue without fallback",
+    "All thirty-nine completed pinned histories replay without new effects or provider secrets in history"
+  ],
+  "sourceFingerprints": {
+    "lib/connectors/scopes.ts": "bb5b7eb5b80011b1d487a8c59246e25a3f047eca1f6d65a590aeaa6ef404cfee",
+    "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
+    "lib/connectors/request.ts": "37584ef57721d52bc77995e97c68a6b69f06f69e63da73c7ea67408a92c0344c",
+    "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
+    "lib/connectors/hosted.ts": "72e67b5ae33fec3201641928bd7389abd98dc97b03de3b4990588d8e9063f79a",
+    "lib/connectors/service.ts": "adcce693094fe31f9ce75df459fba1d783b9620baf59c02c28d254b1a1b06aed",
+    "lib/enquiries/service.ts": "a87d145adfd3809e5119fcf51f96002b4db6febb20de01431b1eee9e5d11ddc6",
+    "lib/enquiries/runner.ts": "931eba28f2a011ba5290ac8af01ac38701a9fe6dea25caf51b53b3578226c864",
+    "lib/enquiries/record-routing-schema.sql": "05c2c214c09e14b9567402206a1efe6b4fb1f064d07203386f7a7e23947e8267",
+    "runtime/temporal/record-routing.ts": "cfca7823cefedcfd561460332c56871afb9e34d9fa1697ba3525c02ae3396536",
+    "runtime/temporal/version-contract.ts": "80fd2948beed1f9f9c0318ed2ac24e59fb3c0820538b718891e179f047c3b921",
+    "runtime/temporal/outbox.ts": "0ff85aa200865cd858e25c4f795f52be619cab1f748a592c33514ee19e9d608c",
+    "runtime/temporal/activities.ts": "9be7fd957c81efbfdc6d365ad583c89fe7cdfe9ed931627ec8690aa65e5d8ab0",
+    "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
+    "scripts/temporal-service.ts": "aabc50a89aa2087f8b3749b561674bf017a61540414d7de4c680cbc479c7fec5",
+    "scripts/build-temporal-worker.mjs": "c7c96a323aedd51e0544e50e050301ff1efab1cdb00bfaac690b01d25d109510",
+    "scripts/connector-twin.py": "41288420d7bf7712c9e88f47b074afd47cfb5ec170df833c623ada9676a5f863",
+    "scripts/temporal-record-proof.ts": "2df56e6ca1b5a520511598046a546bb1c75dfb22053bcbbde6ddd05acdd8def2"
+  },
+  "measurements": {
+    "records": 40,
+    "transferCalls": 80,
+    "completed": 39,
+    "contained": 1,
+    "effects": 78
+  },
+  "observationWindowMs": 112336,
+  "approvalToObservedCompletionMs": [
+    {
+      "ordinal": 3,
+      "approvalToObservedCompletionMs": 12777
+    },
+    {
+      "ordinal": 4,
+      "approvalToObservedCompletionMs": 12772
+    },
+    {
+      "ordinal": 2,
+      "approvalToObservedCompletionMs": 12781
+    },
+    {
+      "ordinal": 7,
+      "approvalToObservedCompletionMs": 12760
+    },
+    {
+      "ordinal": 5,
+      "approvalToObservedCompletionMs": 12768
+    },
+    {
+      "ordinal": 6,
+      "approvalToObservedCompletionMs": 12865
+    },
+    {
+      "ordinal": 10,
+      "approvalToObservedCompletionMs": 12850
+    },
+    {
+      "ordinal": 8,
+      "approvalToObservedCompletionMs": 12857
+    },
+    {
+      "ordinal": 1,
+      "approvalToObservedCompletionMs": 12991
+    },
+    {
+      "ordinal": 9,
+      "approvalToObservedCompletionMs": 19209
+    },
+    {
+      "ordinal": 13,
+      "approvalToObservedCompletionMs": 4151
+    },
+    {
+      "ordinal": 20,
+      "approvalToObservedCompletionMs": 4222
+    },
+    {
+      "ordinal": 14,
+      "approvalToObservedCompletionMs": 4249
+    },
+    {
+      "ordinal": 12,
+      "approvalToObservedCompletionMs": 4258
+    },
+    {
+      "ordinal": 16,
+      "approvalToObservedCompletionMs": 4240
+    },
+    {
+      "ordinal": 17,
+      "approvalToObservedCompletionMs": 4236
+    },
+    {
+      "ordinal": 18,
+      "approvalToObservedCompletionMs": 4437
+    },
+    {
+      "ordinal": 15,
+      "approvalToObservedCompletionMs": 4654
+    },
+    {
+      "ordinal": 11,
+      "approvalToObservedCompletionMs": 4788
+    },
+    {
+      "ordinal": 19,
+      "approvalToObservedCompletionMs": 10794
+    },
+    {
+      "ordinal": 22,
+      "approvalToObservedCompletionMs": 3760
+    },
+    {
+      "ordinal": 23,
+      "approvalToObservedCompletionMs": 4369
+    },
+    {
+      "ordinal": 28,
+      "approvalToObservedCompletionMs": 4542
+    },
+    {
+      "ordinal": 24,
+      "approvalToObservedCompletionMs": 4567
+    },
+    {
+      "ordinal": 30,
+      "approvalToObservedCompletionMs": 4535
+    },
+    {
+      "ordinal": 25,
+      "approvalToObservedCompletionMs": 4562
+    },
+    {
+      "ordinal": 21,
+      "approvalToObservedCompletionMs": 4802
+    },
+    {
+      "ordinal": 26,
+      "approvalToObservedCompletionMs": 4862
+    },
+    {
+      "ordinal": 27,
+      "approvalToObservedCompletionMs": 5057
+    },
+    {
+      "ordinal": 29,
+      "approvalToObservedCompletionMs": 11013
+    },
+    {
+      "ordinal": 33,
+      "approvalToObservedCompletionMs": 3836
+    },
+    {
+      "ordinal": 32,
+      "approvalToObservedCompletionMs": 3843
+    },
+    {
+      "ordinal": 36,
+      "approvalToObservedCompletionMs": 4535
+    },
+    {
+      "ordinal": 37,
+      "approvalToObservedCompletionMs": 4531
+    },
+    {
+      "ordinal": 34,
+      "approvalToObservedCompletionMs": 4545
+    },
+    {
+      "ordinal": 38,
+      "approvalToObservedCompletionMs": 4629
+    },
+    {
+      "ordinal": 31,
+      "approvalToObservedCompletionMs": 4693
+    },
+    {
+      "ordinal": 35,
+      "approvalToObservedCompletionMs": 4642
+    },
+    {
+      "ordinal": 39,
+      "approvalToObservedCompletionMs": 11103
+    }
+  ],
+  "sampleLimits": "Single local workspace and paced four-wave sample; not steady-state throughput, percentile SLO, multi-tenant capacity or remote availability",
+  "buildId": "ack-1cfac314a32ef6cb0ff45a022ea9480f35f676416788a9eee511c8611ea5a12b",
+  "scope": "Local packaged processes and private HTTP twins; no production cutover, sustained load SLA or live provider guarantee"
+}

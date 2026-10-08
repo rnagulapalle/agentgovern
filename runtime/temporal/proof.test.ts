@@ -90,3 +90,15 @@ it("requires actual packaged independent-record routing and refusal evidence",()
  for(const [file,hash] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(readFileSync(file)).digest("hex"),file).toBe(hash);
  expect(proof.scope).toContain("no production cutover");
 });
+
+it("requires actual paced approved-record load and measured completion observations",()=>{
+ const proof=JSON.parse(readFileSync("docs/evidence/temporal-approved-load-proof.json","utf8"));
+ expect(proof.measurements).toEqual({records:40,transferCalls:80,completed:39,contained:1,effects:78});
+ expect(proof.observationWindowMs).toBeGreaterThanOrEqual(60000);
+ expect(proof.approvalToObservedCompletionMs).toHaveLength(39);
+ expect(proof.approvalToObservedCompletionMs.map((s:{ordinal:number})=>s.ordinal).sort((a:number,b:number)=>a-b)).toEqual(Array.from({length:39},(_,i)=>i+1));
+ for(const sample of proof.approvalToObservedCompletionMs){expect(Number.isInteger(sample.approvalToObservedCompletionMs)).toBe(true);expect(sample.approvalToObservedCompletionMs).toBeGreaterThanOrEqual(0);}
+ for(const marker of ["four", "SIGKILL", "duplicate approvals", "Four real lost", "Revoked fortieth", "histories replay"])expect(proof.checks.join(" ").toLowerCase()).toContain(marker.toLowerCase());
+ expect(proof.sampleLimits).toContain("not steady-state throughput");
+ for(const [file,hash] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(readFileSync(file)).digest("hex"),file).toBe(hash);
+});
