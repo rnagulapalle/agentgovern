@@ -118,3 +118,7 @@ The earlier sections record phase snapshots. `SCOPED_TEMPORAL_ROUTING.md` now re
 ## Selected-record chat proof
 
 `SCOPED_CHAT_EXPERIENCE.md` adds the invited typed-request → exact plan → explicitly granted agents → held actions → independent approvals → packaged durable execution journey for two enrolled records. Saved contexts cannot be retargeted by a dropdown; historical messages render their own stored body. Confirmed worker crash/app restart and actual lost-response readback retain exactly four intended effects. This closes a local end-to-end integration gap. Remote operational acceptance, sustained independent-tenant capacity, real-provider guarantees, production migration/cutover and enterprise security gates remain open.
+
+## Two-company API boundary
+
+`TENANT_BOUNDARY_PROOF.md` records two separate companies with colliding agent names, real authenticated HTTP APIs and private-twin effects. Sixty-four hostile cross-company reads/mutations are refused without state changes or effects; each company's approved activity then produces its own two correctly targeted effects. Completed repeats retain four effects. This closes a bounded API/activity query-scoping check, not independent tenant security acceptance, browser-session isolation, runtime database security, provider-side tenant authentication or noisy-neighbor capacity. Those remain release gates.
