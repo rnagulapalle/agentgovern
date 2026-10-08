@@ -122,3 +122,9 @@ The earlier sections record phase snapshots. `SCOPED_TEMPORAL_ROUTING.md` now re
 ## Two-company API boundary
 
 `TENANT_BOUNDARY_PROOF.md` records two separate companies with colliding agent names, real authenticated HTTP APIs and private-twin effects. Sixty-four hostile cross-company reads/mutations are refused without state changes or effects; each company's approved activity then produces its own two correctly targeted effects. Completed repeats retain four effects. This closes a bounded API/activity query-scoping check, not independent tenant security acceptance, browser-session isolation, runtime database security, provider-side tenant authentication or noisy-neighbor capacity. Those remain release gates.
+
+The incremental real-browser proof also signs in through the form in separate Chromium contexts, refuses eight cross-company/hostile-Origin requests, checks HttpOnly/Strict cookie isolation from scripts and rejects expired sessions. Remote HTTPS Secure-cookie acceptance and comprehensive session security remain open.
+
+## Remote staging inventory — October 8
+
+Read-only inspection of the existing server confirmed running web/legacy worker and healthy proof PostgreSQL. The server has no configured Temporal address, namespace, API key/client certificate, workload token, staging mode, record build pin or record catalog; no private Temporal staging environment file exists. This is missing provisioning, not a successful remote trial. The inspected host has about 3.8 GiB total memory and shares production/preview workloads. A dedicated staging service/namespace, isolated application database/provider binding, authenticated transport and matching workers must be provisioned and measured before remote acceptance. Nothing was enabled or cut over during this inventory.

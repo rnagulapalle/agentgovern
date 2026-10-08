@@ -1,13 +1,18 @@
 {
-  "at": "2026-10-08T08:33:26.047Z",
+  "at": "2026-10-08T08:43:07.167Z",
   "checks": [
+    "Two real browser sessions keep company records separate; eight cross-company/origin attacks are denied, HttpOnly/Strict cookies hide credentials from scripts and expired sessions lose API access without effects",
     "Real authenticated HTTP: each catalog/plan list exposes only its company; 64 cross-company member/agent/worker reads and mutations are denied with no state or effects changed",
     "Identical CRM/email agent IDs in two companies do not grant cross-company approval, record access or pinned worker routing",
     "Separate-company independent approvals and real record-aware activity execution produce exactly four intended HTTP effects; no cross-company destination",
     "Repeated completed activity calls retain four effects and each company's original action identities"
   ],
   "sourceFingerprints": {
-    "scripts/tenant-isolation-proof.ts": "6bc836c7550e5cad9d302cf5ad7f95737a290acac75f42017f92398f3a6f60a0",
+    "scripts/tenant-isolation-proof.ts": "30ebcc14054ff5782ec0c5e465445672fbf13b4bed9d05bccff1fece1ba37620",
+    "lib/workspace/auth.ts": "d58f5bdeac77ef3bd5b86f8590b9c17e99508f74df690998439f6137f3541972",
+    "lib/workspace/identity.ts": "0241e4ecaf3060788b8002fe9616ad3a90368dbb8199dbbff0cb7d24f92c86f7",
+    "app/api/workspace/session/route.ts": "adf8e024c4fef51179fd3240e396a4d9f383dbd6b32f4c38508b27e2da439330",
+    "lib/durable/http.ts": "d2280a735ac2cb75c03679754385d487a77b96d1147807c73e92e3cc0c326641",
     "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
     "lib/durable/database.ts": "ad8feee5de5b98415ab7ebd0c3459e7b6a3f6f80c34729c564e4786facdcc625",
     "lib/connectors/routing.ts": "0cf3e90dabf348fbb4443bb5ec841237d33cdb53b1394c88939d9198457c9e02",
@@ -30,7 +35,8 @@
   "measurements": {
     "companies": 2,
     "deniedHttpRequests": 64,
+    "deniedBrowserRequests": 8,
     "effects": 4
   },
-  "scope": "Local real Next HTTP API, PostgreSQL and provider twins; activity function execution, not a new Temporal/container/remote or independent security audit"
+  "scope": "Local real browser, Next HTTP API, PostgreSQL and provider twins; activity function execution, not a new Temporal/container/remote or independent security audit"
 }
