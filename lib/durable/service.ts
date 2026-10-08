@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { activeApprover, memberAuthority, memberSession } from "../workspace/identity";
 import { transaction } from "./database";
+import { recoveryFence } from "./recovery";
 import {
   ControlError,
   parseProposal,
@@ -23,9 +24,10 @@ export async function authenticate(db: Pool, token: string): Promise<Actor> {
   );
   if (!rows[0]) {
     const member = await memberSession(db, token);
-    if (member) return member;
+    if (member) { await recoveryFence(db, member.orgId); return member; }
     throw new ControlError(401, "Valid workspace credentials are required.");
   }
+  await recoveryFence(db, rows[0].org_id);
   return {
     orgId: rows[0].org_id,
     subject: rows[0].subject,
@@ -34,6 +36,7 @@ export async function authenticate(db: Pool, token: string): Promise<Actor> {
   };
 }
 export async function authorize(c: PoolClient, actor: Actor, roles: Role[], purpose?: "enquiries") {
+  await recoveryFence(c, actor.orgId);
   if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject) && purpose !== "enquiries")
     throw new ControlError(403, "This worker is scoped to reviewed enquiry runs.");
   const { rows } = await c.query(

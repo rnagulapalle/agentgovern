@@ -1,6 +1,17 @@
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { it, expect } from "vitest";
+it("requires a real application-database archive restore and refusal of resurrected authority", () => {
+  const proof = JSON.parse(readFileSync("docs/evidence/workspace-restore-proof.json", "utf8"));
+  expect(proof.measurements).toMatchObject({ restoredRuns: 2, finalEffects: 2 });
+  expect(proof.measurements.restoreAndReconcileMs).toBeGreaterThan(0);
+  expect(proof.backupHash).toMatch(/^[0-9a-f]{64}$/);
+  for (const marker of ["custom archive", "Real pg_restore", "resurrected credentials", "idempotent restore quarantine", "unknown held actions stay uncertain"])
+    expect(proof.checks.join(" ")).toContain(marker);
+  for (const [file, hash] of Object.entries(proof.sourceFingerprints))
+    expect(createHash("sha256").update(readFileSync(file)).digest("hex"), file).toBe(hash);
+  expect(proof.scope).toContain("no production cutover");
+});
 it("requires actual Temporal fault/replay evidence matching its implementation", () => {
   const proof = JSON.parse(readFileSync("docs/evidence/temporal-proof.json", "utf8"));
   expect(proof.checks.length).toBeGreaterThanOrEqual(7);
@@ -37,6 +48,7 @@ it("requires packaged worker/scheduler crash and backlog evidence", () => {
   expect(proof.measurements.plans).toBe(25);
   expect(proof.measurements.concurrentTransferCalls).toBe(50);
   expect(proof.measurements.finalEffects).toBe(2);
+  expect(proof.measurements.databaseReplacementAttempts).toEqual({ worker: 2, scheduler: 2 });
   for(const marker of ["scheduler SIGKILL", "worker SIGKILL", "one start event", "revocation", "database connection interruption", "Database connectivity restoration"])
     expect(proof.checks.join(" ")).toContain(marker);
   for(const [file,hash] of Object.entries(proof.sourceFingerprints))
@@ -49,6 +61,7 @@ it("requires real authenticated container, namespace, rotation and persistence r
   const proof=JSON.parse(readFileSync("docs/evidence/temporal-container-proof.json","utf8"));
   expect(proof.measurements.plans).toBe(25);
   expect(proof.measurements.finalEffects).toBe(2);
+  expect(proof.measurements.databaseReplacementAttempts).toEqual({ worker: 2, scheduler: 2 });
   expect(proof.measurements.snapshotRestoreToCompletedMs).toBeGreaterThan(0);
   for(const marker of ["trusted mTLS", "another namespace", "tampered signed JWT", "missing/untrusted client certificates", "Signing-key rotation", "persistence PostgreSQL SIGKILL", "pre-effect Temporal PostgreSQL backup"])
     expect(proof.checks.join(" ")).toContain(marker);

@@ -24,6 +24,7 @@ export default defineConfig({
         "lib/control-plane/model.ts",
         "lib/durable/contracts.ts",
         "lib/durable/service.ts",
+        "lib/durable/recovery.ts",
         "lib/durable/database.ts",
         "lib/durable/http.ts",
         "lib/durable/client.ts",

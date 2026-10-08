@@ -124,7 +124,7 @@ async function main() {
     await assert.rejects(() => activity.advanceContract(revoked), /owner/);
     assert.equal(await effects(), 2);
     pass("Pinned code does not pin authority: revoked owner still prevents execution");
-    const files = ["runtime/temporal/pinned-workflow.ts", "runtime/temporal/version-contract.ts", "scripts/temporal-version-proof.ts"];
+    const files = ["lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/pinned-workflow.ts", "runtime/temporal/version-contract.ts", "scripts/temporal-version-proof.ts"];
     const fingerprints = Object.fromEntries(await Promise.all(files.map(async f => [f, createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/temporal-version-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Local pinned deployments and persisted SQLite dev-service restart; no production cutover", checks, sourceFingerprints: fingerprints, limitations: ["Graceful service restart, not unclean host loss or high availability", "One immutable acknowledgement plan and private twin connector contract", "No retention expiry, production deployment or dispatch cutover proof"] }, null, 2) + "\n");
   } finally {
