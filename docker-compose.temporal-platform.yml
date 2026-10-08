@@ -1,0 +1,155 @@
+# Independent project only. No production services, networks or databases reused.
+# Secrets/configuration must be provisioned privately before startup.
+x-hardening: &hardening
+  restart: unless-stopped
+  init: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 256
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "3"}
+
+services:
+  web:
+    <<: *hardening
+    image: ${LOOPLABS_STAGING_WEB_IMAGE:?Provide the reviewed web image}
+    env_file: ["${LOOPLABS_STAGING_PRIVATE_DIR:?Provide a private staging configuration directory}/web.env"]
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 512m
+    cpus: 0.5
+    ports: ["127.0.0.1:${LOOPLABS_STAGING_WEB_PORT:?Provide an unused loopback port}:3000"]
+    networks: [application, egress]
+    depends_on:
+      application-db: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/sign-in').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  application-db:
+    <<: *hardening
+    image: postgres:16
+    env_file: ["${LOOPLABS_STAGING_PRIVATE_DIR}/application-db.env"]
+    mem_limit: 512m
+    cpus: 0.5
+    volumes: [application-data:/var/lib/postgresql/data]
+    networks: [application]
+    # PostgreSQL's initialization changes ownership before dropping privileges.
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  temporal-db:
+    <<: *hardening
+    image: postgres:16
+    env_file: ["${LOOPLABS_STAGING_PRIVATE_DIR}/temporal-db.env"]
+    mem_limit: 512m
+    cpus: 0.5
+    volumes: [temporal-data:/var/lib/postgresql/data]
+    networks: [orchestration]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER"']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  temporal:
+    <<: *hardening
+    image: temporalio/server:1.31.0
+    entrypoint: [temporal-server, --config-file, /run/staging/server.yaml, start]
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 1536m
+    cpus: 1
+    volumes:
+      - ${LOOPLABS_STAGING_PRIVATE_DIR}/server.yaml:/run/staging/server.yaml:ro
+      - ${LOOPLABS_STAGING_PRIVATE_DIR}/server-tls:/run/server-tls:ro
+    networks: [orchestration]
+    depends_on:
+      temporal-db: {condition: service_healthy}
+    # Schema/namespace provisioning is an explicit step, never auto-setup.
+
+  authorization:
+    <<: *hardening
+    image: ${LOOPLABS_STAGING_WORKER_IMAGE:?Provide the content-pinned worker image}
+    command: [node, /run/staging/authorization.mjs]
+    user: node
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 128m
+    cpus: 0.1
+    volumes:
+      - ./scripts/staging-authorization.mjs:/run/staging/authorization.mjs:ro
+      - ${LOOPLABS_STAGING_PRIVATE_DIR}/jwks.json:/run/staging/jwks.json:ro
+    networks: [orchestration]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8080/jwks').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  temporal-worker:
+    <<: *hardening
+    image: ${LOOPLABS_STAGING_WORKER_IMAGE}
+    command: [node, .worker/temporal-service.cjs, worker]
+    env_file: ["${LOOPLABS_STAGING_PRIVATE_DIR}/worker.env"]
+    environment: {LOOPLABS_TEMPORAL_HEALTH_PORT: "9320"}
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 768m
+    cpus: 0.75
+    stop_grace_period: 30s
+    volumes: ["${LOOPLABS_STAGING_PRIVATE_DIR}/client-tls:/run/temporal-tls:ro"]
+    networks: [application, orchestration]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:9320/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  temporal-scheduler:
+    <<: *hardening
+    image: ${LOOPLABS_STAGING_WORKER_IMAGE}
+    command: [node, .worker/temporal-service.cjs, scheduler]
+    env_file: ["${LOOPLABS_STAGING_PRIVATE_DIR}/worker.env"]
+    environment: {LOOPLABS_TEMPORAL_HEALTH_PORT: "9321"}
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 256m
+    cpus: 0.25
+    stop_grace_period: 30s
+    volumes: ["${LOOPLABS_STAGING_PRIVATE_DIR}/client-tls:/run/temporal-tls:ro"]
+    networks: [application, orchestration]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:9321/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  connector-twin:
+    <<: *hardening
+    image: ${LOOPLABS_STAGING_TWIN_IMAGE:?Provide the reviewed private twin image}
+    environment: {LOOPLABS_CONNECTOR_STATE_DIR: /state}
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 256m
+    cpus: 0.25
+    volumes: [provider-data:/state]
+    networks: [application]
+    # Seed credentials/enrolled test records in this dedicated volume first.
+
+networks:
+  application: {internal: true}
+  orchestration: {internal: true}
+  egress: {}
+volumes:
+  application-data: {}
+  temporal-data: {}
+  provider-data: {}
