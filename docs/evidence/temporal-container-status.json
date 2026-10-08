@@ -1,13 +1,15 @@
 {
-  "at": "2026-10-07T20:54:29.589607+00:00",
-  "status": "blocked",
+  "at": "2026-10-08T00:58:07.780752+00:00",
+  "status": "isolated_container_acceptance_passed",
   "compileStages": "passed",
   "composeValidation": "passed",
-  "imageExport": "failed",
-  "containerSmoke": "not_run",
-  "blocker": "Local Docker image store returned read-only filesystem while extracting image; no daemon restart or destructive cleanup attempted.",
+  "imageExport": "passed",
+  "containerSmoke": "passed",
+  "blocker": null,
   "sourceFingerprints": {
     "Dockerfile.temporal": "28c6f712ead0df4c86607e7d56a66eefc8978957d63e089cda5c96bd73ea09c2",
     "docker-compose.temporal-staging.yml": "8a65aa70c535058da58169a38c567d4459afc814714a039b4a32af335db6b6bf"
-  }
+  },
+  "authenticatedContainerProof": "docs/evidence/temporal-container-proof.json",
+  "limits": "Remote staging, real-provider guarantees, LoopLabs database restore, sustained independent-record load and replicated failover remain unaccepted."
 }

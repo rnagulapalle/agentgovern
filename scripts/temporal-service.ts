@@ -17,7 +17,10 @@ async function main() {
   if (!process.env.LOOPLABS_DATABASE_URL || !process.env.LOOPLABS_TEMPORAL_WORKER_TOKEN) throw Error("Missing workload configuration");
   verifyArtifacts(config.buildId, JSON.parse(await readFile(".worker/temporal-manifest.json", "utf8")), await readFile(".worker/temporal-service.cjs"), await readFile(".worker/temporal-workflow.cjs"), await readFile("pnpm-lock.yaml"));
   Runtime.install({ logger: new DefaultLogger("WARN") });
-  const tls = config.insecureLoopback ? false : config.certPath ? { clientCertPair: { crt: await readFile(config.certPath), key: await readFile(config.keyPath!) } } : true;
+  const tls = config.insecureLoopback ? false : {
+    ...(config.caPath ? { serverRootCACertificate:await readFile(config.caPath) } : {}),
+    ...(config.certPath ? { clientCertPair:{ crt:await readFile(config.certPath), key:await readFile(config.keyPath!) } } : {}),
+  };
   const connectionOptions = { address:config.address, tls, apiKey:config.apiKey };
   const db = new Pool({ connectionString:process.env.LOOPLABS_DATABASE_URL, max:config.activitySlots+2, connectionTimeoutMillis:5000, query_timeout:10000, statement_timeout:10000 });
   let connection: Connection | undefined, native: NativeConnection | undefined, worker: Worker | undefined;

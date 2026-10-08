@@ -17,10 +17,10 @@ arbitrary agents, arbitrary graphs and connectors are outside this acceptance.
 | Gate | Current evidence | Required acceptance before a customer production pilot |
 | --- | --- | --- |
 | Approval and containment | Existing connector and managed-workflow tests; self-approval, stale source/policy, replay and revoked identity refusal | Repeat through the deployed invited UI using separate requester/reviewer accounts and the actual approved provider binding |
-| Crash recovery and scheduling | Actual Temporal/PG/HTTP-twin proof; worker/scheduler SIGKILL, stable IDs and exclusive ownership | Same drills on the staging worker image, including crash after each real test-provider effect |
+| Crash recovery and scheduling | Actual worker containers, Temporal/PG/HTTP-twin proof; worker/scheduler/service/persistence SIGKILL, stable IDs and exclusive ownership | Same drills on the staging worker image, including crash after each real test-provider effect |
 | Version compatibility | Pinned old/new routing; persisted dev-service restart; compatible replay and incompatible rejection | Retained immutable images; promote/rollback drill with old pending runs; namespace retention and drain policy |
-| Database connectivity loss | Packaged roles become unready; explicit supervisor replacements resume 25 held histories and IDs without effects | Database-service outage, replica failover and backup restore drills; reconcile provider effects after recovery; agree and measure RPO/RTO |
-| Secure operations | Authenticated-TLS config rejection tests; workload scoping/revocation and content-bound worker artifacts | Actual TLS handshake; wrong certificate/namespace/credential denial; secret rotation; least-privilege database and network access |
+| Database connectivity loss | Packaged roles become unready; replacement resumes 25 held histories; self-hosted Temporal PG crash and pre-effect snapshot restore do not duplicate effects | LoopLabs database backup restore, managed database-service outage and replica failover drills; reconcile external effects; agree and measure disaster RPO/RTO |
+| Secure operations | Real self-hosted mTLS/JWT namespace authorization, reader write refusal, invalid/expired/tampered token and certificate rejection, signing-key rotation; workload revocation and content-bound artifacts | Repeat secure connectivity and rotation in remote hardened staging; production key lifecycle; least-privilege database/network access and independent security review |
 | Provider correctness | Private atomic source-version/idempotency/read-back twin contracts | Actual hosted/provider guarantees, including concurrent changes, duplicate request, lost response, outage and delivery semantics; hosted CRM atomic version gate remains blocked |
 | Capacity and isolation | 25 held plans and 50 concurrent transfers; one approved completion; workspace serialization | Independent customer records; multiple tenants; sustained approved load, bursts, quotas and backpressure; report latency/error/backlog distributions under an agreed workload |
 | Monitoring and response | Local readiness/backlog/failure signals; no external alerts | Alert reaches the designated operator during an injected fault; traces correlate run/action/provider reference; reviewed incident and rollback procedures |
@@ -35,9 +35,9 @@ release and explicit ownership cutover gates pass.
 
 ## Next execution order
 
-1. Restore a healthy container build environment. The laptop Docker image store
-   currently returns an input/output error even for a basic container. Do not prune
-   user images or volumes as an assumed fix. Rebuild, export and run the worker image.
+1. Container build/export and isolated authenticated execution now pass. Reproduce
+   `temporal:container-proof` from the documented image and verify source hashes.
+   This proves the disposable environment, not a remote customer deployment.
 2. Establish a dedicated staging Temporal namespace, database and private provider
    binding. Existing production web infrastructure is not evidence of staging
    isolation. Use namespace-scoped credentials; never paste credentials into chat.

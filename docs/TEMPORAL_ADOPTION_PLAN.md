@@ -195,3 +195,24 @@ This closes one dependency-loss recovery case, not database crash/failover, back
 restore, independent-customer load or production acceptance. The enterprise release
 matrix is `ENTERPRISE_ACCEPTANCE.md`; every open gate remains open until measured
 in its intended deployment environment.
+
+
+## Phase 3D: authenticated container and persistence recovery acceptance
+
+`pnpm temporal:container-proof` runs the actual built worker and scheduler image
+against a separate PostgreSQL-backed Temporal 1.31 service. It adds a verified
+private-root-CA configuration option; remote transport still requires authenticated
+TLS. Real RPCs prove mTLS rejection, namespace permissions, reader write refusal,
+JWT expiry/signature refusal and signing-key rotation. The regular worker remains
+scoped to LoopLabs authority, consent, independent approvals and exact action IDs.
+
+The shared workload proof adds actual service and persistence PostgreSQL SIGKILL,
+then restores a pre-effect orchestration backup after an independently approved
+completion. The restored history reopens; durable LoopLabs completion prevents
+duplicate provider effects and the run closes again. Source hashes and actual image
+IDs are checked with the repository gates. See `TEMPORAL_OPERATIONS.md` to reproduce.
+
+This is isolated local self-hosted acceptance. Remote hardened staging, LoopLabs
+database backup/restore, replicated failover, independent-record sustained load,
+provider-specific live guarantees, SSO/MFA, delivered alerts and UI ownership cutover
+remain open. No enterprise-grade production or Temporal availability parity claim.

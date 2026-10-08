@@ -1,6 +1,6 @@
 # Temporal staging operations
 
-October 7, 2026. Phase 3B local acceptance; production remains on the existing
+October 7, 2026. Phase 3D isolated container acceptance; production remains on the existing
 worker. Read `TEMPORAL_ADOPTION_PLAN.md` for ownership and open release gates.
 
 ## Packages and transport
@@ -19,9 +19,11 @@ memory and graceful shutdown. No credentials are baked into images.
 The service requires explicit address, namespace, task queue and artifact build
 ID. Remote connections require TLS with a Temporal API key or client certificate
 pair. Certificate paths are read privately; errors do not print credentials.
+`LOOPLABS_TEMPORAL_CA_PATH` optionally supplies a private root CA for verified
+self-hosted connections; it never disables hostname or certificate verification.
 Insecure transport is allowed only for credential-free localhost/127.0.0.1 proof,
-with an explicit override. This local acceptance does not prove a remote TLS
-handshake, namespace ACLs or a deployed authenticated Temporal cluster.
+with an explicit override. The self-hosted container proof below exercises TLS and namespace authorization
+against an isolated real service. Remote customer staging remains unaccepted.
 
 ## Bring up a dedicated staging environment
 
@@ -115,16 +117,59 @@ Sources:
 - https://docs.temporal.io/worker-versioning
 - https://docs.temporal.io/develop/worker-performance
 
-### Container verification blocker
+### Isolated container security and recovery proof
 
-The local October 7 container build passed dependency installation and artifact
-compilation, then failed to export/unpack the image because Docker's local image
-store returned a read-only filesystem error. Compose syntax was validated with an
-empty private fixture environment. Container startup/native-runtime smoke remains
-**unverified**; do not use these templates as an accepted deployment until the
-Docker store is healthy and that smoke/secure-connection test passes. No daemon
-restart, pruning or production change was attempted. Status and source hashes are
-recorded in `docs/evidence/temporal-container-status.json`.
+Docker Desktop was restarted with Raj's authorization after its image store failed.
+The image now builds, exports and runs. Actual worker/scheduler containers run with
+non-root identity, read-only filesystems and removed capabilities. The normal
+service verifies the artifact manifest before connecting; no proof-only worker
+permission engine or TLS verification bypass is added.
+
+```sh
+docker pull temporalio/server:1.31.0
+docker pull temporalio/admin-tools:1.31.0
+docker pull postgres:16
+docker build -f Dockerfile.temporal -t looplabs-temporal:secure-proof .
+LOOPLABS_TEMPORAL_PROOF_IMAGE=looplabs-temporal:secure-proof pnpm temporal:container-proof
+```
+
+This creates a disposable Docker network, persistence volume, PostgreSQL-backed
+Temporal service, generated one-day test PKI and namespace-scoped signed JWTs.
+The frontend is published only on a fixed loopback port; internal ports are not
+published. PostgreSQL belongs only to this test. Server and internode TLS require
+trusted client certificates. Temporal's default JWT claim mapper and authorizer
+separately enforce namespace permissions. Bootstrap admin authority stays in the
+proof process; worker containers receive namespace reader/writer/worker authority.
+The JWKS endpoint contains public keys only; it is a local test issuer, not a
+production identity provider. Test keys/configuration sit inside a private 0700
+parent directory; generated fixture PEM files are readable inside the containers.
+This does not define production key provisioning or retention.
+
+The script refuses another namespace, a reader starting a workflow, expired,
+malformed and tampered tokens, missing/untrusted client certificates and a wrong
+server hostname. Removing an old signing key permits the replacement credential
+and rejects the removed key on real RPCs. LoopLabs workload revocation still makes
+both roles unready and does not grant action authority through Temporal signals.
+
+The same 25-held-run workload then exercises scheduler/worker SIGKILL, connection
+loss and replacement, actual Temporal-service and persistence-PostgreSQL SIGKILL.
+Histories/action IDs survive. A quiesced backup of Temporal and visibility stores is
+made before approval. After one run completes, restoring that old backup reopens
+its Temporal history. The LoopLabs database and provider effects are deliberately
+NOT rolled back. A replacement worker consults the durable completion records and
+closes the reopened run without repeating CRM/email effects. This tests orchestration
+snapshot rollback, not restoration of LoopLabs' own database, replicated failover,
+independent-customer capacity, real delivery, disaster RPO/RTO or an availability SLA.
+
+Results, image IDs, source fingerprints and limits are recorded in
+`docs/evidence/temporal-container-proof.json`. The script deletes only its own
+containers, network, volume, temporary keys and test schema. It does not prune
+Docker, alter production or substitute this setup for a hardened remote cluster.
+
+Sources:
+- https://github.com/temporalio/samples-server/tree/main/compose
+- https://github.com/temporalio/temporal/blob/v1.31.0/common/authorization/default_jwt_claim_mapper.go
+- https://github.com/temporalio/temporal/blob/v1.31.0/common/authorization/default_authorizer.go
 
 
 ## Current acceptance boundary

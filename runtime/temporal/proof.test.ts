@@ -43,3 +43,18 @@ it("requires packaged worker/scheduler crash and backlog evidence", () => {
     expect(createHash("sha256").update(readFileSync(file)).digest("hex"),file).toBe(hash);
   expect(proof.scope).toContain("no production cutover");
 });
+
+
+it("requires real authenticated container, namespace, rotation and persistence recovery evidence", () => {
+  const proof=JSON.parse(readFileSync("docs/evidence/temporal-container-proof.json","utf8"));
+  expect(proof.measurements.plans).toBe(25);
+  expect(proof.measurements.finalEffects).toBe(2);
+  expect(proof.measurements.snapshotRestoreToCompletedMs).toBeGreaterThan(0);
+  for(const marker of ["trusted mTLS", "another namespace", "tampered signed JWT", "missing/untrusted client certificates", "Signing-key rotation", "persistence PostgreSQL SIGKILL", "pre-effect Temporal PostgreSQL backup"])
+    expect(proof.checks.join(" ")).toContain(marker);
+  expect(proof.workerImage.id).toMatch(/^sha256:[a-f0-9]{64}$/);
+  expect(proof.imageIds).toHaveLength(3);
+  for(const [file,hash] of Object.entries(proof.sourceFingerprints))
+    expect(createHash("sha256").update(readFileSync(file)).digest("hex"),file).toBe(hash);
+  expect(proof.scope).toContain("no production cutover");
+});

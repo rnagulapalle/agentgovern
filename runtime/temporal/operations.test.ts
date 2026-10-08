@@ -10,14 +10,14 @@ it("requires authenticated TLS remotely and supports certificate or API-key conf
   const remote={ ...local, LOOPLABS_TEMPORAL_ADDRESS:"cluster.example.com:7233", LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"false", LOOPLABS_TEMPORAL_API_KEY:"private-test-key" };
   expect(operationsConfig(remote,"worker").insecureLoopback).toBe(false);
   const { LOOPLABS_TEMPORAL_API_KEY: omitted, ...mtls } = remote; expect(omitted).toBeDefined();
-  expect(operationsConfig({ ...mtls, LOOPLABS_TEMPORAL_CERT_PATH:"/private/cert", LOOPLABS_TEMPORAL_KEY_PATH:"/private/key" },"worker").certPath).toBe("/private/cert");
+  expect(operationsConfig({ ...mtls, LOOPLABS_TEMPORAL_CERT_PATH:"/private/cert", LOOPLABS_TEMPORAL_KEY_PATH:"/private/key", LOOPLABS_TEMPORAL_CA_PATH:"/private/ca" },"worker")).toMatchObject({certPath:"/private/cert",caPath:"/private/ca"});
   expect(() => operationsConfig(mtls,"worker")).toThrow("TLS");
 });
 it.each([
   { LOOPLABS_TEMPORAL_ADDRESS:"evil.example:7233" }, { LOOPLABS_TEMPORAL_ADDRESS:"http://localhost:7233" },
   { LOOPLABS_TEMPORAL_ADDRESS:"127.0.0.1:0" }, { LOOPLABS_TEMPORAL_ADDRESS:"localhost:65536" },
   { LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"yes" }, { LOOPLABS_TEMPORAL_API_KEY:"must-not-send" },
-  { LOOPLABS_TEMPORAL_CERT_PATH:"/cert" }, { LOOPLABS_TEMPORAL_KEY_PATH:"/key" },
+  { LOOPLABS_TEMPORAL_CA_PATH:"/ca" }, { LOOPLABS_TEMPORAL_CERT_PATH:"/cert" }, { LOOPLABS_TEMPORAL_KEY_PATH:"/key" },
   { LOOPLABS_TEMPORAL_NAMESPACE:"" }, { LOOPLABS_TEMPORAL_BUILD_ID:"v1.2" }, { LOOPLABS_TEMPORAL_TASK_QUEUE:"a/b" },
   { LOOPLABS_TEMPORAL_HEALTH_PORT:"80" }, { LOOPLABS_TEMPORAL_ACTIVITY_SLOTS:"21" },
   { LOOPLABS_TEMPORAL_WORKFLOW_SLOTS:"0" }, { LOOPLABS_TEMPORAL_POLL_MS:"0.5" },
