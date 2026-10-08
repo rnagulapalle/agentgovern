@@ -163,3 +163,32 @@ image identities, run `temporal:staging-preflight`, then repeat real browser app
 restart, lost-response, replay, restore and operator-alert drills. Full remote proof
 and deployment/release authorization remain prerequisites; neither green topology
 tests nor this authorization-container check satisfies them.
+
+## Actual service configuration integration gate
+
+The separate `staging-temporal-service` CI job runs
+`node scripts/staging-temporal-service-proof.mjs` on a disposable runner. It uses
+the generated configuration unchanged, real PostgreSQL schemas, the public JWKS
+container and the pinned Temporal 1.31.0 service. The verification controller runs
+inside the internal network as the private-file owner UID/GID, with dropped
+capabilities and temporary administrator material; no service port
+is published to the host. Docker does not publish ports for internal networks, so
+a host-side client is not a valid test of this topology. It must prove namespace creation
+and repeat, scoped workload acceptance, invalid/expired/tampered and cross-namespace
+refusal, reader write refusal and namespace persistence across service/database
+SIGKILL. Credentials are temporary, errors are sanitized, and only owned resources
+are removed. A Docker memory floor refuses undersized hosts; do not change shared
+services to make the proof fit. Existing quality gates remain required.
+
+The initial actual trial found that starting the default service set omitted the
+internal frontend required by the secure single-service configuration. Both the
+Compose definition and trial now explicitly start frontend, matching, history,
+worker and internal frontend; a topology assertion preserves that selection.
+
+The actual service gate passed on commit `e29ab43` in CI run
+`37808859411`, job `113420185335`. The sanitized image identities, checks and
+source fingerprints are retained in
+`docs/evidence/staging-temporal-service-proof.json`. The trial also exposed and
+fixed controller file-owner access without changing private permissions. Existing
+quality gates and the final PR checks remain required before merging. It does not exercise application workers, the browser or the complete
+eight-service platform and cannot replace allocated remote staging acceptance.

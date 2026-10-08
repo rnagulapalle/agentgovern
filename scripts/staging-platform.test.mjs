@@ -31,6 +31,7 @@ describe("isolated staging platform",()=>{
    expect(Object.keys(c.services.authorization.networks)).toEqual(["orchestration"]);
    expect(Object.keys(c.services["connector-twin"].networks)).toEqual(["application"]);
    expect(Object.keys(c.services["application-db"].networks)).toEqual(["application"]);
+   expect(c.services.temporal.environment.TEMPORAL_SERVICES).toBe("frontend,matching,history,worker,internal-frontend");
    expect(Object.keys(c.services["temporal-db"].networks)).toEqual(["orchestration"]);
    expect(c.services["temporal-worker"].volumes.every(v=>!v.source.includes("server-tls"))).toBe(true);
    const missing={...env};delete missing.LOOPLABS_STAGING_PRIVATE_DIR;

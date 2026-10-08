@@ -64,6 +64,8 @@ services:
     <<: *hardening
     image: temporalio/server:1.31.0
     entrypoint: [temporal-server, --config-file, /run/staging/server.yaml, start]
+    environment:
+      TEMPORAL_SERVICES: frontend,matching,history,worker,internal-frontend
     read_only: true
     tmpfs: [/tmp]
     mem_limit: 1536m
