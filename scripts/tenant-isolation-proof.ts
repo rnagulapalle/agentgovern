@@ -13,6 +13,8 @@ import {WorkflowControl} from "../lib/workflows/service";
 import {EnquiryControl} from "../lib/enquiries/service";
 import {submitScoped} from "../lib/enquiries/submission";
 import {recordActivities} from "../runtime/temporal/record-routing";
+import {chromium,expect,type Browser,type BrowserContext,type Page,type Response} from "@playwright/test";
+import {passwordHash} from "../lib/workspace/auth";
 const origin="http://localhost:3117",wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 async function until(test:()=>Promise<boolean>,label:string){for(let i=0;i<150;i++){if(await test())return;await wait(100);}throw Error(`Unavailable: ${label}`);}
 async function main(){
@@ -20,7 +22,7 @@ async function main(){
  const schema=`tenant_proof_${randomBytes(8).toString("hex")}`,dir=await mkdtemp(resolve(".local/tenant-proof-")),token=randomBytes(32).toString("base64url");
  const admin=new Pool({connectionString:url}),db=new Pool({connectionString:url,options:`-c search_path=${schema}`});
  const records=[{version:"record-scope-1" as const,workspaceId:"company-a",contactId:"4001",recipient:"alice@example.test"},{version:"record-scope-1" as const,workspaceId:"company-b",contactId:"4002",recipient:"bob@example.test"}];
- let app:ChildProcess|undefined,twin:ChildProcess|undefined;const checks:string[]=[];let denied=0;
+ let app:ChildProcess|undefined,twin:ChildProcess|undefined,browser:Browser|undefined;const checks:string[]=[];let denied=0;const password=randomBytes(24).toString("base64url"),hashedPassword=passwordHash(password);
  const pass=(s:string)=>{checks.push(s);console.log("PASS",s);};
  const request=async(key:string,path:string,p?:object)=>{const response=await fetch(origin+path,{headers:{Authorization:`Bearer ${key}`,Origin:origin,...(p?{"Content-Type":"application/json"}:{})},...(p?{method:"POST",body:JSON.stringify(p)}:{})});return {status:response.status,data:await response.json()};};
  try{
@@ -37,8 +39,8 @@ async function main(){
    const org=scope.workspaceId,keys={owner:randomBytes(32).toString("base64url"),reviewer:randomBytes(32).toString("base64url"),worker:randomBytes(32).toString("base64url"),agent:randomBytes(32).toString("base64url")};
    await db.query("INSERT INTO ll_orgs(id) VALUES($1)",[org]);
    const actors=[];
-   for(const [subject,role,key] of [[`${org}-owner`,"operator",keys.owner],[`${org}-reviewer`,"operator",keys.reviewer],["enquiry-temporal","worker",keys.worker],["crm","agent",keys.agent]]){
-    if(role==="operator")await db.query("INSERT INTO ll_members(org_id,email,name,password_hash) VALUES($1,$2,$2,'unused')",[org,subject]);
+   for(const [subject,role,key] of [[`${org}-owner@example.test`,"operator",keys.owner],[`${org}-reviewer@example.test`,"operator",keys.reviewer],["enquiry-temporal","worker",keys.worker],["crm","agent",keys.agent]]){
+    if(role==="operator")await db.query("INSERT INTO ll_members(org_id,email,name,password_hash) VALUES($1,$2,$2,$3)",[org,subject,hashedPassword]);
     await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,$2,$3,$4)",[tokenHash(key),org,subject,role]);
    }
    for(const key of [keys.owner,keys.reviewer,keys.worker,keys.agent])actors.push(await authenticate(db,key));
@@ -63,6 +65,20 @@ async function main(){
   const effects=async()=>JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
   const snapshot=async()=>JSON.stringify((await db.query("SELECT org_id,id,state,payload_hash,approved_by FROM ll_connector_actions ORDER BY org_id,id")).rows);
   const before=await snapshot();assert.equal(Object.keys(await effects()).length,0);
+  browser=await chromium.launch({headless:true});let deniedBrowser=0;
+  for(let i=0;i<companies.length;i++){
+   const own=companies[i],other=companies[1-i];const context:BrowserContext=await browser.newContext();const page:Page=await context.newPage();
+   await page.goto(origin+"/sign-in?next=/control-plane/records");await page.getByLabel("Email",{exact:true}).fill(own.owner.subject);await page.getByLabel("Password").fill(password);
+   const signedIn:Promise<Response>=page.waitForResponse(r=>r.url().endsWith("/api/workspace/session")&&r.request().method()==="POST");await page.getByRole("button",{name:"Sign in",exact:true}).click();assert.equal((await signedIn).status(),200);
+   await expect(page.getByText(own.scope.recipient,{exact:true}).first()).toBeVisible();assert(!(await page.locator("body").innerText()).includes(other.scope.recipient));
+   const cookie=(await context.cookies()).find(c=>c.name==="looplabs_workspace_session");assert(cookie?.httpOnly);assert.equal(cookie.sameSite,"Strict");assert(!(await page.evaluate(()=>document.cookie)).includes(cookie.value));
+   for(const path of ["/api/durable/workflows?run="+other.plan.id,"/api/durable/connectors?action="+other.run.steps[0].action_id,"/api/workspace/enquiries?scope="+other.scopeId]){const r=await context.request.get(origin+path);assert.equal(r.status(),404);assert(!(await r.text()).includes(other.scope.recipient));deniedBrowser++;}
+   const hostile=await context.request.post(origin+"/api/durable/connectors",{headers:{Origin:"https://untrusted.example"},data:{operation:"approve",actionId:own.run.steps[0].action_id,payloadHash:own.run.steps[0].payload_hash}});assert.equal(hostile.status(),403);deniedBrowser++;
+   await db.query("UPDATE ll_sessions SET expires_at=now()-interval '1 second' WHERE email=$1",[own.owner.subject]);assert.equal((await context.request.get(origin+"/api/workspace/records")).status(),401);
+   await page.reload();assert(!(await page.locator("body").innerText()).includes(other.scope.recipient));await context.close();
+  }
+  assert.equal(deniedBrowser,8);assert.equal(await snapshot(),before);assert.equal(Object.keys(await effects()).length,0);
+  pass("Two real browser sessions keep company records separate; eight cross-company/origin attacks are denied, HttpOnly/Strict cookies hide credentials from scripts and expired sessions lose API access without effects");
   for(let i=0;i<companies.length;i++){
    const own=companies[i],other=companies[1-i];
    const catalog=await request(own.keys.owner,"/api/workspace/records");assert.equal(catalog.status,200);assert.deepEqual(catalog.data.candidates.map((r:{contactId:string})=>r.contactId),[own.scope.contactId]);assert.deepEqual(catalog.data.records.map((r:{id:string})=>r.id),[own.scopeId]);
@@ -95,10 +111,11 @@ async function main(){
   for(const own of companies)assert.equal(await recordActivities(db,own.worker,()=>own.provider,build.buildId)(own.input),"completed");
   assert.deepEqual(await effects(),completed);
   pass("Repeated completed activity calls retain four effects and each company's original action identities");
-  const files=["scripts/tenant-isolation-proof.ts","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
+  const files=["scripts/tenant-isolation-proof.ts","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
   const sourceFingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
-  await writeFile("docs/evidence/tenant-isolation-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,effects:4},scope:"Local real Next HTTP API, PostgreSQL and provider twins; activity function execution, not a new Temporal/container/remote or independent security audit"},null,2)+"\n");
+  await writeFile("docs/evidence/tenant-isolation-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,deniedBrowserRequests:deniedBrowser,effects:4},scope:"Local real browser, Next HTTP API, PostgreSQL and provider twins; activity function execution, not a new Temporal/container/remote or independent security audit"},null,2)+"\n");
  }finally{
+  await browser?.close();
   if(app?.pid){try{process.kill(-app.pid,"SIGKILL");}catch{}await wait(400);}
   if(twin&&twin.exitCode===null&&!twin.signalCode){twin.kill("SIGTERM");try{await until(async()=>twin!.exitCode!==null||Boolean(twin!.signalCode),"private twin graceful shutdown");}catch{twin.kill("SIGKILL");await until(async()=>twin!.exitCode!==null||Boolean(twin!.signalCode),"private twin forced shutdown");}}
   await db.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);await admin.end();await rm(dir,{recursive:true,force:true});
