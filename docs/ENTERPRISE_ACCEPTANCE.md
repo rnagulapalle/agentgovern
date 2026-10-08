@@ -61,3 +61,18 @@ Temporal does not automatically establish those guarantees.
 - https://docs.temporal.io/best-practices
 - https://github.com/temporalio/documentation/blob/main/docs/best-practices/pre-production-testing.mdx
 - https://docs.temporal.io/develop/worker-performance
+
+## Saved proposal safeguard
+
+Migration 11 now freezes persisted action proposals, workflow steps/run identity
+and local discount effect values without preventing the existing application from
+updating approvals, leases, readback or restore containment. The restricted-role
+PostgreSQL tests reject direct rewrites, deletion, truncation and trigger disabling.
+See [persisted proposal boundaries](PERSISTED_PROPOSAL_BOUNDARIES.md) for the
+provisioning contract and explicit remaining trust boundaries. This is not a
+complete database state machine, protected approval service or production rollout.
+
+The next product boundary is independent record/recipient scope and the exact
+connector request content. Do not turn the shared-contact held-run test into a
+capacity claim; expand the approved contract and preserve old version compatibility
+before measuring multi-record approved execution.

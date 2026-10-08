@@ -51,7 +51,7 @@ async function main() {
     for (const key of ["", keys.otherKey]) assert([401, 403].includes((await call(base, `/api/sandboxes/${binding.legs.email.sandboxId}/archive`, key)).status));
     check("Native owner API keys provision isolated paired environments; other owners cannot inspect evidence");
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(f, "utf8"));
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
     await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof','crm-agent',ARRAY['twin.crm'],100),('local-proof','email-agent',ARRAY['twin.email'],100)");
@@ -121,7 +121,7 @@ async function main() {
     assert.equal((await apiCall("/api/durable/connectors", "executor", { operation: "execute", actionId: email.action_id })).status, 409);
     assert.equal((await rows(email.action_id)).length, 0);
     check("Unsupported atomic CRM version guard keeps the complete workflow held; no downstream email or false green");
-    const files = ["lib/durable/recovery.ts","lib/durable/service.ts","lib/enquiries/service.ts", "lib/enquiries/contracts.ts", "app/api/workspace/enquiries/route.ts", "lib/durable/service.ts", "lib/workflows/service.ts", "lib/enquiries/dispatch.ts", "lib/connectors/hosted.ts", "lib/connectors/twin.ts", "lib/connectors/service.ts", "app/api/durable/connectors/route.ts", "app/api/durable/workflows/route.ts", "scripts/hosted-connector-proof.ts", "scripts/workflow-http-proof-server.ts"];
+    const files = ["lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/durable/recovery.ts","lib/durable/service.ts","lib/enquiries/service.ts", "lib/enquiries/contracts.ts", "app/api/workspace/enquiries/route.ts", "lib/durable/service.ts", "lib/workflows/service.ts", "lib/enquiries/dispatch.ts", "lib/connectors/hosted.ts", "lib/connectors/twin.ts", "lib/connectors/service.ts", "app/api/durable/connectors/route.ts", "app/api/durable/workflows/route.ts", "scripts/hosted-connector-proof.ts", "scripts/workflow-http-proof-server.ts"];
     const fingerprints: Record<string, string> = {};
     for (const file of files) fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
     await writeFile("docs/evidence/hosted-connector-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.", checks, acceptedResponseLossEvidence: lossEvidence, sourceFingerprints: fingerprints, limitations: ["CRM update cannot satisfy existing atomic approval-version invariant with this provider binding; downstream work stays held.", "Not a completed CRM-to-email workflow acceptance.", "No hosted provider restart/durable-session proof or production readiness claim."] }, null, 2) + "\n");

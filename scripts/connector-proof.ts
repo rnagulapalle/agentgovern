@@ -85,8 +85,8 @@ async function main() {
     for (const f of [
       "lib/durable/schema.sql",
       "lib/workspace/schema.sql",
-      "lib/connectors/schema.sql",
-      "lib/workflows/schema.sql",
+      "lib/refunds/schema.sql", "lib/connectors/schema.sql",
+      "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql",
       "lib/enquiries/schema.sql",
       "lib/enquiries/managed-schema.sql",
     ])
@@ -857,8 +857,8 @@ async function main() {
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
       "lib/connectors/hosted.ts",
-      "lib/connectors/schema.sql",
-      "lib/workflows/schema.sql",
+      "lib/refunds/schema.sql", "lib/connectors/schema.sql",
+      "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql",
       "app/api/durable/connectors/route.ts",
       "scripts/connector-twin.py",
     ];

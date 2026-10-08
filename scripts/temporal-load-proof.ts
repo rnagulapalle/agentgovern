@@ -58,7 +58,7 @@ async function main() {
   const token = randomBytes(32).toString("base64url");
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"]) await db.query(await readFile(f, "utf8"));
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"]) await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('requester','local-proof','Requester','unused'),('reviewer','local-proof','Reviewer','unused')");
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
@@ -262,7 +262,7 @@ async function main() {
     pass("Workload revocation makes both packaged roles unready");
     const shutdownStart=performance.now();await kill(scheduler,"SIGTERM");await kill(worker,"SIGTERM");
     const shutdownMs=Math.round(performance.now()-shutdownStart);
-    const files=["lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts",...(secure?["scripts/temporal-container-environment.ts","Dockerfile.temporal"]:[]),"scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","runtime/temporal/operations.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/version-contract.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-load-proof.ts"];
+    const files=["lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts",...(secure?["scripts/temporal-container-environment.ts","Dockerfile.temporal"]:[]),"scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","runtime/temporal/operations.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/version-contract.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-load-proof.ts"];
     const fingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile(secure?"docs/evidence/temporal-container-proof.json":"docs/evidence/temporal-load-proof.json",JSON.stringify({at:new Date().toISOString(),scope:secure?"Isolated self-hosted PostgreSQL-backed Temporal with mTLS/JWT namespace authorization and actual worker containers; no production cutover":"Local packaged pinned worker/scheduler, actual Temporal, isolated PostgreSQL and one private HTTP twin; no production cutover",checks,
       ...(secure?{imageIds:secure.imageIds,workerImage:{image,id:await secure.docker("image","inspect",image!,"--format","{{.Id}}")}}:{}),

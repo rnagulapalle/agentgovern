@@ -40,7 +40,7 @@ beforeAll(async () => {
   admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
   await admin.query(`CREATE SCHEMA ${schema}`);
   db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
-  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"])
+  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"])
     await db.query(await readFile(file, "utf8"));
 });
 beforeEach(async () => {

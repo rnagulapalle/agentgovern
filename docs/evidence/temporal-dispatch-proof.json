@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T02:58:58.746Z",
+  "at": "2026-10-08T04:40:37.500Z",
   "scope": "Actual Temporal, isolated PostgreSQL and private HTTP twins; no production cutover",
   "checks": [
     "Atomic duplicate transfer excludes legacy polling and rejects legacy or human dispatch of Temporal-owned work",
@@ -10,6 +10,8 @@
     "Owner revoked after actual CRM HTTP effect leaves uncertainty and prevents all downstream email"
   ],
   "sourceFingerprints": {
+    "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
+    "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
     "lib/connectors/contracts.ts": "c43565a05454715f0b9856f936862efef1b475c5ff20826358677a5f0c02967c",
     "lib/connectors/service.ts": "05ecce016a058bc83139eaf49b551caaa18efb2728ff0f5bbbf816058ca30da2",
     "lib/connectors/twin.ts": "03cf4743d1a4bed561482e87e28fe6e05f54947ccb97ceb1a3a99c77b863ffd7",
@@ -26,7 +28,7 @@
     "lib/enquiries/runner.ts": "a0194d41b4bef270bcd5722a17d9058a07f61a873c73feb1842054ea104eb0e0",
     "lib/enquiries/temporal-schema.sql": "72705c41e2674baadeda22b7e324e9e232947e1a40a7d5717d0cf1280b3736da",
     "lib/workflows/service.ts": "8da7ab7684423f9221c22a7cf7af9611baadfbcc9e7f2563e4063a5ca6cebb9a",
-    "scripts/temporal-dispatch-proof.ts": "fe809e297a64fa239c238275784364c76125e4625bab9ae3499f24f975a6dcf0"
+    "scripts/temporal-dispatch-proof.ts": "ee38fc22b444f111c733f7155fc949fbe32a7ad5ed1b4fc406c88f7018ee7583"
   },
   "limitations": [
     "Scheduler lease expiry injected in isolated schema",

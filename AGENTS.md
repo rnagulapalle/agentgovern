@@ -69,3 +69,15 @@ before new work. Never automatically resume restored approvals, reset reservatio
 rewrite action IDs or expose quarantine over a runtime API. Applied migration 9 is
 now immutable too. Unenrolled production does not gain restore protection. Run the
 actual `workspace:restore-proof` and all affected Temporal/connector/chat proofs.
+
+## Persisted proposal boundaries
+
+Read `docs/PERSISTED_PROPOSAL_BOUNDARIES.md` before changing saved proposals or
+operational fields. Migration 11 freezes action identity/payload/policy snapshots,
+workflow steps/run ownership and local effect values at the database boundary.
+Approval, lease, state and readback updates remain controlled by the application;
+this is not a complete database state machine or protection against the database
+owner. Apply through `workspace:proposal-boundaries` with a separate owner connection;
+unmigrated deployments gain no protection. Preserve migrations 1–5 and 7–11 once
+applied. Run the actual connector, Temporal, restore and chat proofs with migration
+11 enabled before declaring this boundary verified.

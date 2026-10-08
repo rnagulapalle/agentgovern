@@ -28,7 +28,7 @@ async function main() {
   const token = randomBytes(32).toString("base64url");
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(f, "utf8"));
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('requester','local-proof','Requester','unused'),('reviewer','local-proof','Reviewer','unused')");
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
@@ -124,7 +124,7 @@ async function main() {
     await assert.rejects(() => activity.advanceContract(revoked), /owner/);
     assert.equal(await effects(), 2);
     pass("Pinned code does not pin authority: revoked owner still prevents execution");
-    const files = ["lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/pinned-workflow.ts", "runtime/temporal/version-contract.ts", "scripts/temporal-version-proof.ts"];
+    const files = ["lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/pinned-workflow.ts", "runtime/temporal/version-contract.ts", "scripts/temporal-version-proof.ts"];
     const fingerprints = Object.fromEntries(await Promise.all(files.map(async f => [f, createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/temporal-version-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Local pinned deployments and persisted SQLite dev-service restart; no production cutover", checks, sourceFingerprints: fingerprints, limitations: ["Graceful service restart, not unclean host loss or high availability", "One immutable acknowledgement plan and private twin connector contract", "No retention expiry, production deployment or dispatch cutover proof"] }, null, 2) + "\n");
   } finally {
