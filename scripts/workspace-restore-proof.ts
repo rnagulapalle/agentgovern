@@ -1,3 +1,4 @@
+import {ScopeControl} from "../lib/connectors/scopes";
 // Actual PostgreSQL archive rollback with provider effects kept outside the backup.
 import { Pool } from "pg";
 import { randomBytes, randomUUID, createHash } from "node:crypto";
@@ -30,7 +31,7 @@ async function main() {
   const checks: string[] = [], pass = (s: string) => { checks.push(s); console.log("PASS", s); };
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"]) await db.query(await readFile(file, "utf8"));
+    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/connectors/scope-schema.sql"]) await db.query(await readFile(file, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("CREATE TABLE ll_migrations(version integer PRIMARY KEY,digest text NOT NULL)");
     await db.query("INSERT INTO ll_migrations VALUES(9,$1)", [createHash("sha256").update(await readFile("lib/enquiries/temporal-schema.sql")).digest("hex")]);
@@ -50,6 +51,8 @@ async function main() {
     const [requester, reviewer, worker] = actors;
     const token = randomBytes(32).toString("base64url");
     await writeFile(`${dir}/connector-twin-credentials.json`, JSON.stringify({ token }), { mode: 0o600 });
+    const scope={version:"record-scope-1" as const,workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"};
+    await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records:[scope]}),{mode:0o600});
     const backend = process.env.FETCHSANDBOX_BACKEND_PATH || `${process.env.HOME}/sandbox/backend`;
     twin = spawn(`${backend}/.venv/bin/python`, ["scripts/connector-twin.py"], { env: { ...process.env, LOOPLABS_CONNECTOR_STATE_DIR: dir }, stdio: "ignore" });
     const provider = new FetchSandboxConnectors("http://127.0.0.1:8018", token);
@@ -64,6 +67,8 @@ async function main() {
     const workflowId = await outbox.transfer(requester, approved.runId); await outbox.transfer(requester, held.runId);
     for (const step of (await workflows.read(requester, approved.runId)).steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
     const savedIds = (await db.query("SELECT run_id,ordinal,action_id FROM ll_workflow_steps ORDER BY run_id,ordinal")).rows;
+    const scopeId=randomUUID(),scopeControl=new ScopeControl(db,new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,scope));
+    await scopeControl.enroll(requester,scopeId);const scopedAgent=(await workflows.read(requester,approved.runId)).steps[0].agent_id;await scopeControl.grant(requester,scopeId,scopedAgent);
     const pg = new URL(url), pgEnv = { ...process.env, PGHOST: pg.hostname, PGPORT: pg.port || "5432", PGUSER: decodeURIComponent(pg.username), PGPASSWORD: decodeURIComponent(pg.password), PGDATABASE: pg.pathname.slice(1) };
     const archive = resolve(dir, "workspace.dump");
     await command("pg_dump", ["--format=custom", "--no-owner", "--no-acl", `--schema=${schema}`, `--file=${archive}`], { env: pgEnv }); await chmod(archive, 0o600);
@@ -76,6 +81,7 @@ async function main() {
     await executor.runUntil(async () => { assert.equal(await temporal!.client.workflow.getHandle(workflowId).result(), "completed"); });
     const effects = async () => JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects;
     const before = await effects(); assert.equal(Object.keys(before).length, 2);
+    await scopeControl.setActive(requester,scopeId,false,scopedAgent);await scopeControl.setActive(requester,scopeId,false);
     await db.query("UPDATE ll_tokens SET active=false WHERE org_id='local-proof'"); await db.query("UPDATE ll_members SET active=false WHERE org_id='local-proof'");
     // Deployment configuration stays OUTSIDE the database archive. All writers
     // were stopped; changing the epoch before restore invalidates rolled-back authority.
@@ -85,6 +91,8 @@ async function main() {
     assert.deepEqual((await db.query("SELECT run_id,ordinal,action_id FROM ll_workflow_steps ORDER BY run_id,ordinal")).rows, savedIds);
     assert.equal((await db.query("SELECT state FROM ll_workflow_runs WHERE id=$1", [approved.runId])).rows[0].state, "active");
     assert.equal((await db.query("SELECT count(*)::int AS n FROM ll_tokens WHERE active")).rows[0].n, 7);
+    assert.deepEqual((await db.query("SELECT active,version FROM ll_connector_scopes WHERE id=$1",[scopeId])).rows[0],{active:true,version:1});
+    assert.deepEqual((await db.query("SELECT active,version FROM ll_connector_scope_grants WHERE scope_id=$1",[scopeId])).rows[0],{active:true,version:1});
     await assert.rejects(() => authenticate(db, keys[0]), /contained/);
     await assert.rejects(() => connector.execute(worker, savedIds.find(s => s.run_id === approved.runId)!.action_id), /contained/);
     assert.deepEqual(await effects(), before);
@@ -98,6 +106,10 @@ async function main() {
     assert.equal((await db.query("SELECT count(*)::int AS n FROM ll_workflow_runs WHERE state='paused'")).rows[0].n, 2);
     await assert.rejects(() => authenticate(db, keys[0]), /credentials/);
     pass("Atomic idempotent restore quarantine revokes all old identities, clears approvals and leases, and pauses both restored runs without rewriting IDs or budgets");
+    assert.deepEqual((await db.query("SELECT active,version FROM ll_connector_scopes WHERE id=$1",[scopeId])).rows[0],{active:false,version:2});
+    assert.deepEqual((await db.query("SELECT active,version FROM ll_connector_scope_grants WHERE scope_id=$1",[scopeId])).rows[0],{active:false,version:2});
+    assert.equal(counts.ll_connector_scopes,1);assert.equal(counts.ll_connector_scope_grants,1);
+    pass("Actual archive resurrects revoked scope/grant version 1; quarantine increments to revoked version 2 before fresh authority can operate");
     const fresh = randomBytes(32).toString("base64url");
     await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','recovery-reviewer','operator')", [tokenHash(fresh)]);
     const recovery = await authenticate(db, fresh);
@@ -108,7 +120,7 @@ async function main() {
     pass("Fresh recovery identity reads back the two existing HTTP twin effects; unknown held actions stay uncertain and no email or CRM write is resent");
     assert.equal((await temporal.client.workflow.getHandle(workflowId).describe()).status.name, "COMPLETED");
     assert.deepEqual((await db.query("SELECT run_id,ordinal,action_id FROM ll_workflow_steps ORDER BY run_id,ordinal")).rows, savedIds);
-    const files = ["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts", "lib/connectors/service.ts", "lib/workflows/service.ts", "runtime/temporal/outbox.ts", "runtime/temporal/version-contract.ts", "runtime/temporal/activities.ts", "scripts/workspace-recovery.ts", "scripts/workspace-restore-proof.ts"];
+    const files = ["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts", "lib/connectors/service.ts", "lib/workflows/service.ts", "runtime/temporal/outbox.ts", "runtime/temporal/version-contract.ts", "runtime/temporal/activities.ts", "scripts/workspace-recovery.ts", "scripts/workspace-restore-proof.ts"];
     const sourceFingerprints = Object.fromEntries(await Promise.all(files.map(async f => [f, createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/workspace-restore-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Actual PostgreSQL pg_dump/pg_restore, local Temporal and private HTTP twin effects outside the archive; no production cutover", checks, measurements: { restoredRuns: 2, finalEffects: 2, restoreAndReconcileMs: Math.round(performance.now() - start) }, backupHash, counts, sourceFingerprints, limitations: ["One isolated schema on dedicated test PostgreSQL, not entire-cluster/WAL/PITR or replicated failover", "Deployment epoch rotation and stopped writers are mandatory external operational steps; undeclared restore cannot be automatically detected", "No automatic resume or reconstruction of approvals lost after backup; paused work requires new reviewed plan", "Single-workspace recovery epoch configuration; multi-workspace configuration is not established", "Readback proves provider-twin effects, not real delivery or customer-provider retention", "Backup confidentiality, remote storage, independent security review and measured RPO/RTO remain open"] }, null, 2) + "\n");
   } finally {

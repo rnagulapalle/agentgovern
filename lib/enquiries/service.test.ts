@@ -11,6 +11,7 @@ import { WorkflowControl } from "../workflows/service";
 import { TemporalOutbox } from "../../runtime/temporal/outbox";
 import { WorkflowExecutionAlreadyStartedError, type Client } from "@temporalio/client";
 import { EnquiryRunner } from "./runner";
+import { ScopeControl } from "../connectors/scopes";
 import { EnquiryControl } from "./service";
 import { checkContact, enquiryFixture, validId, type Contact } from "./contracts";
 import { EnquiryChat, type Intent } from "./chat";
@@ -40,7 +41,7 @@ beforeAll(async () => {
   admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
   await admin.query(`CREATE SCHEMA ${schema}`);
   db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
-  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"])
+  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/connectors/scope-schema.sql"])
     await db.query(await readFile(file, "utf8"));
 });
 beforeEach(async () => {
@@ -487,6 +488,9 @@ it("saves a server-scoped record/recipient and refuses another record, managed d
  const scopedProvider={...provider,contactId:scope.contactId,recordScope:scope};
  const control=new ConnectorControl(db,scopedProvider),flow=new WorkflowControl(db,control);
  const scopedContact={...contact,id:"2001",email:scope.recipient};
+ const scopes=new ScopeControl(db,scopedProvider),scopeId=randomUUID();
+ await db.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES('one','crm','CRM','operator','crm_agent','crm_twin'),('one','email','Email','operator','email_agent','email_twin')");
+ await scopes.enroll(operator,scopeId);await scopes.grant(operator,scopeId,"crm");await scopes.grant(operator,scopeId,"email");
  const s=new EnquiryControl(db,flow,async()=>scopedContact),id=randomUUID();
  await s.prepare(operator,id,"service"); const p=(await s.list(operator))[0];
  expect(p.plan.reply.recipient).toBe(scope.recipient);expect(p.plan.enquiry.email).toBe(scope.recipient);

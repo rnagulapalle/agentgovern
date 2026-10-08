@@ -43,6 +43,7 @@
     "workspace:restore-proof": "node --env-file=.env.local --import tsx scripts/workspace-restore-proof.ts",
     "temporal:alerts": "node --import tsx scripts/temporal-alert-monitor.ts",
     "temporal:alert-proof": "node --import tsx scripts/temporal-alert-proof.ts",
+    "workspace:record-scopes": "node --env-file=.env.local --import tsx scripts/record-scope-setup.ts",
     "workspace:proposal-boundaries": "node --env-file=.env.local --import tsx scripts/proposal-boundary-setup.ts"
   },
   "dependencies": {

@@ -51,16 +51,29 @@ for contact_id,scope in scopes.items():
  record=engines["crm"].state.collection("contacts").get(contact_id)
  if record is None:
   engines["crm"].state.collection("contacts").create({"id":contact_id,"properties":{"email":scope["recipient"],"lifecyclestage":"lead"},"createdAt":"2026-10-08T00:00:00Z","updatedAt":"enrolled-"+contact_id,"archived":False})
-def persist():
- data={name:e.state.snapshot(include_internal=True) for name,e in engines.items()};data["effects"]=effects
- tmp=state_file.with_suffix(".tmp")
- with open(tmp,"w") as f:
-  os.chmod(tmp,0o600);json.dump(data,f);f.flush();os.fsync(f.fileno())
- os.replace(tmp,state_file)
+persistence_failed=False
+def persist(inject_failure=False):
+ global persistence_failed
+ try:
+  if inject_failure:raise OSError("Injected fixture persistence failure")
+  data={name:e.state.snapshot(include_internal=True) for name,e in engines.items()};data["effects"]=effects
+  tmp=state_file.with_suffix(".tmp")
+  with open(tmp,"w") as f:
+   os.chmod(tmp,0o600);json.dump(data,f);f.flush();os.fsync(f.fileno())
+  os.replace(tmp,state_file)
+  directory=os.open(private,os.O_RDONLY)
+  try:os.fsync(directory)
+  finally:os.close(directory)
+ except Exception:
+  # A volatile native-engine effect is not a durable verification receipt.
+  # Refuse all further evidence/writes until a fresh process reads persisted state.
+  persistence_failed=True
+  raise
 app=FastAPI(docs_url=None,redoc_url=None,openapi_url=None)
 @app.api_route("/{path:path}",methods=["GET","POST","PATCH"])
 async def route(path:str,request:Request):
  if request.headers.get("authorization")!=f"Bearer {secret}":return JSONResponse({"error":"Private fixture access required"},status_code=401)
+ if persistence_failed:return JSONResponse({"error":"Fixture persistence unavailable; no durable effect can be attested"},status_code=503)
  if path.startswith("proof/effects/") and request.method=="GET":
   e=effects.get(path.split("/")[-1]);return JSONResponse(e or {"error":"No effect proven"},status_code=200 if e else 404)
  name,_,rest=path.partition("/");api="/"+rest
@@ -107,7 +120,8 @@ async def route(path:str,request:Request):
    engines[name].state.collection("contacts").update(ref,{"updatedAt":version})
   else:version=None
   effects[action]={"actionId":action,"connector":name,"body":body,"recordId":contact_id,"resource":api,"reference":ref,"observedVersion":version,"response":result.body}
-  persist()
+  try:persist(request.headers.get("x-looplabs-proof-fault")=="storage_failure")
+  except Exception:return JSONResponse({"error":"Fixture persistence failed; outcome requires review"},status_code=503)
  if action and request.headers.get("x-looplabs-lose-response")=="true" and 200<=result.status<300:await asyncio.sleep(3)
  return JSONResponse(result.body,status_code=result.status)
 if __name__=="__main__":

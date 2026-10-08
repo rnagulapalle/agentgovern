@@ -12,6 +12,7 @@ import { ConnectorControl } from "../lib/connectors/service";
 import { FetchSandboxConnectors } from "../lib/connectors/twin";
 import { WorkflowControl } from "../lib/workflows/service";
 import { EnquiryControl } from "../lib/enquiries/service";
+import { ScopeControl } from "../lib/connectors/scopes";
 import type { RecordScope } from "../lib/connectors/record-scope";
 import type { Connector, ConnectorAction } from "../lib/connectors/contracts";
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -95,7 +96,7 @@ async function main() {
       "lib/durable/schema.sql",
       "lib/workspace/schema.sql",
       "lib/refunds/schema.sql", "lib/connectors/schema.sql",
-      "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql",
+      "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/connectors/scope-schema.sql",
       "lib/enquiries/schema.sql",
       "lib/enquiries/managed-schema.sql",
     ])
@@ -807,6 +808,10 @@ async function main() {
     }
     const scoped = recordScopes.map(s=>new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,s));
     const controls=scoped.map(p=>new ConnectorControl(db!,p));
+    await db!.query("INSERT INTO ll_members(org_id,email,name,password_hash) VALUES('local-proof','scope-owner@example.test','Scope owner','unused')");
+    await db!.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES('local-proof','crm-agent','CRM','scope-owner@example.test','crm_agent','crm_twin'),('local-proof','email-agent','Email','scope-owner@example.test','email_agent','email_twin') ON CONFLICT DO NOTHING");
+    const scopeIds:string[]=[];
+    for(let i=0;i<2;i++){const id=randomUUID(),grants=new ScopeControl(db!,scoped[i]);await grants.enroll(operator,id);await grants.grant(operator,id,"crm-agent");await grants.grant(operator,id,"email-agent");scopeIds.push(id);}
     const scopedRuns:{runId:string;crm:string;email:string}[]=[];
     await check("record scope: two independent customers save exact plans and complete their own CRM/message effects",async()=>{
       for(let index=0;index<2;index++){
@@ -851,6 +856,29 @@ async function main() {
       assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
       assert.equal((await scoped[0].contact()).id,"2001");assert.equal((await scoped[1].contact()).properties.email,"changed@example.test");
     },"Real process restart retains enrolled records, versions and changed recipient; completed action replay adds no effects.");
+    await check("scope grant: revocation before dispatch and reactivation cannot revive an old exact approval",async()=>{
+      const p=scoped[0],c=controls[0],flow=new WorkflowControl(db!,c),id=randomUUID();await flow.create(operator,"crm-agent","email-agent",id,"lead");const step=(await flow.read(operator,id)).steps[0];
+      const a=await c.propose(crm,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});await c.review(operator,a.id,a.payload_hash,true);
+      const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,grants=new ScopeControl(db!,p);await grants.setActive(operator,scopeIds[0],false,"crm-agent");
+      assert.equal((await c.execute(worker,a.id)).state,"cancelled");await grants.setActive(operator,scopeIds[0],true,"crm-agent");assert.equal((await c.execute(worker,a.id)).state,"cancelled");
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);assert.equal(a.payload.scopeGrant?.grantVersion,1);
+    },"Actual persisted grant version change refuses dispatch; reactivation increments the version and does not rewrite the saved approval.");
+    await check("scope grant: revoke after an actual effect then restart keeps uncertainty and adds no sends",async()=>{
+      const p=scoped[0],c=controls[0],flow=new WorkflowControl(db!,c),id=randomUUID();await flow.create(operator,"crm-agent","email-agent",id,"lead");const step=(await flow.read(operator,id)).steps[0];
+      const a=await c.propose(crm,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});await c.review(operator,a.id,a.payload_hash,true);
+      const execution=c.execute(worker,a.id,true);let effect:unknown=null;for(let n=0;n<100;n++){effect=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects[a.id];if(effect)break;await delay(10);}assert.ok(effect);
+      const grants=new ScopeControl(db!,p);await grants.setActive(operator,scopeIds[0],false,"crm-agent");assert.equal((await execution).state,"uncertain");
+      const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;await stop();await start();assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");await grants.setActive(operator,scopeIds[0],true,"crm-agent");assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");await c.execute(worker,a.id);
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+    },"Actual HTTP effect precedes a lost response and database grant revocation; original action remains contained after real provider restart and reactivation.");
+    await check("fixture storage: failed persistence cannot attest a volatile effect or permit automatic resend",async()=>{
+      const adapter=new FetchSandboxConnectors("http://127.0.0.1:8018",token),c=new ConnectorControl(db!,adapter),flow=new WorkflowControl(db!,c),id=randomUUID();await flow.create(operator,"crm-agent","email-agent",id,"lead");const step=(await flow.read(operator,id)).steps[0];
+      const a=await c.propose(crm,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});await c.review(operator,a.id,a.payload_hash,true);const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+      const original=adapter.request.bind(adapter);adapter.request=async(path,init={})=>original(path,{...init,headers:{...init.headers,...(init.method==="PATCH"?{"X-LoopLabs-Proof-Fault":"storage_failure"}:{})}});
+      assert.equal((await c.execute(worker,a.id)).state,"uncertain");assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");
+      const response=await fetch(`http://127.0.0.1:8018/proof/effects/${a.id}`,{headers:{Authorization:`Bearer ${token}`}});assert.equal(response.status,503);assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+      await stop();await start();adapter.request=original;assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");await c.execute(worker,a.id);assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+    },"Inject an actual persistence exception after native mutation: the process refuses volatile readback, returns unknown, and restart never causes an inferred resend. This is a fixture failure check, not production storage certification.");
     let restoreMilliseconds = 0;
     await check(
       "isolated database backup and restore preserves actions and evidence",
@@ -910,7 +938,7 @@ async function main() {
       "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA.",
     );
     const fingerprintFiles = [
-      "lib/connectors/request.ts", "lib/connectors/content.ts", "lib/connectors/record-scope.ts",
+      "lib/connectors/request.ts", "lib/connectors/content.ts", "lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql",
       "lib/durable/recovery.ts",
       "lib/durable/service.ts",
       "lib/enquiries/dispatch.ts",

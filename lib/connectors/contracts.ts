@@ -1,3 +1,4 @@
+import type { ScopeGrantSnapshot } from "./scopes";
 import type { RecordScope } from "./record-scope";
 import type { RequestSnapshot } from "./request";
 import { ControlError } from "../durable/contracts";
@@ -6,7 +7,7 @@ export type Connector = (typeof CONNECTORS)[number];
 export type Payload = (
   | { lifecycle: "lead" | "customer"; sourceVersion?: string }
   | { template: "case_received" }
-) & { binding?: string; request?: RequestSnapshot };
+) & { binding?: string; request?: RequestSnapshot; scopeGrant?: ScopeGrantSnapshot };
 export interface ConnectorAction {
   id: string;
   org_id: string;

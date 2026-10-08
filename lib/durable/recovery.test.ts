@@ -13,7 +13,7 @@ beforeAll(async () => {
   admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
   await admin.query(`CREATE SCHEMA ${schema}`);
   db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
-  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/durable/recovery-schema.sql"]) await db.query(await readFile(file, "utf8"));
+  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/durable/recovery-schema.sql", "lib/connectors/scope-schema.sql"]) await db.query(await readFile(file, "utf8"));
 });
 beforeEach(async () => {
   await db.query("TRUNCATE ll_orgs CASCADE");
@@ -93,4 +93,12 @@ it("does not allow a runtime database principal to rewrite the recovery fence or
     await recoveryFence(db, "one", epoch);
     expect((await db.query("SELECT active FROM ll_tokens WHERE org_id='one'")).rows[0].active).toBe(true);
   } finally { await restricted.end(); await admin.query(`DROP OWNED BY ${role}`); await admin.query(`DROP ROLE ${role}`); }
+});
+
+
+it("quarantines restored scope enrollments and agent grants without reviving their old versions",async()=>{
+ const id=randomUUID();await db.query("INSERT INTO ll_connector_scopes(org_id,id,contact_id,recipient,binding_id,contract_version,created_by) VALUES('one',$1,'2001','alice@example.test',repeat('a',64),'private-record-twin-2','owner')",[id]);
+ await db.query("INSERT INTO ll_connector_scope_grants(org_id,scope_id,agent_id,created_by) VALUES('one',$1,'agent','owner')",[id]);
+ const counts=await quarantineRestore(db,"one",randomUUID(),"a".repeat(64));expect(counts.ll_connector_scopes).toBe(1);expect(counts.ll_connector_scope_grants).toBe(1);
+ expect((await db.query("SELECT active,version FROM ll_connector_scopes")).rows[0]).toEqual({active:false,version:2});expect((await db.query("SELECT active,version FROM ll_connector_scope_grants")).rows[0]).toEqual({active:false,version:2});
 });

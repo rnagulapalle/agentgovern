@@ -91,7 +91,12 @@ async function main() {
     if(containerMode) {secure=await containerEnvironment(dir);env=secure;checks.push(...secure.checks);}
     else env = await TestWorkflowEnvironment.createLocal({ server:{ dbFilename:`${dir}/temporal.sqlite` } });
     const manifest=secure ? await secure.docker("run","--rm","--entrypoint","cat",image!,".worker/temporal-manifest.json") : await readFile(".worker/temporal-manifest.json", "utf8");
-    const buildId=JSON.parse(manifest).buildId;
+    assert(manifest.trim(),"Built worker manifest is empty; rebuild and verify storage before running proof");
+    const built=JSON.parse(manifest);
+    assert.equal(built.version,1);assert.match(built.artifactHash,/^[a-f0-9]{64}$/);assert.equal(built.buildId,`ack-${built.artifactHash}`);
+    const measured=secure ? await secure.docker("run","--rm","--entrypoint","node",image!,"-e",'const fs=require("fs"),h=require("crypto").createHash("sha256");for(const f of [".worker/temporal-service.cjs",".worker/temporal-workflow.cjs","pnpm-lock.yaml"]){const b=fs.readFileSync(f);if(!b.length)throw Error("Empty packaged artifact: "+f);h.update(b);}console.log(h.digest("hex"));') : createHash("sha256").update(await readFile(".worker/temporal-service.cjs")).update(await readFile(".worker/temporal-workflow.cjs")).update(await readFile("pnpm-lock.yaml")).digest("hex");
+    assert.equal(measured.trim(),built.artifactHash,"Packaged worker bytes must match their content-bound manifest");
+    const buildId=built.buildId;
     const taskQueue=`load-${randomUUID()}`, outbox=new TemporalOutbox(db);
     await new Promise<void>((ok, fail) => { proxy.once("error", fail); proxy.listen(0, "127.0.0.1", ok); });
     const address = proxy.address();
@@ -262,7 +267,7 @@ async function main() {
     pass("Workload revocation makes both packaged roles unready");
     const shutdownStart=performance.now();await kill(scheduler,"SIGTERM");await kill(worker,"SIGTERM");
     const shutdownMs=Math.round(performance.now()-shutdownStart);
-    const files=["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts",...(secure?["scripts/temporal-container-environment.ts","Dockerfile.temporal"]:[]),"scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","runtime/temporal/operations.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/version-contract.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-load-proof.ts"];
+    const files=["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts",...(secure?["scripts/temporal-container-environment.ts","Dockerfile.temporal"]:[]),"scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","runtime/temporal/operations.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/version-contract.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-load-proof.ts"];
     const fingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile(secure?"docs/evidence/temporal-container-proof.json":"docs/evidence/temporal-load-proof.json",JSON.stringify({at:new Date().toISOString(),scope:secure?"Isolated self-hosted PostgreSQL-backed Temporal with mTLS/JWT namespace authorization and actual worker containers; no production cutover":"Local packaged pinned worker/scheduler, actual Temporal, isolated PostgreSQL and one private HTTP twin; no production cutover",checks,
       ...(secure?{imageIds:secure.imageIds,workerImage:{image,id:await secure.docker("image","inspect",image!,"--format","{{.Id}}")}}:{}),
