@@ -30,6 +30,7 @@ describe("isolated staging platform",()=>{
    for(const volume of Object.values(c.volumes))expect(volume.external).not.toBe(true);
    expect(Object.keys(c.services.authorization.networks)).toEqual(["orchestration"]);
    expect(Object.keys(c.services["connector-twin"].networks)).toEqual(["application"]);
+   expect(c.services["connector-twin"].environment.LOOPLABS_TWIN_CONTAINER).toBe("1");
    expect(Object.keys(c.services["application-db"].networks)).toEqual(["application"]);
    expect(c.services.temporal.environment.TEMPORAL_SERVICES).toBe("frontend,matching,history,worker,internal-frontend");
    expect(Object.keys(c.services["temporal-db"].networks)).toEqual(["orchestration"]);
