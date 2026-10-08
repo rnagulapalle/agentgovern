@@ -1,3 +1,11 @@
+## October 8 staged server workflow increment
+
+The earlier architecture below describes the original browser-local examples. The invited server workspace now adds PostgreSQL-backed scoped identity/policy/approval/lease/effect controls and isolated Temporal adoption. See `TEMPORAL_ADOPTION_PLAN.md`, `PERSISTED_PROPOSAL_BOUNDARIES.md`, `PERSISTED_RECORD_GRANTS.md`, `SCOPED_TEMPORAL_ROUTING.md` and `SCOPED_CHAT_EXPERIENCE.md` for current contracts and measured proof.
+
+Typed chat interpretation remains bounded to the fixed acknowledgement graph. An exact saved plan captures record/recipient/request/source/policy versions. Explicit record grants select existing agents; independent approvals bind their actual action payloads. A leased scheduling outbox freezes one-way execution ownership and a compatible content-bound worker build. Temporal provides durable scheduling/history, while application controls recheck current authorization, dependencies and observed effects. Unknown outcomes reconcile rather than resend. No model grants execution authority; no browser selection changes saved destinations.
+
+The current-source local browser/package proof does not establish production cutover, live connector safety, arbitrary workflow generation, complete tenant isolation, HA/SLA or Temporal superiority. `ENTERPRISE_ACCEPTANCE.md` defines remaining acceptance.
+
 # LoopLabs agent control plane
 
 ## Managed acknowledgement experience (October 6)

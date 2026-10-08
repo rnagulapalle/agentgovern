@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T07:27:15.772Z",
+  "at": "2026-10-08T08:10:46.252Z",
   "scope": "Isolated PostgreSQL schema and private FetchSandbox HubSpot Contacts / Resend single-send fixtures. No live CRM, real email, model or money.",
   "checks": [
     {
@@ -202,23 +202,23 @@
     "lib/enquiries/service.ts": "a87d145adfd3809e5119fcf51f96002b4db6febb20de01431b1eee9e5d11ddc6",
     "lib/enquiries/schema.sql": "8e9c620147658f3bd59cd2948d0a46f872eb74066d67eba9f844bc5410fdd743",
     "lib/enquiries/managed-schema.sql": "88818301d4bff0dbfc6d61740f12abe0b0c080045dde7785766b870ac74c92be",
-    "app/api/workspace/enquiries/route.ts": "d15eda40bf16f10d929ffc6cd51d0263762c379fd1830157e0ed1481a4fc760d",
+    "app/api/workspace/enquiries/route.ts": "573c8410c704fa4745d4bebf6f75f951093aed7f2b22abee9fe49a50635a8995",
     "scripts/workflow-http-proof-server.ts": "0802e102094dd95243727121cedbfaf2e17f660f916d5511777c4441b044012e",
     "lib/workflows/service.ts": "861a42c6f3547bc0efe69f6f55e24ea561fe72854b987d25fcf4c653c5362214",
-    "app/api/durable/workflows/route.ts": "149168169108bde6cbbdd99b9c6fff4d35fad5138e6d2d1432fe785dccfd4d95",
+    "app/api/durable/workflows/route.ts": "d1462ef5bdfd9f445bdb7103d1c00c4dc2d36fc69f47b6695239f0008b818faf",
     "scripts/workflow-agent.mjs": "ba686dbe89ee3b5e999666d31597728016dc6aade2b0f3fc806db9c24acb85be",
     "lib/connectors/contracts.ts": "f1bf1c4431877f6beabb026e2df85fdf6e1feed5d21dd46ddbd7e8a3cc109394",
     "lib/connectors/service.ts": "adcce693094fe31f9ce75df459fba1d783b9620baf59c02c28d254b1a1b06aed",
     "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
-    "lib/connectors/hosted.ts": "799d415c110c7261e83fd295b44218939d2fdebc3950c7a322c289d617734a94",
+    "lib/connectors/hosted.ts": "72e67b5ae33fec3201641928bd7389abd98dc97b03de3b4990588d8e9063f79a",
     "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
     "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
     "lib/workflows/schema.sql": "fad98c6bed6e4cdc0168b5248ca5cbf7411c35ec49cd3bcbd24b27eb11bf3e4d",
     "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
-    "app/api/durable/connectors/route.ts": "0bad77eb2c10cb6a1c14573f9ca54785a6890220d826880ad5845d479669e105",
+    "app/api/durable/connectors/route.ts": "cba1fdad383a132abf98b8d869ca0c07cd016defa3b8ac0d8b108b752e406a56",
     "scripts/connector-twin.py": "41288420d7bf7712c9e88f47b074afd47cfb5ec170df833c623ada9676a5f863"
   },
-  "localRestoreMilliseconds": 93,
+  "localRestoreMilliseconds": 96,
   "limits": [
     "Fixture action journal and contact version are LoopLabs extensions, not live provider parity.",
     "No SSO, failover, production load or real delivery proof.",

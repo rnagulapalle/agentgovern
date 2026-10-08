@@ -6,7 +6,7 @@ import {EnquiryRunner} from "../enquiries/runner";
 import {readFile} from "node:fs/promises";
 import {randomBytes,randomUUID} from "node:crypto";
 import {Pool} from "pg";
-import {beforeAll,beforeEach,afterAll,it,expect} from "vitest";
+import {beforeAll,beforeEach,afterAll,it,expect,vi} from "vitest";
 import {authenticate,tokenHash} from "../durable/service";
 import {transaction} from "../durable/database";
 import type {Actor} from "../durable/contracts";
@@ -19,6 +19,7 @@ const schema=`scopes_${randomBytes(8).toString("hex")}`;
 let db:Pool,admin:Pool,operator:Actor,reviewer:Actor,agent:Actor,worker:Actor,other:Actor,scopes:ScopeControl,control:ConnectorControl;
 let writes=0,source:string|null="v1",gate:Promise<void>|undefined;
 let provider:ConnectorProvider;
+vi.mock("../durable/database",async original=>({...await original<typeof import("../durable/database")>(),database:()=>db}));
 const scope={version:"record-scope-1" as const,workspaceId:"one",contactId:"2001",recipient:"alice@example.test"};
 beforeAll(async()=>{
  if(!process.env.LOOPLABS_TEST_DATABASE_URL)throw Error("Dedicated PostgreSQL is required.");
@@ -194,4 +195,74 @@ it("onboards only trusted catalog records and requires explicit non-stale record
  delete process.env.LOOPLABS_FETCHSANDBOX_BINDING;
  await db.query("ALTER TABLE ll_connector_scopes RENAME TO hidden_scopes");try{expect((await service.list(operator)).available).toBe(false);await expect(providerForScope(db,operator,id,()=>provider)).rejects.toThrow("unavailable");}finally{await db.query("ALTER TABLE hidden_scopes RENAME TO ll_connector_scopes");}
  }finally{if(old===undefined)delete process.env.LOOPLABS_RECORD_CATALOG;else process.env.LOOPLABS_RECORD_CATALOG=old;if(hosted===undefined)delete process.env.LOOPLABS_FETCHSANDBOX_BINDING;else process.env.LOOPLABS_FETCHSANDBOX_BINDING=hosted;}
+});
+
+it("resolves saved plan/run/action destinations without caller retargeting or legacy fallback",async()=>{
+ const {savedProvider,selectedProvider}=await import("./routing");type Connected=import("./routing").ConnectedProvider;
+ const bound={...provider,contact:async()=>({id:scope.contactId,properties:{email:scope.recipient,lifecyclestage:"lead"},updatedAt:"v1"})} as unknown as Connected;
+ let defaults=0;const factory=(s?:typeof scope)=>{if(!s){defaults++;return {...bound,recordScope:undefined} as Connected;}expect(s).toEqual(scope);return bound;};
+ const {scopeId,flow,plan}=await routed();
+ expect(await selectedProvider(db,operator,scopeId,factory)).toBe(bound);
+ expect(await savedProvider(db,operator,"plan",plan.id,null,false,factory)).toBe(bound);
+ expect(await savedProvider(db,operator,"run",plan.id,null,false,factory)).toBe(bound);
+ const step=(await flow.read(operator,plan.id)).steps[0];expect(await savedProvider(db,operator,"action",step.action_id,null,false,factory)).toBe(bound);
+ expect(await savedProvider(db,operator,"proposal",step.action_id,null,false,factory)).toBe(bound);
+ for(const [kind,id] of [["plan",plan.id],["run",plan.id],["action",step.action_id]] as const){await expect(savedProvider(db,operator,kind,id,randomUUID(),false,factory)).rejects.toThrow("record saved");await expect(savedProvider(db,other,kind,id,null,false,factory)).rejects.toThrow("not found");}
+ const emailStep=(await flow.read(operator,plan.id)).steps[1];await expect(savedProvider(db,agent,"action",emailStep.action_id,null,false,factory)).rejects.toThrow("not found");await expect(savedProvider(db,agent,"proposal",emailStep.action_id,null,false,factory)).rejects.toThrow("not found");
+ await expect(savedProvider(db,agent,"plan",plan.id,null,false,factory)).rejects.toThrow();
+ await expect(savedProvider(db,operator,"run",randomUUID(),null,false,factory)).rejects.toThrow("not found");
+ expect(await savedProvider(db,operator,"plan",randomUUID(),scopeId,true,factory)).toBe(bound);
+ await expect(savedProvider(db,operator,"plan",randomUUID(),scopeId,false,factory)).rejects.toThrow("not found");
+ expect(defaults).toBe(0);
+ await selectedProvider(db,operator,null,factory);await savedProvider(db,operator,"proposal",randomUUID(),null,false,factory);expect(defaults).toBe(2);expect(writes).toBe(0);
+});
+it("submits scoped chat with existing grants, saves held actions idempotently and pins durable ownership",async()=>{
+ const {submitScoped}=await import("../enquiries/submission"),{EnquiryChat}=await import("../enquiries/chat");
+ const id=await enrolled();await scopes.grant(operator,id,"email");const flow=new WorkflowControl(db,control),enquiries=new EnquiryControl(db,flow,async()=>({id:scope.contactId,email:scope.recipient,version:"v1",lifecycle:"lead"}));
+ const intent={job:"acknowledgement",customerEmail:scope.recipient,askFirst:true,rehearsal:true,extraActions:false};const chat=new EnquiryChat(enquiries,{interpret:async()=>intent});
+ const mismatch=await chat.respond(operator,randomUUID(),[{role:"user",text:"Rehearse customer@example.test and ask first"}]);expect(mismatch).toHaveProperty("clarification");expect((await enquiries.list(operator)).length).toBe(0);
+ const missing=new EnquiryChat(enquiries,{interpret:async()=>({...intent,customerEmail:null})});expect(await missing.respond(operator,randomUUID(),[{role:"user",text:"Rehearse and ask first"}])).toHaveProperty("clarification",expect.stringContaining(scope.recipient));
+ const result=await chat.respond(operator,randomUUID(),[{role:"user",text:`Check CRM for ${scope.recipient}, prepare an acknowledgement, ask first and rehearse.`}]);const plan=(result as {saved:{id:string;plan_hash:string}}).saved;
+ expect(plan).toBeDefined();expect(writes).toBe(0);
+ await expect(submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","")).rejects.toThrow("compatible durable");expect((await flow.list(operator)).length).toBe(0);
+ const requests=await Promise.all([submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64)),submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64))]);expect(requests[0]).toEqual(requests[1]);expect(writes).toBe(0);
+ const run=await flow.read(operator,plan.id);expect(run.steps.map((s:{state:string|null})=>s.state)).toEqual(["held","held"]);expect(run.steps[1].proposedRequest?.body).toHaveProperty("to",[scope.recipient]);
+ expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(1);expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions")).rows[0].n).toBe(2);
+ await expect(submitScoped(enquiries,reviewer,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64))).rejects.toThrow("Only the plan owner");
+ await scopes.setActive(operator,id,false,"email");await expect(submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64))).rejects.toThrow("record grant");expect(writes).toBe(0);
+});
+
+it("refuses malformed scoped saved metadata and preserves legacy destination semantics",async()=>{
+ const {savedProvider}=await import("./routing");const {plan}=await routed();const id=randomUUID();
+ await db.query("INSERT INTO ll_enquiry_plans(org_id,id,fixture_id,source_version,policy_versions,plan,plan_hash,created_by) SELECT org_id,$2,fixture_id,source_version,policy_versions,plan-'recordEnrollment',plan_hash,created_by FROM ll_enquiry_plans WHERE id=$1",[plan.id,id]);
+ await expect(savedProvider(db,operator,"plan",id)).rejects.toThrow("missing or inconsistent");
+ const legacy=randomUUID();await db.query("INSERT INTO ll_enquiry_plans(org_id,id,fixture_id,source_version,policy_versions,plan,plan_hash,created_by) SELECT org_id,$2,fixture_id,source_version,policy_versions,plan-'recordEnrollment'-'requests',plan_hash,created_by FROM ll_enquiry_plans WHERE id=$1",[plan.id,legacy]);
+ await expect(savedProvider(db,operator,"plan",legacy,randomUUID())).rejects.toThrow("record saved");
+ await expect(savedProvider(db,operator,"plan","bad")).rejects.toThrow("stable enquiry ID");expect(writes).toBe(0);
+});
+
+it("exposes bounded scoped submission through the invited API without weaker legacy paths or approval",async()=>{
+ const hosted=await import("./hosted"),{NextRequest}=await import("next/server"),{GET,POST}=await import("@/app/api/workspace/enquiries/route");
+ const scopeId=await enrolled();await scopes.grant(operator,scopeId,"email");
+ const bound={...provider,contact:async()=>({id:scope.contactId,properties:{email:scope.recipient,lifecyclestage:"lead"},updatedAt:"v1"})} as unknown as import("./routing").ConnectedProvider;
+ const mocked=vi.spyOn(hosted,"connectorProvider").mockImplementation((()=>bound) as typeof hosted.connectorProvider);
+ const key=randomBytes(32).toString("base64url");await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one','operator','operator')",[tokenHash(key)]);
+ const origin="https://looplabs.run",url=origin+"/api/workspace/enquiries?scope="+scopeId;
+ const req=(p?:object,scopeIdOverride?:string)=>new NextRequest(scopeIdOverride?origin+"/api/workspace/enquiries?scope="+scopeIdOverride:url,{method:p?"POST":"GET",headers:{Authorization:`Bearer ${key}`,Origin:origin,"Content-Type":"application/json"},...(p?{body:JSON.stringify(p)}:{})});
+ const oldWorkspace=process.env.LOOPLABS_TEMPORAL_WORKSPACE,oldBuild=process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID;
+ try{
+ const plan=(await new EnquiryControl(db,new WorkflowControl(db,control),async()=>({id:scope.contactId,email:scope.recipient,version:"v1",lifecycle:"lead"})).prepareChat(operator,randomUUID())).saved;
+ const p={operation:"submit",id:plan.id,planHash:plan.plan_hash,crmAgent:"agent",emailAgent:"email"};
+ delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;delete process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID;
+ expect((await POST(req(p))).status).toBe(409);expect((await db.query("SELECT count(*)::int n FROM ll_workflow_runs")).rows[0].n).toBe(0);
+ process.env.LOOPLABS_TEMPORAL_WORKSPACE="staging";expect((await POST(req(p))).status).toBe(409);expect((await db.query("SELECT count(*)::int n FROM ll_workflow_runs")).rows[0].n).toBe(0);
+ process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID="ack-"+"c".repeat(64);
+ expect(await (await GET(req())).json()).toHaveProperty("connections.recordDurableAvailable",true);
+ expect((await POST(req({...p,recipient:"wrong@example.test"}))).status).toBe(400);
+ expect((await POST(req({...p,operation:"start"}))).status).toBe(409);expect((await POST(req({operation:"rehearse",id:plan.id,planHash:plan.plan_hash}))).status).toBe(409);
+ expect((await POST(req(p,randomUUID()))).status).toBe(409);
+ expect((await POST(req(p))).status).toBe(200);expect((await POST(req({operation:"resume",id:plan.id,planHash:plan.plan_hash}))).status).toBe(200);
+ expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE state='held'")).rows[0].n).toBe(2);expect(writes).toBe(0);
+ const before=(await db.query("SELECT count(*)::int n FROM ll_agents")).rows[0].n;expect(before).toBe(3);
+ }finally{mocked.mockRestore();if(oldWorkspace===undefined)delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;else process.env.LOOPLABS_TEMPORAL_WORKSPACE=oldWorkspace;if(oldBuild===undefined)delete process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID;else process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID=oldBuild;}
 });

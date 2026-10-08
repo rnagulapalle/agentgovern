@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T07:28:40.945Z",
+  "at": "2026-10-08T08:12:11.702Z",
   "scope": "Actual Temporal, isolated PostgreSQL and private HTTP twins; no production cutover",
   "checks": [
     "Atomic duplicate transfer excludes legacy polling and rejects legacy or human dispatch of Temporal-owned work",
@@ -25,7 +25,7 @@
     "lib/connectors/contracts.ts": "f1bf1c4431877f6beabb026e2df85fdf6e1feed5d21dd46ddbd7e8a3cc109394",
     "lib/connectors/service.ts": "adcce693094fe31f9ce75df459fba1d783b9620baf59c02c28d254b1a1b06aed",
     "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
-    "lib/connectors/hosted.ts": "799d415c110c7261e83fd295b44218939d2fdebc3950c7a322c289d617734a94",
+    "lib/connectors/hosted.ts": "72e67b5ae33fec3201641928bd7389abd98dc97b03de3b4990588d8e9063f79a",
     "lib/enquiries/service.ts": "a87d145adfd3809e5119fcf51f96002b4db6febb20de01431b1eee9e5d11ddc6",
     "lib/workflows/guard.ts": "3af43bf26bc065066a140e4e9e2fd2d601ef4089e4a22f6499b64072081a8d11",
     "lib/durable/recovery.ts": "82ab10eb57e625824260a2fa2b36e5a250610a41fa9f4077e72b7bc62b3f9c6d",

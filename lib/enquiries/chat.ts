@@ -62,9 +62,10 @@ export class EnquiryChat {
     if (intent.job !== "acknowledgement" || intent.extraActions) return { clarification: "That work is outside this rehearsal. I can check one sample CRM contact and prepare the approved acknowledgement for review. No workflow was created." };
     if (!intent.rehearsal) return { clarification: "Should I rehearse this with FetchSandbox sample systems? Live connections and automatic inbox monitoring are not enabled." };
     if (!intent.askFirst) return { clarification: "Who reviews the message? This rehearsal requires a separate named member's approval before each action. Please confirm ask-first." };
-    if (!intent.customerEmail) return { clarification: "Which customer should I check? For this rehearsal, type the sample customer's email: customer@example.test. No plan has been saved yet." };
+    const recipient = this.enquiries.workflows.connectors.provider.recordScope?.recipient ?? approvedReply.recipient;
+    if (!intent.customerEmail) return { clarification: `Which customer should I check? For this rehearsal, type the selected customer's email: ${recipient}. No plan has been saved yet.` };
     const addresses = turns.flatMap(t => t.text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || []);
-    if (intent.customerEmail !== approvedReply.recipient || !addresses.includes(approvedReply.recipient) || addresses.some(a => a !== approvedReply.recipient)) return { clarification: "That customer cannot be matched in this rehearsal. Only customer@example.test is available. No contact or message was created." };
+    if (intent.customerEmail !== recipient || !addresses.includes(recipient) || addresses.some(a => a !== recipient)) return { clarification: `That customer cannot be matched to the selected record. Only ${recipient} is available in this rehearsal. No contact or message was created.` };
     const result = await this.enquiries.prepareChat(actor, id);
     return { ...result, reply: "I checked the sample contact and saved the exact proposed work. Review it below. Nothing has executed. This rehearses one enquiry; it does not turn on an inbox listener." };
   }

@@ -1,6 +1,6 @@
 # Enterprise acceptance for the bounded acknowledgement workflow
 
-October 7, 2026. **Not accepted for enterprise production.** The local engine
+October 8, 2026. **Not accepted for enterprise production.** The local engine
 milestones passed; staging, customer connectors and operational acceptance remain
 open. This document sets a reviewable release boundary, not a numeric maturity score.
 
@@ -22,10 +22,10 @@ arbitrary agents, arbitrary graphs and connectors are outside this acceptance.
 | Database connectivity loss | Packaged roles become unready; replacement resumes 25 held histories; self-hosted Temporal PG crash and pre-effect snapshot restore do not duplicate effects; actual application archive restore fences resurrected authority and quarantines before read-back | Remote application database restore, managed database-service outage and replica failover drills; reconcile external effects; agree and measure disaster RPO/RTO |
 | Secure operations | Real self-hosted mTLS/JWT namespace authorization, reader write refusal, invalid/expired/tampered token and certificate rejection, signing-key rotation; workload revocation and content-bound artifacts | Repeat secure connectivity and rotation in remote hardened staging; production key lifecycle; least-privilege database/network access and independent security review |
 | Provider correctness | Private atomic source-version/idempotency/read-back twin contracts; saved plan/action destination binding refuses retargeting | Actual hosted/provider guarantees, including concurrent changes, duplicate request, lost response, outage and delivery semantics; hosted CRM atomic version gate remains blocked |
-| Capacity and isolation | 25 held plans and 50 concurrent transfers; one approved completion; workspace serialization | Independent customer records; multiple tenants; sustained approved load, bursts, quotas and backpressure; report latency/error/backlog distributions under an agreed workload |
+| Capacity and isolation | 25 held plans and 50 concurrent transfers; separately, ten independent test customer routes across packaged worker restart, nine approved completions/eighteen effects and one revoked route with no effects; workspace serialization | Multiple tenants; sustained approved load, bursts, quotas and backpressure; report latency/error/backlog distributions under an agreed workload |
 | Monitoring and response | Local readiness/backlog/failure signals; independent monitor with protected retry journal, signed local HTTP alert acceptance and lost-response deduplication proof (not a designated on-call notification) | Alert reaches the designated operator during an injected fault; traces correlate run/action/provider reference; reviewed incident and rollback procedures |
 | Human and workload security | Invited member authentication and scoped workload checks | SSO/MFA requirement agreed with pilot organization; adversarial tenant/role/API tests and independent security review; rotation and revocation drill |
-| Deployed user experience | Local real-browser typed request, staging-only opt-in, independent approvals and Temporal completion; saved ownership survives reload | Repeat in isolated remote staging and the approved provider binding; production remains on the legacy runner |
+| Deployed user experience | Local real-browser typed requests for two enrolled records, explicit agent grants, staging-only durable submission, independent approvals and packaged Temporal completion; saved recipient/ownership survives app restart and mobile reload | Repeat in isolated remote staging and the approved provider binding; production remains on the legacy runner |
 
 Local evidence files under `docs/evidence/temporal-*.json` are measured test records
 with source fingerprints. They are not signed certificates, independent audits or
@@ -113,3 +113,8 @@ The earlier sections record phase snapshots. `SCOPED_TEMPORAL_ROUTING.md` now re
 ## Invited onboarding increment
 
 `RECORD_ONBOARDING_WORKSPACE.md` adds a private record/access screen and authenticated catalog-backed enrollment API. It exposes the existing versioned permission foundation without conversational execution authority. Arbitrary-record selection through chat remains a separate integration step. Actual-source proof and release gates must pass before this increment is merged; this does not change the external-provider or remote-operations acceptance requirements above.
+
+
+## Selected-record chat proof
+
+`SCOPED_CHAT_EXPERIENCE.md` adds the invited typed-request → exact plan → explicitly granted agents → held actions → independent approvals → packaged durable execution journey for two enrolled records. Saved contexts cannot be retargeted by a dropdown; historical messages render their own stored body. Confirmed worker crash/app restart and actual lost-response readback retain exactly four intended effects. This closes a local end-to-end integration gap. Remote operational acceptance, sustained independent-tenant capacity, real-provider guarantees, production migration/cutover and enterprise security gates remain open.

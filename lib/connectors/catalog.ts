@@ -17,7 +17,7 @@ export function recordCatalog(org:string,raw=process.env.LOOPLABS_RECORD_CATALOG
  if(new Set(records.map(s=>`${s.workspaceId}:${s.contactId}`)).size!==records.length || new Set(records.map(s=>`${s.workspaceId}:${s.recipient}`)).size!==records.length)throw new ControlError(503,"Supported customer records are ambiguous.");
  return records.filter(s=>s.workspaceId===org).map(scope=>({key:createHash("sha256").update(JSON.stringify(scope)).digest("hex"),scope}));
 }
-export async function providerForScope(db:Pool,actor:Actor,id:string,factory:(scope:RecordScope)=>ConnectorProvider=connectorProvider){
+export async function providerForScope<T extends ConnectorProvider>(db:Pool,actor:Actor,id:string,factory:(scope:RecordScope)=>T):Promise<T>{
  if(typeof id!=="string" || !/^[a-f0-9-]{36}$/i.test(id))throw new ControlError(400,"Choose an enrolled customer record.");
  const scope=await transaction(db,actor.orgId,async c=>{
   await authorize(c,actor,["operator","agent","worker"],actor.role==="worker"?"enquiries":undefined);

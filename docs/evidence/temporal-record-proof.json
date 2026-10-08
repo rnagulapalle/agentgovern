@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T07:31:04.018Z",
+  "at": "2026-10-08T08:15:12.054Z",
   "checks": [
     "Ten independently enrolled customer plans and twenty concurrent transfer requests save ten immutable routes without effects",
     "Actual packaged worker and scheduler start ten explicitly pinned record histories; held approvals remain effect-free",
@@ -13,7 +13,7 @@
     "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
     "lib/connectors/request.ts": "37584ef57721d52bc77995e97c68a6b69f06f69e63da73c7ea67408a92c0344c",
     "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
-    "lib/connectors/hosted.ts": "799d415c110c7261e83fd295b44218939d2fdebc3950c7a322c289d617734a94",
+    "lib/connectors/hosted.ts": "72e67b5ae33fec3201641928bd7389abd98dc97b03de3b4990588d8e9063f79a",
     "lib/connectors/service.ts": "adcce693094fe31f9ce75df459fba1d783b9620baf59c02c28d254b1a1b06aed",
     "lib/enquiries/service.ts": "a87d145adfd3809e5119fcf51f96002b4db6febb20de01431b1eee9e5d11ddc6",
     "lib/enquiries/runner.ts": "931eba28f2a011ba5290ac8af01ac38701a9fe6dea25caf51b53b3578226c864",
@@ -35,6 +35,6 @@
     "contained": 1,
     "effects": 18
   },
-  "buildId": "ack-312c3a5900a3a807ea0303fc5593b2b7d7ae07aefea853f20fb6d8b1ad90a0a1",
+  "buildId": "ack-1cfac314a32ef6cb0ff45a022ea9480f35f676416788a9eee511c8611ea5a12b",
   "scope": "Local packaged processes and private HTTP twins; no production cutover, sustained load SLA or live provider guarantee"
 }

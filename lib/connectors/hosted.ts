@@ -15,6 +15,7 @@ export interface HostedBinding {
 }
 const unavailable = () => new ControlError(503, "Hosted connector evidence unavailable. No safe retry inferred.");
 export class HostedFetchSandboxConnectors implements ConnectorProvider {
+  readonly recordScope = undefined;
   readonly workspaceId: string;
   get bindingId() { return createHash("sha256").update(JSON.stringify(["hosted-twin-1", this.binding.origin, this.workspaceId, this.binding.contactId, this.binding.legs.crm.sandboxId, this.binding.legs.email.sandboxId, "customer@example.test"])).digest("hex"); }
   bound(a: ConnectorAction) { if (!bindingMatches(this, a) || !requestMatches(this,a)) throw new ControlError(409, "Saved connector request or destination changed. No request was sent."); }

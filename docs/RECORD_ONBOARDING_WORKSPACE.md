@@ -10,7 +10,7 @@ This phase adds `/control-plane/records` and its authenticated `/api/workspace/r
 4. Revoke or restore record/agent access. A changed authority version refuses stale restoration requests. Restoring access never revives old approvals.
 5. Reload and inspect the persisted owner/access state. The mobile page uses the shared workspace layout.
 
-None of these operations creates an action, grants action approval, starts a run, or delivers a real message. The current chat route still uses the prepared sample customer: selecting an enrolled record in chat is a separate integration phase. Do not infer end-to-end arbitrary-record chat support from this permission screen.
+None of these operations creates an action, grants action approval, starts a run, or delivers a real message. This permission phase originally used only the prepared sample customer in chat. The later staged integration is now documented in `SCOPED_CHAT_EXPERIENCE.md`; it supports selected enrolled test records for the fixed acknowledgement only. Do not infer arbitrary workflow or live-provider support.
 
 ## Configuration and trust
 

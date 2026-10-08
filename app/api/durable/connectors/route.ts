@@ -4,21 +4,23 @@ import { authenticate } from "@/lib/durable/service";
 import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
 import { ControlError } from "@/lib/durable/contracts";
 import { ConnectorControl } from "@/lib/connectors/service";
+import { savedProvider } from "@/lib/connectors/routing";
 import { connectorProvider } from "@/lib/connectors/hosted";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-async function context(request: NextRequest) {
+async function context(request: NextRequest,id?:string,proposal=false,operation?:unknown) {
   const db = database();
   const actor = await authenticate(db, credential(request));
+  if(operation!==undefined && (typeof operation!=="string" || !["propose","contain","enable","approve","reject","execute","reconcile"].includes(operation)))throw new ControlError(400,"Unknown action.");
   return {
     actor,
-    service: new ConnectorControl(db, connectorProvider()),
+    service: new ConnectorControl(db, id?await savedProvider(db,actor,proposal?"proposal":"action",id):connectorProvider()),
   };
 }
 export async function GET(request: NextRequest) {
   try {
-    const { actor, service } = await context(request);
     const id = request.nextUrl.searchParams.get("action");
+    const { actor, service } = await context(request,id||undefined);
     return Response.json(
       id ? await service.read(actor, id) : await service.snapshot(actor),
       { headers: { "Cache-Control": "no-store" } },
@@ -30,8 +32,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     sameOrigin(request);
-    const { actor, service } = await context(request);
     const { operation, ...p } = await body(request);
+    const { actor, service } = await context(request,typeof p.actionId==="string"?p.actionId:undefined,operation==="propose",operation);
     let result;
     if (operation === "propose") result = await service.propose(actor, p);
     else if (operation === "contain" || operation === "enable") {

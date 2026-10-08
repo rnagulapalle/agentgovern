@@ -1,5 +1,9 @@
 # LoopLabs claim, demo, and funnel audit
 
+## October 8: selected-record chat in staging
+
+The invited fixed acknowledgement now has local browser/package proof from selected enrolled test record and typed prompt through exact saved plan, explicit agent grants, held actions, independent approvals, durable scheduling and verified twin effects. Saved API contexts and message cards preserve the original destination. Two records complete across worker crash/app restart and a lost CRM response with four intended effects and no resend. See `SCOPED_CHAT_EXPERIENCE.md`. This is not a production cutover, arbitrary workflow builder, live integration, complete tenant/HA acceptance or enterprise SLA. Public claims must retain those limits.
+
 ## October 6: bounded chat rehearsal
 
 The invited `/control-plane/work` now interprets typed requests through Amazon Bedrock and asks for missing sample details. It saves a canonical CRM-to-acknowledgement plan for review using the existing server controls. Review never approves execution. Only isolated private FetchSandbox twins execute; no real email, live CRM, general workflow generation, inbox listener or durable chat memory is enabled. Hosted CRM dispatch remains blocked because atomic contact-version enforcement is unavailable. See [CHAT_WORKFLOW_PROOF.md](CHAT_WORKFLOW_PROOF.md) for actual browser proof. This supersedes older no-model statements only for the narrow chat planner; original demos retain their earlier scope.
