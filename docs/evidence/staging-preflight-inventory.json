@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-08T09:54:03.223282+00:00",
+  "scope": "Existing server runtime connection inspected in an isolated read-only diagnostic container; not a staged durable deployment.",
+  "report": {
+    "scope": "read-only staging prerequisites",
+    "prerequisitesPassed": false,
+    "blockers": [
+      "workspace_configuration_missing_or_invalid",
+      "staging_opt_in_missing",
+      "temporal_configuration_missing_or_invalid",
+      "workload_configuration_missing_or_invalid",
+      "isolated_record_binding_missing_or_invalid",
+      "migration_9_missing",
+      "migration_11_missing",
+      "migration_12_missing",
+      "migration_13_missing"
+    ],
+    "notVerified": [
+      "packaged artifact integrity",
+      "Temporal namespace authorization and compatible pollers",
+      "provider availability and enrolled-record consistency",
+      "remote fault, restore, rotation and alert drills",
+      "production release and ownership cutover"
+    ]
+  },
+  "sourceFingerprints": {
+    "runtime/temporal/staging-preflight.ts": "0108fae9ddd88b809fbba3b4c4a412e442abb4678735671fdec02bea1f6acd4a",
+    "scripts/staging-preflight.ts": "b01af10b8a920672b38364b27044dc5fa8b8b1753cdc7137acb476d1c020b3f5"
+  },
+  "limitations": [
+    "Snapshot only; rerun after provisioning or source changes.",
+    "No artifact, poller, provider, fault, restore or cutover acceptance inferred."
+  ],
+  "hostCapacityObservation": {
+    "totalMiB": 3836,
+    "availableMiB": 1955,
+    "swapMiB": 0,
+    "testedSelfHostedCoreMemoryCeilingsMiB": 3072,
+    "interpretation": "Configured ceilings exceed currently available memory before web/provider/application database; not steady-state usage or a sizing recommendation."
+  }
+}

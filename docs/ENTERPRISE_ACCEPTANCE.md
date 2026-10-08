@@ -136,3 +136,7 @@ Read-only inspection of the existing server confirmed running web/legacy worker 
 ## Shared-agent contention increment
 
 `SHARED_AGENT_CONTENTION_PROOF.md` reuses two agents across twelve explicitly granted customers. Three concurrent submissions compete for the last allowance slot: one is admitted and two are refused without actions or Temporal ownership. Actual packaged restart, independent approvals, lost-response recovery and replay retain eighteen intended effects and both lifetime reservation caps. This closes a bounded last-slot race, not fairness, saturation, every interleaving or remote capacity acceptance.
+
+## Executable rollout prerequisite check
+
+`temporal:staging-preflight` and the combined-environment invocation in `TEMPORAL_OPERATIONS.md` now inspect staging configuration, exact schema digests, runtime database privileges, workload scope and independent named members without mutation. The actual existing-server snapshot confirms missing migrations 9/11/12/13 and staging configuration. This narrows the provisioning work; it does not establish artifact integrity, poller/provider health or any remote operational acceptance. Keep the production runner unchanged until the remaining gates above pass.

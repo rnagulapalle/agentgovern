@@ -29,7 +29,7 @@ against an isolated real service. Remote customer staging remains unaccepted.
 
 1. Provision a dedicated Temporal namespace with retention, namespace-scoped
    credentials and a dedicated PostgreSQL environment. Apply the existing managed
-   migrations and migration 9 using `pnpm temporal:setup`; use a separate database
+   migrations and migration 9 using `pnpm temporal:setup`; for scoped records also apply migrations 11, 12 and 13 with their existing setup commands. Migration 10 is separate recovery enrollment; do not edit released migrations. Use a separate database
    owner for migration and the runtime role for execution. Keep production data
    and credentials out of this environment.
 2. Build: `docker build -f Dockerfile.temporal -t <immutable-staging-image> .`.
@@ -51,7 +51,7 @@ against an isolated real service. Remote customer staging remains unaccepted.
    pinned builds while their runs or retained queries need them.
 6. Start the scheduler through the same explicit Compose file. Transfer only
    dedicated staging rehearsals through the existing `TemporalOutbox.transfer`
-   service boundary. There is no new self-service UI switch. Transfer does not
+   service boundary. The invited scoped chat journey now submits exact held actions and pins durable staging ownership; see `SCOPED_CHAT_EXPERIENCE.md`. The original v1 unexecuted rehearsal can still explicitly opt into staging ownership. Transfer does not
    authorize execution; each action still needs exact independent approval.
 
 For local packaged-process proof, `pnpm temporal:build` then
@@ -178,3 +178,21 @@ Read `ENTERPRISE_ACCEPTANCE.md` before using an enterprise-readiness claim. Loca
 fault/replay evidence is necessary but does not qualify the deployed product.
 Staging operations and representative workload acceptance must use explicit
 infrastructure and measured outcomes rather than extrapolating laptop timings.
+
+## Read-only rollout prerequisite inspection — October 8
+
+Run against the **intended combined web/workload staging configuration**, rather than treating a worker-only environment as the complete rollout configuration:
+
+```sh
+node --env-file=.env.local --env-file=.local/temporal-staging.env --import tsx scripts/staging-preflight.ts
+```
+
+`pnpm temporal:staging-preflight` checks the local environment only. Both commands print sanitized blocker codes and exit nonzero on missing/invalid prerequisites. They do not migrate, enroll, approve, transfer, connect to Temporal, contact a provider or enable any service. The CLI reads the runtime connection in a read-only repeatable-read transaction. It needs permission to read the migration ledger, membership and workload records; a permission refusal is reported rather than granting access automatically.
+
+Configuration checks require explicit staging opt-in, workspace, authenticated TLS settings, a content-shaped matching worker/record build pin, a workload credential and supported isolated record catalog/provider configuration. Database checks compare the exact current migration digests, refuse privileged/schema-creating/table-owning runtime identities, verify an active workspace-bound `enquiry-temporal` workload and require two active named members. The restricted-connection tests succeed with SELECT grants only, and cover inactive/wrong-workspace tokens, inactive approvers, missing/corrupt migrations, excessive privileges and inspection denial.
+
+**A passed prerequisite inspection is not deployment readiness.** The report separately retains unverified artifact bytes, namespace authorization/pollers, actual provider/enrollment consistency, remote faults/restore/rotation/alerts and release/ownership cutover. No general enterprise acceptance follows from this command. Run the full operational proof after provisioning.
+
+The actual existing-server snapshot in `docs/evidence/staging-preflight-inventory.json` reports missing migrations 9/11/12/13 and staging configuration, while its runtime role passes the privilege check. This is dated evidence of missing provisioning, not proof of healthy staging. The temporary diagnostic used the already-running web image/network, readonly source mount, restricted container settings and a read-only database transaction; its files/container were removed. Production web/worker ownership was not changed.
+
+The same read-only host inspection observed 3,836 MiB total RAM, 1,955 MiB available and no swap while production/preview services were running. The tested self-hosted secure proof alone allows 3,072 MiB across Temporal, its PostgreSQL, worker and scheduler, before the web/provider/application database. These are configured ceilings, not measured steady-state consumption or a sizing recommendation. A dedicated service/host or an explicitly capacity-tested environment is still required; provisioning that entire stack on this shared server is not justified by the current evidence.
