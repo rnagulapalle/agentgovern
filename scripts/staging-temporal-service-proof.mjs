@@ -1,13 +1,11 @@
 import {execFileSync} from "node:child_process";
-import {randomBytes,randomUUID,sign,createPrivateKey} from "node:crypto";
+import {randomBytes} from "node:crypto";
 import {mkdtemp,readFile,rm} from "node:fs/promises";
 import {resolve} from "node:path";
 import {tmpdir} from "node:os";
 import {parseEnv} from "node:util";
 import assert from "node:assert/strict";
-import {Connection} from "@temporalio/client";
 import {generateTemporalConfiguration} from "./staging-temporal-config.mjs";
-import {bootstrapNamespace} from "./staging-namespace-bootstrap.mjs";
 const docker=(...args)=>execFileSync("docker",args,{encoding:"utf8",timeout:180000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const parent=await mkdtemp(resolve(tmpdir(),"ll-stage-service-")),dir=resolve(parent,"installation");
@@ -31,36 +29,21 @@ try {
  stage="authorization-service";
  run(auth,"--network-alias","authorization","--memory","128m","--cpus","0.1","--pids-limit","256","--read-only","--cap-drop","ALL","--security-opt","no-new-privileges","--user","node","--mount",`type=bind,src=${resolve("scripts/staging-authorization.mjs")},dst=/run/staging/authorization.mjs,readonly`,"--mount",`type=bind,src=${resolve(dir,"jwks.json")},dst=/run/staging/jwks.json,readonly`,"node:22-bookworm-slim","node","/run/staging/authorization.mjs");
  stage="temporal-service";
- run(server,"--network-alias","temporal","--memory","1536m","--cpus","1","--pids-limit","256","--read-only","--tmpfs","/tmp","--cap-drop","ALL","--security-opt","no-new-privileges","--mount",`type=bind,src=${resolve(dir,"server.yaml")},dst=/run/staging/server.yaml,readonly`,"--mount",`type=bind,src=${resolve(dir,"server-tls")},dst=/run/server-tls,readonly`,"-p","127.0.0.1::7233","--entrypoint","temporal-server","temporalio/server:1.31.0","--config-file","/run/staging/server.yaml","start");
- stage="frontend-port";
- const address=`localhost:${docker("port",server,"7233").split(":").pop()}`;
- const options={address,loopbackProof:true};
- stage="namespace-bootstrap";await until(()=>bootstrapNamespace(dir,options));
- assert.equal((await bootstrapNamespace(dir,options)).retentionSeconds,86400);
- stage="workload-authorization";
- const env=parseEnv(await readFile(resolve(dir,"temporal-auth.env"),"utf8"));
- const tls={serverRootCACertificate:await readFile(resolve(dir,"client-tls/ca.pem")),clientCertPair:{crt:await readFile(resolve(dir,"client-tls/client.pem")),key:await readFile(resolve(dir,"client-tls/client.key"))}};
- const rpc=async(token,fn)=>{const c=await Connection.connect({address,tls,apiKey:token,connectTimeout:"2 seconds"});try{return await fn(c.workflowService);}finally{await c.close();}};
- const key=env.LOOPLABS_TEMPORAL_API_KEY;
- await rpc(key,s=>s.describeNamespace({namespace}));
- const deny=async(token,target)=>assert.rejects(rpc(token,s=>s.describeNamespace({namespace:target})),e=>[7,16].includes(e.code??e.cause?.code));
- await deny(key,"temporal-system");await deny("invalid-jwt",namespace);
- const parts=key.split("."),signature=Buffer.from(parts[2],"base64url");signature[0]^=1;await deny(`${parts[0]}.${parts[1]}.${signature.toString("base64url")}`,namespace);
- const issuer=createPrivateKey(await readFile(resolve(dir,"offline/signing.pem")));
- const signed=(permissions,exp)=>{const body=Buffer.from(JSON.stringify({sub:namespace,permissions,exp})).toString("base64url"),content=`${parts[0]}.${body}`;return `${content}.${sign("RSA-SHA256",Buffer.from(content),issuer).toString("base64url")}`;};
- await deny(signed([`${namespace}:read`],Math.floor(Date.now()/1000)-60),namespace);
- await assert.rejects(rpc(signed([`${namespace}:read`],Math.floor(Date.now()/1000)+300),s=>s.startWorkflowExecution({namespace,workflowId:"reader-must-not-start",workflowType:{name:"pinnedAcknowledgement"},taskQueue:{name:"unpolled"},requestId:randomUUID()})),e=>e.code===7);
+ run(server,"--network-alias","temporal","--memory","1536m","--cpus","1","--pids-limit","256","--read-only","--tmpfs","/tmp","--cap-drop","ALL","--security-opt","no-new-privileges","--mount",`type=bind,src=${resolve(dir,"server.yaml")},dst=/run/staging/server.yaml,readonly`,"--mount",`type=bind,src=${resolve(dir,"server-tls")},dst=/run/server-tls,readonly`,"--entrypoint","temporal-server","temporalio/server:1.31.0","--config-file","/run/staging/server.yaml","start");
+ stage="namespace-and-authorization";
+ const verify=()=>{const controller=`${prefix}-controller-${randomBytes(4).toString("hex")}`;owned.push(controller);return docker("run","--rm","--name",controller,"--network",network,"--memory","256m","--cpus","0.5","--pids-limit","256","--read-only","--cap-drop","ALL","--security-opt","no-new-privileges","--mount",`type=bind,src=${resolve("scripts")},dst=/app/scripts,readonly`,"--mount",`type=bind,src=${resolve("node_modules")},dst=/app/node_modules,readonly`,"--mount",`type=bind,src=${dir},dst=/run/installation`,"node:22-bookworm-slim","node","/app/scripts/staging-temporal-service-controller.mjs");};
+ assert.equal(JSON.parse(verify()).passed,true);
  // Namespace configuration must survive abrupt service and persistence restarts.
  stage="crash-recovery";
  docker("kill","--signal","KILL",server);docker("kill","--signal","KILL",pg);docker("start",pg);await until(async()=>docker("exec",pg,"pg_isready","-U","temporal"));docker("start",server);
- await until(()=>bootstrapNamespace(dir,options));await rpc(key,s=>s.describeNamespace({namespace}));await deny(key,"temporal-system");
+ assert.equal(JSON.parse(verify()).passed,true);
  console.log(JSON.stringify({passed:true,scope:"disposable PostgreSQL-backed staging Temporal service configuration",checks:["generated mTLS and JWKS configuration accepted","namespace creation and idempotent repeat","namespace workload accepted","other namespace, invalid, tampered and expired JWT refused","reader cannot start workflow","namespace and authorization survive service/database SIGKILL"],images:["postgres:16","temporalio/server:1.31.0","temporalio/admin-tools:1.31.0","node:22-bookworm-slim"].map(image=>({image,id:docker("image","inspect",image,"--format","{{.Id}}")})),notVerified:["complete eight-service deployment","application workflows and browser UX","remote allocated staging","sustained capacity, restore and operator alerts"]},null,2));
 } catch(error) {
  // Print only daemon diagnostic lines, never command strings, SDK errors or service logs.
  console.error(`Failure category: ${Number.isInteger(error.status)?"docker-exit-"+error.status:"assertion-or-rpc"}`);
  const daemon=String(error.stderr??"").split("\n").filter(line=>/^docker: Error response from daemon:|^Error response from daemon:/.test(line));
  for(const line of daemon)console.error(line.slice(0,500));
- if(stage==="frontend-port") {
+ if(["namespace-and-authorization","crash-recovery"].includes(stage)) {
   try {
    const privateValues=[...Object.values(parseEnv(await readFile(resolve(dir,"temporal-db.env"),"utf8"))),JSON.parse(await readFile(resolve(dir,"offline/administrator.json"),"utf8")).token].filter(value=>value.length>=16);
    for(const line of docker("logs",server).split("\n").slice(-30)) {
