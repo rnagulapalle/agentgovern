@@ -9,6 +9,7 @@ import {spawn,type ChildProcess} from "node:child_process";
 import {resolve} from "node:path";
 import assert from "node:assert/strict";
 import {authenticate,tokenHash} from "../lib/durable/service";
+import {ControlError} from "../lib/durable/contracts";
 import {FetchSandboxConnectors} from "../lib/connectors/twin";
 import {ConnectorControl} from "../lib/connectors/service";
 import {ScopeControl} from "../lib/connectors/scopes";
@@ -19,13 +20,14 @@ const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 async function until(test:()=>Promise<boolean>,label:string,timeout=90000){const start=Date.now();while(!(await test())){if(Date.now()-start>timeout)throw Error(`Timed out: ${label}`);await wait(100);}}
 async function main(){
  const load=process.env.LOOPLABS_RECORD_LOAD_PROOF==="1";if(process.env.LOOPLABS_RECORD_LOAD_PROOF && !load)throw Error("Unsupported load-proof mode");
+ const shared=process.env.LOOPLABS_SHARED_AGENT_PROOF==="1";if((process.env.LOOPLABS_SHARED_AGENT_PROOF&&!shared)||(shared&&load))throw Error("Unsupported shared-agent proof mode");
  const count=load?40:10,completedCount=count-1,effectCount=completedCount*2;
  const url=process.env.LOOPLABS_TEST_DATABASE_URL;if(!url)throw Error("Dedicated test PostgreSQL required.");
  const dir=await mkdtemp(resolve(".local/record-worker-proof-")),schema=`record_worker_${randomBytes(8).toString("hex")}`;
  const admin=new Pool({connectionString:url}),db=new Pool({connectionString:url,options:`-c search_path=${schema}`});
  let env:TestWorkflowEnvironment|undefined,twin:ChildProcess|undefined;const children:ChildProcess[]=[],checks:string[]=[];
  const pass=(s:string)=>{checks.push(s);console.log("PASS",s);},token=randomBytes(32).toString("base64url"),workerKey=randomBytes(32).toString("base64url");
- const records=Array.from({length:count},(_,i)=>({version:"record-scope-1" as const,workspaceId:"local-proof",contactId:String(3001+i),recipient:`person${i+1}@example.test`}));
+ const records=Array.from({length:shared?12:count},(_,i)=>({version:"record-scope-1" as const,workspaceId:"local-proof",contactId:String(3001+i),recipient:`person${i+1}@example.test`}));
  const latencies:{ordinal:number;approvalToObservedCompletionMs:number}[]=[];let observationWindowMs=0;
  try{
   await admin.query(`CREATE SCHEMA ${schema}`);
@@ -45,22 +47,35 @@ async function main(){
   await until(async()=>{try{await base.contact();return true;}catch{if(twin!.exitCode!==null)throw Error("Private twin exited; port 8018 must be free");return false;}},"private twin startup",10000);
   const build=JSON.parse(await readFile(".worker/temporal-manifest.json","utf8")),outbox=new TemporalOutbox(db,build.buildId);
   const runs:{record:(typeof records)[number];scopeId:string;scopes:ScopeControl;control:ConnectorControl;flow:WorkflowControl;plan:Awaited<ReturnType<EnquiryControl["prepareChat"]>>["saved"];steps:Awaited<ReturnType<WorkflowControl["read"]>>["steps"];workflowId:string}[]=[];
-  for(const record of records){
+  type Prepared=Omit<(typeof runs)[number],"workflowId">;
+  async function prepare(record:(typeof records)[number]):Promise<Prepared>{
    const provider=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,record),control=new ConnectorControl(db,provider),flow=new WorkflowControl(db,control),scopes=new ScopeControl(db,provider),scopeId=randomUUID();
-   const crm=`crm-${record.contactId}`,email=`email-${record.contactId}`;
-   for(const [id,tool,role,connector] of [[crm,"twin.crm","crm_agent","crm_twin"],[email,"twin.email","email_agent","email_twin"]]){
-    await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof',$1,ARRAY[$2],1)",[id,tool]);
+   const crm=shared?"shared-crm":`crm-${record.contactId}`,email=shared?"shared-email":`email-${record.contactId}`;
+   if(!shared||record===records[0])for(const [id,tool,role,connector] of [[crm,"twin.crm","crm_agent","crm_twin"],[email,"twin.email","email_agent","email_twin"]]){
+    await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof',$1,ARRAY[$2],$3)",[id,tool,shared?count:1]);
     await db.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES('local-proof',$1,$1,'owner',$2,$3)",[id,role,connector]);
     await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'agent')",[tokenHash(randomBytes(32).toString("base64url")),id]);
    }
    await scopes.enroll(owner,scopeId);await scopes.grant(owner,scopeId,crm);await scopes.grant(owner,scopeId,email);
    const enquiries=new EnquiryControl(db,flow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};});
    const plan=(await enquiries.prepareChat(owner,randomUUID())).saved;await enquiries.start(owner,plan.id,plan.plan_hash,crm,email,true);
-   let steps=(await flow.read(owner,plan.id)).steps;
+   return {record,scopeId,scopes,control,flow,plan,steps:(await flow.read(owner,plan.id)).steps};
+  }
+  async function submit(p:Prepared):Promise<(typeof runs)[number]>{
+   const {control,flow,plan}=p;let {steps}=p;
    for(const step of steps)await control.propose(owner,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});
    steps=(await flow.read(owner,plan.id)).steps;
    const ids=await Promise.all([outbox.transfer(owner,plan.id),outbox.transfer(owner,plan.id)]);assert.equal(ids[0],ids[1]);
-   runs.push({record,scopeId,scopes,control,flow,plan,steps,workflowId:ids[0]});
+   return {...p,steps,workflowId:ids[0]};
+  }
+  const candidates:Prepared[]=[];
+  for(const record of records){const p=await prepare(record);if(shared&&candidates.length+ runs.length>=9)candidates.push(p);else runs.push(await submit(p));}
+  if(shared){
+   const attempts=await Promise.allSettled(candidates.map(submit));
+   assert.equal(attempts.filter(a=>a.status==="fulfilled").length,1);assert.equal(attempts.filter(a=>a.status==="rejected").length,2);
+   for(let i=0;i<attempts.length;i++){const a=attempts[i];if(a.status==="fulfilled")runs.push(a.value);else{assert(a.reason instanceof ControlError&&a.reason.status===403);assert.equal((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE id=ANY($1::uuid[])",[candidates[i].steps.map((s:{action_id:string})=>s.action_id)])).rows[0].n,0);assert.equal((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch WHERE plan_id=$1",[candidates[i].plan.id])).rows[0].n,0);}}
+   const agents=(await db.query("SELECT reserved,action_limit FROM ll_agents ORDER BY id")).rows;assert.equal(agents.length,2);assert(agents.every(a=>a.reserved===10&&a.action_limit===10));
+   pass("Three concurrent customer submissions compete for the final shared-agent allowance: one admitted, two denied without actions or Temporal ownership; both agents retain exactly ten reservations");
   }
   const effects=async()=>JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
   assert.equal(Object.keys(await effects()).length,0);assert.equal((await db.query("SELECT count(*)::int n FROM ll_temporal_record_routes")).rows[0].n,count);
@@ -105,12 +120,14 @@ async function main(){
   pass(load?"Four real lost CRM HTTP responses are read back by the packaged scoped worker without resend or wrong-recipient messaging":"Real lost CRM HTTP response is read back by the packaged scoped worker; exactly one CRM and one intended email effect are retained");
   await wait(1000);assert.equal(Object.keys(await effects()).length,effectCount);assert(!observed[last.steps[0].action_id]);assert(!observed[last.steps[1].action_id]);
   await assert.rejects(()=>env!.client.workflow.getHandle(last.workflowId).result());
-  pass(load?"Revoked fortieth enrollment cannot execute after restart; approved customers continue without fallback":"Revoked tenth enrollment cannot execute after restart; other customers continue and denied authority never falls back to the sample record");
+  pass(shared?"Revoked final admitted enrollment cannot execute after restart; rejected contenders and revoked work have no effects":load?"Revoked fortieth enrollment cannot execute after restart; approved customers continue without fallback":"Revoked tenth enrollment cannot execute after restart; other customers continue and denied authority never falls back to the sample record");
   pass(load?"All thirty-nine completed pinned histories replay without new effects or provider secrets in history":"All nine completed pinned histories replay without new effects or provider secrets in history");
+  if(shared){const agents=(await db.query("SELECT reserved,action_limit FROM ll_agents ORDER BY id")).rows;assert.equal(agents.length,2);assert(agents.every(a=>a.reserved===10&&a.action_limit===10));assert.equal((await db.query("SELECT count(*)::int n FROM ll_connector_actions")).rows[0].n,20);pass("Shared-agent reservations remain capped after execution and replay; revoked work does not silently refund lifetime authority");}
   const files=["lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/connectors/request.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/connectors/service.ts","lib/enquiries/service.ts","lib/enquiries/runner.ts","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/version-contract.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","scripts/connector-twin.py","scripts/temporal-record-proof.ts"];
   const sourceFingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
   const sample=load?{observationWindowMs,approvalToObservedCompletionMs:latencies,sampleLimits:"Single local workspace and paced four-wave sample; not steady-state throughput, percentile SLO, multi-tenant capacity or remote availability"}:{};
-  await writeFile(load?"docs/evidence/temporal-approved-load-proof.json":"docs/evidence/temporal-record-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{records:count,transferCalls:count*2,completed:completedCount,contained:1,effects:effectCount},...sample,buildId:build.buildId,scope:"Local packaged processes and private HTTP twins; no production cutover, sustained load SLA or live provider guarantee"},null,2)+"\n");
+  const contention=shared?{sharedAgents:2,perAgentAllowance:10,enrolledCustomers:12,concurrentFinalSlotCandidates:3,admittedFinalSlotCandidates:1,deniedFinalSlotCandidates:2}:{};
+  await writeFile(shared?"docs/evidence/temporal-shared-agent-proof.json":load?"docs/evidence/temporal-approved-load-proof.json":"docs/evidence/temporal-record-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{records:count,transferCalls:count*2,completed:completedCount,contained:1,effects:effectCount},...sample,...contention,buildId:build.buildId,scope:"Local packaged processes and private HTTP twins; no production cutover, sustained load SLA or live provider guarantee"},null,2)+"\n");
  }finally{
   for(const child of children)if(child.exitCode===null&&!child.signalCode){child.kill("SIGTERM");await until(async()=>child.exitCode!==null||Boolean(child.signalCode),"packaged process shutdown",25000);}
   await env?.teardown();if(twin&&twin.exitCode===null){twin.kill("SIGTERM");await until(async()=>twin!.exitCode!==null||Boolean(twin!.signalCode),"private twin shutdown",10000);}

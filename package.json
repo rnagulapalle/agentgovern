@@ -40,6 +40,7 @@
     "temporal:load-proof": "node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts",
     "temporal:record-proof": "node --env-file=.env.local --import tsx scripts/temporal-record-proof.ts",
     "temporal:approved-load-proof": "LOOPLABS_RECORD_LOAD_PROOF=1 node --env-file=.env.local --import tsx scripts/temporal-record-proof.ts",
+    "temporal:shared-agent-proof": "LOOPLABS_SHARED_AGENT_PROOF=1 node --env-file=.env.local --import tsx scripts/temporal-record-proof.ts",
     "workspace:tenant-proof": "node --env-file=.env.local --import tsx scripts/tenant-isolation-proof.ts",
     "temporal:container-proof": "LOOPLABS_TEMPORAL_CONTAINER_PROOF=1 node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts",
     "workspace:recovery": "node --env-file=.env.local --import tsx scripts/workspace-recovery.ts",
