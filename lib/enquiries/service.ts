@@ -1,3 +1,4 @@
+import { preparedRequest, sameRequestSnapshot } from "../connectors/request";
 import type { Pool, PoolClient } from "pg";
 import { ControlError, type Actor } from "../durable/contracts";
 import { transaction } from "../durable/database";
@@ -47,7 +48,7 @@ export class EnquiryControl {
         if (old.fixture_id !== fixtureId) throw new ControlError(409, "This enquiry ID already belongs to different work.");
         return { saved: old };
       }
-      const plan = { connectorBinding: binding, enquiry: fixture, contact: { id: contact.id, email: contact.email }, crm: { lifecycle: contact.lifecycle }, reply: approvedReply, approval: "Independent named approval for each effect", scope: "Private provider twins; no real delivery" };
+      const plan = { requests: { crm: preparedRequest("crm",{lifecycle:contact.lifecycle,sourceVersion:contact.version},this.contactId), email:preparedRequest("email",{template:"case_received"},this.contactId) }, connectorBinding: binding, enquiry: fixture, contact: { id: contact.id, email: contact.email }, crm: { lifecycle: contact.lifecycle }, reply: approvedReply, approval: "Independent named approval for each effect", scope: "Private provider twins; no real delivery" };
       const hash = digest(JSON.stringify([plan, contact.version, versions]));
       const saved = (await c.query("INSERT INTO ll_enquiry_plans(org_id,id,fixture_id,source_version,policy_versions,plan,plan_hash,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *", [actor.orgId, id, fixtureId, contact.version, JSON.stringify(versions), JSON.stringify(plan), hash, actor.subject])).rows[0];
       return { saved };
@@ -78,7 +79,7 @@ export class EnquiryControl {
       if (plan.plan_hash !== hash) throw new ControlError(409, "The plan changed. Review it again before starting work.");
       // A response lost after commit must resume the same immutable run, not
       // reject solely because that run has since changed the provider version.
-      if (!plan.run_id && (plan.plan.connectorBinding !== binding || plan.plan.contact.id !== contact.id || plan.plan.contact.email !== contact.email || plan.source_version !== contact.version || JSON.stringify(plan.policy_versions) !== JSON.stringify(versions)))
+      if (!plan.run_id && (!sameRequestSnapshot(plan.plan.requests, {crm:preparedRequest("crm",{lifecycle:contact.lifecycle,sourceVersion:contact.version},this.contactId),email:preparedRequest("email",{template:"case_received"},this.contactId)}) || plan.plan.connectorBinding !== binding || plan.plan.contact.id !== contact.id || plan.plan.contact.email !== contact.email || plan.source_version !== contact.version || JSON.stringify(plan.policy_versions) !== JSON.stringify(versions)))
         throw new ControlError(409, "The record or policy changed. Prepare a new plan and review it before execution.");
       if (!plan.run_id && (await c.query("SELECT 1 FROM ll_workflow_runs WHERE org_id=$1 AND id=$2", [actor.orgId, id])).rows[0])
         throw new ControlError(409, "This ID already belongs to unrelated work. Start a new enquiry plan.");

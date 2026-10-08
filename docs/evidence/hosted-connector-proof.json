@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T04:44:46.246Z",
+  "at": "2026-10-08T05:14:01.664Z",
   "scope": "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.",
   "checks": [
     {
@@ -32,33 +32,35 @@
     }
   ],
   "acceptedResponseLossEvidence": {
-    "acceptedRequestId": "94b9c71880ea",
+    "acceptedRequestId": "2ab88747b8ac",
     "acceptedStatus": 200,
     "transport": {
       "state": "delay_completed",
       "delay_ms": 15000,
-      "delay_started_at": "2026-10-08T04:44:30.674453+00:00",
-      "client_disconnected_at": "2026-10-08T04:44:32.173357+00:00",
-      "delay_completed_at": "2026-10-08T04:44:45.678240+00:00"
+      "delay_started_at": "2026-10-08T05:13:46.049994+00:00",
+      "client_disconnected_at": "2026-10-08T05:13:47.549338+00:00",
+      "delay_completed_at": "2026-10-08T05:14:01.057597+00:00"
     },
     "providerWritesAfterReconciliation": 1
   },
   "sourceFingerprints": {
+    "lib/connectors/request.ts": "2b3ca7f9a98f639a1bd143cc295ebb383f24e5967537777c8ed2ddac7cd341ad",
+    "lib/connectors/content.ts": "b37017e9f6dc0fc44b6f3d80f9e1b74afd4bf1352719bd5bf62e8d5e80719291",
     "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
     "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
     "lib/durable/recovery.ts": "d030d0c17ebd09399ff63a1652f23bfbc7dc0296eb29386b14127a67e75bbae7",
     "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
-    "lib/enquiries/service.ts": "7737e2768aa2eb9415b699352dbad19ac2bf38908b6a30073275252b588497e4",
-    "lib/enquiries/contracts.ts": "089a125558beba8d6d9fffa5e9b0796535f7031f8264b3d50c16c95fe7b70833",
+    "lib/enquiries/service.ts": "62def19a7dc89d02bcfd8f6a13478d213273bb31c8cf1a4aa4f69f1fda5baddc",
+    "lib/enquiries/contracts.ts": "9000949ae6c4c61072cb2a627263814b2ea41e1c8431990155baeca3a1a8a64b",
     "app/api/workspace/enquiries/route.ts": "d15eda40bf16f10d929ffc6cd51d0263762c379fd1830157e0ed1481a4fc760d",
-    "lib/workflows/service.ts": "8da7ab7684423f9221c22a7cf7af9611baadfbcc9e7f2563e4063a5ca6cebb9a",
+    "lib/workflows/service.ts": "3d03cee6503820855779d3d9a4d64bf5beb95c90c7c401367ebaf94fcd0c523c",
     "lib/enquiries/dispatch.ts": "4cc5701be853ae7c24e3092c8d9344eafb97f97844b7c29c8a8916ba27d09058",
-    "lib/connectors/hosted.ts": "291a9bea0af976493ae5f758babe5b7d5c31f9a20009fea1451824ae1f0a941f",
-    "lib/connectors/twin.ts": "03cf4743d1a4bed561482e87e28fe6e05f54947ccb97ceb1a3a99c77b863ffd7",
-    "lib/connectors/service.ts": "05ecce016a058bc83139eaf49b551caaa18efb2728ff0f5bbbf816058ca30da2",
+    "lib/connectors/hosted.ts": "0f60d9f82f7e70bc095f0e98199129b1164cb79d5e70575351a935976c0b477b",
+    "lib/connectors/twin.ts": "b93fe709df9f74c8995ffd2484f900b7d2302efec603155cc2e35c7817f16de2",
+    "lib/connectors/service.ts": "497f83772112ecc5b57f74809e9b742489f98994cf7136f17ce8823fb9c2208f",
     "app/api/durable/connectors/route.ts": "0bad77eb2c10cb6a1c14573f9ca54785a6890220d826880ad5845d479669e105",
     "app/api/durable/workflows/route.ts": "149168169108bde6cbbdd99b9c6fff4d35fad5138e6d2d1432fe785dccfd4d95",
-    "scripts/hosted-connector-proof.ts": "730e1db71252e093daf3e3ba79a0f9ff881846448c7060b214f2793aa9fc208f",
+    "scripts/hosted-connector-proof.ts": "287b07250a4fc86dcb06d17d4560acb864d8973dff24c5edc44633977c99218e",
     "scripts/workflow-http-proof-server.ts": "0802e102094dd95243727121cedbfaf2e17f660f916d5511777c4441b044012e"
   },
   "limitations": [

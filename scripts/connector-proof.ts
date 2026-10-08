@@ -301,6 +301,22 @@ async function main() {
       assert.equal((await changed.execute(worker, approved.id)).state, "cancelled");
       assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects, before.effects);
     }, "Real saved approval and adapter destination change; original ID/hash retained, dispatch cancelled and actual provider effect journal unchanged.");
+    await check("exact request: frozen approval, forgery refusal and actual provider body", async () => {
+      const approved = await ready("email");
+      assert(approved.payload.request);
+      const original = structuredClone(approved.payload.request);
+      const before = JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8"));
+      const adapter = new FetchSandboxConnectors("http://127.0.0.1:8018", token);
+      const altered = {...approved,payload:{...approved.payload,request:{...original,body:{...original.body,subject:"Unapproved change"}}}};
+      await assert.rejects(() => adapter.write(altered,false), /destination changed/);
+      await assert.rejects(() => db!.query("UPDATE ll_connector_actions SET payload=jsonb_set(payload,'{request,body,subject}',$2::jsonb) WHERE id=$1",[approved.id,JSON.stringify("Changed")]), {code:"23514"});
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects,before.effects);
+      const replay = await control.propose(email,{actionId:approved.id,agentId:email.subject,connector:"email",payload:{template:"case_received"}});
+      assert.deepEqual(replay.payload.request,original);assert.equal(replay.payload_hash,approved.payload_hash);
+      assert.equal((await control.execute(worker,approved.id)).state,"succeeded");
+      const effects=JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects;
+      assert.deepEqual(effects[approved.id].body,original.body);
+    }, "Real named approval, immutable database refusal, direct adapter refusal before HTTP, stable same-ID replay, and one real twin write equal to the saved request. No live email delivery.");
     for (const stage of ["before", "after"])
       await check(
         `worker SIGKILL ${stage} effect`,
@@ -839,6 +855,7 @@ async function main() {
       "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA.",
     );
     const fingerprintFiles = [
+      "lib/connectors/request.ts", "lib/connectors/content.ts",
       "lib/durable/recovery.ts",
       "lib/durable/service.ts",
       "lib/enquiries/dispatch.ts",

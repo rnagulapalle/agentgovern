@@ -1,3 +1,4 @@
+import { preparedRequest, requestMatches } from "./request";
 import { managedWorker, dispatchOwnership, managedOwnerActive } from "../enquiries/dispatch";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
@@ -75,7 +76,7 @@ export class ConnectorControl {
     a: ConnectorAction,
     approval = true,
   ) {
-    if (!bindingMatches(this.provider, a)) return false;
+    if (!bindingMatches(this.provider, a) || !requestMatches(this.provider, a)) return false;
     if (!(await managedOwnerActive(c, actor.orgId, a.id))) return false;
     const row = (
       await c.query(
@@ -143,12 +144,12 @@ export class ConnectorControl {
       (!sourceVersion || typeof sourceVersion !== "string")
     )
       throw new ControlError(503, "Trusted contact version is unavailable.");
-    const payload =
-      { ...p.payload, ...(p.connector === "crm" ? { sourceVersion } : {}), binding };
+    const scoped = { ...p.payload, ...(p.connector === "crm" && typeof sourceVersion === "string" ? { sourceVersion } : {}), binding };
+    const payload = { ...scoped, request: preparedRequest(p.connector,scoped,this.provider.contactId ?? "1001") };
     return transaction(this.db, actor.orgId, async (c) => {
       await this.authority(c, actor, ["agent", "operator"]);
       if (binding !== this.provider.bindingId) throw new ControlError(409, "Connector destination changed during preparation. Prepare fresh work.");
-      await enquirySource(c, actor.orgId, p.actionId, sourceVersion, binding);
+      await enquirySource(c, actor.orgId, p.actionId, sourceVersion, binding, payload.request);
       await workflowProposal(c, actor.orgId, p);
       if (actor.role === "agent" && actor.subject !== p.agentId)
         throw new ControlError(403, "Agent identity must match the request.");
@@ -283,7 +284,7 @@ export class ConnectorControl {
           "Worker lease expired. Verify the outcome before any further action.",
         );
       if (a.state !== "ready") return { ...a, lease_token: null };
-      await workflowDispatch(c, actor.orgId, id);
+      await workflowDispatch(c, actor.orgId, id, this.provider);
       if (!(await this.valid(c, actor, a)))
         return this.state(
           c,
@@ -360,7 +361,7 @@ export class ConnectorControl {
       if (actor.role === "worker") await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
       if (!["executing", "uncertain", "succeeded"].includes(a.state)) return { ...a, lease_token: null };
-      if (!bindingMatches(this.provider, a)) return this.state(c, actor, a, "uncertain", "Saved destination changed. Restore the original binding before verifying the effect; do not resend.");
+      if (!bindingMatches(this.provider, a) || !requestMatches(this.provider,a)) return this.state(c, actor, a, "uncertain", "Saved request or destination changed. Restore the original reviewed contract before verifying the effect; do not resend.");
       if (
         a.state === "executing" &&
         a.lease_until &&
@@ -386,7 +387,7 @@ export class ConnectorControl {
       const a = await this.get(c, actor, id);
       if (!["executing", "uncertain", "succeeded"].includes(a.state))
         return { ...a, lease_token: null };
-      if (!bindingMatches(this.provider, a)) return this.state(c, actor, a, "uncertain", "Destination changed during effect verification. Do not resend.");
+      if (!bindingMatches(this.provider, a) || !requestMatches(this.provider,a)) return this.state(c, actor, a, "uncertain", "Request or destination changed during effect verification. Do not resend.");
       return this.observed(c, actor, a, o);
     });
   }

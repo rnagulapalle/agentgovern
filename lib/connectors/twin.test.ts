@@ -1,3 +1,4 @@
+import { preparedRequest } from "./request";
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { FetchSandboxConnectors } from "./twin";
 import type { ConnectorAction } from "./contracts";
@@ -7,7 +8,7 @@ const a = (connector: "crm" | "email" = "crm") =>
     id: "proof-id",
     org_id: "local-proof",
     connector,
-    payload: { ...(connector === "crm" ? { lifecycle: "customer" } : { template: "case_received" }), binding: new FetchSandboxConnectors("http://127.0.0.1:8018", token).bindingId },
+    payload: { ...(connector === "crm" ? { lifecycle: "customer", sourceVersion:"v1" } : { template: "case_received" }), request: preparedRequest(connector,connector === "crm" ? {lifecycle:"customer",sourceVersion:"v1"} : {template:"case_received"}), binding: new FetchSandboxConnectors("http://127.0.0.1:8018", token).bindingId },
   }) as ConnectorAction;
 afterEach(() => vi.restoreAllMocks());
 describe("Private connector adapter", () => {
@@ -172,4 +173,15 @@ it("treats approved private transport aliases as one fixture identity and refuse
   await expect(local.write({ ...a(), org_id: "other" }, false)).rejects.toThrow();
   await expect(local.write({ ...a(), payload: { lifecycle: "customer" } }, false)).rejects.toThrow();
   expect(request).not.toHaveBeenCalled();
+});
+
+it("refuses changed saved requests before any provider HTTP call",async () => {
+  const p=new FetchSandboxConnectors("http://127.0.0.1:8018",token),original=a("email");
+  const fetch=vi.spyOn(globalThis,"fetch");
+  for (const patch of [{method:"DELETE"},{resource:"/other"},{version:"unsupported"},{body:{subject:"Changed"}}]) {
+    const changed={...original,payload:{...original.payload,request:{...original.payload.request!,...patch}}} as ConnectorAction;
+    await expect(p.write(changed,false)).rejects.toMatchObject({status:409});
+    await expect(p.inspect(changed)).rejects.toMatchObject({status:409});
+  }
+  expect(fetch).not.toHaveBeenCalled();
 });

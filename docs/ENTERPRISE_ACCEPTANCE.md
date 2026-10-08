@@ -76,3 +76,15 @@ The next product boundary is independent record/recipient scope and the exact
 connector request content. Do not turn the shared-contact held-run test into a
 capacity claim; expand the approved contract and preserve old version compatibility
 before measuring multi-record approved execution.
+
+## Exact request safeguard
+
+Saved plans and independently approved actions now include the exact method,
+resource, atomic source condition and body. Both adapters send that saved request
+and refuse mismatches; readback/display never replace it with current template
+text. Downstream execution requires predecessors to match the current destination
+and request contract. See [exact connector requests](EXACT_CONNECTOR_REQUESTS.md).
+Fresh actual connector, hosted, Temporal, secure-container, application-restore
+and real-model/browser proofs passed. This is local prototype acceptance only;
+older plans/actions without snapshots need reviewed handling before production
+cutover. It does not close independent-record capacity or real-provider gates.

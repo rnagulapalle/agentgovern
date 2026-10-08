@@ -81,3 +81,14 @@ owner. Apply through `workspace:proposal-boundaries` with a separate owner conne
 unmigrated deployments gain no protection. Preserve migrations 1–5 and 7–11 once
 applied. Run the actual connector, Temporal, restore and chat proofs with migration
 11 enabled before declaring this boundary verified.
+
+## Exact connector requests
+
+Read `docs/EXACT_CONNECTOR_REQUESTS.md` before changing request preparation,
+templates, dispatch or readback. Server-created snapshots bind method, resource,
+source condition and body to saved plans and action approval hashes. Adapters send
+the saved request; they must reject missing/changed contracts before HTTP. Do not
+edit retained v1 content or silently replace historical request displays. Downstream
+steps must match current predecessor destination/request contracts as well as
+identity, policy and verified state. Changes require meaningful failure/replay
+tests and fresh application/worker/container plus actual proof suites.

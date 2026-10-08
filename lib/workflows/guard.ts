@@ -1,6 +1,7 @@
+import { requestMatches, sameRequestSnapshot, type RequestSnapshot } from "../connectors/request";
 import type { PoolClient } from "pg";
 import { ControlError } from "../durable/contracts";
-import type { ConnectorProposal } from "../connectors/contracts";
+import { bindingMatches, type ConnectorProvider, type ConnectorProposal } from "../connectors/contracts";
 export async function workflowProposal(
   c: PoolClient,
   org: string,
@@ -36,7 +37,7 @@ export async function workflowProposal(
       "The request does not match this workflow step.",
     );
 }
-export async function workflowDispatch(c: PoolClient, org: string, id: string) {
+export async function workflowDispatch(c: PoolClient, org: string, id: string, provider: ConnectorProvider) {
   const step = (
     await c.query(
       "SELECT s.*,r.state AS run_state FROM ll_workflow_steps s JOIN ll_workflow_runs r ON r.org_id=s.org_id AND r.id=s.run_id WHERE s.org_id=$1 AND s.action_id=$2",
@@ -65,16 +66,18 @@ export async function workflowDispatch(c: PoolClient, org: string, id: string) {
       [org, step.run_id, step.ordinal],
     )
   ).rows;
-  if (missing.length)
+  const predecessors = (await c.query("SELECT a.connector,a.payload FROM ll_workflow_steps s JOIN ll_connector_actions a ON a.org_id=s.org_id AND a.id=s.action_id WHERE s.org_id=$1 AND s.run_id=$2 AND s.ordinal<$3",[org,step.run_id,step.ordinal])).rows;
+  if (missing.length || predecessors.some(a => !bindingMatches(provider,a) || !requestMatches(provider,a)))
     throw new ControlError(
       409,
       "A preceding step is unverified or its authority changed. Downstream execution is held.",
     );
 }
 
-export async function enquirySource(c: PoolClient, org: string, actionId: string, version: string | null, binding?: string) {
+export async function enquirySource(c: PoolClient, org: string, actionId: string, version: string | null, binding: string, request: RequestSnapshot) {
   const plan = (await c.query("SELECT p.source_version,p.plan,s.ordinal FROM ll_workflow_steps s JOIN ll_enquiry_plans p ON p.org_id=s.org_id AND p.run_id=s.run_id WHERE s.org_id=$1 AND s.action_id=$2", [org, actionId])).rows[0];
   if (plan && plan.plan.connectorBinding !== binding) throw new ControlError(409, "Connector destination changed after plan review. Prepare fresh work; no action was proposed.");
+  if (plan && !sameRequestSnapshot(plan.plan.requests?.[plan.ordinal === 1 ? "crm" : "email"],request)) throw new ControlError(409,"The connector request changed after plan review. Prepare fresh work; no action was proposed.");
   if (plan && plan.ordinal === 1 && plan.source_version !== version)
     throw new ControlError(409, "The contact changed after plan review. This enquiry stays held; prepare new work rather than silently changing its evidence.");
 }

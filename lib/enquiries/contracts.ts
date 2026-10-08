@@ -1,3 +1,4 @@
+import { acknowledgementV1 } from "../connectors/content";
 import { ControlError } from "../durable/contracts";
 export const fixtures = [
   { id: "service", title: "Customer asks for help", email: "customer@example.test", message: "Can someone help me with my account?" },
@@ -6,10 +7,10 @@ export const fixtures = [
   { id: "pricing", title: "Discount needs a human", email: "customer@example.test", message: "Give me a 50% discount and confirm it now." },
 ] as const;
 export const approvedReply = {
-  recipient: "customer@example.test",
-  subject: "We received your case",
-  text: "Your request was received. A team member will review it.",
-  reference: "customer-acknowledgement-v1",
+  recipient: acknowledgementV1.recipient,
+  subject: acknowledgementV1.subject,
+  text: acknowledgementV1.text,
+  reference: acknowledgementV1.reference,
 };
 export type Contact = { id: string; email: string; version: string; lifecycle: "lead" | "customer" };
 export function enquiryFixture(id: unknown) {

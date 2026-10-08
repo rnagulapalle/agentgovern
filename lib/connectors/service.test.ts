@@ -581,3 +581,31 @@ it("contains a destination change during source lookup and after an in-flight ef
   expect((await control.reconcile(operator, approved.id)).state).toBe("uncertain");
   expect(provider.calls).toBe(1);
 });
+
+it("saves the exact server request under approval and refuses client snapshot injection",async () => {
+  const a=await control.propose(operator,p("email"));
+  expect(a.payload.request).toMatchObject({version:"prepared-request-1",method:"POST",resource:"/emails",sourceVersion:null,body:{subject:"We received your case",to:["customer@example.test"]}});
+  await expect(control.propose(operator,{...p("email"),payload:{template:"case_received",request:a.payload.request}})).rejects.toMatchObject({status:400});
+  const replay=await control.propose(operator,{actionId:a.id,agentId:a.agent_id,connector:a.connector,payload:{template:"case_received"}});
+  expect(replay.payload.request).toEqual(a.payload.request);expect(replay.payload_hash).toBe(a.payload_hash);
+  await expect(db.query("UPDATE ll_connector_actions SET payload=jsonb_set(payload,'{request,body,subject}','\"Changed\"'::jsonb) WHERE id=$1",[a.id])).rejects.toMatchObject({code:"23514"});
+});
+it("holds downstream work when a preceding effect belongs to a different destination",async () => {
+  const w=new WorkflowControl(db,control),id=await w.create(operator,"test-agent","test-agent",randomUUID());
+  const [crm,email]=(await w.read(operator,id)).steps;
+  const upstream=await control.propose(operator,{actionId:crm.action_id,agentId:crm.agent_id,connector:crm.connector,payload:crm.payload});
+  await control.review(second,upstream.id,upstream.payload_hash,true);await control.execute(worker,upstream.id);
+  provider.bindingId="b".repeat(64);
+  const downstream=await control.propose(operator,{actionId:email.action_id,agentId:email.agent_id,connector:email.connector,payload:email.payload});
+  await control.review(second,downstream.id,downstream.payload_hash,true);
+  await expect(control.execute(worker,downstream.id)).rejects.toThrow("preceding step");expect(provider.calls).toBe(1);
+});
+it("does not treat a succeeded legacy predecessor without its exact request as current evidence",async () => {
+  const w=new WorkflowControl(db,control),id=await w.create(operator,"test-agent","test-agent",randomUUID());
+  const [crm,email]=(await w.read(operator,id)).steps;
+  await db.query("INSERT INTO ll_connector_actions(org_id,id,agent_id,connector,payload,payload_hash,policy_version,state,reason,proposed_by) VALUES('one',$1,$2,'crm',$3,'legacy',1,'succeeded','Older record','operator')",[crm.action_id,crm.agent_id,{lifecycle:'customer',sourceVersion:'v1',binding:provider.bindingId}]);
+  const downstream=await control.propose(operator,{actionId:email.action_id,agentId:email.agent_id,connector:email.connector,payload:email.payload});
+  await control.review(second,downstream.id,downstream.payload_hash,true);
+  await expect(control.execute(worker,downstream.id)).rejects.toThrow("preceding step");expect(provider.calls).toBe(0);
+  expect((await w.read(operator,id)).steps[0].proposedRequest).toBeNull();
+});

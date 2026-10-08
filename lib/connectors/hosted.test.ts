@@ -1,9 +1,10 @@
+import { preparedRequest } from "./request";
 import { afterEach, expect, it, vi } from "vitest";
 import { HostedFetchSandboxConnectors, connectorProvider, type HostedBinding } from "./hosted";
 import { FetchSandboxConnectors } from "./twin";
 import type { ConnectorAction } from "./contracts";
 const binding = (): HostedBinding => ({ origin: "http://127.0.0.1:8019", ownerKey: "fsk_" + "a".repeat(40), workspaceId: "local-proof", contactId: "1001", legs: { crm: { sandboxId: "a".repeat(10), apiKey: "c".repeat(40) }, email: { sandboxId: "b".repeat(10), apiKey: "e".repeat(40) } } });
-const action = (connector: "crm" | "email" = "email") => ({ id: "proof-id", org_id: "local-proof", connector, payload: { ...(connector === "crm" ? { lifecycle: "customer" } : { template: "case_received" }), binding: new HostedFetchSandboxConnectors(binding()).bindingId } }) as ConnectorAction;
+const action = (connector: "crm" | "email" = "email") => ({ id: "proof-id", org_id: "local-proof", connector, payload: { ...(connector === "crm" ? { lifecycle: "customer",sourceVersion:"v1" } : { template: "case_received" }), request:preparedRequest(connector,connector === "crm" ? {lifecycle:"customer",sourceVersion:"v1"} : {template:"case_received"}), binding: new HostedFetchSandboxConnectors(binding()).bindingId } }) as ConnectorAction;
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); });
 it.each([null, { origin: "https://api.resend.com" }, { origin: "https://fetchsandbox.com/" }, { ownerKey: "bad" }, { workspaceId: "" }, { contactId: "../escape" }, { legs: {} }])("rejects unsafe or incomplete binding %j", value => {
   expect(() => new HostedFetchSandboxConnectors(value === null ? value as unknown as HostedBinding : { ...binding(), ...value } as unknown as HostedBinding)).toThrow();
@@ -89,6 +90,17 @@ it("freezes destination identity while allowing credentials to rotate within the
     else b.origin = "https://stage.fetchsandbox.com";
     await expect(p.write(a, false)).rejects.toThrow("destination changed");
     await expect(p.inspect(a)).rejects.toThrow("destination changed");
+  }
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+it("refuses changed saved requests before any provider HTTP call",async () => {
+  const p=new HostedFetchSandboxConnectors(binding()),original=action();
+  const fetch=vi.spyOn(globalThis,"fetch");
+  for (const patch of [{method:"DELETE"},{resource:"/other"},{version:"unsupported"},{body:{subject:"Changed"}}]) {
+    const changed={...original,payload:{...original.payload,request:{...original.payload.request!,...patch}}} as ConnectorAction;
+    await expect(p.write(changed,false)).rejects.toMatchObject({status:409});
+    await expect(p.inspect(changed)).rejects.toMatchObject({status:409});
   }
   expect(fetch).not.toHaveBeenCalled();
 });
