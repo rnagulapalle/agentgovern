@@ -99,11 +99,13 @@ tests and fresh application/worker/container plus actual proof suites.
 Read `docs/RECORD_SCOPED_CONNECTORS.md` before changing enrolled record scope or
 recipient routing. The private adapter's server-only `prepared-request-2` contract
 binds workspace/record/test-recipient; v1 remains unchanged. Extra records are
-fixture enrollment, not live provider/tenant authentication. Record-scoped managed
-submission and Temporal ownership transfer remain refused until compatible worker
-routing is proven. Never relabel a v2 request as a pinned v1 contract or treat the
+fixture enrollment, not live provider/tenant authentication. Record-scoped managed submission and Temporal ownership transfer require the compatible immutable-route and worker-build gates described below; a v1 worker must never receive scoped work. Never relabel a v2 request as a pinned v1 contract or treat the
 manual two-record proof as approved load or deployed background acceptance.
 
 ## Persistent record authority
 
-Read `docs/PERSISTED_RECORD_GRANTS.md` before changing migration 12, record enrollment, per-agent grants or scoped approval checks. Revocation/reactivation must not revive an old plan or approval. Preserve uncertain effects and recovery quarantine. The enrollment service is not yet a self-service UI or compatible scoped background routing.
+Read `docs/PERSISTED_RECORD_GRANTS.md` before changing migration 12, record enrollment, per-agent grants or scoped approval checks. Revocation/reactivation must not revive an old plan or approval. Preserve uncertain effects and recovery quarantine. The enrollment service is not yet a self-service UI. Compatible scoped background routing uses the separate contract described below.
+
+## Scoped background routing
+
+Read `docs/SCOPED_TEMPORAL_ROUTING.md` before changing migration 13 or record-aware Temporal dispatch. Applied migrations 1–12 must remain unchanged. Scoped transfers require an immutable record route and explicit content-bound worker build; no legacy, sample-record or hosted fallback is allowed. Legacy dispatch must exclude scoped runs before ownership transfer. Scoped managed runs use existing explicitly granted agents and cannot silently enroll authority. The private fixed acknowledgement workflow is not an arbitrary workflow builder or live integration.

@@ -503,7 +503,7 @@ it("saves a server-scoped record/recipient and refuses another record, managed d
  const run=await flow.read(operator,id);
  for(const step of run.steps)await control.propose(operator,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});
  await db.query("INSERT INTO ll_enquiry_dispatch(org_id,plan_id,created_by) VALUES('one',$1,'operator')",[id]);
- await expect(new TemporalOutbox(db).transfer(operator,id)).rejects.toThrow("compatible worker");
+ await expect(new TemporalOutbox(db,"ack-"+"c".repeat(64)).transfer(operator,id)).rejects.toThrow("compatible worker");
  expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(0);
  await expect(new EnquiryControl(db,flow,async()=>({...scopedContact,email:"wrong@example.test"})).prepare(operator,randomUUID(),"service")).rejects.toThrow("unique supported");
 });

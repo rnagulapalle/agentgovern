@@ -80,3 +80,13 @@ it("requires actual monitor-process alert delivery and restart evidence", () => 
   for (const [file, hash] of Object.entries(proof.sourceFingerprints))
     expect(createHash("sha256").update(readFileSync(file)).digest("hex"), file).toBe(hash);
 });
+
+it("requires actual packaged independent-record routing and refusal evidence",()=>{
+ const proof=JSON.parse(readFileSync("docs/evidence/temporal-record-proof.json","utf8"));
+ expect(proof.measurements).toEqual({records:10,transferCalls:20,completed:9,contained:1,effects:18});
+ for(const marker of ["immutable routes","explicitly pinned", "SIGKILL", "lost CRM HTTP response", "Revoked tenth", "histories replay"])
+  expect(proof.checks.join(" ")).toContain(marker);
+ expect(proof.buildId).toMatch(/^ack-[a-f0-9]{64}$/);
+ for(const [file,hash] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(readFileSync(file)).digest("hex"),file).toBe(hash);
+ expect(proof.scope).toContain("no production cutover");
+});

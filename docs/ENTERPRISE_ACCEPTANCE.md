@@ -105,3 +105,7 @@ requests. No customer production readiness follows from these local checks.
 ## Persistent record authority foundation
 
 Migration 12 and `ScopeControl` now persist immutable record enrollment and versioned per-agent grants, with named-owner checks and stale approval refusal across approval, dispatch, readback and predecessor checks. Archive quarantine revokes restored grants. See [PERSISTED_RECORD_GRANTS.md](PERSISTED_RECORD_GRANTS.md). This closes a local authority-persistence gap; invited enrollment UX/API, compatible scoped Temporal routing and independent-record capacity remain open. A storage-failure drill also exposed and fixed false verification from volatile fixture state; failed persistence now blocks further evidence and automatic resend. Production was not changed.
+
+## Latest scoped background routing proof
+
+The earlier sections record phase snapshots. `SCOPED_TEMPORAL_ROUTING.md` now records ten independent customer plans running in actual packaged Temporal worker/scheduler processes. Nine approved workflows complete exactly eighteen correctly targeted effects across worker restart; an actual lost CRM response is reconciled and the revoked tenth record produces no effects. Completed histories replay without effects. Immutable routes pin a compatible worker build and never fall back to v1 or hosted execution. This closes a local background record-routing gap. Invited scope onboarding/selection, remote TLS operational acceptance, independent tenant security, sustained capacity, live provider guarantees and production cutover remain open.

@@ -74,11 +74,7 @@ archive drill additionally registers a real fixture scope/grant before backup,
 revokes them, restores the archive and checks that quarantine revokes resurrected
 version 1 as version 2 before fresh authority can operate.
 
-The current UI/factory still selects the original sample. Record-scoped background
-submission/Temporal transfer remain refused until compatible per-run routing is
-proven. Existing v1 behavior is preserved. Next: server enrollment UX/API, compatible
-routing/versioned worker contract and invited browser proof; then approved independent
-record/tenant load and operational acceptance. No live provider grant, hosted CRM
+The current UI/factory still selects the original sample. The subsequent local routing phase is described in `SCOPED_TEMPORAL_ROUTING.md`: compatible per-run routing now has packaged-process proof, with explicit build pinning and no fallback. Existing v1 behavior is preserved. Next: server enrollment UX/API and invited browser proof; then approved independent record/tenant sustained load and operational acceptance. No live provider grant, hosted CRM
 atomic write guarantee, sustained throughput or full tenant security is established.
 
 ## Storage failure found during verification
