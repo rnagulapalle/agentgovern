@@ -401,3 +401,27 @@ this increment does **not** prove fresh typed chat/model interpretation. No brow
 acceptance is established until the full quality gate and actual combined trial
 pass. Persistent staging, live delivery, sustained tenant load and remote
 restore/operator acceptance remain open.
+
+### Image-builder lifecycle — implementation awaiting trial
+
+Browser trial runs `37853700287` and `37856164794` passed the full quality gate
+but refused runtime host admission before any browser actions. The second run
+measured 6,484,697,088 available bytes against 4,697,620,480 service bytes plus
+2,147,483,648 reserve bytes. Its post-refusal diagnostics found Docker to be the
+largest resident process (494,665,728 bytes); no test containers remained. These
+measurements establish insufficient capacity, not the exact cause of every retained
+byte or a successful browser journey.
+
+The trial now uses an explicitly named, random disposable `docker-container`
+BuildKit builder with 3 GiB memory and swap limits. It inspects the actual limits,
+loads the four completed images into Docker, removes only that builder, and requires
+its container to be absent before the unchanged runtime admission check. It never
+selects a shared builder, prunes shared caches, restarts Docker or changes the eight
+runtime service budgets or 2 GiB browser reserve. Failure to initialize, build or
+remove the owned builder refuses the trial; teardown retries only owned cleanup.
+[Docker documents this driver's memory controls and lifecycle](https://docs.docker.com/build/builders/drivers/docker-container/).
+
+This lifecycle increment is unproven until the actual image builds, capacity
+measurement and full browser/runtime trial complete. Command-contract tests prove
+refusal/cleanup decisions only; they do not prove Docker enforcement or available
+host capacity. Persistent staging and the broader enterprise gates remain open.

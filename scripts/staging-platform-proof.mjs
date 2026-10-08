@@ -11,6 +11,7 @@ import {stagingHostAdmission} from "../runtime/temporal/staging-host.ts";
 import {safeTrialFailure,safeProviderFailure,safeBrowserFailure} from "./staging-trial-failure.mjs";
 import {stagingBrowserProof} from "./staging-browser-proof.mjs";
 import {browserOrigin} from "./staging-browser-tls.mjs";
+import {ownedBuilder} from "./staging-owned-builder.mjs";
 const docker=(...args)=>execFileSync("docker",args,{encoding:"utf8",timeout:600000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const backend=process.env.FETCHSANDBOX_BACKEND_PATH;
@@ -26,6 +27,7 @@ const parent=await mkdtemp(resolve(tmpdir(),"ll-platform-")),privateDir=resolve(
 const project=`ll-platform-${randomBytes(6).toString("hex")}`,images={web:`${project}:web`,worker:`${project}:worker`,twin:`${project}:twin`,provisioner:`${project}:provisioner`};
 const env={...process.env,LOOPLABS_STAGING_PRIVATE_DIR:privateDir,LOOPLABS_STAGING_WEB_PORT:"3199",LOOPLABS_STAGING_WEB_IMAGE:images.web,LOOPLABS_STAGING_WORKER_IMAGE:images.worker,LOOPLABS_STAGING_TWIN_IMAGE:images.twin};
 const compose=(...args)=>execFileSync("docker",["compose","-p",project,"-f","docker-compose.temporal-platform.yml",...args],{env,encoding:"utf8",timeout:180000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
+const imageBuilder=ownedBuilder(docker,`${project}-build`);
 const uid=`${process.getuid()}:${process.getgid()}`,owned=[],built=[];let stage="prepare",controller,controllerExit=null;
 async function until(fn,label,seconds=120){for(const end=Date.now()+seconds*1000;Date.now()<end;){if(await fn())return;await wait(500);}throw Error(label);}
 const container=service=>compose("ps","-aq",service);
@@ -41,8 +43,9 @@ try{
  for(const role of ["web","worker"])await writeFile(resolve(privateDir,`${role}.env`),"",{mode:0o600});
  const records=[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"customer@example.test"}];
  for(const [file,value] of [["credentials",{token}],["records",{records}],["faults",{loseResponseRecords:["2001"]}]])await writeFile(resolve(seed,`connector-twin-${file}.json`),JSON.stringify(value),{mode:0o600});
- stage="images";
- for(const [role,file] of [["web","Dockerfile"],["worker","Dockerfile.temporal"],["twin","Dockerfile.connector-twin"],["provisioner","Dockerfile.staging-provisioner"]]){docker("build","-f",file,...(role==="twin"?["--build-context",`fetchsandbox=${backend}`]:[]),"-t",images[role],".");built.push(images[role]);}
+ stage="images";imageBuilder.start();
+ for(const [role,file] of [["web","Dockerfile"],["worker","Dockerfile.temporal"],["twin","Dockerfile.connector-twin"],["provisioner","Dockerfile.staging-provisioner"]]){imageBuilder.build("-f",file,...(role==="twin"?["--build-context",`fetchsandbox=${backend}`]:[]),"-t",images[role],".");built.push(images[role]);}
+ imageBuilder.close();
  const build=JSON.parse(docker("run","--rm","--network","none",images.worker,"node","-e","process.stdout.write(require('fs').readFileSync('.worker/temporal-manifest.json','utf8'))"));
  stage="host-admission";
  const topology=JSON.parse(compose("config","--format","json"));
@@ -103,6 +106,7 @@ try{
  console.error(`Complete isolated platform trial failed at ${stage}${detail}${provider}; no acceptance, raw logs or credentials printed.`);process.exitCode=1;
 }
 finally{
+ try{imageBuilder.close();}catch{console.error("Owned image builder cleanup failed; no shared resources modified.");process.exitCode=1;}
  for(const name of owned.reverse())try{docker("rm","-f",name);}catch{}
  controller?.kill("SIGTERM");try{compose("down","--volumes","--remove-orphans");}catch{}
  for(const image of built.reverse())try{docker("image","rm",image);}catch{}
