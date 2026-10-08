@@ -1,3 +1,4 @@
+import {recordActivities} from "../runtime/temporal/record-routing";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createServer } from "node:http";
@@ -47,7 +48,7 @@ async function main() {
         workflowBundle:{ codePath:resolve(".worker/temporal-workflow.cjs") },
         workerDeploymentOptions:{ version:{ deploymentName:"looplabs-acknowledgement", buildId:config.buildId }, useWorkerVersioning:true, defaultVersioningBehavior:"PINNED" },
         maxConcurrentActivityTaskExecutions:config.activitySlots, maxConcurrentWorkflowTaskExecutions:config.workflowSlots,
-        activities:versionedActivities(db, actor, activities(new WorkflowControl(db, new ConnectorControl(db, connectorProvider())), actor)),
+        activities:versionedActivities(db, actor, activities(new WorkflowControl(db, new ConnectorControl(db, connectorProvider())), actor),recordActivities(db,actor)),
         shutdownGraceTime:"20 seconds" });
     }
     await new Promise<void>((ok, fail) => { server.once("error", fail); server.listen(config.healthPort, "127.0.0.1", ok); });

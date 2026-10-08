@@ -35,6 +35,13 @@ if record_file.exists():
   if not isinstance(scope,dict) or set(scope)!={"version","workspaceId","contactId","recipient"} or scope["version"]!="record-scope-1" or not isinstance(scope["contactId"],str) or not re.fullmatch(r"[0-9]{1,24}",scope["contactId"]) or scope["contactId"]=="1001" or not isinstance(scope["workspaceId"],str) or not re.fullmatch(r"[a-zA-Z0-9_-]{1,64}",scope["workspaceId"]) or not isinstance(scope["recipient"],str) or len(scope["recipient"])>254 or not re.fullmatch(r"[a-z0-9][a-z0-9._+-]*@[a-z0-9]+(?:[.-][a-z0-9]+)*\.test",scope["recipient"]) or scope["contactId"] in scopes:raise ValueError("Invalid fixture scope")
   scopes[scope["contactId"]]=scope
  if len({s["recipient"] for s in scopes.values()})!=len(scopes):raise ValueError("Duplicate fixture recipient")
+# Offline, private fault injection used only by reproducible connector drills.
+fault_file=private/"connector-twin-faults.json"
+lose_records=set()
+if fault_file.exists():
+ faults=json.loads(fault_file.read_text())
+ if not isinstance(faults,dict) or set(faults)!={"loseResponseRecords"} or not isinstance(faults["loseResponseRecords"],list) or any(not isinstance(r,str) or r not in scopes for r in faults["loseResponseRecords"]):raise ValueError("Invalid private fixture fault selection")
+ lose_records=set(faults["loseResponseRecords"])
 engines={}
 for name,provider in [("crm","hubspot"),("email","resend")]:
  cfg=yaml.safe_load((backend/f"configs/{provider}/sandbox_config.yaml").read_text())
@@ -122,7 +129,7 @@ async def route(path:str,request:Request):
   effects[action]={"actionId":action,"connector":name,"body":body,"recordId":contact_id,"resource":api,"reference":ref,"observedVersion":version,"response":result.body}
   try:persist(request.headers.get("x-looplabs-proof-fault")=="storage_failure")
   except Exception:return JSONResponse({"error":"Fixture persistence failed; outcome requires review"},status_code=503)
- if action and request.headers.get("x-looplabs-lose-response")=="true" and 200<=result.status<300:await asyncio.sleep(3)
+ if action and (request.headers.get("x-looplabs-lose-response")=="true" or name=="crm" and contact_id in lose_records) and 200<=result.status<300:await asyncio.sleep(3)
  return JSONResponse(result.body,status_code=result.status)
 if __name__=="__main__":
  import uvicorn

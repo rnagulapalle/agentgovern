@@ -68,7 +68,7 @@ export class EnquiryControl {
   }
   async start(actor: Actor, id: string, hash: string, crm: string, email: string, managed = false) {
     validId(id);
-    if (managed && this.workflows.connectors.provider.recordScope) throw new ControlError(409,"Record-scoped background execution needs a compatible worker contract. No run was started.");
+
     if (typeof hash !== "string" || !/^[a-f0-9]{64}$/.test(hash)) throw new ControlError(400, "Review the exact saved plan first.");
     await transaction(this.db, actor.orgId, (c) => this.policies(c, actor));
     const binding = this.workflows.connectors.provider.bindingId;
@@ -82,6 +82,7 @@ export class EnquiryControl {
       if (!plan) throw new ControlError(404, "Enquiry plan not found.");
       if (plan.plan_hash !== hash) throw new ControlError(409, "The plan changed. Review it again before starting work.");
       if(this.workflows.connectors.provider.recordScope){
+        if(managed && !(await c.query("SELECT to_regclass('ll_temporal_record_routes') AS present")).rows[0].present)throw new ControlError(409,"Record-scoped background execution needs a compatible worker contract. No run was started.");
         const enrollment=await scopeEnrollment(c,actor.orgId,this.workflows.connectors.provider);
         if(!enrollment || plan.plan.recordEnrollment?.id!==enrollment.id || plan.plan.recordEnrollment?.version!==enrollment.version)throw new ControlError(409,"Record enrollment changed. Prepare fresh reviewed work.");
         for(const agent of [crm,email])if(!(await currentScopeGrant(c,actor.orgId,agent,this.workflows.connectors.provider)))throw new ControlError(403,"Each agent needs an active record grant before starting work.");
@@ -95,6 +96,7 @@ export class EnquiryControl {
       if (managed) {
         if (plan.created_by !== actor.subject) throw new ControlError(403, "Only the plan owner can assign agents and submit this rehearsal.");
         for (const [agentId, name, role, connector] of [[crm, "Customer record assistant", "crm_agent", "crm_twin"], [email, "Acknowledgement assistant", "email_agent", "email_twin"]] as const) {
+          if(this.workflows.connectors.provider.recordScope) continue; // Explicit existing grants; never auto-enroll scoped authority.
           const existing = (await c.query("SELECT a.active,a.tools,a.action_limit,p.owner,p.role,p.connector FROM ll_agents a LEFT JOIN ll_agent_profiles p ON p.org_id=a.org_id AND p.agent_id=a.id WHERE a.org_id=$1 AND a.id=$2", [actor.orgId, agentId])).rows[0];
           if (existing && (!existing.active || existing.action_limit !== 1 || JSON.stringify(existing.tools) !== JSON.stringify([role === "crm_agent" ? "twin.crm" : "twin.email"]) || existing.owner !== actor.subject || existing.role !== role || existing.connector !== connector))
             throw new ControlError(409, "Existing assistant boundaries do not match this plan. No enrollment was changed.");

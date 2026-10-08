@@ -67,3 +67,5 @@ failed before being corrected. The completed run additionally detects the change
 recipient/version in CRM readback as a conflict. No gate was weakened or skipped.
 
 Persistent enrollment and per-agent revocation are described in [PERSISTED_RECORD_GRANTS.md](PERSISTED_RECORD_GRANTS.md). Background routing remains unproved.
+
+The subsequent local background-routing phase is in [SCOPED_TEMPORAL_ROUTING.md](SCOPED_TEMPORAL_ROUTING.md). It adds explicit compatible build pinning and an immutable saved route; the public record-selection UX and production cutover remain open.

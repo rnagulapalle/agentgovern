@@ -38,11 +38,13 @@
     "temporal:worker": "node --env-file=.env.local --env-file=.local/temporal-worker.env .worker/temporal-service.cjs worker",
     "temporal:scheduler": "node --env-file=.env.local --env-file=.local/temporal-worker.env .worker/temporal-service.cjs scheduler",
     "temporal:load-proof": "node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts",
+    "temporal:record-proof": "node --env-file=.env.local --import tsx scripts/temporal-record-proof.ts",
     "temporal:container-proof": "LOOPLABS_TEMPORAL_CONTAINER_PROOF=1 node --env-file=.env.local --import tsx scripts/temporal-load-proof.ts",
     "workspace:recovery": "node --env-file=.env.local --import tsx scripts/workspace-recovery.ts",
     "workspace:restore-proof": "node --env-file=.env.local --import tsx scripts/workspace-restore-proof.ts",
     "temporal:alerts": "node --import tsx scripts/temporal-alert-monitor.ts",
     "temporal:alert-proof": "node --import tsx scripts/temporal-alert-proof.ts",
+    "workspace:record-routing": "node --env-file=.env.local --import tsx scripts/record-routing-setup.ts",
     "workspace:record-scopes": "node --env-file=.env.local --import tsx scripts/record-scope-setup.ts",
     "workspace:proposal-boundaries": "node --env-file=.env.local --import tsx scripts/proposal-boundary-setup.ts"
   },

@@ -1,3 +1,8 @@
+import {TemporalOutbox} from "../../runtime/temporal/outbox";
+import {recordActivities} from "../../runtime/temporal/record-routing";
+import {versionedActivities,type RunContract} from "../../runtime/temporal/version-contract";
+import {activities} from "../../runtime/temporal/activities";
+import {EnquiryRunner} from "../enquiries/runner";
 import {readFile} from "node:fs/promises";
 import {randomBytes,randomUUID} from "node:crypto";
 import {Pool} from "pg";
@@ -19,11 +24,11 @@ beforeAll(async()=>{
  if(!process.env.LOOPLABS_TEST_DATABASE_URL)throw Error("Dedicated PostgreSQL is required.");
  admin=new Pool({connectionString:process.env.LOOPLABS_TEST_DATABASE_URL});await admin.query(`CREATE SCHEMA ${schema}`);
  db=new Pool({connectionString:process.env.LOOPLABS_TEST_DATABASE_URL,options:`-c search_path=${schema}`});
- for(const f of ["lib/durable/schema.sql","lib/workspace/schema.sql","lib/refunds/schema.sql","lib/connectors/schema.sql","lib/workflows/schema.sql","lib/durable/proposal-schema.sql","lib/enquiries/schema.sql","lib/enquiries/managed-schema.sql","lib/connectors/scope-schema.sql"])await db.query(await readFile(f,"utf8"));
+ for(const f of ["lib/durable/schema.sql","lib/workspace/schema.sql","lib/refunds/schema.sql","lib/connectors/schema.sql","lib/workflows/schema.sql","lib/durable/proposal-schema.sql","lib/enquiries/schema.sql","lib/enquiries/managed-schema.sql","lib/connectors/scope-schema.sql","lib/enquiries/temporal-schema.sql","lib/enquiries/record-routing-schema.sql"])await db.query(await readFile(f,"utf8"));
 });
 beforeEach(async()=>{
  await db.query("TRUNCATE ll_orgs CASCADE");await db.query("INSERT INTO ll_orgs(id) VALUES('one'),('two')");
- await db.query("INSERT INTO ll_members(org_id,email,name,password_hash) VALUES('one','owner','Owner','unused')");
+ await db.query("INSERT INTO ll_members(org_id,email,name,password_hash) VALUES('one','owner','Owner','unused'),('one','operator','Operator','unused'),('one','reviewer','Reviewer','unused')");
  await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('one','agent',ARRAY['twin.crm','twin.email'],100),('one','email',ARRAY['twin.email'],100),('one','unowned',ARRAY['twin.crm'],100)");
  await db.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES('one','agent','CRM','owner','crm_agent','crm_twin'),('one','email','Email','owner','email_agent','email_twin')");
  await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('one','crm'),('one','email')");
@@ -111,4 +116,54 @@ it("holds downstream execution when an independently approved predecessor's reco
  for(const step of run.steps){const a=await control.propose(operator,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});await control.review(reviewer,a.id,a.payload_hash,true);}
  expect((await control.execute(worker,run.steps[0].action_id)).state).toBe("succeeded");await scopes.setActive(operator,id,false,"agent");
  await expect(control.execute(worker,run.steps[1].action_id)).rejects.toThrow("preceding step");expect(writes).toBe(1);
+});
+
+async function routed(){
+ const scopeId=await enrolled();await scopes.grant(operator,scopeId,"email");
+ const flow=new WorkflowControl(db,control),enquiry=new EnquiryControl(db,flow,async()=>({id:"2001",email:scope.recipient,version:"v1",lifecycle:"lead"}));
+ const plan=(await enquiry.prepare(operator,randomUUID(),"service") as {saved:{id:string;plan_hash:string}}).saved;
+ await enquiry.start(operator,plan.id,plan.plan_hash,"agent","email",true);
+ for(const step of (await flow.read(operator,plan.id)).steps)await control.propose(operator,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});
+ const key=randomBytes(32).toString("base64url");await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one','enquiry-temporal','worker')",[tokenHash(key)]);
+ const temporal=await authenticate(db,key),input:RunContract={runId:plan.id,planHash:plan.plan_hash,planVersion:"acknowledgement-1",connectorVersion:"private-record-twin-2"};
+ return {scopeId,flow,plan,temporal,input};
+}
+it("persists immutable scoped Temporal ownership and resolves only that run's enrolled provider",async()=>{
+ const {flow,plan,temporal,input}=await routed(),outbox=new TemporalOutbox(db,"ack-"+"c".repeat(64));
+ await expect(new TemporalOutbox(db,"").transfer(operator,plan.id)).rejects.toThrow("explicit compatible");
+ const ids=await Promise.all([outbox.transfer(operator,plan.id),outbox.transfer(operator,plan.id)]);expect(ids[0]).toBe(ids[1]);
+ const route=(await db.query("SELECT * FROM ll_temporal_record_routes")).rows[0];expect(route.scope_version).toBe(1);expect(route.worker_build_id).toBe("ack-"+"c".repeat(64));
+ const factory=(s:typeof scope)=>{expect(s).toEqual(scope);return provider;};
+ const next=versionedActivities(db,temporal,activities(flow,temporal),recordActivities(db,temporal,factory,"ack-"+"c".repeat(64)));
+ expect(await next.advanceContract(input)).toBe("waiting");expect(writes).toBe(0);
+ for(const step of (await flow.read(operator,plan.id)).steps)await control.review(reviewer,step.action_id,step.payload_hash,true);
+ expect(await next.advanceContract(input)).toBe("completed");expect(writes).toBe(2);
+ expect(await next.advanceContract(input)).toBe("completed");expect(writes).toBe(2);
+ for(const sql of ["UPDATE ll_temporal_record_routes SET scope_version=2","DELETE FROM ll_temporal_record_routes","UPDATE ll_temporal_dispatch SET connector_version='private-twin-1'"])await expect(db.query(sql)).rejects.toThrow();
+});
+it("excludes scoped work from legacy runner before transfer and refuses stale grants at transfer",async()=>{
+ const {scopeId,flow,plan}=await routed();
+ const key=randomBytes(32).toString("base64url");await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one','enquiry-runner','worker')",[tokenHash(key)]);
+ const legacy=await authenticate(db,key);expect(await new EnquiryRunner(db,flow).tick(legacy)).toBe(0);expect(writes).toBe(0);
+ await scopes.setActive(operator,scopeId,false,"agent");await scopes.setActive(operator,scopeId,true,"agent");
+ await expect(new TemporalOutbox(db,"ack-"+"c".repeat(64)).transfer(operator,plan.id)).rejects.toThrow("exact record grants");
+ expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(0);expect(writes).toBe(0);
+});
+it("refuses absent routes, tenant substitution, provider changes and revoked scope without fallback",async()=>{
+ const {scopeId,flow,plan,temporal,input}=await routed();let factories=0;
+ const next=recordActivities(db,temporal,()=>{factories++;return provider;},"ack-"+"c".repeat(64));
+ await expect(next(input)).rejects.toThrow("unavailable");expect(factories).toBe(0);
+ await new TemporalOutbox(db,"ack-"+"c".repeat(64)).transfer(operator,plan.id);
+ await expect(recordActivities(db,temporal,()=>provider,"ack-"+"d".repeat(64))(input)).rejects.toThrow("pinned worker");
+ await expect(recordActivities(db,temporal,()=>({...provider,bindingId:"b".repeat(64)}),"ack-"+"c".repeat(64))(input)).rejects.toThrow("Configured provider");
+ await expect(recordActivities(db,worker,()=>provider,"ack-"+"c".repeat(64))(input)).rejects.toThrow("Compatible Temporal");
+ await expect(next({...input,planHash:"b".repeat(64)})).rejects.toThrow("unavailable");
+ await expect(recordActivities(db,temporal,()=>provider,"")(input)).rejects.toThrow("verified record worker");
+ await expect(next({...input,connectorVersion:"private-twin-1"})).rejects.toThrow("Unsupported");
+ await expect(recordActivities(db,temporal,()=>({...provider,recordScope:undefined}),"ack-"+"c".repeat(64))(input)).rejects.toThrow("Configured provider");
+ const otherKey=randomBytes(32).toString("base64url");await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'two','enquiry-temporal','worker')",[tokenHash(otherKey)]);
+ await expect(recordActivities(db,await authenticate(db,otherKey),()=>provider,"ack-"+"c".repeat(64))(input)).rejects.toThrow("unavailable");
+ await db.query("ALTER TABLE ll_temporal_record_routes RENAME TO hidden_routes");try{await expect(next(input)).rejects.toThrow("routing is unavailable");}finally{await db.query("ALTER TABLE hidden_routes RENAME TO ll_temporal_record_routes");}
+ await scopes.setActive(operator,scopeId,false);await expect(next(input)).rejects.toThrow("unavailable");await scopes.setActive(operator,scopeId,true);await expect(next(input)).rejects.toThrow("unavailable");
+ expect(factories).toBe(0);expect(writes).toBe(0);expect((await flow.read(operator,plan.id)).steps[0].state).toBe("held");
 });

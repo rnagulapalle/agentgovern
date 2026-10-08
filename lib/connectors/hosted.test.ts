@@ -104,3 +104,10 @@ it("refuses changed saved requests before any provider HTTP call",async () => {
   }
   expect(fetch).not.toHaveBeenCalled();
 });
+
+it("uses explicit private record scopes and refuses unsupported hosted routing without fallback",()=>{
+ const scope={version:"record-scope-1" as const,workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"};
+ vi.stubEnv("LOOPLABS_CONNECTOR_TWIN_URL","http://127.0.0.1:8018");vi.stubEnv("LOOPLABS_CONNECTOR_TWIN_TOKEN","a".repeat(40));vi.stubEnv("LOOPLABS_FETCHSANDBOX_BINDING","");
+ expect(connectorProvider(scope).recordScope).toEqual(scope);
+ vi.stubEnv("LOOPLABS_FETCHSANDBOX_BINDING",JSON.stringify(binding()));expect(()=>connectorProvider(scope)).toThrow();
+});

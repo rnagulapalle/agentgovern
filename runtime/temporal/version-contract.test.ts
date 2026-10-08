@@ -35,3 +35,13 @@ it("refuses a revoked plan owner before dispatch", async () => {
   const { a, advance } = setup([{ plan_hash: valid.planHash, owner_active: false }]);
   await expect(a.advanceContract(valid)).rejects.toThrow("owner"); expect(advance).not.toHaveBeenCalled();
 });
+
+it("requires an explicit scoped resolver and refuses contract downgrade",async()=>{
+ const plan={recordEnrollment:{id:"scope",version:1},requests:{crm:{version:"prepared-request-2"},email:{version:"prepared-request-2"}}};
+ const {a,query,advance}=setup([{plan_hash:valid.planHash,owner_active:true,plan}]);
+ await expect(a.advanceContract(valid)).rejects.toThrow("legacy");
+ await expect(a.advanceContract({...valid,connectorVersion:"private-record-twin-2"})).rejects.toThrow("Unsupported scoped");expect(advance).not.toHaveBeenCalled();
+ const scoped=vi.fn().mockResolvedValue("waiting"),next=versionedActivities({query} as unknown as Pool,{orgId:"tenant-a",subject:"enquiry-temporal",role:"worker",tokenHash:"test"},{advance},scoped);
+ const input={...valid,connectorVersion:"private-record-twin-2"};expect(await next.advanceContract(input)).toBe("waiting");expect(scoped).toHaveBeenCalledWith(input);expect(advance).not.toHaveBeenCalled();
+ query.mockResolvedValueOnce({rows:[{plan_hash:valid.planHash,owner_active:true}]});await expect(next.advanceContract(input)).rejects.toThrow("Unsupported scoped");
+});

@@ -1,3 +1,4 @@
+import type { RecordScope } from "./record-scope";
 import { requestMatches, savedRequest } from "./request";
 import { createHash } from "node:crypto";
 import { bindingMatches } from "./contracts";
@@ -82,9 +83,12 @@ export class HostedFetchSandboxConnectors implements ConnectorProvider {
     return { outcome: "verified", reference, detail: "One correlated simulated provider acceptance and exact email readback verified. Inbox delivery is not established." };
   }
 }
-export function connectorProvider() {
+export function connectorProvider(scope:RecordScope):FetchSandboxConnectors;
+export function connectorProvider():FetchSandboxConnectors|HostedFetchSandboxConnectors;
+export function connectorProvider(scope?: RecordScope) {
   const raw = process.env.LOOPLABS_FETCHSANDBOX_BINDING;
-  if (!raw) return new FetchSandboxConnectors();
+  if (!raw) return new FetchSandboxConnectors(undefined,undefined,undefined,scope);
+  if(scope) throw unavailable();
   try { return new HostedFetchSandboxConnectors(JSON.parse(raw)); }
   catch { throw unavailable(); }
 }
