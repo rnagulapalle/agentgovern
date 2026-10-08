@@ -115,7 +115,7 @@ async function main() {
     await (await createWorker()).runUntil(async () => { assert.equal(await stopped.result(), "contained"); });
     assert.equal(await effects(), before);
     pass("Paused run stays contained without effects");
-    const files = ["runtime/temporal/activities.ts", "runtime/temporal/workflow.ts", "runtime/temporal/workflow-v2.ts", "scripts/temporal-proof.ts", "scripts/temporal-proof-worker.ts"];
+    const files = ["lib/durable/recovery.ts","lib/durable/service.ts","runtime/temporal/activities.ts", "runtime/temporal/workflow.ts", "runtime/temporal/workflow-v2.ts", "scripts/temporal-proof.ts", "scripts/temporal-proof-worker.ts"];
     const fingerprints = Object.fromEntries(await Promise.all(files.map(async f => [f, createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/temporal-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Local Temporal dev service; isolated PostgreSQL and private HTTP twins; no production cutover", checks, sourceFingerprints: fingerprints, limitations: ["Compatible patch rollout, not deployment pinning", "Lease expiry shortened in isolated test; Temporal activity uses normal timeout/retry", "No UI cutover, production failover, real providers or scale proof"] }, null, 2) + "\n");
   } finally {

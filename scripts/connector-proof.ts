@@ -829,6 +829,7 @@ async function main() {
       "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA.",
     );
     const fingerprintFiles = [
+      "lib/durable/recovery.ts",
       "lib/durable/service.ts",
       "lib/enquiries/dispatch.ts",
       "lib/workflows/guard.ts",

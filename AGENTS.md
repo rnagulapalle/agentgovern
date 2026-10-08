@@ -58,3 +58,14 @@ an effect already sent may remain uncertain. Run the actual Temporal proof suite
 and all affected connector/chat proofs when their covered sources change. Applied
 migrations 1–5, 7 and 8 remain unchanged. Phase 3 throughput and real-provider gates,
 and Phase 4 HA/operational gates remain open; no Temporal-parity claim is supported.
+
+## Workspace disaster recovery
+
+Read `docs/WORKSPACE_DISASTER_RECOVERY.md` before changing restore or authority.
+Migration 10 adds the externally configured recovery epoch and offline quarantine.
+An enrolled deployment must rotate the epoch outside the database archive, stop all
+writers before restore, revoke restored credentials/approvals and reconcile effects
+before new work. Never automatically resume restored approvals, reset reservations,
+rewrite action IDs or expose quarantine over a runtime API. Applied migration 9 is
+now immutable too. Unenrolled production does not gain restore protection. Run the
+actual `workspace:restore-proof` and all affected Temporal/connector/chat proofs.

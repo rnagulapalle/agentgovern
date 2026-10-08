@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-07T18:58:10.296Z",
+  "at": "2026-10-08T01:52:08.361Z",
   "scope": "Isolated PostgreSQL schema and private FetchSandbox HubSpot Contacts / Resend single-send fixtures. No live CRM, real email, model or money.",
   "checks": [
     {
@@ -139,7 +139,8 @@
     }
   ],
   "sourceFingerprints": {
-    "lib/durable/service.ts": "875bd1c16e7fdc27362f5983555d4f663c748fe3501554a26e1ccb4de07eeaf9",
+    "lib/durable/recovery.ts": "d030d0c17ebd09399ff63a1652f23bfbc7dc0296eb29386b14127a67e75bbae7",
+    "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
     "lib/enquiries/dispatch.ts": "4cc5701be853ae7c24e3092c8d9344eafb97f97844b7c29c8a8916ba27d09058",
     "lib/workflows/guard.ts": "02779db55e5f9637d06f790c578b0e9cc00e683cfbbab4d66ad8f76850009c8e",
     "lib/enquiries/contracts.ts": "089a125558beba8d6d9fffa5e9b0796535f7031f8264b3d50c16c95fe7b70833",
@@ -160,7 +161,7 @@
     "app/api/durable/connectors/route.ts": "0bad77eb2c10cb6a1c14573f9ca54785a6890220d826880ad5845d479669e105",
     "scripts/connector-twin.py": "8ee1508e9c41ab0f62b049ee06ee56d21af5dbe897a7c18c56c6513101c2e616"
   },
-  "localRestoreMilliseconds": 94,
+  "localRestoreMilliseconds": 83,
   "limits": [
     "Fixture action journal and contact version are LoopLabs extensions, not live provider parity.",
     "No SSO, failover, production load or real delivery proof.",

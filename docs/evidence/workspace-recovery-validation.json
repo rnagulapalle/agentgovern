@@ -1,0 +1,43 @@
+{
+  "observedLocalDate": "2026-10-07",
+  "scope": "Local recovery regression history; no production incident or enterprise readiness claim",
+  "observations": [
+    {
+      "result": "failed",
+      "check": "Authenticated container regression after database TCP outage",
+      "evidence": "Timed out: database restored and supervisor replacement ready",
+      "lesson": "The single replacement attempt lacked process diagnostics. Cause of the initial timeout remains unconfirmed; do not call this a demonstrated production fix.",
+      "lastObservedEffects": 0
+    },
+    {
+      "result": "passed",
+      "check": "Diagnostic rerun with private process-output capture",
+      "evidence": "Original readiness, service/database SIGKILL, orchestration archive restore and two-effect checks passed with the same limits."
+    },
+    {
+      "result": "failed",
+      "check": "Injected database-down replacement startup in authenticated containers",
+      "evidence": "docker kill returned container is not running while its CLI child exit was still propagating",
+      "lesson": "The proof must accept already-stopped/removing containers only after the actual child exit is observed within the unchanged shutdown deadline. Other Docker errors must still fail."
+    },
+    {
+      "result": "passed",
+      "check": "Strengthened terminal-child replacement fault drill",
+      "evidence": {
+        "localChecks": 10,
+        "containerChecks": 17,
+        "localReplacementAttempts": {
+          "worker": 2,
+          "scheduler": 2
+        },
+        "containerReplacementAttempts": {
+          "worker": 2,
+          "scheduler": 2
+        },
+        "finalEffects": 2
+      },
+      "lesson": "Both actual initial replacements terminate with the database still unavailable; each next process recovers once connectivity returns. Readiness and child-exit deadlines are unchanged."
+    }
+  ],
+  "remaining": "Remote deployed supervisor behavior, dependency availability and reliability under repeated faults require separate acceptance. A passing rerun alone does not establish availability."
+}

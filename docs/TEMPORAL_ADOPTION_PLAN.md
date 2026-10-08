@@ -216,3 +216,21 @@ This is isolated local self-hosted acceptance. Remote hardened staging, LoopLabs
 database backup/restore, replicated failover, independent-record sustained load,
 provider-specific live guarantees, SSO/MFA, delivered alerts and UI ownership cutover
 remain open. No enterprise-grade production or Temporal availability parity claim.
+
+## Phase 3E: application-database restore containment
+
+`workspace:restore-proof` now executes actual `pg_dump`/`pg_restore` against the
+LoopLabs schema after an independently approved Temporal run produces two HTTP
+provider-twin effects. The restore observably loses completion and credential
+revocation. Migration 10 and the deployment-owned recovery epoch refuse restored
+authority before an offline idempotent quarantine clears approvals, revokes old
+identities and pauses affected work. Fresh recovery authority reads back existing
+effects without resending; unknown actions remain uncertain. The original action
+IDs and budget reservations survive.
+
+See `WORKSPACE_DISASTER_RECOVERY.md` for enrollment and the required stopped-writer,
+external-epoch-rotation and fresh-credential procedure. This is a declared isolated
+archive restore acceptance, not automatic detection of undeclared restores, remote
+PITR/HA, a recovery time objective or production enrollment. Current production
+keeps its existing configuration. Full affected Temporal, connector and browser
+proofs must match the new shared authorization source before release.
