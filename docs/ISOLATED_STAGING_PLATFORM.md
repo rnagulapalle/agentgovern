@@ -166,6 +166,33 @@ tests nor this authorization-container check satisfies them.
 
 ## Actual service configuration integration gate
 
+### Role input assembly
+
+The reviewed database and Temporal bootstrap outputs can now be assembled with
+`LOOPLABS_STAGING_BOOTSTRAP=isolated node --import tsx
+scripts/staging-runtime-inputs.mjs <database-directory> <temporal-directory>
+<private-settings.json> <new-runtime-directory>`. The settings object must contain
+exactly `origin` (HTTPS staging origin), `buildId` (reviewed content-bound worker
+build), `taskQueue`, `records` (existing isolated catalog scope objects) and
+`connectorToken` (the separately seeded private twin credential).
+
+This exclusively creates 0600 `web.env` and `worker.env` under a 0700 directory;
+it never replaces existing runtime authority. Only reviewed fields are copied.
+The web receives neither the Temporal workload JWT nor the database workload
+token; migration-owner, named-member and signer material are excluded from both
+files. The output refuses a non-runtime/non-isolated database target, insecure
+origin, incompatible build or absent isolated records. The private twin address
+is fixed to the unpublished Compose service. A failed assembly leaves any partial
+directory for inspection, rather than silently resetting it.
+
+This is input preparation, not provisioning or acceptance: it does not verify the
+JWT signature/expiry, actual database grants, image contents, provider seed,
+record enrollment or permission grants. Those checks and full stack startup remain
+mandatory. Mount individual role files and runtime TLS/public-key inputs, never
+the bootstrap directory or offline signer directory. Planner configuration remains
+a separate reviewed web-only input; this command does not inherit cloud secrets
+from the invoking shell.
+
 The separate `staging-temporal-service` CI job runs
 `node scripts/staging-temporal-service-proof.mjs` on a disposable runner. It uses
 the generated configuration unchanged, real PostgreSQL schemas, the public JWKS
