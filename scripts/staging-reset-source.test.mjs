@@ -28,3 +28,15 @@ test('reset controller and host add actual response-loss and distinct owner-proc
  expect(()=>resetController(controller.replace(' await mark("post-replay-effects-ready",{});','moved'))).toThrow('missing');
  expect(()=>resetHost(host+'\n  phase="replay";await checkpoint("post-replay-effects-ready");','scripts/.drain-controller-a1-b2.mjs')).toThrow('ambiguous');
 });
+
+
+test('reset setup failures retain distinct safe controller and host checkpoints',async()=>{
+ const {resetController,resetHost}=await import('./staging-reset-source.mjs');
+ const c=resetController(await readFile('scripts/staging-semantic-controller.mjs','utf8'));
+ const h=resetHost(await readFile('scripts/staging-semantic-host.mjs','utf8'),'scripts/.drain-controller-a1-b2.mjs');
+ for(const phase of ['reset-authority','reset-history','reset-pin','reset-boundary','reset-images','reset-request-write','reset-wait-readback'])expect(c).toContain(`phase="${phase}"`);
+ for(const phase of ['reset-registry-owner-exit','reset-owner-config','reset-owner-launch'])expect(h).toContain(`phase="${phase}"`);
+ expect(c.indexOf('phase="reset-pin"')).toBeLessThan(c.indexOf('pinnedBuild(originalDescription'));
+ expect(c.indexOf('phase="reset-request-write"')).toBeLessThan(c.indexOf('await mark("reset-request"'));
+ expect(h.indexOf('phase="reset-owner-launch"')).toBeLessThan(h.indexOf('await resetOwner("dispatch")'));
+});

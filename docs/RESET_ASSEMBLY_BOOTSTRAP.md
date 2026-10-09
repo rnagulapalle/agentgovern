@@ -113,3 +113,14 @@ remain excluded. The host retains at most 4 KiB of private child stderr and forw
 only the exact allowlisted diagnostic line; the top-level driver applies the same
 parser. No permission, state, resource, effect or receipt acceptance condition changes.
 A fresh complete runtime and regression run is required after exact-head CI.
+
+The diagnostic retry `37926465198`, pinned to public
+`75b4414f8470b829d48b3a61ef79462c7d868c11`, also failed at the combined dispatch /
+controller reset-preparation checkpoint. No safe owner diagnostic was emitted.
+Therefore it does not establish an owner RPC failure: reset-request preparation
+or host pre-launch checks may have refused first. The next candidate separates
+controller authority/history/pin/boundary/image/write/wait phases and host registry
+exit/configuration/launch phases. All acceptance assertions remain in place; a
+phase label is diagnostic evidence only. This second attempt produced no accepted
+receipt and skipped post-runtime quality. Its temporary planner secret was deleted
+and absence verified after preparation, before the failure.
