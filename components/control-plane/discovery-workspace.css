@@ -1,5 +1,6 @@
 .cp-discovery h2,
-.cp-discovery h3 {
+.cp-discovery h3,
+.cp-discovery h4 {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -7,6 +8,7 @@
 }
 .cp-discovery h2 svg,
 .cp-discovery h3 svg,
+.cp-discovery h4 svg,
 .cp-discovery-coverage svg {
   flex-shrink: 0;
 }

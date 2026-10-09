@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { CloudOwnerReviewCard } from "./cloud-owner-review";
 import { useEffect, useState } from "react";
 import { Cloud, ShieldQuestion, UserRound, Cable } from "lucide-react";
 import { PageTitle } from "./ui";
@@ -49,7 +50,7 @@ function AwsDiscoveryWorkspace() {
     finally { setBusy(false); }
   }
   return <div className="cp-durable cp-discovery">
-    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> AWS AgentCore discovery</h2><p>This candidate supports saved AWS account and region scopes plus read-only inventory evidence. Scanning requires a reviewed server binding. Azure and Google project scopes can be saved separately; native project scanning is not connected yet.</p><p>Saving a scope does not contact AWS or import agents. A configured binding allows read-only scans; it does not prove cloud permissions or enable controlled execution.</p></section>
+    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> AWS AgentCore discovery</h2><p>This candidate supports saved AWS account and region scopes plus read-only inventory evidence. Scanning requires a reviewed server binding. Azure and Google use separate reviewed project scopes and server bindings.</p><p>Saving a scope does not contact AWS or import agents. A configured binding allows read-only scans; it does not prove cloud permissions or enable controlled execution.</p></section>
     {error && <p role="alert" className="cp-durable-message is-error">{error}</p>}
     {notice && <p role="status" className="cp-durable-message">{notice}</p>}
     <section className="cp-panel cp-durable-card"><h2>Save a discovery scope</h2><p>Use the account and region reviewed by your workspace administrator. Enter no passwords, access keys or tokens.</p>
@@ -68,12 +69,12 @@ function AwsDiscoveryWorkspace() {
     </section>
     {selected && busy && <p role="status">Loading saved evidence…</p>}
     {inventory && <section className="cp-panel cp-durable-card"><h2>{inventory.scope.connectionId}: discovery evidence</h2>
-      <div className="cp-discovery-coverage"><span><UserRound size={18} aria-hidden="true" /> Owner not mapped</span><span><Cable size={18} aria-hidden="true" /> Activity not connected</span><span><ShieldQuestion size={18} aria-hidden="true" /> Action enforcement not verified</span></div>
+      <div className="cp-discovery-coverage"><span><UserRound size={18} aria-hidden="true" /> Ownership reviewed per resource</span><span><Cable size={18} aria-hidden="true" /> Activity not connected</span><span><ShieldQuestion size={18} aria-hidden="true" /> Action enforcement not verified</span></div>
       {inventory.status === "no-scan" ? <p>No scan has been saved. Cloud resources, roles and actions are unknown.</p> : <>
         <p>{inventory.completeness === "partial" ? "Partial scan: some reads could not be verified." : "API traversal completed within this saved account and region."} Observed {date(inventory.observedAt)}. {inventory.stale ? "This evidence is stale." : "This is a saved observation, not a live authority check."}</p>
         {inventory.historyTruncated && <p>Showing 2,000 resource versions. Full saved history remains in the workspace database.</p>}
         {!inventory.records.length && <p>No runtime observations were saved. This does not prove that agents do not exist elsewhere.</p>}
-        {inventory.records.map(({ record, observedInCurrentScan, stale }) => <article className="cp-durable-card" key={`${record.resourceArn}:${record.version}`}><h3><Cloud size={20} aria-hidden="true" /> {record.resourceId}</h3><p>Version {record.version} · Observed {date(record.observedAt)}{stale ? " · Stale" : ""}{!observedInCurrentScan ? " · Retained from an earlier scan" : ""}</p><p>Effective permissions and declared tools are unknown. This agent is not enrolled for controlled execution.</p><details><summary>Identity references</summary><p style={{ overflowWrap: "anywhere" }}>Resource: {record.resourceArn}</p><p style={{ overflowWrap: "anywhere" }}>Role: {record.roleReference || "Not observed"}</p><p style={{ overflowWrap: "anywhere" }}>Workload identity: {record.workloadIdentityReference || "Not observed"}</p></details></article>)}
+        {inventory.records.map(({ record, observedInCurrentScan, stale }) => <article className="cp-durable-card" key={`${record.resourceArn}:${record.version}`}><h3><Cloud size={20} aria-hidden="true" /> {record.resourceId}</h3><p>Version {record.version} · Observed {date(record.observedAt)}{stale ? " · Stale" : ""}{!observedInCurrentScan ? " · Retained from an earlier scan" : ""}</p><p>Effective permissions and declared tools are unknown. This agent is not enrolled for controlled execution.</p><details><summary>Identity references</summary><p style={{ overflowWrap: "anywhere" }}>Resource: {record.resourceArn}</p><p style={{ overflowWrap: "anywhere" }}>Role: {record.roleReference || "Not observed"}</p><p style={{ overflowWrap: "anywhere" }}>Workload identity: {record.workloadIdentityReference || "Not observed"}</p></details><CloudOwnerReviewCard reference={{provider:"aws-agentcore-runtime",connectionId:inventory.scope.connectionId,scanId:inventory.scanId,resource:record.resourceArn,version:record.version}} current={observedInCurrentScan && !stale} /></article>)}
       </>}
       <p>Discovered identities do not authorize actions. Reviewed owner mapping and cloud enrollment remain required.</p><Link href="/control-plane/agents" prefetch={false}>View existing scoped workspace agents →</Link>
     </section>}

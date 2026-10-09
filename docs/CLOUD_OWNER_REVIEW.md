@@ -4,7 +4,8 @@ This increment reuses named workspace membership, recovery fencing and the share
 per-workspace transaction lock. Optional migration18 adds append-only owner-review
 history for the existing AWS, Azure and Google inventory snapshots. It does not
 create agents, workload credentials, policy permissions or execution authority.
-The current application UI and production remain unchanged.
+The invited inventory UI exposes a per-resource owner review. Production remains
+unchanged until the normal release gates pass.
 
 Each decision names one observed resource/version, its immutable scan ID, an active
 invited owner and the reviewing member. The service derives the scan digest from
@@ -36,7 +37,13 @@ digests1,3,10,16,17, serializes installation and refuses migration18 drift.
 It is not in normal bootstrap and must not be installed in production during this
 candidate phase. Run full `pnpm quality` before commit.
 
-Next: expose readable owner review in invited inventory UI, prove the complete
-browser path, then link a reviewed observation to an explicitly scoped existing
+The owner-review API lists only active invited members in the current workspace.
+It validates exact observation references, same-origin mutations and stable review
+IDs; missing migration refuses rather than implying review is available. The UI
+loads review details on demand, preserves the same decision ID when retrying, and
+discards responses for a replaced observation. It shows renewed review requirements
+after owner revocation, without reporting verified workload identity or enforcement.
+
+Next: prove the complete browser path, then link a reviewed observation to an explicitly scoped existing
 agent enrollment and authenticated mandatory tool path. Workload attestation and
 real cloud acceptance remain required; owner mapping alone cannot close them.

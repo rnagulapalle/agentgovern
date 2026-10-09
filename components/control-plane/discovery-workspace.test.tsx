@@ -5,7 +5,7 @@ it("does not present configured scopes as connected enforcement or ask for secre
   const html = renderToStaticMarkup(<DiscoveryWorkspace />);
   expect(html).toContain("Scanning requires a reviewed server binding");
   expect(html).toContain("Saving a scope does not contact AWS or import agents");
-  expect(html).toContain("Azure and Google project scopes can be saved separately");
+  expect(html).toContain("Azure and Google use separate reviewed project scopes and server bindings");
   expect(html).toContain("Enter no passwords, access keys or tokens");
   expect(html).not.toContain('type="password"'); expect(html).not.toContain("<pre");
   expect(html).toContain('name="accountId"'); expect(html).toContain('name="region"');

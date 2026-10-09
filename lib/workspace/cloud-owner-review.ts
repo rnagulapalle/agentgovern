@@ -20,7 +20,7 @@ export function parseCloudOwnerReview(value: unknown): CloudOwnerReview {
   if (Object.keys(v).sort().join() !== "connectionId,id,owner,provider,resource,scanId,version"
     || typeof v.id !== "string" || !uuid.test(v.id) || typeof v.scanId !== "string" || !uuid.test(v.scanId)
     || !["aws-agentcore-runtime", "azure-foundry", "google-agent-engine"].includes(v.provider as string)
-    || typeof v.connectionId !== "string" || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(v.connectionId)
+    || typeof v.connectionId !== "string" || !(v.provider === "aws-agentcore-runtime" ? /^[a-zA-Z0-9_-]{1,64}$/ : /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/).test(v.connectionId)
     || typeof v.resource !== "string" || !v.resource || v.resource.length > 1024
     || (v.provider === "google-agent-engine" ? v.version !== null : typeof v.version !== "string" || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(v.version))
     || typeof v.owner !== "string" || v.owner.length > 254 || !/^[^\s@]+@[^\s@]+$/.test(v.owner))
@@ -39,12 +39,24 @@ async function evidence(c: PoolClient, org: string, p: CloudOwnerReview) {
   const present = Boolean((await c.query(`SELECT 1 FROM ${observations} WHERE org_id=$1 AND connection_id=$2 AND scan_id=$3 AND ${resource}=$4 AND ${version}=$5`, [org, p.connectionId, p.scanId, p.resource, p.version ?? ""])).rows[0]);
   return { latest, current: Boolean(latest && latest.id === p.scanId && present && Date.now()-latest.observed_at.getTime() <= 900_000 && latest.observed_at.getTime()-Date.now() <= 300_000) };
 }
+async function available(c: PoolClient) {
+  if (!(await c.query("SELECT to_regclass('ll_cloud_owner_reviews') AS present")).rows[0].present) throw new ControlError(503, "Owner review is not enabled in this workspace. Ask your administrator to enable it.");
+}
 export class CloudOwnerReviewStore {
   constructor(private readonly db: Pool) {}
+  async owners(actor: Actor) {
+    return transaction(this.db, actor.orgId, async c => {
+      await authority(c, actor);
+      await available(c);
+      const rows = (await c.query("SELECT email,name FROM ll_members WHERE org_id=$1 AND active=true ORDER BY name,email LIMIT 101", [actor.orgId])).rows;
+      return { owners: rows.slice(0,100) as {email:string;name:string}[], truncated: rows.length>100 };
+    });
+  }
   async review(actor: Actor, input: unknown) {
     const p = parseCloudOwnerReview(input);
     return transaction(this.db, actor.orgId, async c => {
       await authority(c, actor);
+      await available(c);
       const { latest, current } = await evidence(c, actor.orgId, p);
       if (!current) throw new ControlError(409, "Refresh and review the current cloud observation first.");
       if (!(await c.query("SELECT 1 FROM ll_members WHERE org_id=$1 AND email=$2 AND active=true", [actor.orgId, p.owner])).rows[0]) throw new ControlError(400, "Choose an active invited workspace owner.");
@@ -59,6 +71,7 @@ export class CloudOwnerReviewStore {
     const p = parseCloudOwnerReview(input);
     return transaction(this.db, actor.orgId, async c => {
       await authority(c, actor);
+      await available(c);
       const { current } = await evidence(c, actor.orgId, p);
       const row = (await c.query("SELECT r.id,r.scan_id,r.owner_email,r.reviewed_by,m.active AND m.org_id=r.org_id AS owner_active FROM ll_cloud_owner_reviews r JOIN ll_members m ON m.email=r.owner_email WHERE r.org_id=$1 AND r.provider=$2 AND r.connection_id=$3 AND r.resource=$4 AND r.provider_version=$5 ORDER BY r.recorded_at DESC,r.id DESC LIMIT 1", [actor.orgId,p.provider,p.connectionId,p.resource,p.version ?? ""])).rows[0];
       return { ownership: !row ? "unmapped" : current && row.scan_id === p.scanId && row.owner_active ? "reviewed" : "needs-review", reviewId: row?.id ?? null, owner: row?.owner_email ?? null, reviewedBy: row?.reviewed_by ?? null, authorityGranted: false as const, workloadIdentity: "unverified" as const, enforcement: "unverified" as const };
