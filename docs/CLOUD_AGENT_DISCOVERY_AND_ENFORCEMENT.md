@@ -147,3 +147,24 @@ Production release remains clean pushed main, full quality/CI and `./deploy.sh`.
 These sources establish integration surfaces, not evidence that LoopLabs has
 implemented or secured them. Availability, preview status and permissions must be
 checked again when each provider adapter is implemented.
+
+## Read-only collection foundation candidate
+
+`lib/workspace/cloud-discovery.ts` adds an API-client interface and allowlisted AWS
+AgentCore runtime collection model. It checks the enrolled caller account, runtime
+ARN/account/region, exact listed version and bounded pagination before retaining
+resource and identity references. Raw runtime detail objects can contain environment
+values; those objects, descriptions, headers and raw errors are never returned.
+Unknown effective permissions and tools remain explicit gaps. Collection creates
+no agent, credential, record grant, approval or execution request.
+
+Partial, cyclic, malformed, throttled and page-limited scans remain incomplete.
+The separate evidence merge retains prior resource/version observations even when
+the next API traversal returns nothing; absence is not deletion or revocation.
+Stored evidence cannot inject authority, hide gaps or carry extra raw metadata.
+Input scope is copied before the first asynchronous operation.
+
+The tests use native-shaped API fixtures, including hostile metadata and failures.
+No signed native AWS client, real cloud-account scan, database snapshot persistence,
+connection/enrollment UI, MCP/A2A import or customer-side enforcement is wired yet.
+This is the shared collection foundation, not a working enterprise cloud pilot.
