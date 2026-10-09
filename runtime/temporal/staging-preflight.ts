@@ -9,7 +9,7 @@ import {FetchSandboxConnectors} from "../../lib/connectors/twin";
 export const scopedMigrations=[
  [1,"lib/durable/schema.sql"],[2,"lib/refunds/schema.sql"],[3,"lib/workspace/schema.sql"],
  [4,"lib/connectors/schema.sql"],[5,"lib/workflows/schema.sql"],[7,"lib/enquiries/schema.sql"],
- [8,"lib/enquiries/managed-schema.sql"],[9,"lib/enquiries/temporal-schema.sql"],
+ [8,"lib/enquiries/managed-schema.sql"],[9,"lib/enquiries/temporal-schema.sql"],[10,"lib/durable/recovery-schema.sql"],
  [11,"lib/durable/proposal-schema.sql"],[12,"lib/connectors/scope-schema.sql"],
  [13,"lib/enquiries/record-routing-schema.sql"],
 ] as const;
@@ -20,6 +20,7 @@ export function stagingConfiguration(env:Record<string,string|undefined>){
  const blockers:string[]=[];
  const org=env.LOOPLABS_WORKSPACE_ID;
  if(!org||!/^[a-zA-Z0-9_-]{1,64}$/.test(org))blockers.push("workspace_configuration_missing_or_invalid");
+ if(!env.LOOPLABS_RECOVERY_EPOCH||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(env.LOOPLABS_RECOVERY_EPOCH))blockers.push("recovery_epoch_missing_or_invalid");
  if(env.LOOPLABS_TEMPORAL_WORKSPACE!=="staging")blockers.push("staging_opt_in_missing");
  try{
   const config=operationsConfig(env,"worker");
@@ -35,7 +36,7 @@ export function stagingConfiguration(env:Record<string,string|undefined>){
  }catch{blockers.push("isolated_record_binding_missing_or_invalid");}
  return blockers;
 }
-export async function stagingDatabase(db:Pool,expected:{version:number;digest:string}[],org:string,token:string){
+export async function stagingDatabase(db:Pool,expected:{version:number;digest:string}[],org:string,token:string,epoch:string|undefined){
  const c=await db.connect();
  try{
   await c.query("BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY");
@@ -56,6 +57,9 @@ export async function stagingDatabase(db:Pool,expected:{version:number;digest:st
    const owns=(await c.query("SELECT 1 FROM pg_class t JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname=current_schema() AND t.relkind IN ('r','p') AND t.relname LIKE 'll_%' AND pg_has_role(current_user,t.relowner,'USAGE') LIMIT 1")).rows.length>0;
    if(owns&&!blockers.includes("runtime_database_role_privileged"))blockers.push("runtime_database_role_privileged");
    if(!blockers.some(b=>b.startsWith("migration_")||b==="workspace_schema_missing")){
+    const validEpoch=typeof epoch==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(epoch);
+    const stored=(await c.query("SELECT epoch FROM ll_workspace_recovery WHERE org_id=$1",[org])).rows[0]?.epoch;
+    if(!validEpoch||stored!==epoch!.toLowerCase())blockers.push("recovery_fence_missing_or_mismatched");
     const active=(await c.query("SELECT 1 FROM ll_tokens t JOIN ll_orgs o ON o.id=t.org_id WHERE t.hash=$1 AND t.org_id=$2 AND t.subject='enquiry-temporal' AND t.role='worker' AND t.active=true",[createHash("sha256").update(token).digest("hex"),org])).rows.length===1;
     if(!active)blockers.push("scoped_workload_not_active_in_workspace");
     const members=(await c.query("SELECT count(*)::int n FROM ll_members WHERE org_id=$1 AND active=true",[org])).rows[0].n;

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import type { Actor } from "../durable/contracts";
+import { recoveryFence } from "../durable/recovery";
 export const WORKSPACE_COOKIE = "looplabs_workspace_session";
 export const digest = (value: string) =>
   createHash("sha256").update(value).digest("hex");
@@ -14,6 +15,7 @@ export async function memberSession(
     "SELECT m.org_id,m.email FROM ll_sessions s JOIN ll_members m ON m.email=s.email WHERE s.hash=$1 AND s.expires_at>now() AND m.active=true",
     [hash],
   );
+  if (rows[0]) await recoveryFence(db, rows[0].org_id);
   return rows[0]
     ? {
         orgId: rows[0].org_id,
@@ -29,6 +31,7 @@ export async function memberAuthority(c: PoolClient, actor: Actor) {
     "SELECT 1 FROM ll_sessions s JOIN ll_members m ON m.email=s.email WHERE s.hash=$1 AND s.expires_at>now() AND m.active=true AND m.org_id=$2 AND m.email=$3",
     [actor.tokenHash, actor.orgId, actor.subject],
   );
+  if (rows[0]) await recoveryFence(c, actor.orgId);
   return Boolean(rows[0]);
 }
 export async function activeApprover(

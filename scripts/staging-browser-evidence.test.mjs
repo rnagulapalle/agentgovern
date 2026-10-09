@@ -15,11 +15,15 @@ test("the retained browser trial remains bound to its measured runtime sources a
  expect(proof.notVerified).toEqual(expect.arrayContaining(["remote persistent staging","live provider guarantees"]));
  expect(proof.browser.planning).toEqual({typedRequest:true,clarified:true,model:"us.amazon.nova-lite-v1:0",savedBeforeSubmission:true});
  expect(proof.plannerAuthority).toEqual({webOnly:true});
+ expect(proof.restoreContainment).toEqual({approvedArchive:true,externalEpochRotated:true,runtimeRoles:3,omittedEpochRefused:true,revivedSessionsRefused:true,restoredApprovalRefused:true,packagedWorkerRefused:true,packagedSchedulerRefused:true,quarantineRevokesAuthority:true,quarantineReplay:true,staleBootstrapRefused:true,retainedEffects:4});
  expect(proof.notVerified).not.toContain("fresh typed chat/model interpretation");
+ const historical=await readFile("docs/evidence/staging-platform-browser-typed-before-restore-proof.json");
+ expect(createHash("sha256").update(historical).digest("hex")).toBe("bdbb632b2b3cee77814239435f375181705d388aaf8a6b880439e3dda44e8704");
+ expect(JSON.parse(historical).executionEvidence.runId).toBe(37863416303);
  const prior=JSON.parse(await readFile("docs/evidence/staging-platform-browser-prepared-proof.json","utf8"));
  expect(createHash("sha256").update(await readFile("docs/evidence/staging-platform-browser-prepared-proof.json")).digest("hex")).toBe("880f370595bb97b0d6e8025ac5caafe71ebdcb106ea2d8d258cf34179c328f2f");
  expect(prior.executionEvidence.runId).toBe(37859172131);expect(prior.executionEvidence.qualityTests).toBe(400);
- expect(Object.keys(proof.sourceFingerprints).sort()).toEqual([...new Set([...Object.keys(prior.sourceFingerprints),"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs"])].sort());
+ expect(Object.keys(proof.sourceFingerprints).sort()).toEqual([...new Set([...Object.keys(prior.sourceFingerprints),"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs","scripts/workspace-recovery.ts","scripts/staging-restore-controller.mjs"])].sort());
  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["scripts/staging-browser-proof.mjs","scripts/staging-browser-tls.mjs","scripts/staging-owned-builder.mjs","components/control-plane/enquiry-workspace.tsx","lib/connectors/service.ts","runtime/temporal/activities.ts"]));
  for(const [file,digest] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(await readFile(file)).digest("hex"),file).toBe(digest);
  expect(proof).not.toHaveProperty("actionIds");expect(proof.browser).not.toHaveProperty("actionIds");

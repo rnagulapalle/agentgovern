@@ -256,3 +256,19 @@ remote capacity, noisy-neighbor saturation, quotas/fairness under overload or a
 production SLO. Delay samples include the injected downtime and client polling.
 Persistent staging, representative tenant load and the pilot's agreed operational
 objectives remain required. Production is unchanged.
+
+
+## Assembled staging restore containment
+
+`STAGING_RESTORE_FENCE.md` records the actual runtime result of private run
+`37873330354`: approved application archive restored with Temporal/provider state
+left ahead; all staged runtime roles contain revived authority; missing epoch does
+not opt out; offline quarantine is idempotent; stale bootstrap cannot issue a new
+workload key; provider effects remain exactly four. Component and assembled failures
+exposed and fixed bootstrap token issuance and direct member-session access gaps.
+The latest runtime passed, but its following CI quality step failed two staging
+fixtures. Corrected fixtures keep their original refusal assertions and add
+missing-epoch refusal; current local full quality passed all 414 tests. Exact-head
+release checks remain required. This closes a disposable assembled restore proof,
+not persistent staging, remote RPO/RTO, operator acceptance, real-provider safety,
+enterprise production readiness or a production ownership cutover.

@@ -24,6 +24,7 @@ it("requires fresh recorded UI/model/twin proof and keeps unsupported hosted exe
   expect(proof.observedRuns).toHaveLength(3);
   expect(Object.keys(proof.providerEffects)).toHaveLength(5);
   expect(proof.unsupported.some(s => s.includes("atomic CRM contact-version"))).toBe(true);
+  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/identity.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql"]));
   for (const [file, hash] of Object.entries(proof.sourceFingerprints)) {
     expect(createHash("sha256").update(await readFile(file)).digest("hex"), `Chat UI proof is stale for ${file}; rerun pnpm chat:proof`).toBe(hash);
   }

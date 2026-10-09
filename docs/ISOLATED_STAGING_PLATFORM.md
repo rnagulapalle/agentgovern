@@ -62,11 +62,15 @@ remains supported; this file does not silently replace it.
 
 ## Application database bootstrap
 
-`scripts/staging-database-bootstrap.mjs` now wraps the existing eleven application
+`scripts/staging-database-bootstrap.mjs` now wraps the existing twelve application
 provisioners in their required order. Run it from the reviewed repository with
 installed dependencies using `node --import tsx scripts/staging-database-bootstrap.mjs
 <new-private-installation-directory>`. Supply `LOOPLABS_STAGING_BOOTSTRAP=isolated`
-and `LOOPLABS_STAGING_OWNER_URL` through private operator configuration. The owner
+and `LOOPLABS_STAGING_OWNER_URL` through private operator configuration. Also supply
+a fresh, externally held UUID v4 `LOOPLABS_RECOVERY_EPOCH`; retries must use the
+same epoch. Bootstrap enrolls migration 10 before exporting runtime configuration, and
+assembled web, worker and scheduler configuration must match it. Existing-directory
+retries check the fence before any provisioner can issue another workload key. The owner
 must be `ll_stage_owner`, database `looplabs_staging`, host `application-db`, without
 connection query overrides. Execute inside the isolated network when that service
 name is used. A disposable local proof alone may explicitly enable
@@ -87,10 +91,12 @@ keep them offline and **never mount the entire directory into web/workers**. Onl
 inputs. The script adds read-only SELECT on the migration ledger for the existing
 preflight, then verifies the actual runtime connection against that preflight.
 It does not enroll records, grant record authority, approve actions, start workers
-or configure Temporal/provider/TLS. Separate recovery-epoch enrollment and restore
-procedures remain required before operational acceptance.
+or configure Temporal/provider/TLS. Offline restore review and quarantine remain required before restoring authority.
+An existing installation with a missing or different database fence refuses before
+any provisioner runs, including after a partially completed initial installation.
+Do not delete its private directory to bypass that refusal.
 
-The actual disposable PostgreSQL proof applies migrations 1–5, 7–9 and 11–13,
+The actual disposable PostgreSQL proof applies migrations 1–5 and 7–13,
 checks restricted privileges and independent members/workload, repeats without
 credential/token changes, refuses a retargeted runtime, and stops on a corrupted
 retained migration. It creates no scoped grants/actions/runs, then removes its own
@@ -507,3 +513,30 @@ normal pre-push gate and exact-head CI. Temporary repository/local credential
 inputs were removed and verified. Persistent hosting, sustained load, remote
 restore/alerts/operator acceptance, live-provider safety and production cutover
 remain unproved; this is not an enterprise production acceptance.
+
+## Recovery-fence increment under validation
+
+October 8: the actual component database archive drill passed after exposing and
+fixing a bootstrap defect. A retry previously issued a fresh workload token before
+recovery enrollment checked a changed fence. The token-count assertion failed
+(7 versus 6); the earlier failure is retained privately. Existing-installation
+bootstrap now checks its configured and database epoch before any provisioner.
+The corrected actual `pg_dump`/`pg_restore` trial preserved token count, refused
+restored authority, and verified idempotent offline quarantine.
+
+The new assembled-runtime approved-archive drill is implemented but **not yet
+measured**. It must freeze independently approved work while workers are stopped,
+complete the original effects, rotate configuration outside the archive, restore
+only the application database, refuse old sessions and approvals, prove packaged
+worker/scheduler termination, quarantine twice, and retain the same independent
+provider effects. Earlier browser receipts do not prove this new source state.
+See [STAGING_RESTORE_FENCE.md](STAGING_RESTORE_FENCE.md).
+
+
+The current restore increment is documented in `STAGING_RESTORE_FENCE.md`.
+Actual runtime run `37873330354` passed the restored authority and provider-effect
+checks; its subsequent quality failure was two unenrolled staging fixtures, not
+an overall CI pass. The corrected fixtures and current candidate passed local
+full quality (414 tests). The current measured receipt covers 94 runtime sources;
+historical prepared/typed receipts remain retained. Exact-head CI and persistent
+operational acceptance are still required; production remains unchanged.

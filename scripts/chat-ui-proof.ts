@@ -23,6 +23,7 @@ async function main() {
   if (!process.env.LOOPLABS_TEST_DATABASE_URL) throw Error("Dedicated test PostgreSQL required.");
   await mkdir(".local", { recursive: true, mode: 0o700 });
   const dir = await mkdtemp(resolve(".local/chat-ui-proof-"));
+  const recoveryEpoch=randomUUID();
   const schema = `chat_ui_${randomBytes(8).toString("hex")}`, token = randomBytes(32).toString("base64url"), password = randomBytes(24).toString("base64url");
   const admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
   const db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
@@ -35,12 +36,12 @@ async function main() {
   const check = (name: string) => { checks.push({ name, passed: true }); console.log(`PASS ${name}`); };
   const url = new URL(process.env.LOOPLABS_TEST_DATABASE_URL); url.searchParams.set("options", `-c search_path=${schema}`);
   async function startApp() {
-    app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...process.env, LOOPLABS_TEMPORAL_WORKSPACE: "staging", LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId, LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_RECORD_CATALOG: JSON.stringify({records:[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"},{version:"record-scope-1",workspaceId:"local-proof",contactId:"2002",recipient:"bob@example.test"}]}), LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
+    app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...process.env, LOOPLABS_RECOVERY_EPOCH:recoveryEpoch, LOOPLABS_TEMPORAL_WORKSPACE: "staging", LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId, LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_RECORD_CATALOG: JSON.stringify({records:[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"},{version:"record-scope-1",workspaceId:"local-proof",contactId:"2002",recipient:"bob@example.test"}]}), LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
     for (let i = 0; i < 100; i++) { try { if ((await fetch(origin + "/sign-in")).ok) return; } catch {} await delay(100); }
     throw Error("UI app unavailable");
   }
   async function startWorker() {
-    worker = spawn("pnpm", ["exec", "tsx", "scripts/enquiry-worker.ts"], { detached: true, env: { ...process.env, LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_ENQUIRY_WORKER_TOKEN: workerToken, LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token }, stdio: ["ignore", "pipe", "pipe"] });
+    worker = spawn("pnpm", ["exec", "tsx", "scripts/enquiry-worker.ts"], { detached: true, env: { ...process.env, LOOPLABS_RECOVERY_EPOCH:recoveryEpoch, LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_ENQUIRY_WORKER_TOKEN: workerToken, LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token }, stdio: ["ignore", "pipe", "pipe"] });
     for (let i = 0; i < 100; i++) { if ((await db.query("SELECT 1 FROM ll_enquiry_worker_status WHERE last_tick>now()-interval '10 seconds'")).rows[0]) return; await delay(100); }
     throw Error("Background worker unavailable");
   }
@@ -50,8 +51,7 @@ async function main() {
     const result = await chat(page, enquiryRequest + " Use customer@example.test.");
     assert(result.saved?.id);
     await page.getByRole("checkbox").check();
-    const submitted = page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST");
-    await page.getByRole("button", { name: "Rehearse this plan", exact: true }).click();
+    const [submitted] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Rehearse this plan", exact: true }).click()]);
     assert.equal((await submitted).status(), 200);
     await expect(page.getByRole("region", { name: "Rehearsal progress" })).toBeVisible();
     return result.saved.id as string;
@@ -75,8 +75,7 @@ async function main() {
     page.off("request", observe);
     assert.equal(prefetched.length, 0, "Sign-in must not fan out background route prefetches");
     await page.getByLabel("Email", { exact: true }).fill(email); await page.getByLabel("Password").fill(password);
-    const signedIn = page.waitForResponse(r => r.url().endsWith("/api/workspace/session") && r.request().method() === "POST");
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    const [signedIn] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/session") && r.request().method() === "POST"), page.getByRole("button", { name: "Sign in", exact: true }).click()]);
     const result = await signedIn; assert.equal(result.status(), 200, `UI sign-in: ${JSON.stringify(await result.json())}`);
     await expect(page.getByRole("heading", { name: "Describe the work. Rehearse it first." })).toBeVisible();
   }
@@ -87,8 +86,7 @@ async function main() {
   }
   async function chat(page: Page, text: string) {
     await page.getByLabel("Your request or clarification").fill(text);
-    const result = page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST");
-    await page.getByRole("button", { name: "Send request", exact: true }).click();
+    const [result] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Send request", exact: true }).click()]);
     const response = await result; assert.equal(response.status(), 200); return response.json();
   }
   async function prepare(page: Page) {
@@ -107,8 +105,7 @@ async function main() {
   }
   function step(page: Page, ordinal: number) { return page.locator("article").filter({ has: page.getByRole("heading", { name: ordinal === 1 ? /^1\. Set/ : /^2\. Send/ }) }); }
   async function clickAction(page: Page, ordinal: number, name: string) {
-    const result = page.waitForResponse(r => r.url().endsWith("/api/durable/connectors") && r.request().method() === "POST");
-    await step(page, ordinal).getByRole("button", { name, exact: true }).click(); return result;
+    const [result] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/durable/connectors") && r.request().method() === "POST"), step(page, ordinal).getByRole("button", { name, exact: true }).click()]); return result;
   }
   async function proposeAndApprove(page: Page, reviewer: Page, id: string) {
     for (const ordinal of [1, 2]) assert.equal((await clickAction(page, ordinal, "Submit prepared action")).status(), 200);
@@ -126,8 +123,9 @@ async function main() {
   }
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/connectors/scope-schema.sql", "lib/enquiries/record-routing-schema.sql"]) await db.query(await readFile(file, "utf8"));
+    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/durable/recovery-schema.sql", "lib/connectors/scope-schema.sql", "lib/enquiries/record-routing-schema.sql"]) await db.query(await readFile(file, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
+    await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('local-proof',$1)",[recoveryEpoch]);
     for (const [email, name] of [["requester@example.test", "Requester"], ["reviewer@example.test", "Reviewer"]]) await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,'local-proof',$2,$3)", [email, name, passwordHash(password)]);
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
     for (const [id, tool] of [["crm-agent", "twin.crm"], ["email-agent", "twin.email"]]) {
@@ -150,8 +148,7 @@ async function main() {
     check("Sign-in navigation generates no background route prefetch burst for either member");
     await page.goto(origin + "/control-plane/records");
     await expect(page.getByRole("heading", {name:"Records and access",exact:true})).toBeVisible();
-    const enrollmentResponse=page.waitForResponse(r=>r.url().endsWith("/api/workspace/records") && r.request().method()==="POST");
-    await page.locator("div.cp-durable-card").filter({has:page.getByRole("heading",{name:"alice@example.test",exact:true})}).getByRole("button",{name:"Add customer record",exact:true}).click();
+    const [enrollmentResponse] = await Promise.all([page.waitForResponse(r=>r.url().endsWith("/api/workspace/records") && r.request().method()==="POST"), page.locator("div.cp-durable-card").filter({has:page.getByRole("heading",{name:"alice@example.test",exact:true})}).getByRole("button",{name:"Add customer record",exact:true}).click()]);
     const enrolled=await enrollmentResponse;assert.equal(enrolled.status(),200);const record=await enrolled.json();
     await page.getByLabel("Agent to grant access").selectOption("crm-agent");
     await page.getByRole("button",{name:"Grant record access",exact:true}).click();
@@ -269,13 +266,13 @@ async function main() {
     await page.screenshot({ path: "docs/evidence/enquiry-temporal-mobile.png", fullPage: true });
     check("Typed chat and invited UI transfer one saved run to Temporal without granting approval; second-member approvals complete exactly two effects and reload preserves ownership");
     const until=async(test:()=>Promise<boolean>,label:string,timeout=90000)=>{const start=Date.now();while(!(await test())){if(Date.now()-start>timeout)throw Error(`Timed out: ${label}`);await delay(100);}};
-    const packagedService=(role:"worker"|"scheduler")=>{const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{env:{...process.env,LOOPLABS_DATABASE_URL:url.toString(),LOOPLABS_TEMPORAL_WORKER_TOKEN:temporalToken,LOOPLABS_TEMPORAL_ADDRESS:temporal!.address,LOOPLABS_TEMPORAL_NAMESPACE:"default",LOOPLABS_TEMPORAL_TASK_QUEUE:"scoped-ui-"+schema,LOOPLABS_TEMPORAL_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",LOOPLABS_TEMPORAL_API_KEY:"",LOOPLABS_TEMPORAL_CERT_PATH:"",LOOPLABS_TEMPORAL_KEY_PATH:"",LOOPLABS_TEMPORAL_CA_PATH:"",LOOPLABS_TEMPORAL_POLL_MS:"250",LOOPLABS_TEMPORAL_HEALTH_PORT:role==="worker"?"19340":"19341",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:""},stdio:"ignore"});packaged.push(child);return child;};
+    const packagedService=(role:"worker"|"scheduler")=>{const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{env:{...process.env,LOOPLABS_RECOVERY_EPOCH:recoveryEpoch,LOOPLABS_DATABASE_URL:url.toString(),LOOPLABS_TEMPORAL_WORKER_TOKEN:temporalToken,LOOPLABS_TEMPORAL_ADDRESS:temporal!.address,LOOPLABS_TEMPORAL_NAMESPACE:"default",LOOPLABS_TEMPORAL_TASK_QUEUE:"scoped-ui-"+schema,LOOPLABS_TEMPORAL_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",LOOPLABS_TEMPORAL_API_KEY:"",LOOPLABS_TEMPORAL_CERT_PATH:"",LOOPLABS_TEMPORAL_KEY_PATH:"",LOOPLABS_TEMPORAL_CA_PATH:"",LOOPLABS_TEMPORAL_POLL_MS:"250",LOOPLABS_TEMPORAL_HEALTH_PORT:role==="worker"?"19340":"19341",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:""},stdio:"ignore"});packaged.push(child);return child;};
     const ready=async(port:number)=>{try{return (await fetch(`http://127.0.0.1:${port}/health/ready`,{signal:AbortSignal.timeout(1000)})).ok;}catch{return false;}};
     let scopedWorker=packagedService("worker");packagedService("scheduler");await until(async()=>await ready(19340)&&await ready(19341),"scoped packaged readiness");
     await page.goto(origin+"/control-plane/records");
     const aliceCard=page.locator("section").filter({has:page.getByRole("heading",{name:"alice@example.test",exact:true})});
     await aliceCard.getByLabel("Agent to grant access").selectOption("email-agent");await aliceCard.getByRole("button",{name:"Grant record access",exact:true}).click();
-    const added=page.waitForResponse(r=>r.url().endsWith("/api/workspace/records")&&r.request().method()==="POST");await page.getByRole("button",{name:"Add customer record",exact:true}).click();assert.equal((await added).status(),200);
+    const [added] = await Promise.all([page.waitForResponse(r=>r.url().endsWith("/api/workspace/records")&&r.request().method()==="POST"), page.getByRole("button",{name:"Add customer record",exact:true}).click()]);assert.equal((await added).status(),200);
     const bobCard=page.locator("section").filter({has:page.getByRole("heading",{name:"bob@example.test",exact:true})});
     for(const agent of ["crm-agent","email-agent"]){await bobCard.getByLabel("Agent to grant access").selectOption(agent);await bobCard.getByRole("button",{name:"Grant record access",exact:true}).click();await expect(bobCard.getByRole("button",{name:"Revoke agent access",exact:true})).toHaveCount(agent==="crm-agent"?1:2);}
     const records=(await (await page.request.get(origin+"/api/workspace/records")).json()).records;
@@ -285,10 +282,10 @@ async function main() {
       const record=records.find((r:{recipient:string})=>r.recipient===recipient);
       await page.goto(origin+"/control-plane/work");await page.getByLabel("Customer record for this conversation").selectOption(record.id);
       await page.getByLabel("Your request or clarification").fill(`Check the CRM record for ${recipient}, prepare an acknowledgement, and ask me before sending. Rehearse it with FetchSandbox first.`);
-      const interpreted=page.waitForResponse(r=>r.url().includes("/api/workspace/enquiries?scope=")&&r.request().method()==="POST");await page.getByRole("button",{name:"Send request",exact:true}).click();const answer=await interpreted;assert.equal(answer.status(),200);const value=await answer.json();assert(value.saved);assert.equal(value.saved.plan.contact.email,recipient);scopedPlans.push(value.saved);
+      const [interpreted] = await Promise.all([page.waitForResponse(r=>r.url().includes("/api/workspace/enquiries?scope=")&&r.request().method()==="POST"), page.getByRole("button",{name:"Send request",exact:true}).click()]);const answer=await interpreted;assert.equal(answer.status(),200);const value=await answer.json();assert(value.saved);assert.equal(value.saved.plan.contact.email,recipient);scopedPlans.push(value.saved);
       await expect(page.getByText("Prepared reply to "+recipient,{exact:true})).toBeVisible();
       await page.getByLabel(/^CRM agent/).selectOption("crm-agent");await page.getByLabel(/^Messaging agent/).selectOption("email-agent");await page.getByRole("checkbox").check();
-      const submitted=page.waitForResponse(r=>r.url().includes("/api/workspace/enquiries?scope=")&&r.request().method()==="POST");await page.getByRole("button",{name:"Submit for independent approval",exact:true}).click();assert.equal((await submitted).status(),200);
+      const [submitted] = await Promise.all([page.waitForResponse(r=>r.url().includes("/api/workspace/enquiries?scope=")&&r.request().method()==="POST"), page.getByRole("button",{name:"Submit for independent approval",exact:true}).click()]);assert.equal((await submitted).status(),200);
       await expect(page.getByRole("region",{name:"Rehearsal progress"})).toBeVisible();await expect(page.getByText("To: "+recipient,{exact:true})).toBeVisible();
       const duplicate=await page.request.post(origin+"/api/workspace/enquiries?scope="+record.id,{headers:{Origin:origin},data:{operation:"submit",id:value.saved.id,planHash:value.saved.plan_hash,crmAgent:"crm-agent",emailAgent:"email-agent"}});assert.equal(duplicate.status(),200);
       assert.equal((await db.query("SELECT count(*) FROM ll_connector_actions a JOIN ll_workflow_steps s ON s.org_id=a.org_id AND s.action_id=a.id WHERE s.run_id=$1 AND a.state='held'",[value.saved.id])).rows[0].count,"2");
@@ -320,17 +317,17 @@ async function main() {
     await db.query("UPDATE ll_agents SET action_limit=reserved WHERE id=ANY($1::text[])",[["crm-agent","email-agent"]]);
     await page.setViewportSize({width:1280,height:900});await page.getByRole("button",{name:"Start a new conversation",exact:true}).click();
     await page.getByLabel("Your request or clarification").fill(enquiryRequest+" Use bob@example.test.");
-    const blockedChatResponse=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/workspace/enquiries"&&r.request().method()==="POST");await page.getByRole("button",{name:"Send request",exact:true}).click();
+    const [blockedChatResponse] = await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname==="/api/workspace/enquiries"&&r.request().method()==="POST"), page.getByRole("button",{name:"Send request",exact:true}).click()]);
     const blockedPlan=(await (await blockedChatResponse).json()).saved;assert(blockedPlan?.id);
     await page.getByLabel(/^CRM agent/).selectOption("crm-agent");await page.getByLabel(/^Messaging agent/).selectOption("email-agent");await page.getByRole("checkbox").check();
-    const blockedSubmit=page.waitForResponse(r=>new URL(r.url()).pathname==="/api/workspace/enquiries"&&r.request().method()==="POST");await page.getByRole("button",{name:"Submit for independent approval",exact:true}).click();assert.equal((await blockedSubmit).status(),403);
+    const [blockedSubmit] = await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname==="/api/workspace/enquiries"&&r.request().method()==="POST"), page.getByRole("button",{name:"Submit for independent approval",exact:true}).click()]);assert.equal((await blockedSubmit).status(),403);
     await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Confirm saved submission",exact:true})).toBeVisible();await expect(page.getByRole("region",{name:"Verification receipt"})).toHaveCount(0);
     await expect(page.getByText("Action not submitted",{exact:true})).toHaveCount(2);await expect(page.getByText("Submission incomplete · reopen and retry rehearsal",{exact:true})).toHaveCount(0);
     const blockedRun=await run(page,blockedPlan.id);assert(blockedRun.steps.every((s:{state:string|null})=>s.state===null));assert.equal((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch WHERE plan_id=$1",[blockedPlan.id])).rows[0].n,0);assert.deepEqual(await effects(),afterScoped);
     await page.reload();await page.getByRole("button",{name:new RegExp(blockedPlan.id.slice(0,8))}).click();await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await page.setViewportSize({width:390,height:844});await page.getByRole("region",{name:"Rehearsal progress"}).scrollIntoViewIfNeeded();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:"docs/evidence/chat-ui-submission-blocked.png",fullPage:false});assert.deepEqual(await effects(),afterScoped);
     check("Real typed scoped chat with exhausted registered-agent allowance retains a guided Submission incomplete view after refusal/reload; no submitted actions, Temporal ownership, verification receipt or new effects; 390px layout stays readable");
     const fingerprints: Record<string, string> = {};
-    for (const file of ["docker-compose.yml","deploy.sh","lib/connectors/routing.ts","lib/enquiries/submission.ts","lib/enquiries/presentation.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","lib/connectors/catalog.ts","app/api/workspace/records/route.ts","components/control-plane/records-workspace.tsx","app/control-plane/records/page.tsx","components/control-plane/shell.tsx","lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/service.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
+    for (const file of ["docker-compose.yml","deploy.sh","lib/connectors/routing.ts","lib/enquiries/submission.ts","lib/enquiries/presentation.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","lib/connectors/catalog.ts","app/api/workspace/records/route.ts","components/control-plane/records-workspace.tsx","app/control-plane/records/page.tsx","components/control-plane/shell.tsx","lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts","lib/workspace/identity.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
       fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
     await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: legacyEffects, scopedRuns,blockedRun,scopedEffects:Object.fromEntries(Object.entries(afterScoped).filter(([id])=>!beforeScoped[id])),managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
   } finally {

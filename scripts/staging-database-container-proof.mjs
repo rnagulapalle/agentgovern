@@ -1,5 +1,5 @@
 import {execFileSync} from "node:child_process";
-import {randomBytes,createHash} from "node:crypto";
+import {randomUUID,randomBytes,createHash} from "node:crypto";
 import {mkdtemp,writeFile,readFile,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {resolve} from "node:path";
@@ -10,7 +10,7 @@ let stage="build",built=false,network=false;const owned=[];
 try{
  docker("build","-f","Dockerfile.staging-provisioner","-t",image,".");built=true;
  await writeFile(resolve(dir,"database.env"),`POSTGRES_USER=ll_stage_owner\nPOSTGRES_PASSWORD=${password}\nPOSTGRES_DB=looplabs_staging\n`,{mode:0o600});
- await writeFile(resolve(dir,"controller.env"),`LOOPLABS_STAGING_OWNER_URL=postgresql://ll_stage_owner:${password}@application-db:5432/looplabs_staging\n`,{mode:0o600});
+ await writeFile(resolve(dir,"controller.env"),`LOOPLABS_STAGING_OWNER_URL=postgresql://ll_stage_owner:${password}@application-db:5432/looplabs_staging\nLOOPLABS_RECOVERY_EPOCH=${randomUUID()}\n`,{mode:0o600});
  stage="internal-database";docker("network","create","--internal",prefix);network=true;
  owned.push(pg);docker("run","-d","--name",pg,"--network",prefix,"--network-alias","application-db","--memory","512m","--cpus","0.5","--pids-limit","256","--cap-drop","ALL","--cap-add","CHOWN","--cap-add","DAC_OVERRIDE","--cap-add","FOWNER","--cap-add","SETGID","--cap-add","SETUID","--security-opt","no-new-privileges","--env-file",resolve(dir,"database.env"),"postgres:16");
  for(let i=0;;i++)try{docker("exec",pg,"pg_isready","-U","ll_stage_owner","-d","looplabs_staging");break;}catch{if(i===40)throw Error("Database not ready");await new Promise(r=>setTimeout(r,250));}

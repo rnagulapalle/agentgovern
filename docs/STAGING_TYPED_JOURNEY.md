@@ -18,8 +18,8 @@ five model/session fields. No model response supplies execution approval.
 
 The previous prepared-plan result is retained as
 `evidence/staging-platform-browser-prepared-proof.json`. It measures its historical
-sources, not this candidate. The current [measured browser receipt](evidence/staging-platform-browser-proof.json)
-records the successful typed trial after all 92 covered source fingerprints were
+sources, not this candidate. The retained [pre-restore typed receipt](evidence/staging-platform-browser-typed-before-restore-proof.json)
+records that successful typed trial after all 92 covered source fingerprints were
 checked against the candidate. Its recorder required and accepted typed clarification, exact
 scoped plan review without a run, web-only model authority, four independently
 observed provider effects, trusted HTTPS and the existing refusal/reload checks.
@@ -55,3 +55,17 @@ crash/replay and typed-browser runs. The temporary repository secret was deleted
 and its absence verified; the exact owned local session input was removed. The
 CI cleanup step succeeded. This does not independently inventory every final
 project resource or revoke an issued STS session before its scheduled expiry.
+
+
+## Restore containment increment
+
+The current [measured receipt](evidence/staging-platform-browser-proof.json) is
+from the actual runtime portion of private run `37873330354` and binds 94 sources.
+It additionally proves approved-archive restore, externally rotated and omitted
+recovery epoch refusal, restored-session and approval refusal, packaged-role
+startup refusal, offline quarantine/replay and stale-bootstrap refusal while
+retaining exactly four provider effects. The following CI quality step failed two
+unenrolled staging fixtures; that run is not overall CI success. Their original
+behavior assertions remain and missing-epoch refusal is tested explicitly. The
+corrected candidate passed local `pnpm quality` with all 414 tests. Public commit,
+exact-head CI, persistent staging and operational acceptance remain separate gates.

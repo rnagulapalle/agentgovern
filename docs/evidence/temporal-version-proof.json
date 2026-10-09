@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-08T08:12:09.339Z",
+  "at": "2026-10-09T02:06:12.985Z",
   "scope": "Local pinned deployments and persisted SQLite dev-service restart; no production cutover",
   "checks": [
     "Current v2 routes new runs to v2 while pending v1 remains pinned to v1; no approval from rollout",
@@ -29,10 +29,11 @@
     "lib/connectors/hosted.ts": "72e67b5ae33fec3201641928bd7389abd98dc97b03de3b4990588d8e9063f79a",
     "lib/enquiries/service.ts": "a87d145adfd3809e5119fcf51f96002b4db6febb20de01431b1eee9e5d11ddc6",
     "lib/workflows/guard.ts": "3af43bf26bc065066a140e4e9e2fd2d601ef4089e4a22f6499b64072081a8d11",
-    "lib/durable/recovery.ts": "82ab10eb57e625824260a2fa2b36e5a250610a41fa9f4077e72b7bc62b3f9c6d",
+    "lib/durable/recovery.ts": "836b90a85dc4f8e8b8bd6bafc4297f4af0937c894decb190d892956669f31343",
     "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
+    "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
     "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
-    "scripts/temporal-version-proof.ts": "c557350eb1bec066cc4e6670dea7ac7922a47c44169c9ac3b25aff7f1a6042b3"
+    "scripts/temporal-version-proof.ts": "78330b06d12bdfda50bd8cb4adb33b1c0377adce31a08435e2be6e35fc03f306"
   },
   "limitations": [
     "Graceful service restart, not unclean host loss or high availability",
