@@ -3,8 +3,7 @@
 October 9, 2026. Raj added cloud discovery and sidecar-based enforcement to the
 platform scope. This document is the implementation contract, not a shipped
 integration claim. Current LoopLabs controls operate enrolled identities and
-bounded private provider twins. No AWS, Azure or Google discovery connector,
-credential broker or customer-side enforcement sidecar is established yet.
+bounded private provider twins. A staged AWS inventory candidate now stores scoped observations and exposes manual read-only scanning through a reviewed private binding; actual AWS account discovery remains unproved. Azure/Google discovery, a credential broker and customer-side enforcement sidecar remain unimplemented. See `CLOUD_INVENTORY_PERSISTENCE.md`.
 
 ## Product journey
 
@@ -166,9 +165,7 @@ Stored evidence cannot inject authority, hide gaps or carry extra raw metadata.
 Input scope is copied before the first asynchronous operation.
 
 The tests use native-shaped API fixtures, including hostile metadata and failures.
-No signed native AWS client, real cloud-account scan, database snapshot persistence,
-connection/enrollment UI, MCP/A2A import or customer-side enforcement is wired yet.
-This is the shared collection foundation, not a working enterprise cloud pilot.
+This historical foundation is now extended by the optional persisted inventory and invited scope/scan UI documented in `CLOUD_INVENTORY_PERSISTENCE.md`. Actual AWS signing/account discovery, reviewed enrollment, MCP/A2A import and customer-side enforcement remain unproved; fixture traversal is not a working enterprise cloud pilot.
 
 ## Signed read-only transport candidate
 
@@ -199,10 +196,13 @@ cloud-account discovery. The inspected laptop CLI is `2.27.7` and does not conta
 `bedrock-agentcore-control`; no silent fallback or global upgrade was performed.
 A reviewed supporting AWS CLI v2 image/executable and scoped discovery session,
 then an actual account scan, remain acceptance requirements. No live account was
-queried by this increment. Durable inventory, enrollment UI, enterprise identity
-and action enforcement are still separate unfinished integration work.
+queried by this increment. Durable inventory and secret-free scope/scan UI now have isolated local and exact-head CI browser proof. Reviewed enrollment, enterprise identity and mandatory action enforcement remain separate unfinished integration work. The supporting CLI schema was checked offline; no account scan follows from that result.
 
 References for this transport:
 - https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/list-agent-runtimes.html
 - https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/get-agent-runtime.html
 - https://docs.aws.amazon.com/cli/latest/reference/sts/get-caller-identity.html
+
+## Scoped tool integration candidate
+
+`AGENT_TOOL_CLIENT.md` describes the new thin connector API client and actual HTTP/PostgreSQL route checks. It keeps agent identity and idempotency fixed, refuses redirects and uncertain-response resends, and exposes no approval/execution operation. It reuses the existing services; it is not a mandatory gateway, cloud federation or direct-provider bypass proof.
