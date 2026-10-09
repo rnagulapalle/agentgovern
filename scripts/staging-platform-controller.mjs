@@ -35,11 +35,14 @@ async function main(){
   phase="held-run";const read=()=>json(owner,`/api/durable/workflows?run=${id}`);let run=await read();assert.equal(run.steps.length,2);
   phase="self-approval-refusal";await json(owner,"/api/durable/connectors",{operation:"approve",actionId:run.steps[0].action_id,payloadHash:run.steps[0].payload_hash},403);
   phase="pre-approval-containment";await wait(2000);assert.equal((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE state IN ('succeeded','uncertain')")).rows[0].n,0);
+  await writeFile(`${dir}/restore-reference.json`,JSON.stringify({owner,reviewer,id,steps:run.steps.map(s=>({action_id:s.action_id,payload_hash:s.payload_hash})),reservations:(await db.query("SELECT id,reserved FROM ll_agents WHERE org_id='local-proof' ORDER BY id")).rows,tokenCount:(await db.query("SELECT count(*)::int n FROM ll_tokens WHERE org_id='local-proof'")).rows[0].n}),{mode:0o600});
   phase="restart-checkpoint";await writeFile(`${dir}/held.json`,JSON.stringify({held:true}),{mode:0o600});
   await until(async()=>{try{await access(`${dir}/continue.json`);return true;}catch{return false;}},"Restart controller did not release trial",180);
   // Cookies and saved work must survive the actual web/worker/twin restart.
   phase="session-recovery";await json(owner,"/api/workspace/session");run=await read();assert.equal(run.id,id);
   phase="independent-approval";for(const step of run.steps)await json(reviewer,"/api/durable/connectors",{operation:"approve",actionId:step.action_id,payloadHash:step.payload_hash});
+  phase="restore-approval-checkpoint";await writeFile(`${dir}/approved.json`,"",{mode:0o600});
+  await until(async()=>{try{await access(`${dir}/execute.json`);return true;}catch{return false;}},"Approved archive checkpoint was not released",180);
   phase="completion";await until(async()=>{run=await read();return run.state==="completed";},"Scoped workflow did not complete",180);
   assert(run.steps.every(s=>s.approved_by===accounts[1].email&&s.state==="succeeded"));
   phase="temporal-dispatch";const rows=(await db.query("SELECT workflow_id FROM ll_temporal_dispatch WHERE org_id='local-proof' AND plan_id=$1",[id])).rows;assert.equal(rows.length,1);

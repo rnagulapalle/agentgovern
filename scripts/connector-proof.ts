@@ -940,7 +940,7 @@ async function main() {
     const fingerprintFiles = [
       "lib/connectors/request.ts", "lib/connectors/content.ts", "lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts",
       "lib/durable/recovery.ts",
-      "lib/durable/service.ts",
+      "lib/durable/service.ts","lib/workspace/identity.ts",
       "lib/enquiries/dispatch.ts",
       "lib/workflows/guard.ts",
       "lib/enquiries/contracts.ts",

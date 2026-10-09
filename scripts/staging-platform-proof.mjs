@@ -1,15 +1,16 @@
 // One disposable eight-service trial; never uses or deploys a production project.
 import {execFileSync,spawn,spawnSync} from "node:child_process";
-import {randomBytes} from "node:crypto";
+import {randomUUID,randomBytes} from "node:crypto";
 import {mkdtemp,mkdir,writeFile,readFile,cp,access,rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {resolve} from "node:path";
+import {parseEnv} from "node:util";
 import assert from "node:assert/strict";
 import {generateTemporalConfiguration} from "./staging-temporal-config.mjs";
 import {attachPlannerInputs} from "./staging-planner-attachment.mjs";
 import {assembleRuntimeInputs} from "./staging-runtime-inputs.mjs";
 import {stagingHostAdmission} from "../runtime/temporal/staging-host.ts";
-import {safeTrialFailure,safeProviderFailure,safeBrowserFailure} from "./staging-trial-failure.mjs";
+import {safeTrialFailure,safeProviderFailure,safeBrowserFailure,safeRestoreFailure} from "./staging-trial-failure.mjs";
 import {stagingBrowserProof} from "./staging-browser-proof.mjs";
 import {browserOrigin} from "./staging-browser-tls.mjs";
 import {ownedBuilder} from "./staging-owned-builder.mjs";
@@ -41,9 +42,9 @@ function runController(name,network,image,args,mounts,files=[]){owned.push(name)
 try{
  await generateTemporalConfiguration(privateDir,`looplabs-staging-${randomBytes(5).toString("hex")}`);
  for(const path of [trial,seed,application])await mkdir(path,{mode:0o700});
- const password=randomBytes(32).toString("base64url"),token=randomBytes(32).toString("base64url");
+ const recoveryEpoch=randomUUID(),password=randomBytes(32).toString("base64url"),token=randomBytes(32).toString("base64url");
  await writeFile(resolve(privateDir,"application-db.env"),`POSTGRES_USER=ll_stage_owner\nPOSTGRES_PASSWORD=${password}\nPOSTGRES_DB=looplabs_staging\n`,{mode:0o600});
- await writeFile(resolve(parent,"owner.env"),`LOOPLABS_STAGING_BOOTSTRAP=isolated\nLOOPLABS_STAGING_OWNER_URL=postgresql://ll_stage_owner:${password}@application-db:5432/looplabs_staging\n`,{mode:0o600});
+ await writeFile(resolve(parent,"owner.env"),`LOOPLABS_STAGING_BOOTSTRAP=isolated\nLOOPLABS_STAGING_OWNER_URL=postgresql://ll_stage_owner:${password}@application-db:5432/looplabs_staging\nLOOPLABS_RECOVERY_EPOCH=${recoveryEpoch}\n`,{mode:0o600});
  await writeFile(resolve(parent,"namespace.env"),"LOOPLABS_STAGING_BOOTSTRAP=isolated\n",{mode:0o600});
  for(const role of ["web","worker"])await writeFile(resolve(privateDir,`${role}.env`),"",{mode:0o600});
  const records=[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"customer@example.test"}];
@@ -88,6 +89,7 @@ try{
  const inspection=JSON.parse(docker("inspect",...Object.keys(roles).map(container)));
  assert.equal(inspection.length,8);
  if(typedPlanning){for(const c of inspection){const cloud=(c.Config.Env||[]).filter(v=>v.startsWith("AWS_")||v.startsWith("LOOPLABS_CHAT_MODEL="));if(c.Name.endsWith("-web-1")){assert.equal(cloud.length,5);assert(cloud.some(v=>v==="LOOPLABS_CHAT_MODEL=us.amazon.nova-lite-v1:0"));}else assert.equal(cloud.length,0,"Non-web roles must not receive cloud credentials");}}
+ for(const role of ["web","temporal-worker","temporal-scheduler"]){const c=inspection.find(c=>c.Id===container(role));assert((c.Config.Env||[]).includes(`LOOPLABS_RECOVERY_EPOCH=${recoveryEpoch}`),"All three runtime roles require the enrolled external recovery epoch");}
  for(const c of inspection){assert(c.HostConfig.Memory>0&&c.HostConfig.PidsLimit>0);if(!c.Name.endsWith("-web-1"))assert.equal(Object.keys(c.HostConfig.PortBindings||{}).length,0);}
  stage="api-execution";
  await cp(resolve(database,".local/workspace-accounts.json"),resolve(trial,"accounts.json"));await cp(resolve(privateDir,"worker.env"),resolve(trial,"worker.env"));await cp(resolve(privateDir,"client-tls"),resolve(trial,"tls"),{recursive:true});
@@ -98,18 +100,70 @@ try{
  await until(()=>{try{docker("network","connect",`${project}_orchestration`,controlName);return true;}catch{return false;}},"Trial controller unavailable",15);
  const checkpoint=async file=>until(async()=>{if(controllerExit!==null)throw Error("Trial controller exited");try{await access(resolve(trial,file));return true;}catch{return false;}},"Trial checkpoint unavailable",240);
  await checkpoint("held.json");
- stage="runtime-crash";compose("kill","-s","SIGKILL","web","temporal-worker","temporal-scheduler","connector-twin");compose("start","web","temporal-worker","temporal-scheduler","connector-twin");await ready(["web","temporal-worker","temporal-scheduler","connector-twin"]);
- await writeFile(resolve(trial,"continue.json"),"",{mode:0o600});await checkpoint("effects-ready.json");
+ stage="runtime-crash";compose("kill","-s","SIGKILL","web","temporal-worker","temporal-scheduler","connector-twin");compose("start","web","connector-twin");await ready(["web","connector-twin"]);
+ await writeFile(resolve(trial,"continue.json"),"",{mode:0o600});await checkpoint("approved.json");
+ stage="approved-archive";
+ const archivedProvider=JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"));assert.equal(Object.keys(archivedProvider.effects).length,0);
+ const archive=execFileSync("docker",["exec",container("application-db"),"pg_dump","-U","ll_stage_owner","-d","looplabs_staging","-Fc"],{timeout:30000,maxBuffer:8*1024*1024,stdio:["ignore","pipe","pipe"]});
+ await writeFile(resolve(application,"approved.archive"),archive,{mode:0o600,flag:"wx"});
+ compose("start","temporal-worker","temporal-scheduler");await ready(["temporal-worker","temporal-scheduler"]);
+ await writeFile(resolve(trial,"execute.json"),"",{mode:0o600});await checkpoint("effects-ready.json");
  await writeFile(resolve(trial,"provider-state.json"),docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"),{mode:0o600});
  await until(()=>controllerExit!==null,"Trial did not finish");assert.equal(controllerExit,0);
  const result=JSON.parse(output.trim());assert.equal(result.passed,true);
  let browser;
  if(browserEnabled){stage="browser-https";const observed=await stagingBrowserProof(trial,{typedPlanning});const provider=JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"));assert.equal(Object.keys(provider.effects).length,4);for(const id of observed.actionIds)assert(provider.effects[id]);const {actionIds,...sanitized}=observed;assert.equal(actionIds.length,2);browser=sanitized;}
- console.log(JSON.stringify({...result,...(typedPlanning?{plannerAuthority:{webOnly:true},actualProviderEffects:4}:{}),...(browser?{browser,scope:typedPlanning?"assembled isolated API/runtime and fresh typed HTTPS browser trial":"assembled isolated API/runtime and prepared-plan HTTPS browser trial",notVerified:[...(typedPlanning?[]:["fresh typed chat/model interpretation"]),...result.notVerified.filter(x=>x!=="browser HTTPS and typed chat UX")]}:{}),buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission},null,2));
+ stage="archive-restore-containment";
+ const expectedEffects=browser?4:2;
+ const retainedProvider=JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"));assert.equal(Object.keys(retainedProvider.effects).length,expectedEffects);
+ compose("stop","web","temporal-worker","temporal-scheduler");
+ for(const role of ["web","temporal-worker","temporal-scheduler"])assert.equal(docker("inspect","--format","{{.State.Running}}",container(role)),"false","All application writers must actually stop before restore");
+ const nextEpoch=randomUUID();assert.notEqual(nextEpoch,recoveryEpoch);
+ for(const role of ["web","worker"]){const file=resolve(privateDir,`${role}.env`),values=parseEnv(await readFile(file,"utf8"));assert.equal(values.LOOPLABS_RECOVERY_EPOCH,recoveryEpoch);values.LOOPLABS_RECOVERY_EPOCH=nextEpoch;await writeFile(file,Object.entries(values).map(([k,v])=>`${k}=${v}`).join("\n")+"\n",{mode:0o600});}
+ await cp(resolve(privateDir,"worker.env"),resolve(trial,"worker.env"));
+ stage="application-archive-restore";
+ execFileSync("docker",["exec","-i",container("application-db"),"pg_restore","--clean","--if-exists","-U","ll_stage_owner","-d","looplabs_staging"],{input:archive,timeout:30000,stdio:["pipe","ignore","pipe"]});
+ stage="restored-web-start";
+ compose("up","-d","--no-deps","--force-recreate","web");await ready(["web"]);
+ const restoreController=(phase)=>JSON.parse(runController(`${project}-restore-${phase}`,`${project}_application`,images.worker,["node","/app/restore-controller.mjs",phase],[`type=bind,src=${trial},dst=/run/trial`,`type=bind,src=${resolve("scripts/staging-restore-controller.mjs")},dst=/app/restore-controller.mjs,readonly`],browserEnabled?[resolve(parent,"restore-origin.env")]:[]));
+ if(browserEnabled)await writeFile(resolve(parent,"restore-origin.env"),`LOOPLABS_TRIAL_ORIGIN=${browserOrigin}\n`,{mode:0o600});
+ stage="restored-http-before-quarantine";assert.equal(restoreController("before").passed,true);
+ const refusePackagedRoles=(variant)=>{for(const role of ["temporal-worker","temporal-scheduler"]){
+  const name=`${project}-restore-${variant}-${role}`;owned.push(name);
+  let refused=false;try{compose("run","--no-deps","--name",name,role);}catch{refused=true;}
+  const state=JSON.parse(docker("inspect","--format","{{json .State}}",name));
+  assert(refused&&state.Status==="exited"&&state.ExitCode===1&&!state.OOMKilled,"Packaged workload must actually exit through startup refusal, not observation timeout or resource failure");
+  const logs=spawnSync("docker",["logs",name],{encoding:"utf8",timeout:10000,maxBuffer:65536,stdio:["ignore","pipe","pipe"]});
+  assert.equal(logs.status,0);assert.equal(`${logs.stdout||""}${logs.stderr||""}`.trim(),"Temporal service stopped; inspect sanitized health signals and saved run state.");
+ }};
+ stage="restored-packaged-role-refusal";refusePackagedRoles("rotated");
+ stage="restored-omitted-epoch-refusal";
+ // Removing a staged runtime's epoch must not disable the same boundary.
+ const configuredRoleFiles={};
+ compose("stop","web");
+ for(const role of ["web","worker"]){const file=resolve(privateDir,`${role}.env`);configuredRoleFiles[role]=await readFile(file,"utf8");const values=parseEnv(configuredRoleFiles[role]);delete values.LOOPLABS_RECOVERY_EPOCH;await writeFile(file,Object.entries(values).map(([k,v])=>`${k}=${v}`).join("\n")+"\n",{mode:0o600});}
+ compose("up","-d","--no-deps","--force-recreate","web");await ready(["web"]);
+ assert.equal(restoreController("before").passed,true);refusePackagedRoles("omitted-epoch");
+ assert.deepEqual(JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json")).effects,retainedProvider.effects);
+ compose("stop","web");
+ for(const role of ["web","worker"])await writeFile(resolve(privateDir,`${role}.env`),configuredRoleFiles[role],{mode:0o600});
+ compose("up","-d","--no-deps","--force-recreate","web");await ready(["web"]);
+ compose("stop","web");
+ const ownerValues=parseEnv(await readFile(resolve(parent,"owner.env"),"utf8"));
+ await writeFile(resolve(parent,"quarantine.env"),`LOOPLABS_MIGRATION_DATABASE_URL=${ownerValues.LOOPLABS_STAGING_OWNER_URL}\nLOOPLABS_WORKSPACE_ID=local-proof\nLOOPLABS_RECOVERY_EPOCH=${nextEpoch}\nLOOPLABS_RESTORE_ARCHIVE=/run/private/approved.archive\nLOOPLABS_RESTORE_ACK=WRITERS_STOPPED_AND_EPOCH_ROTATED\n`,{mode:0o600});
+ const quarantine=()=>runController(`${project}-quarantine`,`${project}_application`,images.provisioner,["node","--import","tsx","scripts/workspace-recovery.ts","quarantine"],[`type=bind,src=${application},dst=/run/private,readonly`],[resolve(parent,"quarantine.env")]);
+ stage="offline-restore-quarantine";quarantine();quarantine();
+ // A stale bootstrap must refuse before it can issue replacement workload keys.
+ stage="stale-bootstrap-refusal";let staleBootstrapRefused=false;try{runController(`${project}-stale-bootstrap`,`${project}_application`,images.provisioner,["node","--import","tsx","scripts/staging-database-bootstrap.mjs","/run/private/database"],[`type=bind,src=${application},dst=/run/private`],[resolve(parent,"owner.env")]);}catch{staleBootstrapRefused=true;}assert(staleBootstrapRefused);
+ stage="quarantined-http-authority";compose("start","web");await ready(["web"]);assert.equal(restoreController("after").passed,true);
+ assert.deepEqual(JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json")).effects,retainedProvider.effects);
+ const restoreContainment={approvedArchive:true,externalEpochRotated:true,runtimeRoles:3,omittedEpochRefused:true,revivedSessionsRefused:true,restoredApprovalRefused:true,packagedWorkerRefused:true,packagedSchedulerRefused:true,quarantineRevokesAuthority:true,quarantineReplay:true,staleBootstrapRefused:true,retainedEffects:expectedEffects};
+ console.log(JSON.stringify({...result,restoreContainment,...(typedPlanning?{plannerAuthority:{webOnly:true},actualProviderEffects:4}:{}),...(browser?{browser,scope:typedPlanning?"assembled isolated API/runtime and fresh typed HTTPS browser trial":"assembled isolated API/runtime and prepared-plan HTTPS browser trial",notVerified:[...(typedPlanning?[]:["fresh typed chat/model interpretation"]),...result.notVerified.filter(x=>x!=="browser HTTPS and typed chat UX")]}:{}),buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission},null,2));
 }catch{
  let detail="";
  try {const report=JSON.parse(await readFile(resolve(trial,"failure.json"),"utf8"));detail=safeTrialFailure(report);}catch{}
  try {detail+=safeBrowserFailure(JSON.parse(await readFile(resolve(trial,"browser-failure.json"),"utf8")));}catch{}
+ try {detail+=safeRestoreFailure(JSON.parse(await readFile(resolve(trial,"restore-failure.json"),"utf8")));}catch{}
  let provider="";
  try {const id=container("connector-twin");if(id)provider=safeProviderFailure(JSON.parse(docker("inspect","--format","{{json .State}}",id)),(()=>{const r=spawnSync("docker",["logs","--tail","80",id],{encoding:"utf8",timeout:10000,maxBuffer:65536,stdio:["ignore","pipe","pipe"]});return `${r.stdout||""}\n${r.stderr||""}`;})());}catch{}
  console.error(`Complete isolated platform trial failed at ${stage}${detail}${provider}; no acceptance, raw logs or credentials printed.`);process.exitCode=1;

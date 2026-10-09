@@ -23,10 +23,11 @@ async function until(test:()=>Promise<boolean>,label:string,timeout=15000){const
 async function main(){
  const load=process.env.LOOPLABS_TENANT_LOAD_PROOF==="1";if(process.env.LOOPLABS_TENANT_LOAD_PROOF&&!load)throw Error("Unsupported tenant workload mode");
  const url=process.env.LOOPLABS_TEST_DATABASE_URL;if(!url)throw Error("Dedicated test PostgreSQL required");
+ const recoveryEpoch=randomUUID();
  const schema=`tenant_proof_${randomBytes(8).toString("hex")}`,dir=await mkdtemp(resolve(".local/tenant-proof-")),token=randomBytes(32).toString("base64url");
  const admin=new Pool({connectionString:url}),db=new Pool({connectionString:url,options:`-c search_path=${schema}`});
  const runtimeRole=`ll_tenant_${randomBytes(8).toString("hex")}`,runtimePassword=randomBytes(32).toString("base64url");let runtime:Pool|undefined,roleCreated=false;
- const provisioningFiles=["scripts/durable-runtime-role.ts","scripts/workspace-setup.ts","scripts/refund-setup.ts","scripts/connector-setup.ts","scripts/enquiry-setup.ts","scripts/enquiry-managed-setup.ts","scripts/temporal-setup.ts","scripts/record-scope-setup.ts","scripts/record-routing-setup.ts"];
+ const provisioningFiles=["scripts/durable-runtime-role.ts","scripts/workspace-setup.ts","scripts/refund-setup.ts","scripts/connector-setup.ts","scripts/enquiry-setup.ts","scripts/enquiry-managed-setup.ts","scripts/temporal-setup.ts","scripts/workspace-recovery.ts","scripts/record-scope-setup.ts","scripts/record-routing-setup.ts"];
  const records=[{version:"record-scope-1" as const,workspaceId:"company-a",contactId:"4001",recipient:"alice@example.test"},{version:"record-scope-1" as const,workspaceId:"company-b",contactId:"4002",recipient:"bob@example.test"}];
  const loadRecords=load?companiesRecords():[];
  function companiesRecords(){return ["company-a","company-b"].flatMap((workspaceId,index)=>Array.from({length:12},(_,i)=>({version:"record-scope-1" as const,workspaceId,contactId:String(4101+index*100+i),recipient:`tenant${index+1}-customer${i+1}@example.test`})) );}
@@ -37,7 +38,7 @@ async function main(){
  const request=async(key:string,path:string,p?:object)=>{const response=await fetch(origin+path,{headers:{Authorization:`Bearer ${key}`,Origin:origin,...(p?{"Content-Type":"application/json"}:{})},...(p?{method:"POST",body:JSON.stringify(p)}:{})});return {status:response.status,data:await response.json()};};
  try{
   await admin.query(`CREATE SCHEMA ${schema}`);
-  for(const f of ["lib/durable/schema.sql","lib/workspace/schema.sql","lib/refunds/schema.sql","lib/connectors/schema.sql","lib/workflows/schema.sql","lib/durable/proposal-schema.sql","lib/enquiries/schema.sql","lib/enquiries/managed-schema.sql","lib/enquiries/temporal-schema.sql","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql"])await db.query(await readFile(f,"utf8"));
+  for(const f of ["lib/durable/schema.sql","lib/workspace/schema.sql","lib/refunds/schema.sql","lib/connectors/schema.sql","lib/workflows/schema.sql","lib/durable/proposal-schema.sql","lib/enquiries/schema.sql","lib/enquiries/managed-schema.sql","lib/enquiries/temporal-schema.sql","lib/durable/recovery-schema.sql","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql"])await db.query(await readFile(f,"utf8"));
   await writeFile(`${dir}/connector-twin-credentials.json`,JSON.stringify({token}),{mode:0o600});await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records:catalogRecords}),{mode:0o600});
   await writeFile(`${dir}/connector-twin-faults.json`,JSON.stringify({loseResponseRecords:load?["4001","4105","4209"]:["4001"]}),{mode:0o600});
   const backend=process.env.FETCHSANDBOX_BACKEND_PATH||`${process.env.HOME}/sandbox/backend`;
@@ -49,6 +50,7 @@ async function main(){
   for(const scope of records){
    const org=scope.workspaceId,keys={owner:randomBytes(32).toString("base64url"),reviewer:randomBytes(32).toString("base64url"),worker:randomBytes(32).toString("base64url"),agent:randomBytes(32).toString("base64url")};
    await db.query("INSERT INTO ll_orgs(id) VALUES($1)",[org]);
+   await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES($1,$2)",[org,recoveryEpoch]);
    const actors=[];
    for(const [subject,role,key] of [[`${org}-owner@example.test`,"operator",keys.owner],[`${org}-reviewer@example.test`,"operator",keys.reviewer],["enquiry-temporal","worker",keys.worker],["crm","agent",keys.agent]]){
     if(role==="operator")await db.query("INSERT INTO ll_members(org_id,email,name,password_hash) VALUES($1,$2,$2,$3)",[org,subject,hashedPassword]);
@@ -90,7 +92,7 @@ async function main(){
   assert.equal((await runtime.query("SELECT has_schema_privilege(current_user,$1,'CREATE') AS permitted",[schema])).rows[0].permitted,false);
   const ownerRole=(await admin.query("SELECT current_user AS name")).rows[0].name;
   assert.equal((await runtime.query("SELECT pg_has_role(current_user,$1,'MEMBER') AS permitted",[ownerRole])).rows[0].permitted,false);
-  const runtimeEnv={...process.env,LOOPLABS_MIGRATION_DATABASE_URL:"",LOOPLABS_TEST_DATABASE_URL:""};
+  const runtimeEnv={...process.env,LOOPLABS_RECOVERY_EPOCH:recoveryEpoch,LOOPLABS_MIGRATION_DATABASE_URL:"",LOOPLABS_TEST_DATABASE_URL:""};
   pass(`Actual LOGIN runtime uses ${grantStatements} provisioner grants with no owner membership, schema creation, table ownership or privileged role flags`);
   app=spawn("pnpm",["exec","next","start","-p","3117"],{detached:true,env:{...runtimeEnv,LOOPLABS_DATABASE_URL:databaseUrl.toString(),LOOPLABS_DURABLE_ORIGIN:"",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:"",LOOPLABS_RECORD_CATALOG:JSON.stringify({records:catalogRecords}),LOOPLABS_TEMPORAL_WORKSPACE:"staging",LOOPLABS_TEMPORAL_RECORD_BUILD_ID:build.buildId},stdio:"ignore"});
   await until(async()=>{try{return (await fetch(origin+"/sign-in")).ok;}catch{return false;}},"real application");
@@ -236,7 +238,7 @@ async function main(){
    loadMeasurement={additionalRuns:24,independentRecords:24,sharedAgents:4,waves,windowMs,samples,effects:52,heldBeforeApproval:48,replayedHistories:replayed,workerFaultIsolation:true,lostResponseRecords:2,reservationsPreserved:true,duplicateSubmissions:24,duplicateApprovals:48};
    pass("Six paced two-company waves complete 24 independently scoped workflows with shared agents, duplicate-safe submissions/approvals, isolated worker crash, lost-response readback and 52 exact effects; histories replay without changing reservations");
   }
-  const files=[...provisioningFiles,"scripts/tenant-isolation-proof.ts","scripts/temporal-service.ts","runtime/temporal/pinned-workflow.ts","runtime/temporal/version-contract.ts","scripts/build-temporal-worker.mjs","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
+  const files=[...provisioningFiles,"scripts/tenant-isolation-proof.ts","scripts/temporal-service.ts","runtime/temporal/pinned-workflow.ts","runtime/temporal/version-contract.ts","scripts/build-temporal-worker.mjs","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/recovery.ts","lib/durable/recovery-schema.sql","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
   const sourceFingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
   await writeFile(load?"docs/evidence/tenant-paced-operation-proof.json":"docs/evidence/tenant-isolation-proof.json",JSON.stringify({loadMeasurement,at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,deniedBrowserRequests:deniedBrowser,deniedDatabaseRequests:deniedDatabase,runtimeGrantStatements:grantStatements,restrictedDatabaseLogin:true,databaseTenantRls:false,effects:load?52:4,taskQueues:2,workerProcesses:load?4:3,schedulerProcesses:2,crashedWorkers:load?2:1,replayedHistories:load?26:2},workflowIds,buildId:build.buildId,scope:"Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"},null,2)+"\n");
  }finally{

@@ -8,7 +8,7 @@ import pg from "pg";
 import {migrationDigests,stagingDatabase} from "../runtime/temporal/staging-preflight.ts";
 const exec=promisify(execFile);
 const root=resolve(fileURLToPath(new URL("..",import.meta.url)));
-const steps=["durable-setup.ts","durable-runtime-role.ts","refund-setup.ts","workspace-setup.ts","connector-setup.ts","enquiry-setup.ts","enquiry-managed-setup.ts","temporal-setup.ts","proposal-boundary-setup.ts","record-scope-setup.ts","record-routing-setup.ts"];
+const steps=["durable-setup.ts","durable-runtime-role.ts","refund-setup.ts","workspace-setup.ts","connector-setup.ts","enquiry-setup.ts","enquiry-managed-setup.ts","temporal-setup.ts","workspace-recovery.ts","proposal-boundary-setup.ts","record-scope-setup.ts","record-routing-setup.ts"];
 
 export function stagingOwner(url,loopbackProof=false) {
   const u=new URL(url);
@@ -27,7 +27,12 @@ async function preserveWorkloads(dir) {
  }
  await writeFile(resolve(dir,".env.local"),Object.entries(env).map(([k,v])=>`${k}=${v}`).join("\n")+"\n",{mode:0o600});
 }
-export async function bootstrapDatabase(dir,url,loopbackProof=false) {
+export function stagingRecoveryEpoch(value) {
+ if(typeof value!=="string"||! /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))throw Error("Explicit externally held v4 recovery epoch required");
+ return value.toLowerCase();
+}
+export async function bootstrapDatabase(dir,url,loopbackProof=false,recoveryEpoch) {
+ const epoch=stagingRecoveryEpoch(recoveryEpoch);
  const owner=stagingOwner(url,loopbackProof);
  dir=resolve(dir);
  // A caller must explicitly allocate this dedicated database. Name validation is
@@ -40,13 +45,15 @@ export async function bootstrapDatabase(dir,url,loopbackProof=false) {
   let prior;
   try{prior=parseEnv(await readFile(envPath,"utf8"));}catch(error){if(error.code!=="ENOENT")throw error;}
   if(prior) {
-   if(prior.LOOPLABS_MIGRATION_DATABASE_URL!==owner || prior.LOOPLABS_WORKSPACE_ID!=="local-proof")throw Error("Existing provisioning directory targets another installation");
+   if(prior.LOOPLABS_MIGRATION_DATABASE_URL!==owner || prior.LOOPLABS_WORKSPACE_ID!=="local-proof" || prior.LOOPLABS_RECOVERY_EPOCH!==epoch)throw Error("Existing provisioning directory targets another installation");
    stagingRuntime(prior.LOOPLABS_DATABASE_URL,owner,false);
+   const fencePresent=(await db.query("SELECT to_regclass('ll_workspace_recovery') AS present")).rows[0]?.present;
+   if(!fencePresent || (await db.query("SELECT epoch FROM ll_workspace_recovery WHERE org_id='local-proof'")).rows[0]?.epoch!==epoch)throw Error("Existing staging recovery fence differs or is missing; offline restore review required before provisioning");
   } else {
    const occupied=(await db.query("SELECT 1 FROM pg_class t JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname='public' AND t.relkind IN ('r','p') LIMIT 1")).rows.length;
    if(occupied || (await db.query("SELECT 1 FROM pg_roles WHERE rolname='ll_runtime'")).rows.length)throw Error("First bootstrap requires an empty dedicated cluster/database; existing authority is not adopted");
    await mkdir(dir,{mode:0o700});
-   await writeFile(envPath,`LOOPLABS_MIGRATION_DATABASE_URL=${owner}\nLOOPLABS_DATABASE_URL=${owner}\nLOOPLABS_WORKSPACE_ID=local-proof\n`,{mode:0o600,flag:"wx"});
+   await writeFile(envPath,`LOOPLABS_MIGRATION_DATABASE_URL=${owner}\nLOOPLABS_DATABASE_URL=${owner}\nLOOPLABS_WORKSPACE_ID=local-proof\nLOOPLABS_RECOVERY_EPOCH=${epoch}\n`,{mode:0o600,flag:"wx"});
    await symlink(resolve(root,"lib"),resolve(dir,"lib"));
    await symlink(resolve(root,"node_modules"),resolve(dir,"node_modules"));
   }
@@ -55,7 +62,7 @@ export async function bootstrapDatabase(dir,url,loopbackProof=false) {
   for(const step of steps) {
    await preserveWorkloads(dir);
    try {
-    await exec(process.execPath,["--env-file=.env.local","--import","tsx",resolve(root,"scripts",step)],{cwd:dir,env:{PATH:process.env.PATH||"",HOME:dir},timeout:30000,maxBuffer:1024*1024});
+    await exec(process.execPath,["--env-file=.env.local","--import","tsx",resolve(root,"scripts",step),...(step==="workspace-recovery.ts"?["enroll"]:[])],{cwd:dir,env:{PATH:process.env.PATH||"",HOME:dir},timeout:30000,maxBuffer:1024*1024});
    }catch{throw Error(`Staging provisioning stopped at ${step}; keep private state for inspection, do not silently reset credentials`);}
   }
   await preserveWorkloads(dir);
@@ -66,9 +73,9 @@ export async function bootstrapDatabase(dir,url,loopbackProof=false) {
   const runtime=stagingRuntime(env.LOOPLABS_DATABASE_URL,owner);
   const check=new pg.Pool({connectionString:runtime.href,connectionTimeoutMillis:5000,query_timeout:10000});
   try {
-   if((await stagingDatabase(check,await migrationDigests(),"local-proof",env.LOOPLABS_TEMPORAL_WORKER_TOKEN)).length)throw Error("Restricted runtime prerequisites failed");
+   if((await stagingDatabase(check,await migrationDigests(),"local-proof",env.LOOPLABS_TEMPORAL_WORKER_TOKEN,epoch)).length)throw Error("Restricted runtime prerequisites failed");
   }finally{await check.end();}
-  await writeFile(resolve(dir,"runtime-db.env"),`LOOPLABS_DATABASE_URL=${runtime.href}\nLOOPLABS_WORKSPACE_ID=local-proof\n`,{mode:0o600});
+  await writeFile(resolve(dir,"runtime-db.env"),`LOOPLABS_DATABASE_URL=${runtime.href}\nLOOPLABS_WORKSPACE_ID=local-proof\nLOOPLABS_RECOVERY_EPOCH=${epoch}\n`,{mode:0o600});
   await writeFile(resolve(dir,"workload.env"),`LOOPLABS_TEMPORAL_WORKER_TOKEN=${env.LOOPLABS_TEMPORAL_WORKER_TOKEN}\n`,{mode:0o600});
   const migrations=(await db.query("SELECT version,digest FROM ll_migrations ORDER BY version")).rows;
   const actions=(await db.query("SELECT (SELECT count(*) FROM ll_connector_actions)::int actions,(SELECT count(*) FROM ll_workflow_runs)::int runs")).rows[0];
@@ -80,7 +87,7 @@ export async function bootstrapDatabase(dir,url,loopbackProof=false) {
 if(process.argv[1]===fileURLToPath(import.meta.url)) {
  const [dir,extra]=process.argv.slice(2);
  if(!dir || extra || process.env.LOOPLABS_STAGING_BOOTSTRAP!=="isolated")throw Error("Explicit isolated staging opt-in and private output directory required");
- bootstrapDatabase(dir,process.env.LOOPLABS_STAGING_OWNER_URL,process.env.LOOPLABS_STAGING_LOOPBACK_PROOF==="true")
+ bootstrapDatabase(dir,process.env.LOOPLABS_STAGING_OWNER_URL,process.env.LOOPLABS_STAGING_LOOPBACK_PROOF==="true",process.env.LOOPLABS_RECOVERY_EPOCH)
   .then(result=>console.log(JSON.stringify(result,null,2)))
   .catch(error=>{console.error(error.message.startsWith("Staging provisioning stopped")?error.message:"Staging database provisioning refused or unavailable. No credentials printed; inspect the private installation before retry.");process.exitCode=1;});
 }

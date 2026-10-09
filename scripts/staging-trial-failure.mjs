@@ -1,5 +1,5 @@
 // Only predefined checkpoint names and a numeric HTTP status may leave the trial.
-const phases=new Set(["inputs","sessions","unauthenticated-refusal","record-catalog","record-enrollment","agent-grants","saved-plan","submission","held-run","self-approval-refusal","pre-approval-containment","restart-checkpoint","session-recovery","independent-approval","completion","temporal-dispatch","temporal-history","lost-response-proof","history-replay","provider-readback"]);
+const phases=new Set(["inputs","sessions","unauthenticated-refusal","record-catalog","record-enrollment","agent-grants","saved-plan","submission","held-run","self-approval-refusal","pre-approval-containment","restart-checkpoint","session-recovery","independent-approval","restore-approval-checkpoint","completion","temporal-dispatch","temporal-history","lost-response-proof","history-replay","provider-readback"]);
 export function safeTrialFailure(report){
  if(!report || !phases.has(report.phase))return "";
  const status=Number.isInteger(report.httpStatus)&&report.httpStatus>=100&&report.httpStatus<=599?` HTTP ${report.httpStatus}`:"";
@@ -19,4 +19,9 @@ export function safeProviderFailure(state,logs=""){
  const errors=["ModuleNotFoundError","ImportError","PermissionError","FileNotFoundError","ValueError","OSError"];
  const kind=typeof logs==="string"?errors.find(e=>new RegExp(`(?:^|\\n)${e}:`).test(logs)):undefined;
  return ` provider ${status} exit ${exit}${state.OOMKilled===true?" oom":""}${kind?` ${kind}`:""}`;
+}
+
+export function safeRestoreFailure(report){
+ const phases=new Set(["inputs","action-snapshot","reservations","token-count","fence","workload-identity","approved-snapshot","restored-sessions","old-session-http","approval-http","execution-http","quarantine-state","revoked-identities","old-password-http","unchanged-actions"]);
+ return report&&phases.has(report.phase)?` (restore ${report.phase})`:"";
 }

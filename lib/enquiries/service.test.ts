@@ -41,7 +41,7 @@ beforeAll(async () => {
   admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
   await admin.query(`CREATE SCHEMA ${schema}`);
   db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
-  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/connectors/scope-schema.sql"])
+  for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql","lib/durable/recovery-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/connectors/scope-schema.sql"])
     await db.query(await readFile(file, "utf8"));
 });
 beforeEach(async () => {
@@ -411,7 +411,8 @@ it("gates staged execution transfer, isolates workspaces and never grants approv
   const url = "https://looplabs.run/api/workspace/enquiries/execution";
   const get = (id = p.id, who = "operator") => new NextRequest(`${url}?run=${id}`, { headers: { Authorization: `Bearer ${keys[who]}` } });
   const post = (payload: object = { operation: "transfer", runId: p.id }, who = "operator", origin = "https://looplabs.run") => new NextRequest(url, { method: "POST", headers: { Authorization: `Bearer ${keys[who]}`, Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-  const original = process.env.LOOPLABS_TEMPORAL_WORKSPACE;
+  const original = process.env.LOOPLABS_TEMPORAL_WORKSPACE,oldEpoch=process.env.LOOPLABS_RECOVERY_EPOCH;
+  const recoveryEpoch=randomUUID();await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('one',$1),('two',$1)",[recoveryEpoch]);
   try {
     delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;
     expect(await (await GET(get())).json()).toEqual({ available: false });
@@ -419,6 +420,7 @@ it("gates staged execution transfer, isolates workspaces and never grants approv
     process.env.LOOPLABS_TEMPORAL_WORKSPACE = "true";
     expect((await POST(post())).status).toBe(409);
     process.env.LOOPLABS_TEMPORAL_WORKSPACE = "staging";
+    delete process.env.LOOPLABS_RECOVERY_EPOCH;expect((await GET(get("bad"))).status).toBe(503);process.env.LOOPLABS_RECOVERY_EPOCH=recoveryEpoch;
     expect((await GET(new NextRequest(url))).status).toBe(401);
     expect((await GET(get("bad"))).status).toBe(400);
     // Resource lookup never falls back to the sample provider or reveals another tenant's saved run.
@@ -445,7 +447,7 @@ it("gates staged execution transfer, isolates workspaces and never grants approv
     expect(await (await GET(get())).json()).toHaveProperty("dispatch", "started");
     await workflow.pause(operator, p.id);
     expect((await POST(post())).status).toBe(403);
-  } finally { if (original === undefined) delete process.env.LOOPLABS_TEMPORAL_WORKSPACE; else process.env.LOOPLABS_TEMPORAL_WORKSPACE = original; }
+  } finally { if(oldEpoch===undefined)delete process.env.LOOPLABS_RECOVERY_EPOCH;else process.env.LOOPLABS_RECOVERY_EPOCH=oldEpoch; if (original === undefined) delete process.env.LOOPLABS_TEMPORAL_WORKSPACE; else process.env.LOOPLABS_TEMPORAL_WORKSPACE = original; }
 });
 
 it("does not assign a changed connector destination to a reviewed saved plan", async () => {

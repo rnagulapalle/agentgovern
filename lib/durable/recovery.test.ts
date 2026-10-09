@@ -1,10 +1,14 @@
 import { readFile } from "node:fs/promises";
 import { randomBytes, randomUUID } from "node:crypto";
 import { Pool } from "pg";
-import { beforeAll, afterAll, beforeEach, it, expect } from "vitest";
+import { beforeAll, afterAll, beforeEach, it, expect, vi } from "vitest";
 import { recoveryFence, quarantineRestore } from "./recovery";
 import { authenticate, tokenHash, authorize } from "./service";
 import { transaction } from "./database";
+import { NextRequest } from "next/server";
+import { memberSession, memberAuthority, WORKSPACE_COOKIE } from "../workspace/identity";
+vi.mock("./database",async original=>({...await original<typeof import("./database")>(),database:()=>db}));
+import { GET as workspaceSession } from "@/app/api/workspace/session/route";
 const schema = `recovery_${randomBytes(8).toString("hex")}`;
 let db: Pool, admin: Pool;
 const key = randomBytes(32).toString("base64url"), epoch = randomUUID();
@@ -101,4 +105,48 @@ it("quarantines restored scope enrollments and agent grants without reviving the
  await db.query("INSERT INTO ll_connector_scope_grants(org_id,scope_id,agent_id,created_by) VALUES('one',$1,'agent','owner')",[id]);
  const counts=await quarantineRestore(db,"one",randomUUID(),"a".repeat(64));expect(counts.ll_connector_scopes).toBe(1);expect(counts.ll_connector_scope_grants).toBe(1);
  expect((await db.query("SELECT active,version FROM ll_connector_scopes")).rows[0]).toEqual({active:false,version:2});expect((await db.query("SELECT active,version FROM ll_connector_scope_grants")).rows[0]).toEqual({active:false,version:2});
+});
+
+it("staging cannot silently disable its recovery fence by omitting the external epoch",async()=>{
+ const previousStage=process.env.LOOPLABS_TEMPORAL_WORKSPACE,previousEpoch=process.env.LOOPLABS_RECOVERY_EPOCH;
+ try{
+  process.env.LOOPLABS_TEMPORAL_WORKSPACE="staging";delete process.env.LOOPLABS_RECOVERY_EPOCH;
+  await expect(recoveryFence(db,"one")).rejects.toThrow("configuration");
+  await expect(authenticate(db,key)).rejects.toThrow("configuration");
+  process.env.LOOPLABS_RECOVERY_EPOCH=epoch;
+  expect((await authenticate(db,key)).orgId).toBe("one");
+  delete process.env.LOOPLABS_RECOVERY_EPOCH;delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;
+  expect((await authenticate(db,key)).orgId).toBe("one");
+ }finally{
+  if(previousStage===undefined)delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;else process.env.LOOPLABS_TEMPORAL_WORKSPACE=previousStage;
+  if(previousEpoch===undefined)delete process.env.LOOPLABS_RECOVERY_EPOCH;else process.env.LOOPLABS_RECOVERY_EPOCH=previousEpoch;
+ }
+});
+
+
+it("restored member sessions and delayed member authority obey the external fence, including the actual profile route",async()=>{
+ const previousStage=process.env.LOOPLABS_TEMPORAL_WORKSPACE,previousEpoch=process.env.LOOPLABS_RECOVERY_EPOCH;
+ const session=randomBytes(32).toString("base64url");
+ await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,'owner',now()+interval '1 hour')",[tokenHash(session)]);
+ const request=()=>new NextRequest("https://looplabs.run/api/workspace/session",{headers:{cookie:`${WORKSPACE_COOKIE}=${session}`}});
+ try{
+  process.env.LOOPLABS_TEMPORAL_WORKSPACE="staging";process.env.LOOPLABS_RECOVERY_EPOCH=epoch;
+  const actor=await memberSession(db,session);expect(actor).not.toBeNull();
+  expect((await workspaceSession(request())).status).toBe(200);
+  const next=randomUUID();process.env.LOOPLABS_RECOVERY_EPOCH=next;
+  expect((await workspaceSession(request())).status).toBe(503);
+  await expect(memberSession(db,session)).rejects.toThrow("contained");
+  await expect(transaction(db,"one",c=>memberAuthority(c,actor!))).rejects.toThrow("contained");
+  delete process.env.LOOPLABS_RECOVERY_EPOCH;
+  expect((await workspaceSession(request())).status).toBe(503);
+  delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;
+  expect((await workspaceSession(request())).status).toBe(200);
+  process.env.LOOPLABS_RECOVERY_EPOCH=next;
+  await quarantineRestore(db,"one",next,"c".repeat(64));
+  expect((await workspaceSession(request())).status).toBe(401);
+  expect(await memberSession(db,session)).toBeNull();
+ }finally{
+  if(previousStage===undefined)delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;else process.env.LOOPLABS_TEMPORAL_WORKSPACE=previousStage;
+  if(previousEpoch===undefined)delete process.env.LOOPLABS_RECOVERY_EPOCH;else process.env.LOOPLABS_RECOVERY_EPOCH=previousEpoch;
+ }
 });

@@ -1,7 +1,7 @@
 {
-  "at": "2026-10-09T00:48:40.270Z",
+  "at": "2026-10-09T02:00:26.939Z",
   "checks": [
-    "Actual LOGIN runtime uses 29 provisioner grants with no owner membership, schema creation, table ownership or privileged role flags",
+    "Actual LOGIN runtime uses 30 provisioner grants with no owner membership, schema creation, table ownership or privileged role flags",
     "Thirteen actual restricted-database attacks refuse proposal rewrites, identity revocation, event mutation, deletion, truncation, trigger disabling and DDL without effects; shared role still reads both companies (no RLS claim)",
     "Two real browser sessions keep company records separate; eight cross-company/origin attacks are denied, HttpOnly/Strict cookies hide credentials from scripts and expired sessions lose API access without effects",
     "Real authenticated HTTP: each catalog/plan list exposes only its company; 64 cross-company member/agent/worker reads and mutations are denied with no state or effects changed",
@@ -20,17 +20,20 @@
     "scripts/enquiry-setup.ts": "59b76043752fb240b9da8ba4f0b123b44bfb21755fca8d877cb9d312d0cd22c5",
     "scripts/enquiry-managed-setup.ts": "dfe02bf53de0a6fcb8ae507f3cdc91970e8a44b53da8b9228c5ea496faf738c0",
     "scripts/temporal-setup.ts": "dea407444e81b7e99f5c0f5e7eb2bc2ff7479fb31c3a048a810dc8e15fe1a548",
+    "scripts/workspace-recovery.ts": "46ca583a30482edbb3345a2f2643e50b745d3f81be1a99c74076f52ac140d605",
     "scripts/record-scope-setup.ts": "3ed2a61a9563b949598571f4c5388bfc5ef8dccdbd4aceec18dbbc642bf3b3a8",
     "scripts/record-routing-setup.ts": "c98611bdf652fc76d66d641dbe20d606ab8ceb99bab4d42391e12235fd1498cc",
-    "scripts/tenant-isolation-proof.ts": "d094ce528437a0ec6b2120c535dc59cd892f15024524f9804bc3843cb48d1814",
+    "scripts/tenant-isolation-proof.ts": "b492f66a94a26103cda17bad1d8eab4a40405943100031e26fd693710cf8aec5",
     "scripts/temporal-service.ts": "aabc50a89aa2087f8b3749b561674bf017a61540414d7de4c680cbc479c7fec5",
     "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
     "runtime/temporal/version-contract.ts": "80fd2948beed1f9f9c0318ed2ac24e59fb3c0820538b718891e179f047c3b921",
     "scripts/build-temporal-worker.mjs": "c7c96a323aedd51e0544e50e050301ff1efab1cdb00bfaac690b01d25d109510",
     "lib/workspace/auth.ts": "d58f5bdeac77ef3bd5b86f8590b9c17e99508f74df690998439f6137f3541972",
-    "lib/workspace/identity.ts": "0241e4ecaf3060788b8002fe9616ad3a90368dbb8199dbbff0cb7d24f92c86f7",
+    "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
     "app/api/workspace/session/route.ts": "adf8e024c4fef51179fd3240e396a4d9f383dbd6b32f4c38508b27e2da439330",
     "lib/durable/http.ts": "b1c0813e3b094e5b40c9e51adf99d1074851e00b2287af61cb7ec95a7f38bcce",
+    "lib/durable/recovery.ts": "836b90a85dc4f8e8b8bd6bafc4297f4af0937c894decb190d892956669f31343",
+    "lib/durable/recovery-schema.sql": "75af0b8e95425de3d0b88f927e8612ed50ade36db85969da322c98c17eefe395",
     "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
     "lib/durable/database.ts": "ad8feee5de5b98415ab7ebd0c3459e7b6a3f6f80c34729c564e4786facdcc625",
     "lib/connectors/routing.ts": "0cf3e90dabf348fbb4443bb5ec841237d33cdb53b1394c88939d9198457c9e02",
@@ -55,7 +58,7 @@
     "deniedHttpRequests": 64,
     "deniedBrowserRequests": 8,
     "deniedDatabaseRequests": 13,
-    "runtimeGrantStatements": 29,
+    "runtimeGrantStatements": 30,
     "restrictedDatabaseLogin": true,
     "databaseTenantRls": false,
     "effects": 4,
@@ -66,9 +69,9 @@
     "replayedHistories": 2
   },
   "workflowIds": [
-    "looplabs:company-a:ack:d39c1581-4ab7-43ae-b1cb-dd2120dd2388",
-    "looplabs:company-b:ack:7f56ba6b-a050-47db-8bab-98abcdb849ea"
+    "looplabs:company-a:ack:5ea8716d-e8e2-4e33-bab7-6283264f00c9",
+    "looplabs:company-b:ack:9c3fdf61-4b71-498f-a1d9-ffd4e2d2f95b"
   ],
-  "buildId": "ack-1cfac314a32ef6cb0ff45a022ea9480f35f676416788a9eee511c8611ea5a12b",
+  "buildId": "ack-696ab7761b0bc72d20d4a62bedc980fd423869753ffedbf35c9d0d913d91aa21",
   "scope": "Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"
 }

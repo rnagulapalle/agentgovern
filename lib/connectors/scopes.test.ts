@@ -25,7 +25,7 @@ beforeAll(async()=>{
  if(!process.env.LOOPLABS_TEST_DATABASE_URL)throw Error("Dedicated PostgreSQL is required.");
  admin=new Pool({connectionString:process.env.LOOPLABS_TEST_DATABASE_URL});await admin.query(`CREATE SCHEMA ${schema}`);
  db=new Pool({connectionString:process.env.LOOPLABS_TEST_DATABASE_URL,options:`-c search_path=${schema}`});
- for(const f of ["lib/durable/schema.sql","lib/workspace/schema.sql","lib/refunds/schema.sql","lib/connectors/schema.sql","lib/workflows/schema.sql","lib/durable/proposal-schema.sql","lib/enquiries/schema.sql","lib/enquiries/managed-schema.sql","lib/connectors/scope-schema.sql","lib/enquiries/temporal-schema.sql","lib/enquiries/record-routing-schema.sql"])await db.query(await readFile(f,"utf8"));
+ for(const f of ["lib/durable/schema.sql","lib/workspace/schema.sql","lib/refunds/schema.sql","lib/connectors/schema.sql","lib/workflows/schema.sql","lib/durable/proposal-schema.sql","lib/durable/recovery-schema.sql","lib/enquiries/schema.sql","lib/enquiries/managed-schema.sql","lib/connectors/scope-schema.sql","lib/enquiries/temporal-schema.sql","lib/enquiries/record-routing-schema.sql"])await db.query(await readFile(f,"utf8"));
 });
 beforeEach(async()=>{
  await db.query("TRUNCATE ll_orgs CASCADE");await db.query("INSERT INTO ll_orgs(id) VALUES('one'),('two')");
@@ -249,13 +249,14 @@ it("exposes bounded scoped submission through the invited API without weaker leg
  const key=randomBytes(32).toString("base64url");await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one','operator','operator')",[tokenHash(key)]);
  const origin="https://looplabs.run",url=origin+"/api/workspace/enquiries?scope="+scopeId;
  const req=(p?:object,scopeIdOverride?:string)=>new NextRequest(scopeIdOverride?origin+"/api/workspace/enquiries?scope="+scopeIdOverride:url,{method:p?"POST":"GET",headers:{Authorization:`Bearer ${key}`,Origin:origin,"Content-Type":"application/json"},...(p?{body:JSON.stringify(p)}:{})});
- const oldWorkspace=process.env.LOOPLABS_TEMPORAL_WORKSPACE,oldBuild=process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID;
+ const oldWorkspace=process.env.LOOPLABS_TEMPORAL_WORKSPACE,oldBuild=process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID,oldEpoch=process.env.LOOPLABS_RECOVERY_EPOCH;
+ const recoveryEpoch=randomUUID();await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('one',$1),('two',$1)",[recoveryEpoch]);
  try{
  const plan=(await new EnquiryControl(db,new WorkflowControl(db,control),async()=>({id:scope.contactId,email:scope.recipient,version:"v1",lifecycle:"lead"})).prepareChat(operator,randomUUID())).saved;
  const p={operation:"submit",id:plan.id,planHash:plan.plan_hash,crmAgent:"agent",emailAgent:"email"};
  delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;delete process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID;
  expect((await POST(req(p))).status).toBe(409);expect((await db.query("SELECT count(*)::int n FROM ll_workflow_runs")).rows[0].n).toBe(0);
- process.env.LOOPLABS_TEMPORAL_WORKSPACE="staging";expect((await POST(req(p))).status).toBe(409);expect((await db.query("SELECT count(*)::int n FROM ll_workflow_runs")).rows[0].n).toBe(0);
+ process.env.LOOPLABS_TEMPORAL_WORKSPACE="staging";delete process.env.LOOPLABS_RECOVERY_EPOCH;expect((await POST(req(p))).status).toBe(503);process.env.LOOPLABS_RECOVERY_EPOCH=recoveryEpoch;expect((await POST(req(p))).status).toBe(409);expect((await db.query("SELECT count(*)::int n FROM ll_workflow_runs")).rows[0].n).toBe(0);
  process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID="ack-"+"c".repeat(64);
  expect(await (await GET(req())).json()).toHaveProperty("connections.recordDurableAvailable",true);
  expect((await POST(req({...p,recipient:"wrong@example.test"}))).status).toBe(400);
@@ -264,5 +265,5 @@ it("exposes bounded scoped submission through the invited API without weaker leg
  expect((await POST(req(p))).status).toBe(200);expect((await POST(req({operation:"resume",id:plan.id,planHash:plan.plan_hash}))).status).toBe(200);
  expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE state='held'")).rows[0].n).toBe(2);expect(writes).toBe(0);
  const before=(await db.query("SELECT count(*)::int n FROM ll_agents")).rows[0].n;expect(before).toBe(3);
- }finally{mocked.mockRestore();if(oldWorkspace===undefined)delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;else process.env.LOOPLABS_TEMPORAL_WORKSPACE=oldWorkspace;if(oldBuild===undefined)delete process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID;else process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID=oldBuild;}
+ }finally{if(oldEpoch===undefined)delete process.env.LOOPLABS_RECOVERY_EPOCH;else process.env.LOOPLABS_RECOVERY_EPOCH=oldEpoch;mocked.mockRestore();if(oldWorkspace===undefined)delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;else process.env.LOOPLABS_TEMPORAL_WORKSPACE=oldWorkspace;if(oldBuild===undefined)delete process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID;else process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID=oldBuild;}
 });

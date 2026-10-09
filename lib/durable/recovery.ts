@@ -5,7 +5,11 @@ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{1
 export async function recoveryFence(db: Pool | PoolClient, org: string, epoch = process.env.LOOPLABS_RECOVERY_EPOCH) {
   // Existing deployments remain compatible until explicitly enrolled. An empty
   // or malformed configured value is never treated as disabled.
-  if (epoch === undefined) return;
+  if (epoch === undefined) {
+    if (process.env.LOOPLABS_TEMPORAL_WORKSPACE === "staging")
+      throw new ControlError(503, "Workspace recovery configuration requires administrator attention.");
+    return;
+  }
   if (!uuid.test(epoch)) throw new ControlError(503, "Workspace recovery configuration requires administrator attention.");
   const present = (await db.query("SELECT to_regclass('ll_workspace_recovery') AS present")).rows[0]?.present;
   if (!present || (await db.query("SELECT epoch FROM ll_workspace_recovery WHERE org_id=$1", [org])).rows[0]?.epoch !== epoch.toLowerCase())
