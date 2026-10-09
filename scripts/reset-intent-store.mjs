@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {completedSemanticHistory} from './temporal-semantic-replay.mjs';
-import {pinnedBuild} from './temporal-completed-reset.mjs';
+import {pinnedBuild,resetWorkflowId} from './temporal-completed-reset.mjs';
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const hash=/^[a-f0-9]{64}$/;
 const fields=['org_id','operation_id','plan_id','namespace','workflow_id','original_run_id','task_finish_event_id','original_history_sha256','worker_build_id','image_id','recovery_epoch'];
@@ -12,7 +12,8 @@ export function resetIntent(input){
  assert(/^[a-zA-Z0-9_-]{1,64}$/.test(input.org_id));
  for(const f of ['operation_id','plan_id','original_run_id','recovery_epoch'])assert(uuid.test(input[f]));
  assert(/^[a-zA-Z0-9_-]{1,100}$/.test(input.namespace));
- assert(/^[a-zA-Z0-9_-]{1,200}$/.test(input.workflow_id));
+ const identity=resetWorkflowId(input.workflow_id);
+ if(identity){assert.equal(identity.orgId,input.org_id,'Reset workflow workspace mismatch');assert.equal(identity.planId,input.plan_id,'Reset workflow plan mismatch');}
  assert(Number.isSafeInteger(input.task_finish_event_id)&&input.task_finish_event_id>0);
  assert(hash.test(input.original_history_sha256));assert(/^ack-[a-f0-9]{64}$/.test(input.worker_build_id));
  assert(/^sha256:[a-f0-9]{64}$/.test(input.image_id));return {...input};

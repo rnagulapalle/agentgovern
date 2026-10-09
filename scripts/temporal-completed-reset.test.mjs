@@ -8,6 +8,11 @@ const buildId=`ack-${'a'.repeat(64)}`;
 const events=Array.from({length:7},(_,i)=>({eventId:i+1,eventType:[1,5,6,7,12,5,2][i],...(i===0?{workflowExecutionStartedEventAttributes:{workflowType:{name:'pinnedAcknowledgement'}}}:{})}));
 const description=()=>({raw:{workflowExecutionInfo:{versioningInfo:{behavior:1,deploymentVersion:{deploymentName:'looplabs-acknowledgement',buildId},versioningOverride:{behavior:1,pinnedVersion:`looplabs-acknowledgement.${buildId}`}}}}});
 const input=()=>({namespace:'default',workflowId:'isolated-proof',runId:id,requestId:nextId,history:{events}});
+test('reset accepts the existing outbox workflow identity while refusing malformed namespaced IDs',()=>{
+ const workflowId=`looplabs:local-proof:ack:${id}`;
+ expect(completedResetRequest({...input(),workflowId}).workflowExecution.workflowId).toBe(workflowId);
+ for(const bad of [`looplabs:local-proof:ack:not-a-plan`,`looplabs:local-proof:other:${id}`,`looplabs::ack:${id}`,`other:local-proof:ack:${id}`,`${workflowId}\n`,`${workflowId}:extra`,42])expect(()=>completedResetRequest({...input(),workflowId:bad})).toThrow();
+});
 test('reset selects an actual completed task and excludes reapplication without moving versions',()=>{
  const r=completedResetRequest(input());expect(r.workflowTaskFinishEventId).toBe(4);
  expect(r.resetReapplyExcludeTypes).toEqual([1,2,3]);expect(r.postResetOperations).toEqual([]);

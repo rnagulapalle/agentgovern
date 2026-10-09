@@ -2,6 +2,15 @@
 import assert from 'node:assert/strict';
 import {completedSemanticHistory} from './temporal-semantic-replay.mjs';
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+// Existing outbox IDs are namespaced; legacy isolated calibrations use plain IDs.
+// This validates spelling only. The persisted route still establishes authority.
+export function resetWorkflowId(value){
+ assert(typeof value==='string'&&value.length<=200);
+ if(/^[a-zA-Z0-9_-]{1,200}$/.test(value))return null;
+ const match=/^looplabs:([a-zA-Z0-9_-]{1,64}):ack:([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/.exec(value);
+ assert(match,'Existing namespaced acknowledgement workflow required');
+ return {orgId:match[1],planId:match[2]};
+}
 export class ResetRequestDeduplicationError extends Error {
  constructor(evidence){super('Reset request created another execution');this.name='ResetRequestDeduplicationError';this.evidence=evidence;}
 }
@@ -22,7 +31,7 @@ export function pinnedBuild(description,buildId){
 }
 export function completedResetRequest({namespace,workflowId,runId,requestId,history}){
  assert(typeof namespace==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(namespace));
- assert(typeof workflowId==='string'&&/^[a-zA-Z0-9_-]{1,200}$/.test(workflowId));
+ resetWorkflowId(workflowId);
  assert(uuid.test(runId)&&uuid.test(requestId));
  completedSemanticHistory(history);
  const point=history.events.find(e=>e.eventType===7);

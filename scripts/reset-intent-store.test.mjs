@@ -12,7 +12,7 @@ const suffix=randomBytes(8).toString('hex'),schema=`reset_${suffix}`,role=`reset
 const build=`ack-${'a'.repeat(64)}`,image=`sha256:${'a'.repeat(64)}`,epoch=randomUUID();
 let admin,db,runtime;const priorEpoch=process.env.LOOPLABS_RECOVERY_EPOCH;
 async function input(){
- const plan=randomUUID(),workflow=`reset-proof-${randomUUID()}`;
+ const plan=randomUUID(),workflow=`looplabs:proof:ack:${plan}`;
  await db.query("INSERT INTO ll_workflow_runs VALUES('proof',$1,'completed')",[plan]);
  await db.query("INSERT INTO ll_temporal_dispatch VALUES('proof',$1,$2,'started')",[plan,workflow]);
  // Fixture routes are installed before migration14; no new admission is inferred.
@@ -81,7 +81,8 @@ test('runtime credentials cannot claim, observe, insert or mutate reset intents'
  await expect(runtime.query("INSERT INTO ll_temporal_reset_intents(org_id) VALUES('proof')")).rejects.toMatchObject({code:'42501'});
 });
 test('wrong image, workflow, unknown route and unfinished application run default-deny',async()=>{
- for(const change of [{image_id:`sha256:${'d'.repeat(64)}`},{workflow_id:'different-workflow'},{worker_build_id:`ack-${'d'.repeat(64)}`},{plan_id:randomUUID()}]){
+ const missingPlan=randomUUID();
+ for(const change of [{image_id:`sha256:${'d'.repeat(64)}`},{workflow_id:'different-workflow'},{worker_build_id:`ack-${'d'.repeat(64)}`},{plan_id:missingPlan,workflow_id:`looplabs:proof:ack:${missingPlan}`}]){
   const i=await input();await expect(claimResetIntent(db,{...i,...change})).rejects.toMatchObject({code:'23514'});
  }
  const i=await input();await db.query("UPDATE ll_workflow_runs SET state='active' WHERE id=$1",[i.plan_id]);
@@ -91,6 +92,11 @@ test('malformed intent and missing observed history refuse before mutation',asyn
  const i=await input();for(const change of [{namespace:'unsafe/path'},{task_finish_event_id:0},{image_id:'latest'},{extra:'authority'},{recovery_epoch:'invalid'}])expect(()=>resetIntent({...i,...change})).toThrow();
  await claimResetIntent(db,i);
  await expect(db.query("UPDATE ll_temporal_reset_intents SET state='observed',reset_run_id=$2,reset_history_sha256=NULL,observed_at=now() WHERE operation_id=$1",[i.operation_id,randomUUID()])).rejects.toMatchObject({code:'23514'});
+});
+test('namespaced outbox identity must match the exact workspace and plan before mutation',async()=>{
+ const i=await input();expect(resetIntent(i).workflow_id).toBe(`looplabs:proof:ack:${i.plan_id}`);
+ for(const workflow_id of [`looplabs:other:ack:${i.plan_id}`,`looplabs:proof:ack:${randomUUID()}`,`looplabs:proof:ack:invalid`,`prefix:${i.workflow_id}`])expect(()=>resetIntent({...i,workflow_id})).toThrow();
+ expect((await db.query('SELECT count(*)::int n FROM ll_temporal_reset_intents WHERE operation_id=$1',[i.operation_id])).rows[0].n).toBe(0);
 });
 test('rotated external recovery epoch contains both pending and observed intents',async()=>{
  const i=await input();await claimResetIntent(db,i);

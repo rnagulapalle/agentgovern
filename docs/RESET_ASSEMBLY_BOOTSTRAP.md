@@ -124,3 +124,26 @@ exit/configuration/launch phases. All acceptance assertions remain in place; a
 phase label is diagnostic evidence only. This second attempt produced no accepted
 receipt and skipped post-runtime quality. Its temporary planner secret was deleted
 and absence verified after preparation, before the failure.
+
+Reviewing the actual outbox exposed a definite ID-contract gap: it creates
+`looplabs:<org>:ack:<plan UUID>`, but both reset validators accepted only plain
+alphanumeric/underscore/hyphen IDs. A new regression using the existing outbox
+format failed before the correction. Reset spelling validation now accepts that
+exact namespaced acknowledgement format and retains the earlier plain isolated
+calibration names. Namespaced persisted intents additionally require the embedded
+workspace and plan to equal their explicit fields before mutation. The database
+still checks the exact existing route, completed run, retained image and epoch.
+
+The local actual Temporal/lost-response/reconnect test now uses namespaced IDs;
+all 19 focused tests passed, including malformed names, cross-workspace/plan refusal
+and the unchanged unknown-route database refusal. That unknown-route fixture uses
+a syntactically matching nonexistent plan so it continues to reach the database
+boundary instead of failing at the new earlier identity check. This establishes
+the corrected local contract, not a passing full assembly. Diagnostic trial
+`37930008662`, pinned to `5278093a17c9cfd4569e0c5447eb6305e90bd6dc`, subsequently
+failed at `reset-owner-dispatch/reset-boundary`. This locates refusal in the
+controller's request preparation, before the owner receives a request. Combined
+with the failing actual-outbox-ID regression, it identifies a concrete correction;
+the corrected source still needs fresh full assembled acceptance. The trial
+produced no accepted receipt and skipped post-runtime quality. Its temporary
+planner secret had already been consumed, deleted and absence verified.
