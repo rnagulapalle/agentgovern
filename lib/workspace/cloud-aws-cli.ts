@@ -8,6 +8,17 @@ export interface DiscoverySession {
   expiresAt: string;
 }
 const runtimeId = /^[a-zA-Z][a-zA-Z0-9_]{0,47}-[a-zA-Z0-9]{10}$/;
+export function discoverySession(value: unknown, now = Date.now()): DiscoverySession {
+  const credentials = value as DiscoverySession;
+  const remaining = typeof credentials?.expiresAt === "string" ? Date.parse(credentials.expiresAt) - now : NaN;
+  if (!credentials || Object.keys(credentials).sort().join() !== "accessKeyId,expiresAt,secretAccessKey,sessionToken"
+    || typeof credentials.accessKeyId !== "string" || !/^ASIA[A-Z0-9]{16}$/.test(credentials.accessKeyId)
+    || typeof credentials.secretAccessKey !== "string" || !/^[A-Za-z0-9/+=]{40}$/.test(credentials.secretAccessKey)
+    || typeof credentials.sessionToken !== "string" || !/^[A-Za-z0-9/+=]{16,16384}$/.test(credentials.sessionToken)
+    || !Number.isFinite(remaining) || remaining < 30_000 || remaining > 3_600_000)
+    throw new Error("Current short-lived discovery session required");
+  return { accessKeyId: credentials.accessKeyId, secretAccessKey: credentials.secretAccessKey, sessionToken: credentials.sessionToken, expiresAt: credentials.expiresAt };
+}
 // An administrator-owned AWS CLI v2 signs requests. Never accept a client-supplied
 // executable, endpoint, profile or command. This bridge does not acquire authority.
 export function awsCliInventoryApi(options: {
@@ -23,13 +34,7 @@ export function awsCliInventoryApi(options: {
   async function read(service: string, operation: string, input: object, query: string): Promise<unknown> {
     let credentials: DiscoverySession;
     try { credentials = await session(); } catch { throw new Error("Discovery credentials unavailable"); }
-    const expiry = Date.parse(credentials?.expiresAt), remaining = expiry - now();
-    if (!credentials || Object.keys(credentials).sort().join() !== "accessKeyId,expiresAt,secretAccessKey,sessionToken"
-      || typeof credentials.accessKeyId !== "string" || !/^ASIA[A-Z0-9]{16}$/.test(credentials.accessKeyId)
-      || typeof credentials.secretAccessKey !== "string" || !/^[A-Za-z0-9/+=]{40}$/.test(credentials.secretAccessKey)
-      || typeof credentials.sessionToken !== "string" || !/^[A-Za-z0-9/+=]{16,16384}$/.test(credentials.sessionToken)
-      || !Number.isFinite(remaining) || remaining < 30_000 || remaining > 3_600_000)
-      throw new Error("Current short-lived discovery session required");
+    credentials = discoverySession(credentials, now());
     // No ambient credentials, custom endpoints/proxies, credential-process, CLI
     // history or AWS config inheritance. Credentials exist only in the child env.
     const env = {

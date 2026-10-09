@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { beforeEach, expect, it, vi } from "vitest";
 import { ControlError } from "@/lib/durable/contracts";
-const mocks = vi.hoisted(() => ({ authenticate: vi.fn(), connections: vi.fn(), latest: vi.fn(), configureConnection: vi.fn() }));
+const mocks = vi.hoisted(() => ({ authenticate: vi.fn(), connections: vi.fn(), latest: vi.fn(), configureConnection: vi.fn(), scan: vi.fn() }));
 vi.mock("@/lib/durable/database", () => ({ database: () => ({}) }));
 vi.mock("@/lib/durable/service", () => ({ authenticate: mocks.authenticate }));
 vi.mock("@/lib/workspace/cloud-inventory", () => ({ CloudInventoryStore: class { connections = mocks.connections; latest = mocks.latest; configureConnection = mocks.configureConnection; } }));
+vi.mock("@/lib/workspace/cloud-operations", () => ({ CloudDiscoveryOperations: class { connections = mocks.connections; scan = mocks.scan; } }));
 import { GET, POST } from "./route";
 const actor = { orgId: "company-a", role: "operator", subject: "member" };
 const req = (content?: string, query = "", origin = "https://looplabs.run") => new NextRequest(`https://looplabs.run/api/workspace/discovery${query}`, { method: content === undefined ? "GET" : "POST", headers: { origin, authorization: "Bearer member", "Content-Type": "application/json" }, ...(content === undefined ? {} : { body: content }) });
@@ -18,8 +19,14 @@ it("derives tenant from authentication and never accepts raw evidence, credentia
   const r = await POST(req(JSON.stringify(input))); expect(r.status).toBe(200); expect(r.headers.get("Cache-Control")).toBe("no-store");
   expect(mocks.configureConnection).toHaveBeenCalledWith(actor, { tenantId: "company-a", connectionId: "aws-a", accountId: "123456789012", region: "us-west-2" });
   mocks.configureConnection.mockClear();
-  for (const bad of [{ ...input, tenantId: "company-b" }, { ...input, credentials: "secret" }, { operation: "scan", connectionId: "aws-a" }, { ...input, records: [] }, { ...input, accountId: 123456789012 }, { ...input, region: "us-gov-west-1" }, { ...input, connectionId: "../other" }, { ...input, accountId: "123" }]) expect((await POST(req(JSON.stringify(bad)))).status).toBe(400);
+  for (const bad of [{ ...input, tenantId: "company-b" }, { ...input, credentials: "secret" }, { operation: "scan", connectionId: "aws-a", tenantId: "company-b" }, { ...input, records: [] }, { ...input, accountId: 123456789012 }, { ...input, region: "us-gov-west-1" }, { ...input, connectionId: "../other" }, { ...input, accountId: "123" }]) expect((await POST(req(JSON.stringify(bad)))).status).toBe(400);
   expect(mocks.configureConnection).not.toHaveBeenCalled();
+});
+it("scans only a saved connection through the authority service without accepting cloud credentials or raw scope", async () => {
+  mocks.scan.mockResolvedValue({ completeness: "partial", enforcement: "unverified" });
+  const r = await POST(req(JSON.stringify({ operation: "scan", connectionId: "aws-a" }))); expect(r.status).toBe(200); expect(r.headers.get("Cache-Control")).toBe("no-store"); expect(mocks.scan).toHaveBeenCalledWith(actor, "aws-a");
+  mocks.scan.mockClear(); for (const bad of [{ operation: "scan", connectionId: "../other" }, { operation: "scan", connectionId: "aws-a", accountId: "123456789012" }, { operation: "scan", connectionId: "aws-a", session: {} }]) expect((await POST(req(JSON.stringify(bad)))).status).toBe(400);
+  expect(mocks.scan).not.toHaveBeenCalled();
 });
 it("refuses authentication, cross-site mutation and malformed bodies before inventory access", async () => {
   expect((await POST(req("{}", "", "https://evil.example"))).status).toBe(403); expect(mocks.authenticate).not.toHaveBeenCalled();

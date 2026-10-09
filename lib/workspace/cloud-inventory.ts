@@ -3,6 +3,7 @@ import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
 import { ControlError, type Actor } from "../durable/contracts";
 import { memberAuthority } from "./identity";
+import { throttle } from "./auth";
 import { preserveRuntimeInventory, type CloudDiscoveryScope, type DiscoveredRuntime, type RuntimeInventoryScan } from "./cloud-discovery";
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const failures = ["list-unavailable", "invalid-page", "invalid-resource", "detail-unavailable", "invalid-detail", "pagination-cycle", "page-limit"];
@@ -39,6 +40,15 @@ export class CloudInventoryStore {
       await authority(c, actor);
       const rows = (await c.query("SELECT id,account_id,region FROM ll_cloud_connections WHERE org_id=$1 ORDER BY created_at,id LIMIT 101", [actor.orgId])).rows;
       return { connections: rows.slice(0, 100).map(row => ({ scope: { tenantId: actor.orgId, connectionId: row.id, accountId: row.account_id, region: row.region }, status: "configured" as const })), truncated: rows.length > 100, scanningAvailable: false as const, enforcement: "unverified" as const };
+    });
+  }
+  async beginScan(actor: Actor, connectionId: string) {
+    return transaction(this.db, actor.orgId, async c => {
+      await authority(c, actor);
+      const scope = await connection(c, actor.orgId, connectionId);
+      const allowed = await throttle(c, `cloud-discovery:${actor.orgId}:${connectionId}`, 3, 60);
+      // Return the decision so the throttle counter commits even on refusal.
+      return { scope, allowed };
     });
   }
   async configureConnection(actor: Actor, scope: CloudDiscoveryScope) {

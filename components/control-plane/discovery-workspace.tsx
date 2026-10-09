@@ -5,7 +5,8 @@ import { Cloud, ShieldQuestion, UserRound, Cable } from "lucide-react";
 import { PageTitle } from "./ui";
 import { workspaceJson } from "@/lib/workspace/response";
 import type { CloudInventoryStore } from "@/lib/workspace/cloud-inventory";
-type Connections = Awaited<ReturnType<CloudInventoryStore["connections"]>>;
+import type { CloudDiscoveryOperations } from "@/lib/workspace/cloud-operations";
+type Connections = Awaited<ReturnType<CloudDiscoveryOperations["connections"]>>;
 type Inventory = Awaited<ReturnType<CloudInventoryStore["latest"]>>;
 const date = (at: string) => new Date(at).toLocaleString();
 export function DiscoveryWorkspace() {
@@ -37,9 +38,17 @@ export function DiscoveryWorkspace() {
     } catch (e) { setError(e instanceof Error ? e.message : "Could not save the discovery scope. Refresh before retrying."); }
     finally { setBusy(false); }
   }
+  async function scan(connectionId: string) {
+    setBusy(true); setError(""); setNotice(""); setInventory(null); setSelected(connectionId);
+    try {
+      const r = await fetch("/api/workspace/discovery", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ operation: "scan", connectionId }) });
+      const value = await workspaceJson(r); if (!r.ok) throw new Error(value.error); setInventory(value);
+    } catch (e) { setError(e instanceof Error ? e.message : "The scan could not be verified. Refresh saved evidence before trying again."); }
+    finally { setBusy(false); }
+  }
   return <div className="cp-durable">
     <PageTitle eyebrow="CLOUD INVENTORY" title="Discover agents" description="Review saved cloud inventory before deciding which agents should enter your control plane." />
-    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> AWS AgentCore discovery</h2><p>This candidate supports saved AWS account and region scopes plus read-only inventory evidence. Scanning is not connected to this workspace yet. Azure and Google discovery are not available.</p><p>Saving a scope does not contact AWS or import agents. Your administrator must configure and verify a separate read-only cloud binding before scanning can be enabled.</p></section>
+    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> AWS AgentCore discovery</h2><p>This candidate supports saved AWS account and region scopes plus read-only inventory evidence. Scanning requires a reviewed server binding. Azure and Google discovery are not available.</p><p>Saving a scope does not contact AWS or import agents. A configured binding allows read-only scans; it does not prove cloud permissions or enable controlled execution.</p></section>
     {error && <p role="alert" className="cp-durable-message is-error">{error}</p>}
     {notice && <p role="status" className="cp-durable-message">{notice}</p>}
     <section className="cp-panel cp-durable-card"><h2>Save a discovery scope</h2><p>Use the account and region reviewed by your workspace administrator. Enter no passwords, access keys or tokens.</p>
@@ -54,7 +63,7 @@ export function DiscoveryWorkspace() {
       {!connections && !error && <p role="status">Loading saved scopes…</p>}
       {connections && !connections.connections.length && <p>No discovery scopes have been saved. This does not mean your cloud has no agents.</p>}
       {connections?.truncated && <p>Showing the first 100 saved scopes. Ask your administrator for the remaining inventory.</p>}
-      {connections?.connections.map(c => <div className="cp-durable-card" key={c.scope.connectionId}><h3>{c.scope.connectionId}</h3><p>Account {c.scope.accountId} · {c.scope.region} · Scope configured</p><button className="cp-button secondary" disabled={busy} onClick={() => void read(c.scope.connectionId)}>Review saved evidence</button></div>)}
+      {connections?.connections.map(c => <div className="cp-durable-card" key={c.scope.connectionId}><h3>{c.scope.connectionId}</h3><p>Account {c.scope.accountId} · {c.scope.region} · Scope configured</p><p>{c.scanReady ? "Read-only binding configured. Cloud identity will be checked during the scan." : "Scanning unavailable. Ask your administrator to configure reviewed read-only access."}</p><button className="cp-button secondary" disabled={busy} onClick={() => void read(c.scope.connectionId)}>Review saved evidence</button>{c.scanReady && <button className="cp-button" disabled={busy} onClick={() => void scan(c.scope.connectionId)}>Scan cloud inventory</button>}</div>)}
     </section>
     {selected && busy && <p role="status">Loading saved evidence…</p>}
     {inventory && <section className="cp-panel cp-durable-card"><h2>{inventory.scope.connectionId}: discovery evidence</h2>

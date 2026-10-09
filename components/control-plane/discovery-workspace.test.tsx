@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { DiscoveryWorkspace } from "./discovery-workspace";
 it("does not present configured scopes as connected enforcement or ask for secrets", () => {
   const html = renderToStaticMarkup(<DiscoveryWorkspace />);
-  expect(html).toContain("Scanning is not connected to this workspace yet");
+  expect(html).toContain("Scanning requires a reviewed server binding");
   expect(html).toContain("Saving a scope does not contact AWS or import agents");
   expect(html).toContain("Azure and Google discovery are not available");
   expect(html).toContain("Enter no passwords, access keys or tokens");

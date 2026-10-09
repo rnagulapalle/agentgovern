@@ -131,3 +131,11 @@ it("lists only current member's tenant scopes and reports the connection view li
   expect((await db.query("SELECT count(*)::int n FROM ll_cloud_connections WHERE org_id=$1", [tenant])).rows[0].n).toBe(101);
   await db.query("UPDATE ll_members SET active=false WHERE email='owner@example.test'"); await expect(store.connections(actor)).rejects.toThrow("member required");
 }));
+it("scan admission rechecks identity and commits the shared per-connection throttle without holding a network lock", async () => fixture(async (db, store, actor) => {
+  await store.configureConnection(actor, scope);
+  for (let i = 0; i < 3; i++) expect(await store.beginScan(actor, scope.connectionId)).toEqual({ scope, allowed: true });
+  expect(await store.beginScan(actor, scope.connectionId)).toEqual({ scope, allowed: false });
+  expect(await store.beginScan(actor, scope.connectionId)).toEqual({ scope, allowed: false });
+  expect((await db.query("SELECT count FROM ll_access_attempts WHERE key=$1", [`cloud-discovery:${tenant}:${scope.connectionId}`])).rows[0].count).toBe(5);
+  await db.query("UPDATE ll_members SET active=false WHERE email='owner@example.test'"); await expect(store.beginScan(actor, scope.connectionId)).rejects.toThrow("member required");
+}));

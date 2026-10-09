@@ -1,7 +1,9 @@
 import { expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { Pool } from "pg";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdtemp, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { randomBytes, randomUUID } from "node:crypto";
 import { digest, WORKSPACE_COOKIE } from "@/lib/workspace/identity";
 import { CloudInventoryStore } from "@/lib/workspace/cloud-inventory";
@@ -12,6 +14,7 @@ it("real session authentication and PostgreSQL persist only tenant-owned observa
   if (!process.env.LOOPLABS_TEST_DATABASE_URL) throw new Error("Dedicated PostgreSQL required; never skip.");
   const admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL }), schema = `discovery_http_${randomBytes(8).toString("hex")}`, epoch = randomUUID();
   const token = randomBytes(32).toString("base64url"), otherToken = randomBytes(32).toString("base64url"); let db: Pool | undefined;
+  const privateDir = await mkdtemp(join(tmpdir(), "ll-discovery-http-"));
   const request = (session: string, payload?: object, query = "") => new NextRequest(`https://looplabs.run/api/workspace/discovery${query}`, { method: payload ? "POST" : "GET", headers: { origin: "https://looplabs.run", cookie: `${WORKSPACE_COOKIE}=${session}`, "Content-Type": "application/json" }, ...(payload ? { body: JSON.stringify(payload) } : {}) });
   try {
     await admin.query(`CREATE SCHEMA ${schema}`); db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` }); binding.db = db;
@@ -30,6 +33,16 @@ it("real session authentication and PostgreSQL persist only tenant-owned observa
     const scope = { tenantId: "company-a", connectionId: "aws-a", accountId: "123456789012", region: "us-west-2" };
     await new CloudInventoryStore(db).recordScan({ orgId: "company-a", subject: "owner@example.test", tokenHash: digest(token), role: "operator" }, randomUUID(), { scope, observedAt: new Date().toISOString(), completeness: "partial", records: [], failures: ["list-unavailable"] });
     expect(await (await GET(request(token, undefined, "?connectionId=aws-a"))).json()).toMatchObject({ status: "observed", completeness: "partial", failures: ["list-unavailable"], enforcement: "unverified" });
+    expect((await POST(request(token, { operation: "scan", connectionId: "aws-a" }))).status).toBe(503);
+    const executable = join(privateDir, "aws-fixture"), path = join(privateDir, "binding.json");
+    const runtime = { agentRuntimeId: "service-1234567890", agentRuntimeArn: "arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/service-1234567890", agentRuntimeVersion: "1" };
+    // A real child-process fixture, not an AWS CLI or live account proof.
+    await writeFile(executable, `#!/bin/sh\ncase "$2" in\nget-caller-identity) printf '%s' '${JSON.stringify({ Account: scope.accountId })}' ;;\nlist-agent-runtimes) printf '%s' '${JSON.stringify({ agentRuntimes: [runtime], nextToken: null })}' ;;\nget-agent-runtime) printf '%s' '${JSON.stringify(runtime)}' ;;\n*) exit 1 ;;\nesac\n`, { mode: 0o700 });
+    await writeFile(path, JSON.stringify({ scope, executable, session: { accessKeyId: `ASIA${"A".repeat(16)}`, secretAccessKey: "b".repeat(40), sessionToken: "c".repeat(40), expiresAt: new Date(Date.now() + 600000).toISOString() } }), { mode: 0o600 });
+    vi.stubEnv("LOOPLABS_CLOUD_DISCOVERY_BINDING_FILE", path);
+    expect(await (await GET(request(token))).json()).toMatchObject({ connections: [{ scanReady: true }], scanningAvailable: true });
+    const scanned = await POST(request(token, { operation: "scan", connectionId: "aws-a" })); expect(scanned.status).toBe(200);
+    expect(await scanned.json()).toMatchObject({ completeness: "complete-api-traversal", records: [{ record: { resourceId: runtime.agentRuntimeId, version: "1", roleReference: null, coverage: { enforcement: "unverified" } } }], enforcement: "unverified" });
     expect((await POST(request(token, { ...input, tenantId: "company-b" }))).status).toBe(400);
     expect((await POST(request(token, { ...input, accountId: "999999999999" }))).status).toBe(409);
     for (const table of ["ll_agents", "ll_actions", "ll_tokens"]) expect((await db.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n).toBe(0);
@@ -37,6 +50,6 @@ it("real session authentication and PostgreSQL persist only tenant-owned observa
     expect((await GET(request(token))).status).toBe(401); expect((await POST(request(token, input))).status).toBe(401);
     await db.query("UPDATE ll_members SET active=true WHERE email='owner@example.test'"); await db.query("UPDATE ll_sessions SET expires_at=now()-interval '1 second' WHERE hash=$1", [digest(token)]);
     expect((await GET(request(token))).status).toBe(401);
-    expect((await db.query("SELECT count(*)::int n FROM ll_cloud_scans")).rows[0].n).toBe(1);
-  } finally { binding.db = null; vi.unstubAllEnvs(); await db?.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); }
+    expect((await db.query("SELECT count(*)::int n FROM ll_cloud_scans")).rows[0].n).toBe(2);
+  } finally { binding.db = null; vi.unstubAllEnvs(); await db?.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); await rm(privateDir, { recursive: true, force: true }); }
 });
