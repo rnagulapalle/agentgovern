@@ -24,6 +24,17 @@ malformed entries before stopping and after replacement. It does not exempt any
 environment variable. This corrects an order-dependent check; the new full trial
 still has to prove actual promotion and reversion.
 
+Trial `37892334696` passed the replacement environment checks but refused retained
+infrastructure comparison. A local Docker metadata experiment inspected one owned,
+never-started container with three read-only bind mounts twenty times. Mount array
+order varied while every mount identity and attribute stayed identical. The
+comparator now sorts mounts by validated unique canonical destination, retaining
+all attributes; changed sources, write access, types or extra attributes still
+refuse. Malformed and duplicate destinations fail before stop and after replacement.
+Retained running state, container/image identity and configuration have separate
+sanitized checkpoints. Neither metadata experiment establishes runtime acceptance;
+the next full trial remains required. No mount or environment field is exempted.
+
 The next disposable trial will cold-load the two independently retrieved private
 release artifacts from runs `37877500571` and `37881876443`. Their web and worker
 image IDs differ, but their content-bound acknowledgement worker build is the same.

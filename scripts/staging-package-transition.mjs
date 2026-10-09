@@ -1,6 +1,7 @@
 // Disposable-trial application package switch only. No database/schema/authority rollback.
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
+import {posix} from "node:path";
 const services=["web","temporal-worker","temporal-scheduler"];
 const retained=["application-db","temporal-db","temporal","authorization","connector-twin"];
 const imageId=/^sha256:[a-f0-9]{64}$/;
@@ -37,8 +38,21 @@ function environmentEntries(entries){
  // Values remain exact; duplicates are refused because their ordering can matter.
  return [...entries].sort();
 }
+function mountEntries(entries){
+ assert(Array.isArray(entries),"Explicit runtime mounts required");
+ const destinations=new Set();
+ for(const entry of entries){
+  assert(entry&&typeof entry==="object"&&!Array.isArray(entry),"Malformed runtime mount");
+  const destination=entry.Destination;
+  assert(typeof destination==="string"&&destination.startsWith("/")&&(destination==="/"||!destination.endsWith("/"))&&!destination.includes("\0")&&posix.normalize(destination)===destination&&!destinations.has(destination),"Malformed or duplicate runtime mount destination");
+  destinations.add(destination);
+ }
+ // Docker inspect enumerates its mount map in varying orders, even for the same
+ // stopped container. Preserve all attributes; compare only the list order canonically.
+ return [...entries].sort((a,b)=>a.Destination<b.Destination?-1:a.Destination>b.Destination?1:0);
+}
 function configuration(c){
- return {env:environmentEntries(c.Config.Env),user:c.Config.User,command:c.Config.Cmd,entrypoint:c.Config.Entrypoint,healthcheck:c.Config.Healthcheck,mounts:c.Mounts,host:c.HostConfig};
+ return {env:environmentEntries(c.Config.Env),user:c.Config.User,command:c.Config.Cmd,entrypoint:c.Config.Entrypoint,healthcheck:c.Config.Healthcheck,mounts:mountEntries(c.Mounts),host:c.HostConfig};
 }
 function unchangedConfiguration(c){
  // Compare sensitive environment/configuration in memory; return only its digest.
@@ -99,7 +113,19 @@ export async function transitionRuntimePackage({project,environment,current,targ
    assert(unchangedConfiguration(after)===unchangedConfiguration(before[s]),"Runtime authority, mounts or hardening changed during package replacement");
   }
   phase="retained-infrastructure";
-  for(const s of retained){const after=inspect(docker,nextCompose,s,project);assert(after.State.Running&&after.Id===before[s].Id&&after.Image===before[s].Image&&unchangedConfiguration(after)===unchangedConfiguration(before[s]),"Database, provider or orchestration service changed during package replacement");}
+  for(const s of retained){
+   phase="retained-infrastructure";const after=inspect(docker,nextCompose,s,project);
+   phase="retained-running";assert(after.State.Running,"Retained infrastructure stopped during replacement");
+   phase="retained-identity";assert(after.Id===before[s].Id&&after.Image===before[s].Image,"Retained infrastructure identity changed during replacement");
+   phase="retained-configuration";
+   if(unchangedConfiguration(after)!==unchangedConfiguration(before[s])){
+    const old=configuration(before[s]),replacement=configuration(after);
+    for(const key of ["env","user","command","entrypoint","healthcheck","mounts","host"]){
+     if(hash([old[key]])!==hash([replacement[key]])){phase=`retained-${key}`;break;}
+    }
+   }
+   assert(unchangedConfiguration(after)===unchangedConfiguration(before[s]),"Database, provider or orchestration service configuration changed during package replacement");
+  }
   phase="pending-after-replacement";await assertPending();succeeded=true;
  }finally{
   if(!succeeded){

@@ -96,3 +96,32 @@ test("malformed or duplicate environment names refuse before stopping and after 
   for(const s of services)expect(after.containers[s].State.Running).toBe(false);
  }
 });
+test("mount enumeration may reorder for replacement and retained containers without changing any attributes",async()=>{
+ const f=fixture(),extra={Source:"owned-second",Destination:"/second",RW:false,Type:"bind"};
+ for(const c of Object.values(f.containers))c.Mounts.push(extra);
+ const ready=async()=>{
+  for(const s of services)f.containers[s].Mounts.push(extra);
+  for(const c of Object.values(f.containers))c.Mounts.reverse();
+ };
+ const result=await transitionRuntimePackage({...input(f),ready});
+ expect(result.evidence.retainedRoles).toBe(5);expect(f.checks()).toBe(3);
+});
+test("changed mount attributes and retained running/identity/configuration drift still contain writers with fixed diagnostics",async()=>{
+ for(const [service,key,value,checkpoint] of [["web","Source","different-source","application-mounts"],["web","RW",false,"application-mounts"],["web","Type","volume","application-mounts"],["web","extra","changed","application-mounts"],["application-db","Source","different-source","retained-mounts"]]){
+  diagnostic.mockClear();const f=fixture();await expect(transitionRuntimePackage({...input(f),ready:async()=>{f.containers[service].Mounts[0][key]=value;}})).rejects.toThrow();
+  for(const s of services)expect(f.containers[s].State.Running).toBe(false);
+  expect(diagnostic.mock.calls).toEqual([[`Package transition refused at ${checkpoint}; no raw configuration or output printed.`]]);
+ }
+ for(const [change,checkpoint] of [[f=>{f.containers.temporal.State.Running=false;},"retained-running"],[f=>{f.containers.temporal.Image=id(9);},"retained-identity"]]){
+  diagnostic.mockClear();const f=fixture();await expect(transitionRuntimePackage({...input(f),ready:async()=>change(f)})).rejects.toThrow();
+  expect(diagnostic.mock.calls).toEqual([[`Package transition refused at ${checkpoint}; no raw configuration or output printed.`]]);
+ }
+});
+test("malformed, aliased or duplicate mount destinations refuse before replacement and after replacement",async()=>{
+ for(const mounts of [[null],[[]],[{Destination:"relative"}],[{Destination:"/state/../state"}],[{Destination:"/state/"}],[{Destination:"/state\0"}],[{Destination:"/state"},{Destination:"/state"}]]){
+  const before=fixture();before.containers.web.Mounts=mounts;
+  await expect(transitionRuntimePackage(input(before))).rejects.toThrow();expect(before.calls.some(a=>a[5]==="stop"||a[5]==="up")).toBe(false);
+  const after=fixture();await expect(transitionRuntimePackage({...input(after),ready:async()=>{after.containers.web.Mounts=mounts;}})).rejects.toThrow();
+  for(const s of services)expect(after.containers[s].State.Running).toBe(false);
+ }
+});
