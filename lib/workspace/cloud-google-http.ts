@@ -1,13 +1,6 @@
 import { projectDiscoveryScope, type ProjectDiscoveryScope, type ProjectInventoryApi } from "./cloud-project-discovery";
-export interface ProjectReadSession { token: string; expiresAt: string }
-export function projectReadSession(value: unknown, at: number): ProjectReadSession {
-  const v = value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
-  const remaining = typeof v?.expiresAt === "string" ? Date.parse(v.expiresAt) - at : NaN;
-  if (!v || Object.keys(v).sort().join() !== "expiresAt,token" || typeof v.token !== "string"
-    || !/^[a-zA-Z0-9_.~+/-]{16,16384}={0,2}$/.test(v.token) || !Number.isFinite(remaining) || remaining < 30_000 || remaining > 3_600_000)
-    throw Error("Discovery credential unavailable");
-  return { token: v.token, expiresAt: v.expiresAt as string };
-}
+import { boundedProjectJson, projectReadSession, projectCredential, type ProjectReadSession } from "./cloud-project-http";
+export { projectReadSession, type ProjectReadSession } from "./cloud-project-http";
 // Server-only adapter. Credentials must come from an explicitly configured,
 // reviewed broker; no browser token, ambient login or planner fallback exists.
 export function googleProjectInventoryApi(input: ProjectDiscoveryScope, session: (signal: AbortSignal) => Promise<ProjectReadSession>, options: { fetch?: typeof fetch; now?: () => number } = {}): ProjectInventoryApi {
@@ -18,45 +11,16 @@ export function googleProjectInventoryApi(input: ProjectDiscoveryScope, session:
   const resourcePattern = new RegExp(`^${parent}/[a-zA-Z0-9_-]{1,128}$`);
   const origin = `https://${scope.location}-aiplatform.googleapis.com/v1/`;
   const projectUrl = `https://cloudresourcemanager.googleapis.com/v3/projects/${scope.projectNumber}`;
-  async function request(url: string, token: string, signal: AbortSignal): Promise<Record<string, unknown>> {
-    let response: Response | undefined;
-    try {
-      response = await transport(url, { method: "GET", redirect: "manual", headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }, signal });
-      if (response.status !== 200 || !/^application\/json(?:\s*;|$)/i.test(response.headers.get("content-type") ?? "")) throw Error();
-      const length = response.headers.get("content-length");
-      if (length !== null && (!/^[0-9]{1,10}$/.test(length) || Number(length) > 1_048_576)) throw Error();
-      if (!response.body) throw Error();
-      const reader = response.body.getReader(), chunks: Uint8Array[] = []; let bytes = 0;
-      try {
-        for (;;) {
-          const part = await reader.read(); if (part.done) break;
-          bytes += part.value.length;
-          if (bytes > 1_048_576 || signal.aborted) throw Error();
-          chunks.push(part.value);
-        }
-      } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
-      const value = JSON.parse(Buffer.concat(chunks).toString("utf8"));
-      if (!value || typeof value !== "object" || Array.isArray(value)) throw Error();
-      return value;
-    } catch {
-      if (response?.body && !response.body.locked) await response.body.cancel().catch(() => {});
-      throw Error("Read-only cloud response unavailable"); // No raw error, body, URL or token.
-    }
-  }
   async function read(url?: string) {
     try {
       const signal = AbortSignal.timeout(15_000);
-      const value = await new Promise<ProjectReadSession>((resolve, reject) => {
-        const abort = () => reject(Error("Discovery credential deadline reached"));
-        signal.addEventListener("abort", abort, { once: true });
-        Promise.resolve().then(() => session(signal)).then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
-      });
+      const value = await projectCredential(session, signal);
       const token = projectReadSession(value, now()).token; // Snapshot before verification + read.
       // One shared deadline and one credential snapshot cover verification + read.
       signal.throwIfAborted();
-      const project = await request(projectUrl, token, signal);
+      const project = await boundedProjectJson(projectUrl, token, signal, transport);
       if (project.name !== `projects/${scope.projectNumber}` || project.projectId !== scope.projectId || project.state !== "ACTIVE") throw Error();
-      return url ? await request(url, token, signal) : { projectId: scope.projectId, projectNumber: scope.projectNumber };
+      return url ? await boundedProjectJson(url, token, signal, transport) : { projectId: scope.projectId, projectNumber: scope.projectNumber };
     } catch { throw Error("Verified read-only project access unavailable"); }
   }
   return {

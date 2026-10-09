@@ -103,3 +103,24 @@ responses and proves successful minimized persistence plus refusal after members
 revocation during a read. This is not a native Google account proof. Browser proof
 still uses saved project fixtures and must show no scan control without a matching
 binding. Real cloud scope/credentials and reviewed enrollment remain outstanding.
+
+## Azure HTTP transport candidate
+
+The Azure read adapter candidate accepts only the enrolled Foundry project endpoint,
+pins `api-version=v1`, bounds requests/responses and reads agent/version resources
+with draft versions excluded. It shares GET/JSON limits, sanitized errors and the
+broker deadline with Google. It requires an explicitly configured trusted broker
+association for the exact directory, endpoint and Foundry audience before native
+access. A successful native GET verifies endpoint access; directory association
+comes from the supported broker, not an API-returned tenant or local JWT decoding.
+
+A supported Azure credential broker/file bridge has not been implemented, this
+adapter is not wired to workspace scans, and no native Azure account has been read.
+The provider selector must continue showing Azure native scanning unavailable.
+Six initial transport/response fixture tests passed; extraction into shared code
+requires fresh full regression, Google API and browser proof before acceptance.
+
+Sources for pinned native version and fixed project GETs:
+[SDK version](https://azuresdkdocs.z19.web.core.windows.net/javascript/azure-ai-projects/2.7.1/enums/KnownApiVersions.html),
+[native management examples](https://github.com/MicrosoftDocs/azure-ai-docs/blob/main/articles/foundry/agents/how-to/manage-hosted-agent.md),
+[version listing](https://ai.azure.com/api-reference/agent-versions/list-agent-versions/).
