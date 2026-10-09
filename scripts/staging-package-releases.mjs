@@ -1,9 +1,24 @@
 // Cold-load the two measured releases; provenance is checked by the private CI download gate.
 import assert from "node:assert/strict";
-import {readFile} from "node:fs/promises";
+import {readFile,lstat,unlink} from "node:fs/promises";
 import {createHash} from "node:crypto";
+import {resolve} from "node:path";
 import {loadTestedImages} from "./staging-image-artifact.mjs";
 const roles=["web","worker","twin","provisioner"];
+export async function loadAndRetireMeasuredArchive(directory,expected,docker){
+ const archive=resolve(directory,"images.tar"),before=await lstat(archive);
+ assert(before.isFile()&&!before.isSymbolicLink()&&before.uid===process.getuid(),"Owned regular downloaded archive required");
+ const loaded=await loadTestedImages({directory,expectedManifestSha256:expected.manifestSha256,docker});
+ assert.equal(loaded.buildId,expected.buildId);assert.deepEqual(loaded.images,expected.images);
+ assert.equal(loaded.archive.sha256,expected.archiveSha256);assert.equal(loaded.archive.bytes,expected.archiveBytes);
+ const after=await lstat(archive);
+ assert(after.isFile()&&!after.isSymbolicLink(),"Downloaded archive replaced after load");
+ for(const key of ["dev","ino","uid","size","mtimeMs","ctimeMs"])assert.equal(after[key],before[key],"Downloaded archive changed after load");
+ // Delete only this validated local download, never its directory, remote artifact,
+ // manifest, other files or Docker layers. The next release needs this disk space.
+ await unlink(archive);
+ return loaded;
+}
 export async function loadPackageReleases(directories,docker,owned){
  let phase="directories";
  try{
@@ -33,8 +48,7 @@ export async function loadPackageReleases(directories,docker,owned){
  const loaded=[];
  for(let i=0;i<2;i++){
   phase=`package-load-${i}`;
-  const r=receipts[i],m=await loadTestedImages({directory:directories[i],expectedManifestSha256:r.artifact.manifestSha256,docker});
-  assert.equal(m.buildId,r.buildId);assert.deepEqual(m.images,r.images);assert.equal(m.archive.sha256,r.artifact.archiveSha256);assert.equal(m.archive.bytes,r.artifact.archiveBytes);
+  const r=receipts[i],m=await loadAndRetireMeasuredArchive(directories[i],{buildId:r.buildId,images:r.images,manifestSha256:r.artifact.manifestSha256,archiveSha256:r.artifact.archiveSha256,archiveBytes:r.artifact.archiveBytes},docker);
   loaded.push({buildId:m.buildId,...Object.fromEntries(m.images.map(x=>[x.role,x.id]))});
  }
  return {packages:loaded,origins:receipts.map(r=>({runId:r.executionEvidence.runId,manifestSha256:r.artifact.manifestSha256,archiveSha256:r.artifact.archiveSha256,archiveBytes:r.artifact.archiveBytes}))};

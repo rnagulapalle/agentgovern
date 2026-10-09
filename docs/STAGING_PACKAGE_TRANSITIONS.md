@@ -3,6 +3,16 @@
 Implementation under validation. No actual promotion/reversion acceptance yet;
 production remains on its existing runner.
 
+The first retained-load trial (`37887325116`) failed before promotion. The next
+trial (`37888383459`) identified storage exhaustion while loading the second
+package: root storage had 7,141,191,680 bytes available before loading. Neither
+run establishes transition acceptance. The loader now retires only each owned
+local `images.tar` download after checksum, loaded image/build and measured
+receipt checks pass. It retains the manifest and remote artifact. Failed checks
+or a replaced archive path refuse deletion; no Docker pruning or shared-file
+cleanup is used. Three focused tests cover this disk-lifetime change. A new full
+runtime trial remains required.
+
 The next disposable trial will cold-load the two independently retrieved private
 release artifacts from runs `37877500571` and `37881876443`. Their web and worker
 image IDs differ, but their content-bound acknowledgement worker build is the same.
