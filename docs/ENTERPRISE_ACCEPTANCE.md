@@ -237,3 +237,22 @@ This closes fresh typed planning in the disposable assembled environment; it doe
 not establish persistent remote staging, sustained tenant capacity, remote restore,
 operator alert delivery, independent security review, live-provider guarantees or
 production ownership cutover. Enterprise acceptance remains incomplete.
+
+
+## Paced two-company operation
+
+`TENANT_PACED_OPERATION.md` now records an actual 207,787 ms local observation
+window: twenty-four additional independent customer records across two companies,
+six approval waves and four reused scoped agents. All 52 effects (including the
+original two-company checks) target their approved records/recipients. Later waves
+remain held; repeated submission and exact approval do not add effects or allowance
+reservations. One company's worker is killed during the third wave while the other
+queue completes; replacement preserves the original actions. Two further lost
+CRM responses are read back and all twenty-four workload histories replay without
+new effects. The original tenant browser/API/database refusals remain required.
+
+This closes one paced multi-tenant/shared-agent operation observation, not sustained
+remote capacity, noisy-neighbor saturation, quotas/fairness under overload or a
+production SLO. Delay samples include the injected downtime and client polling.
+Persistent staging, representative tenant load and the pilot's agreed operational
+objectives remain required. Production is unchanged.

@@ -21,20 +21,25 @@ import {passwordHash} from "../lib/workspace/auth";
 const origin="http://localhost:3117",wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 async function until(test:()=>Promise<boolean>,label:string,timeout=15000){const start=Date.now();while(!(await test())){if(Date.now()-start>timeout)throw Error(`Unavailable: ${label}`);await wait(100);}}
 async function main(){
+ const load=process.env.LOOPLABS_TENANT_LOAD_PROOF==="1";if(process.env.LOOPLABS_TENANT_LOAD_PROOF&&!load)throw Error("Unsupported tenant workload mode");
  const url=process.env.LOOPLABS_TEST_DATABASE_URL;if(!url)throw Error("Dedicated test PostgreSQL required");
  const schema=`tenant_proof_${randomBytes(8).toString("hex")}`,dir=await mkdtemp(resolve(".local/tenant-proof-")),token=randomBytes(32).toString("base64url");
  const admin=new Pool({connectionString:url}),db=new Pool({connectionString:url,options:`-c search_path=${schema}`});
  const runtimeRole=`ll_tenant_${randomBytes(8).toString("hex")}`,runtimePassword=randomBytes(32).toString("base64url");let runtime:Pool|undefined,roleCreated=false;
  const provisioningFiles=["scripts/durable-runtime-role.ts","scripts/workspace-setup.ts","scripts/refund-setup.ts","scripts/connector-setup.ts","scripts/enquiry-setup.ts","scripts/enquiry-managed-setup.ts","scripts/temporal-setup.ts","scripts/record-scope-setup.ts","scripts/record-routing-setup.ts"];
  const records=[{version:"record-scope-1" as const,workspaceId:"company-a",contactId:"4001",recipient:"alice@example.test"},{version:"record-scope-1" as const,workspaceId:"company-b",contactId:"4002",recipient:"bob@example.test"}];
+ const loadRecords=load?companiesRecords():[];
+ function companiesRecords(){return ["company-a","company-b"].flatMap((workspaceId,index)=>Array.from({length:12},(_,i)=>({version:"record-scope-1" as const,workspaceId,contactId:String(4101+index*100+i),recipient:`tenant${index+1}-customer${i+1}@example.test`})) );}
+ const catalogRecords=[...records,...loadRecords];
+ let loadMeasurement:object|undefined;
  let app:ChildProcess|undefined,twin:ChildProcess|undefined,browser:Browser|undefined,temporal:TestWorkflowEnvironment|undefined;const children:ChildProcess[]=[];const checks:string[]=[];let denied=0;const password=randomBytes(24).toString("base64url"),hashedPassword=passwordHash(password);
  const pass=(s:string)=>{checks.push(s);console.log("PASS",s);};
  const request=async(key:string,path:string,p?:object)=>{const response=await fetch(origin+path,{headers:{Authorization:`Bearer ${key}`,Origin:origin,...(p?{"Content-Type":"application/json"}:{})},...(p?{method:"POST",body:JSON.stringify(p)}:{})});return {status:response.status,data:await response.json()};};
  try{
   await admin.query(`CREATE SCHEMA ${schema}`);
   for(const f of ["lib/durable/schema.sql","lib/workspace/schema.sql","lib/refunds/schema.sql","lib/connectors/schema.sql","lib/workflows/schema.sql","lib/durable/proposal-schema.sql","lib/enquiries/schema.sql","lib/enquiries/managed-schema.sql","lib/enquiries/temporal-schema.sql","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql"])await db.query(await readFile(f,"utf8"));
-  await writeFile(`${dir}/connector-twin-credentials.json`,JSON.stringify({token}),{mode:0o600});await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records}),{mode:0o600});
-  await writeFile(`${dir}/connector-twin-faults.json`,JSON.stringify({loseResponseRecords:["4001"]}),{mode:0o600});
+  await writeFile(`${dir}/connector-twin-credentials.json`,JSON.stringify({token}),{mode:0o600});await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records:catalogRecords}),{mode:0o600});
+  await writeFile(`${dir}/connector-twin-faults.json`,JSON.stringify({loseResponseRecords:load?["4001","4105","4209"]:["4001"]}),{mode:0o600});
   const backend=process.env.FETCHSANDBOX_BACKEND_PATH||`${process.env.HOME}/sandbox/backend`;
   twin=spawn(`${backend}/.venv/bin/python`,["scripts/connector-twin.py"],{env:{...process.env,LOOPLABS_CONNECTOR_STATE_DIR:dir},stdio:"ignore"});
   const base=new FetchSandboxConnectors("http://127.0.0.1:8018",token);
@@ -52,7 +57,7 @@ async function main(){
    for(const key of [keys.owner,keys.reviewer,keys.worker,keys.agent])actors.push(await authenticate(db,key));
    const [owner,reviewer,worker,agent]=actors;
    for(const [id,tool,role,connector] of [["crm","twin.crm","crm_agent","crm_twin"],["email","twin.email","email_agent","email_twin"]]){
-    await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES($1,$2,ARRAY[$3],1)",[org,id,tool]);
+    await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES($1,$2,ARRAY[$3],$4)",[org,id,tool,load?13:1]);
     await db.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES($1,$2,$2,$3,$4,$5)",[org,id,owner.subject,role,connector]);
     if(id!=="crm")await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,$2,$3,'agent')",[tokenHash(randomBytes(32).toString("base64url")),org,id]);
    }
@@ -87,7 +92,7 @@ async function main(){
   assert.equal((await runtime.query("SELECT pg_has_role(current_user,$1,'MEMBER') AS permitted",[ownerRole])).rows[0].permitted,false);
   const runtimeEnv={...process.env,LOOPLABS_MIGRATION_DATABASE_URL:"",LOOPLABS_TEST_DATABASE_URL:""};
   pass(`Actual LOGIN runtime uses ${grantStatements} provisioner grants with no owner membership, schema creation, table ownership or privileged role flags`);
-  app=spawn("pnpm",["exec","next","start","-p","3117"],{detached:true,env:{...runtimeEnv,LOOPLABS_DATABASE_URL:databaseUrl.toString(),LOOPLABS_DURABLE_ORIGIN:"",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:"",LOOPLABS_RECORD_CATALOG:JSON.stringify({records}),LOOPLABS_TEMPORAL_WORKSPACE:"staging",LOOPLABS_TEMPORAL_RECORD_BUILD_ID:build.buildId},stdio:"ignore"});
+  app=spawn("pnpm",["exec","next","start","-p","3117"],{detached:true,env:{...runtimeEnv,LOOPLABS_DATABASE_URL:databaseUrl.toString(),LOOPLABS_DURABLE_ORIGIN:"",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:"",LOOPLABS_RECORD_CATALOG:JSON.stringify({records:catalogRecords}),LOOPLABS_TEMPORAL_WORKSPACE:"staging",LOOPLABS_TEMPORAL_RECORD_BUILD_ID:build.buildId},stdio:"ignore"});
   await until(async()=>{try{return (await fetch(origin+"/sign-in")).ok;}catch{return false;}},"real application");
   const effects=async()=>JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
   const snapshot=async()=>JSON.stringify((await db.query("SELECT org_id,id,state,payload_hash,approved_by FROM ll_connector_actions ORDER BY org_id,id")).rows);
@@ -129,7 +134,7 @@ async function main(){
   pass("Two real browser sessions keep company records separate; eight cross-company/origin attacks are denied, HttpOnly/Strict cookies hide credentials from scripts and expired sessions lose API access without effects");
   for(let i=0;i<companies.length;i++){
    const own=companies[i],other=companies[1-i];
-   const catalog=await request(own.keys.owner,"/api/workspace/records");assert.equal(catalog.status,200);assert.deepEqual(catalog.data.candidates.map((r:{contactId:string})=>r.contactId),[own.scope.contactId]);assert.deepEqual(catalog.data.records.map((r:{id:string})=>r.id),[own.scopeId]);
+   const catalog=await request(own.keys.owner,"/api/workspace/records");assert.equal(catalog.status,200);assert.deepEqual(catalog.data.candidates.map((r:{contactId:string})=>r.contactId).sort(),catalogRecords.filter(r=>r.workspaceId===own.scope.workspaceId).map(r=>r.contactId).sort());assert.deepEqual(catalog.data.records.map((r:{id:string})=>r.id),[own.scopeId]);
    const plans=await request(own.keys.owner,"/api/workspace/enquiries?scope="+own.scopeId);assert.equal(plans.status,200);assert.deepEqual(plans.data.plans.map((p:{id:string})=>p.id),[own.plan.id]);
    for(const key of [own.keys.owner,own.keys.reviewer,own.keys.worker,own.keys.agent]){
     const attempts:[string,object|undefined][]=[
@@ -165,7 +170,7 @@ async function main(){
   await until(async()=> (await companies[1].flow.read(companies[1].owner,companies[1].plan.id)).state==="completed","company-b completes with company-a worker stopped",90000);
   const whileStopped=await effects();assert.equal(Object.keys(whileStopped).length,2);assert(companies[0].run.steps.every((s:{action_id:string})=>!whileStopped[s.action_id]));assert.equal((await companies[0].flow.read(companies[0].owner,companies[0].plan.id)).state,"active");assert.equal(crashed.signalCode,"SIGKILL");
   pass("Company-b independently approved workflow completes two correct effects while company-a worker is confirmed stopped; no company-a effect or replacement authority");
-  service(0,"worker");await until(()=>ready(19340),"company-a replacement worker",90000);
+  let activeA=service(0,"worker");await until(()=>ready(19340),"company-a replacement worker",90000);
   await until(async()=> (await companies[0].flow.read(companies[0].owner,companies[0].plan.id)).state==="completed","company-a recovered completion",90000);
   const completed=await effects();assert.equal(Object.keys(completed).length,4);
   for(const own of companies)for(const step of own.run.steps){assert.equal(completed[step.action_id].recordId,own.scope.contactId);if(step.connector==="email")assert.deepEqual(completed[step.action_id].body.to,[own.scope.recipient]);}
@@ -178,9 +183,62 @@ async function main(){
   for(const own of companies)assert.equal(await recordActivities(runtime!,own.worker,()=>own.provider,build.buildId)(own.input),"completed");
   assert.deepEqual(await effects(),completed);
   pass("Repeated completed activity calls retain four effects and each company\'s original action identities");
+  if(load){
+   const prepared:{company:(typeof companies)[number];record:(typeof records)[number];plan:Awaited<ReturnType<EnquiryControl["prepareChat"]>>["saved"];run:Awaited<ReturnType<WorkflowControl["read"]>>;flow:WorkflowControl}[]=[];
+   for(const record of loadRecords){
+    const company=companies.find(c=>c.scope.workspaceId===record.workspaceId)!;
+    const provider:FetchSandboxConnectors=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,record);const control:ConnectorControl=new ConnectorControl(runtime!,provider),flow:WorkflowControl=new WorkflowControl(runtime!,control),scopes:ScopeControl=new ScopeControl(runtime!,provider),scopeId=randomUUID();
+    await scopes.enroll(company.owner,scopeId);for(const id of ["crm","email"])await scopes.grant(company.owner,scopeId,id);
+    const enquiries:EnquiryControl=new EnquiryControl(runtime!,flow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};});
+    const plan:Awaited<ReturnType<EnquiryControl["prepareChat"]>>["saved"]=(await enquiries.prepareChat(company.owner,randomUUID())).saved;
+    await submitScoped(enquiries,company.owner,plan.id,plan.plan_hash,"crm","email",build.buildId);
+    const run:Awaited<ReturnType<WorkflowControl["read"]>>=await flow.read(company.owner,plan.id);
+    await submitScoped(enquiries,company.owner,plan.id,plan.plan_hash,"crm","email",build.buildId);
+    assert.deepEqual((await flow.read(company.owner,plan.id)).steps.map((s:{action_id:string})=>s.action_id),run.steps.map((s:{action_id:string})=>s.action_id));
+    prepared.push({company,record,plan,run,flow});
+   }
+   assert.equal(prepared.length,24);assert.equal(Object.keys(await effects()).length,4);
+   await until(async()=> (await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch WHERE state='started'")).rows[0].n===26,"all two-company workload histories started",90000);
+   const reservations=(await db.query("SELECT org_id,id,reserved,action_limit FROM ll_agents ORDER BY org_id,id")).rows;
+   assert.equal(reservations.length,4);assert(reservations.every(a=>a.reserved===13&&a.action_limit===13));
+   const samples:{company:string;ordinal:number;approvalToObservedCompletionMs:number}[]=[],waves:{wave:number;observedAtMs:number;effects:number;held:number}[]=[];
+   const started=performance.now();let faultIsolationObserved=false;
+   for(let wave=0;wave<6;wave++){
+    const batch=companies.flatMap(company=>prepared.filter(r=>r.company===company).slice(wave*2,wave*2+2));
+    const began=new Map<string,number>(),seen=new Set<string>();
+    if(wave===2){activeA.kill("SIGKILL");await until(async()=>activeA.signalCode==="SIGKILL","workload company-a SIGKILL");}
+    for(const run of batch){began.set(run.plan.id,performance.now());for(const step of run.run.steps){const input={operation:"approve",actionId:step.action_id,payloadHash:step.payload_hash};assert.equal((await request(run.company.keys.reviewer,"/api/durable/connectors",input)).status,200);assert.equal((await request(run.company.keys.reviewer,"/api/durable/connectors",input)).status,200);}}
+    if(wave===2){
+     const b=batch.filter(r=>r.company===companies[1]);
+     await until(async()=> (await Promise.all(b.map(r=>r.flow.read(r.company.owner,r.plan.id)))).every(r=>r.state==="completed"),"company-b workload with company-a stopped",90000);
+     const observed=await effects();assert.equal(Object.keys(observed).length,24);
+     for(const a of batch.filter(r=>r.company===companies[0])){assert.equal((await a.flow.read(a.company.owner,a.plan.id)).state,"active");assert(a.run.steps.every((s:{action_id:string})=>!observed[s.action_id]));}
+     assert.equal(activeA.signalCode,"SIGKILL");await wait(15000);assert.deepEqual(await effects(),observed);
+     activeA=service(0,"worker");await until(()=>ready(19340),"workload replacement worker",90000);faultIsolationObserved=true;
+    }
+    await until(async()=>{for(const run of batch){if(!seen.has(run.plan.id)&&(await run.flow.read(run.company.owner,run.plan.id)).state==="completed"){seen.add(run.plan.id);samples.push({company:run.record.workspaceId,ordinal:loadRecords.indexOf(run.record)+1,approvalToObservedCompletionMs:Math.round(performance.now()-began.get(run.plan.id)!)});}}return seen.size===4;},`two-company workload wave ${wave+1}`,90000);
+    const observed=await effects(),held=(await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE state='held'")).rows[0].n;
+    assert.equal(Object.keys(observed).length,4+(wave+1)*8);assert.equal(held,(5-wave)*8);
+    const completeIds=new Set(prepared.filter(r=>samples.some(s=>s.ordinal===loadRecords.indexOf(r.record)+1)).flatMap(r=>r.run.steps.map((s:{action_id:string})=>s.action_id)));
+    for(const run of prepared)for(const step of run.run.steps){if(completeIds.has(step.action_id)){assert.equal(observed[step.action_id].recordId,run.record.contactId);if(step.connector==="email")assert.deepEqual(observed[step.action_id].body.to,[run.record.recipient]);}else assert(!observed[step.action_id]);}
+    waves.push({wave:wave+1,observedAtMs:Math.round(performance.now()-started),effects:Object.keys(observed).length,held});
+    if(wave<5)await wait(30000);
+   }
+   const windowMs=Math.round(performance.now()-started);assert(windowMs>=150000);assert.equal(samples.length,24);assert(faultIsolationObserved);
+   const final=await effects();assert.equal(Object.keys(final).length,52);
+   let replayed=0;
+   for(const run of prepared){
+    const id=(await db.query("SELECT workflow_id FROM ll_temporal_dispatch WHERE org_id=$1 AND plan_id=$2",[run.record.workspaceId,run.plan.id])).rows[0].workflow_id;
+    const handle:WorkflowHandle=temporal.client.workflow.getHandle(id);assert.equal(await handle.result(),"completed");await Worker.runReplayHistory({workflowsPath:resolve("runtime/temporal/pinned-workflow.ts")},await handle.fetchHistory());replayed++;
+   }
+   assert.deepEqual(await effects(),final);assert.deepEqual((await db.query("SELECT org_id,id,reserved,action_limit FROM ll_agents ORDER BY org_id,id")).rows,reservations);
+   for(const contactId of ["4105","4209"]){const run=prepared.find(r=>r.record.contactId===contactId)!;assert((await db.query("SELECT 1 FROM ll_connector_events WHERE action_id=$1 AND kind='uncertain'",[run.run.steps[0].action_id])).rows[0]);}
+   loadMeasurement={additionalRuns:24,independentRecords:24,sharedAgents:4,waves,windowMs,samples,effects:52,heldBeforeApproval:48,replayedHistories:replayed,workerFaultIsolation:true,lostResponseRecords:2,reservationsPreserved:true,duplicateSubmissions:24,duplicateApprovals:48};
+   pass("Six paced two-company waves complete 24 independently scoped workflows with shared agents, duplicate-safe submissions/approvals, isolated worker crash, lost-response readback and 52 exact effects; histories replay without changing reservations");
+  }
   const files=[...provisioningFiles,"scripts/tenant-isolation-proof.ts","scripts/temporal-service.ts","runtime/temporal/pinned-workflow.ts","runtime/temporal/version-contract.ts","scripts/build-temporal-worker.mjs","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
   const sourceFingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
-  await writeFile("docs/evidence/tenant-isolation-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,deniedBrowserRequests:deniedBrowser,deniedDatabaseRequests:deniedDatabase,runtimeGrantStatements:grantStatements,restrictedDatabaseLogin:true,databaseTenantRls:false,effects:4,taskQueues:2,workerProcesses:3,schedulerProcesses:2,crashedWorkers:1,replayedHistories:2},workflowIds,buildId:build.buildId,scope:"Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"},null,2)+"\n");
+  await writeFile(load?"docs/evidence/tenant-paced-operation-proof.json":"docs/evidence/tenant-isolation-proof.json",JSON.stringify({loadMeasurement,at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,deniedBrowserRequests:deniedBrowser,deniedDatabaseRequests:deniedDatabase,runtimeGrantStatements:grantStatements,restrictedDatabaseLogin:true,databaseTenantRls:false,effects:load?52:4,taskQueues:2,workerProcesses:load?4:3,schedulerProcesses:2,crashedWorkers:load?2:1,replayedHistories:load?26:2},workflowIds,buildId:build.buildId,scope:"Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"},null,2)+"\n");
  }finally{
   for(const child of children)if(child.exitCode===null&&!child.signalCode){child.kill("SIGTERM");await until(async()=>child.exitCode!==null||Boolean(child.signalCode),"packaged tenant role shutdown",25000);}
   await temporal?.teardown();await browser?.close();
