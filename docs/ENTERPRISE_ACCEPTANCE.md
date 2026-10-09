@@ -18,7 +18,7 @@ arbitrary agents, arbitrary graphs and connectors are outside this acceptance.
 | --- | --- | --- |
 | Approval and containment | Existing connector and managed-workflow tests; self-approval, stale source/policy, replay and revoked identity refusal | Repeat through the deployed invited UI using separate requester/reviewer accounts and the actual approved provider binding |
 | Crash recovery and scheduling | Actual worker containers, Temporal/PG/HTTP-twin proof; worker/scheduler/service/persistence SIGKILL, stable IDs and exclusive ownership | Same drills on the staging worker image, including crash after each real test-provider effect |
-| Version compatibility | Pinned old/new routing; persisted dev-service restart; compatible replay and incompatible rejection; exact four custom images retained and independently retrieved with matched checksums/build | Pin and verify third-party runtime image digests; promote/rollback drill with old pending runs; long-term artifact/namespace retention and drain policy |
+| Version compatibility | Pinned old/new routing; persisted dev-service restart; compatible replay and incompatible rejection; exact four custom images retained and independently retrieved with matched checksums/build; PostgreSQL/Temporal/schema dependencies pinned and independently retrieved | promote/rollback drill with old pending runs; long-term artifact/namespace retention and drain policy |
 | Database connectivity loss | Packaged roles become unready; replacement resumes 25 held histories; self-hosted Temporal PG crash and pre-effect snapshot restore do not duplicate effects; actual application archive restore fences resurrected authority and quarantines before read-back | Remote application database restore, managed database-service outage and replica failover drills; reconcile external effects; agree and measure disaster RPO/RTO |
 | Secure operations | Real self-hosted mTLS/JWT namespace authorization, reader write refusal, invalid/expired/tampered token and certificate rejection, signing-key rotation; workload revocation and content-bound artifacts | Repeat secure connectivity and rotation in remote hardened staging; production key lifecycle; least-privilege database/network access and independent security review |
 | Provider correctness | Private atomic source-version/idempotency/read-back twin contracts; saved plan/action destination binding refuses retargeting | Actual hosted/provider guarantees, including concurrent changes, duplicate request, lost response, outage and delivery semantics; hosted CRM atomic version gate remains blocked |
@@ -282,3 +282,17 @@ custom image IDs/build match; loaded validation images were removed. Their curre
 source fingerprints match and the earlier restore receipt is hash-preserved.
 This supplies tested custom artifacts; it does not accept dependency tags,
 application promotion/rollback, a persistent deployment or production operations.
+
+
+## Isolated runtime dependency identity and retrieval
+
+The candidate now freezes PostgreSQL, Temporal and the offline schema tool to
+reviewed Linux/AMD64 content references and expected image IDs. Actual container
+bindings and all six schema invocations are required in a fresh typed-trial
+receipt. `STAGING_RUNTIME_DEPENDENCIES.md` defines the measured acceptance scope.
+Actual corrected run `37881876443` passed runtime acceptance and all 429 tests;
+all 97 covered sources match. Separate fresh-runner retrieval `37883440083`
+passed with the same origin/artifact and all five retrieval sources matching.
+Public release checks remain required. Previous custom-artifact receipts are
+preserved and do not substitute for these new records.
+No production deployment or ownership cutover is part of this trial.

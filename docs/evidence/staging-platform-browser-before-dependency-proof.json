@@ -30,32 +30,6 @@
     "staleBootstrapRefused": true,
     "retainedEffects": 4
   },
-  "dependencyImages": {
-    "version": 1,
-    "platform": "linux/amd64",
-    "images": [
-      {
-        "role": "postgres",
-        "selectionTag": "postgres:16",
-        "reference": "postgres@sha256:75adc2a65806c96bc0e59030230bfe3f1c1b0d6d8f8181a8913e2b8b53bdc166",
-        "imageId": "sha256:275447c94b11b151decd1f29877965301d5a77032037c46de93d990f739f00a9"
-      },
-      {
-        "role": "temporal",
-        "selectionTag": "temporalio/server:1.31.0",
-        "reference": "temporalio/server@sha256:d7b3a2f56c599b317494b28e84099c02a096a94005fd20180b54d5ae5a8b3be1",
-        "imageId": "sha256:fce8c365ec85e41182bdafac2fc9d93ed72b9dda72db8cbd7d7192cb237f711f"
-      },
-      {
-        "role": "schema",
-        "selectionTag": "temporalio/admin-tools:1.31.0",
-        "reference": "temporalio/admin-tools@sha256:b396c1dff819b3653236f3acb65cfcde2bc032822c4202842236fd8a5d6d5898",
-        "imageId": "sha256:9a860057b10ec4a1e5b33a077c2b253205d4dbe6256d3627a40b83210991b501"
-      }
-    ],
-    "runtimeBindings": 3,
-    "schemaExecutions": 6
-  },
   "plannerAuthority": {
     "webOnly": true
   },
@@ -92,19 +66,19 @@
   "images": [
     {
       "role": "web",
-      "id": "sha256:c9de2bd70006f79a3829c9614e460edd79ee3bee37b326da738badf213510e22"
+      "id": "sha256:d8c5c97e4ac69acc45d6d7abafe30c45d5b2b13f15782a36a62d33143e158605"
     },
     {
       "role": "worker",
-      "id": "sha256:5153bb024c369d831308a64bbeda3b895938225c669bfed77760f9ad56260043"
+      "id": "sha256:6ffa4c1c380053bcf27f47eade2879a6be11a3b3d6a45f760849e7da290a9d08"
     },
     {
       "role": "twin",
-      "id": "sha256:39421830fc2e330f0080e0007338f5fc871988918ea5be0255b21eb18f1ece0b"
+      "id": "sha256:4297f7e6efac9aa9e245a9100b2513d6894e4dc87147a43ac52e13c113c7b843"
     },
     {
       "role": "provisioner",
-      "id": "sha256:31ea2821dca373cf47be2a3d2a8b459ec1984fb53eeede4cf67cf29220af5748"
+      "id": "sha256:9d0f9553d1238544ad3f5c6e6516416a2fc041861e9342fe0a813c39d4da585b"
     }
   ],
   "services": [
@@ -164,28 +138,28 @@
     "plannedBytes": 4697620480,
     "hostReserveBytes": 2147483648,
     "totalBytes": 8323969024,
-    "availableBytes": 7114821632
+    "availableBytes": 7015571456
   },
   "artifact": {
-    "manifestSha256": "9548186357fcd8abdd22787081b4a3bf429c4c4409e7a30ba86f9c17bdd043a7",
-    "archiveSha256": "9705782faa44836c6c8dd03b39e557c54716779f822ca207b25a4ca1029509ab",
-    "archiveBytes": 2399602688,
+    "manifestSha256": "a889c3af2859a52c0532df533eb4dc0ef749430f235b239c780188b92231788b",
+    "archiveSha256": "94f0afc3b160655649b724105a9c5d86757b96c3d7858b8f62a335896fe7e624",
+    "archiveBytes": 2399583744,
     "images": [
       {
         "role": "web",
-        "id": "sha256:c9de2bd70006f79a3829c9614e460edd79ee3bee37b326da738badf213510e22"
+        "id": "sha256:d8c5c97e4ac69acc45d6d7abafe30c45d5b2b13f15782a36a62d33143e158605"
       },
       {
         "role": "worker",
-        "id": "sha256:5153bb024c369d831308a64bbeda3b895938225c669bfed77760f9ad56260043"
+        "id": "sha256:6ffa4c1c380053bcf27f47eade2879a6be11a3b3d6a45f760849e7da290a9d08"
       },
       {
         "role": "twin",
-        "id": "sha256:39421830fc2e330f0080e0007338f5fc871988918ea5be0255b21eb18f1ece0b"
+        "id": "sha256:4297f7e6efac9aa9e245a9100b2513d6894e4dc87147a43ac52e13c113c7b843"
       },
       {
         "role": "provisioner",
-        "id": "sha256:31ea2821dca373cf47be2a3d2a8b459ec1984fb53eeede4cf67cf29220af5748"
+        "id": "sha256:9d0f9553d1238544ad3f5c6e6516416a2fc041861e9342fe0a813c39d4da585b"
       }
     ],
     "reloadedAfterRemoval": true,
@@ -211,8 +185,7 @@
     "components/control-plane/enquiry-execution.tsx": "01305c3088ea8e8393a7cd9796f063889429212890bcd0e9e70aeda037dfaa9c",
     "components/control-plane/enquiry-progress.tsx": "901fee30e82392ede3b59f52ea44979e08d6d05bb0c908ffe5c61bde38351079",
     "components/control-plane/enquiry-workspace.tsx": "34b24c121b49dc76450e7d993647455486c9291ea1c147b35b8b70bc687850e0",
-    "config/staging-runtime-images.json": "3e53fe690cfe0527084f654344e3e8092d02130d39c71574bbc76e398cf66b5f",
-    "docker-compose.temporal-platform.yml": "c485242fb8438a1c2cfc7eaa2c9fb98ae142f526db0288c2784756682270ccd4",
+    "docker-compose.temporal-platform.yml": "576c8701f6fbe3e88597c03cc8b25b169b0bd99c2cf8d89de09668a9df3db566",
     "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
     "lib/connectors/content.ts": "b37017e9f6dc0fc44b6f3d80f9e1b74afd4bf1352719bd5bf62e8d5e80719291",
     "lib/connectors/contracts.ts": "f1bf1c4431877f6beabb026e2df85fdf6e1feed5d21dd46ddbd7e8a3cc109394",
@@ -272,7 +245,7 @@
     "runtime/temporal/workflow.ts": "5ed74bf103edbae5d6345f258f77da6b6e6baf340ccec866d340065ffd607c14",
     "scripts/build-temporal-worker.mjs": "c7c96a323aedd51e0544e50e050301ff1efab1cdb00bfaac690b01d25d109510",
     "scripts/staging-browser-proof.mjs": "428e2ecdf26cc01d7c2d0940cce0cbf876a00455d96acb84bc8b50e8c814cf30",
-    "scripts/staging-browser-record.mjs": "955a318a4c9843916683894bf34773f48c3761f5be9ad43c7e417c0ff62480d2",
+    "scripts/staging-browser-record.mjs": "e9a797d602c6d02b0403402b0f45ba28c39bb8817b92462355028ae2410e32f7",
     "scripts/staging-browser-tls.mjs": "9b6e13b2dad7999e598989b3a5a53c2a30a6421b917c2abb68e9eb495cc35bb8",
     "scripts/staging-database-bootstrap.mjs": "76cfc8cc58c724efc46b8d37915fb7515976dc5f28af5065e3c0c956e924cb57",
     "scripts/staging-fixture-source.mjs": "76e404f688009c9b08322ab4d5a57dc057b5bf2221837c61945a4a5f19e76296",
@@ -283,19 +256,18 @@
     "scripts/staging-planner-attachment.mjs": "021115f6afad958f5b0c5e92074788efe864497b17f156f69994ff0e66f335b4",
     "scripts/staging-planner-inputs.mjs": "bb5f7b0e582e274336dd8c68fb9fbe52ffa3b72c8e4e28c3d4e8ffdb30868f4c",
     "scripts/staging-platform-controller.mjs": "242a7d354cebd473dfee9cda60d088e7b4401ad98bcfddb3e8afb7a6d3eeb588",
-    "scripts/staging-platform-proof.mjs": "04dab89b699c9b15ad0a3da6a533329d9bc28cd01908ecee06bfa067b8ae40c3",
+    "scripts/staging-platform-proof.mjs": "685cf005888670390841c7c630a0447c12cd052f170a2a100828d334cabb0523",
     "scripts/staging-restore-controller.mjs": "0ef5bae8e436c44bb87289d9041d7242dc9d14aeb00cba9b92344e4da57b8ad5",
-    "scripts/staging-runtime-images.mjs": "29891a47d7bf259b865d56ebfe5558681ed456716aeb8f638727b0064603c6d6",
     "scripts/staging-runtime-inputs.mjs": "9438eda08e7af7fcf7a0726379de42d1852982e8a1af16cd2d31217e10e2f9b6",
     "scripts/staging-temporal-config.mjs": "2aacddbd5688e033def992b088c2e51efb0e329e9c18d763a11ac7736ed5dd5c",
     "scripts/workspace-recovery.ts": "46ca583a30482edbb3345a2f2643e50b745d3f81be1a99c74076f52ac140d605"
   },
   "executionEvidence": {
-    "runId": 37881876443,
-    "privateWorkflowCommit": "a6ed5b8ffe594c5d6a3e8cba0a2d19355f6ba486",
-    "publicBaseCommit": "88374581ff5f177f6208b5c2294339cb20fd8702",
-    "exactCompressedOverlaySha256": "503243f4586eff77d2860c8416ae1a25df2b767e7f621a09281a2110166e715d",
-    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37881876443",
+    "runId": 37877500571,
+    "privateWorkflowCommit": "5eef23d39dc4fcdc96aa55eede4e971730cbf000",
+    "publicBaseCommit": "d344d1569d8883853af99c0fc6d636492641c693",
+    "exactCompressedOverlaySha256": "07966cdb25a839552e1505da9b85f0c4f80432057b41b44cb3f07a3ae0b2961d",
+    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37877500571",
     "actualProviderEffects": 4,
     "productionChanged": false,
     "scope": "disposable assembled runtime and real-model trusted HTTPS typed journey"
