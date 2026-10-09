@@ -169,3 +169,40 @@ The tests use native-shaped API fixtures, including hostile metadata and failure
 No signed native AWS client, real cloud-account scan, database snapshot persistence,
 connection/enrollment UI, MCP/A2A import or customer-side enforcement is wired yet.
 This is the shared collection foundation, not a working enterprise cloud pilot.
+
+## Signed read-only transport candidate
+
+`lib/workspace/cloud-aws-cli.ts` implements the existing inventory API through an
+administrator-owned absolute AWS CLI v2 executable. AWS performs request signing;
+LoopLabs does not implement a separate signer or accept browser-selected commands,
+profiles, executable paths or endpoints. Only `sts:GetCallerIdentity`,
+`bedrock-agentcore:ListAgentRuntimes` and `bedrock-agentcore:GetAgentRuntime` are
+called. Permissions must be provisioned for the explicit enrolled discovery scope;
+the transport does not assume roles or modify IAM. Existing planner credentials
+are not discovery credentials and must not be reused or broadened.
+
+The server-supplied session provider must return current temporary credentials
+with at least 30 seconds and at most one hour remaining. Credentials go only to
+the child process environment. No ambient AWS credentials/config/endpoint/proxy,
+credential-process or CLI history is inherited. Fixed JMESPath projections remove
+runtime environment values and descriptions before stdout; the collector then
+validates scope and retains allowlisted references. Each read has one attempt,
+bounded time/output and sanitized errors. Pagination stays in the existing
+collector using native input `nextToken`, with CLI auto-pagination disabled; do
+not substitute the CLI's aggregated `NextToken`/`--starting-token` semantics.
+
+Eight tests cover hostile inputs, temporary-session expiry/shape, exact read
+operations, isolated process environment, account mismatch, version collection,
+actual child execution, oversize/malformed output and missing executable refusal.
+Child fixtures prove the process boundary; they do not prove AWS signing or live
+cloud-account discovery. The inspected laptop CLI is `2.27.7` and does not contain
+`bedrock-agentcore-control`; no silent fallback or global upgrade was performed.
+A reviewed supporting AWS CLI v2 image/executable and scoped discovery session,
+then an actual account scan, remain acceptance requirements. No live account was
+queried by this increment. Durable inventory, enrollment UI, enterprise identity
+and action enforcement are still separate unfinished integration work.
+
+References for this transport:
+- https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/list-agent-runtimes.html
+- https://docs.aws.amazon.com/cli/latest/reference/bedrock-agentcore-control/get-agent-runtime.html
+- https://docs.aws.amazon.com/cli/latest/reference/sts/get-caller-identity.html
