@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { ControlError, type Actor } from "../durable/contracts";
 import { CloudInventoryStore } from "./cloud-inventory";
 import { cloudDiscoveryBinding } from "./cloud-binding";
-import { googleProjectDiscoveryBinding } from "./cloud-google-binding";
+import { cloudProjectDiscoveryBinding } from "./cloud-project-binding";
 import { collectProjectInventory, type ProjectDiscoveryScope, type ProjectInventoryApi } from "./cloud-project-discovery";
 import { collectAwsRuntimeInventory, type AwsRuntimeInventoryApi, type CloudDiscoveryScope } from "./cloud-discovery";
 function scanBudget(started: number, now: () => number) {
@@ -15,7 +15,7 @@ function scanBudget(started: number, now: () => number) {
   };
 }
 export class CloudDiscoveryOperations {
-  constructor(private readonly store: CloudInventoryStore, private readonly binding: (scope: CloudDiscoveryScope) => Promise<AwsRuntimeInventoryApi> = cloudDiscoveryBinding, private readonly now = Date.now, private readonly projectBinding: (scope: ProjectDiscoveryScope) => Promise<ProjectInventoryApi> = googleProjectDiscoveryBinding) {}
+  constructor(private readonly store: CloudInventoryStore, private readonly binding: (scope: CloudDiscoveryScope) => Promise<AwsRuntimeInventoryApi> = cloudDiscoveryBinding, private readonly now = Date.now, private readonly projectBinding: (scope: ProjectDiscoveryScope) => Promise<ProjectInventoryApi> = cloudProjectDiscoveryBinding) {}
   async connections(actor: Actor) {
     const data = await this.store.connections(actor);
     const connections = [];

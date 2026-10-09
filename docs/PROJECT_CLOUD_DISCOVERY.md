@@ -1,8 +1,8 @@
 # Azure and Google read-only discovery candidate
 
 The provider collectors in `lib/workspace/cloud-project-discovery.ts` are pure
-read-only collection logic. They are not yet connected to administrator bindings or native scans in the
-invited UI. Optional migration17 and the shared inventory store retain their
+read-only collection logic. Google manual scans have an explicit private session binding. The next Azure
+broker candidate connects reviewed CLI access to the same invited scan service. Optional migration17 and the shared inventory store retain their
 normalized evidence; a candidate UI saves scopes and reviews that evidence. They confer no execution authority.
 The existing AWS collector, migration16 and control engine remain unchanged.
 
@@ -57,8 +57,8 @@ traversal completeness means only that these bounded reads completed successfull
   captures and source/artifact hashes were reviewed. Project observations in
   that browser proof were normalized database fixtures, not native cloud reads.
   The credential-reader change passed fresh617-test,19-gateway,21-browser CI
-  run37972097445. The subsequent manual Google scan integration requires fresh
-  full regression and browser acceptance.
+  run37972097445. The manual Google scan integration passed fresh622-test,19-gateway,21-browser
+  CI run37975139796. Neither run used native cloud accounts.
 - Prove actual native reads with explicitly authorized project bindings. Fixture
   tests do not establish live cloud access, federation or enforcement.
 - Enroll accountable owners and workload attestation before joining a cloud agent
@@ -114,11 +114,12 @@ association for the exact directory, endpoint and Foundry audience before native
 access. A successful native GET verifies endpoint access; directory association
 comes from the supported broker, not an API-returned tenant or local JWT decoding.
 
-A supported Azure credential broker/file bridge has not been implemented, this
-adapter is not wired to workspace scans, and no native Azure account has been read.
-The provider selector must continue showing Azure native scanning unavailable.
-Six initial transport/response fixture tests passed; extraction into shared code
-requires fresh full regression, Google API and browser proof before acceptance.
+Shared HTTP/transport exact-tree CI run37977462568 passed629 tests,19 actual
+gateway checks and21 browser checks with source/artifact hashes verified. No native
+Azure account was read. The subsequent explicit CLI broker/file-binding candidate
+reuses the existing scan service; see `AZURE_DISCOVERY_BROKER.md`. It remains
+uncommitted pending fresh full regression and browser acceptance. Without its
+reviewed private binding, Azure scanning remains unavailable.
 
 Sources for pinned native version and fixed project GETs:
 [SDK version](https://azuresdkdocs.z19.web.core.windows.net/javascript/azure-ai-projects/2.7.1/enums/KnownApiVersions.html),

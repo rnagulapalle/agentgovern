@@ -13,10 +13,12 @@ it("does not present configured scopes as connected enforcement or ask for secre
 });
 
 import { ProjectDiscoveryWorkspace } from "./project-discovery-workspace";
-it("Azure and Google forms request only project scope and label unconnected scanning explicitly", () => {
+it("Azure and Google forms request only project scope and require reviewed bindings before scanning", () => {
   for (const provider of ["azure-foundry", "google-agent-engine"] as const) {
     const html = renderToStaticMarkup(<ProjectDiscoveryWorkspace provider={provider} />);
-    expect(html).toContain(provider === "azure-foundry" ? "Native scanning is not connected" : "Google scanning requires an administrator-reviewed server binding");
+    expect(html).toContain(provider === "azure-foundry" ? "Azure scanning requires an administrator-reviewed directory and server binding" : "Google scanning requires an administrator-reviewed server binding");
+    expect(html).toContain("Configured access is not a verified scan");
+    expect(html).not.toContain("Scan project inventory");
     expect(html).toContain("Enter no passwords, access keys or tokens");
     expect(html).not.toContain('type="password"'); expect(html).not.toContain("<pre");
     expect(html).toContain(provider === "azure-foundry" ? 'name="directoryId"' : 'name="projectNumber"');

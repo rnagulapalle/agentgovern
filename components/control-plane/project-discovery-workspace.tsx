@@ -48,7 +48,7 @@ export function ProjectDiscoveryWorkspace({ provider }: { provider: "azure-found
   }
   const saved = connections?.connections.filter(c => c.scope.provider === provider);
   return <>
-    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> {azure ? "Azure Foundry" : "Google Agent Engine"} inventory</h2><p>Save the project scope reviewed by your administrator and inspect saved observations. {azure ? "Native scanning is not connected to this workspace yet." : "Google scanning requires an administrator-reviewed server binding. Configured access is not a verified scan."}</p><p>Saving a scope does not contact the cloud, import agents or grant execution permission. Enter no passwords, access keys or tokens.</p></section>
+    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> {azure ? "Azure Foundry" : "Google Agent Engine"} inventory</h2><p>Save the project scope reviewed by your administrator and inspect saved observations. {azure ? "Azure scanning requires an administrator-reviewed directory and server binding. Configured access is not a verified scan." : "Google scanning requires an administrator-reviewed server binding. Configured access is not a verified scan."}</p><p>Saving a scope does not contact the cloud, import agents or grant execution permission. Enter no passwords, access keys or tokens.</p></section>
     {error && <p role="alert" className="cp-durable-message is-error">{error}</p>}
     {notice && <p role="status" className="cp-durable-message">{notice}</p>}
     <section className="cp-panel cp-durable-card"><h2>Save a project scope</h2>
