@@ -18,7 +18,7 @@ arbitrary agents, arbitrary graphs and connectors are outside this acceptance.
 | --- | --- | --- |
 | Approval and containment | Existing connector and managed-workflow tests; self-approval, stale source/policy, replay and revoked identity refusal | Repeat through the deployed invited UI using separate requester/reviewer accounts and the actual approved provider binding |
 | Crash recovery and scheduling | Actual worker containers, Temporal/PG/HTTP-twin proof; worker/scheduler/service/persistence SIGKILL, stable IDs and exclusive ownership | Same drills on the staging worker image, including crash after each real test-provider effect |
-| Version compatibility | Pinned old/new routing; persisted dev-service restart; compatible replay and incompatible rejection; exact four custom images retained and independently retrieved with matched checksums/build; PostgreSQL/Temporal/schema dependencies pinned and independently retrieved | promote/rollback drill with old pending runs; long-term artifact/namespace retention and drain policy |
+| Version compatibility | Pinned old/new routing; persisted dev-service restart; compatible replay and incompatible rejection; retained same-worker-build A→B→A application package transitions preserve held authority and the actual signed-in 390px UI; exact custom/dependency image identities verified | Semantic worker-version upgrade with old pending histories; persistent operator promotion/reversion; long-term artifact/namespace retention and drain policy |
 | Database connectivity loss | Packaged roles become unready; replacement resumes 25 held histories; self-hosted Temporal PG crash and pre-effect snapshot restore do not duplicate effects; actual application archive restore fences resurrected authority and quarantines before read-back | Remote application database restore, managed database-service outage and replica failover drills; reconcile external effects; agree and measure disaster RPO/RTO |
 | Secure operations | Real self-hosted mTLS/JWT namespace authorization, reader write refusal, invalid/expired/tampered token and certificate rejection, signing-key rotation; workload revocation and content-bound artifacts | Repeat secure connectivity and rotation in remote hardened staging; production key lifecycle; least-privilege database/network access and independent security review |
 | Provider correctness | Private atomic source-version/idempotency/read-back twin contracts; saved plan/action destination binding refuses retargeting | Actual hosted/provider guarantees, including concurrent changes, duplicate request, lost response, outage and delivery semantics; hosted CRM atomic version gate remains blocked |
@@ -296,3 +296,20 @@ passed with the same origin/artifact and all five retrieval sources matching.
 Public release checks remain required. Previous custom-artifact receipts are
 preserved and do not substitute for these new records.
 No production deployment or ownership cutover is part of this trial.
+
+## Pending-work package transition acceptance
+
+Actual private run `37893973887` passed same-worker-build retained A→B→A package
+transitions, the complete existing typed HTTPS/runtime/restore acceptance and the
+following full regression gate. Five infrastructure roles retained their exact
+containers/configuration while the three application roles were replaced. Pending
+authority and action hashes survived; the same named 390px browser session reopened
+the held run three times without self-approval or overflow. Provider effects remained
+zero during switching and exactly four after the complete trial. All 104 covered
+sources match the retained receipt. See
+[STAGING_PENDING_PACKAGE_TRANSITIONS.md](STAGING_PENDING_PACKAGE_TRANSITIONS.md).
+
+This closes a disposable same-build application release/reversion gap. Semantic
+worker-version upgrades, persistent operator acceptance, retention/drain, sustained
+service objectives, live providers, enterprise security and production cutover
+remain open. Prior refused trials are preserved, not counted as acceptance.
