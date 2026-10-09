@@ -24,7 +24,12 @@ isolation from a compromised host or container runtime.
 
 Set `LOOPLABS_STAGING_PRIVATE_DIR`, `LOOPLABS_STAGING_WEB_PORT` and the reviewed
 `LOOPLABS_STAGING_WEB_IMAGE`, `LOOPLABS_STAGING_WORKER_IMAGE` and
-`LOOPLABS_STAGING_TWIN_IMAGE`. A tag alone is not artifact attestation: retain image
+`LOOPLABS_STAGING_TWIN_IMAGE`. The Linux/AMD64 dependency increment also requires
+`LOOPLABS_STAGING_POSTGRES_IMAGE` and `LOOPLABS_STAGING_TEMPORAL_IMAGE` from the
+reviewed content references in `config/staging-runtime-images.json`; the complete
+trial supplies these through the strict lock verifier. See
+[STAGING_RUNTIME_DEPENDENCIES.md](STAGING_RUNTIME_DEPENDENCIES.md) for validation
+status, offline schema identity and separate retrieval requirements. A tag alone is not artifact attestation: retain image
 digests and verify the worker's content-bound manifest and matching record build pin.
 Render `docker compose -p <dedicated-project> -f docker-compose.temporal-platform.yml
 config` privately: resolved environment output may contain credentials.
@@ -550,3 +555,16 @@ The opt-in private retention path now passed full runtime and quality in run
 images are retained after checksum verification; runtime credentials, volumes and
 state are never exported. Third-party image digest pinning, promotion/rollback and
 persistent operational acceptance remain separate open gates.
+
+
+## Reviewed runtime dependency identities
+
+Actual corrected run `37881876443` passed complete typed/runtime/restore acceptance
+and all 429 tests with reviewed Linux/AMD64 PostgreSQL, Temporal server and schema
+tool references. Three actual container IDs and six schema invocations match the
+lock. All 97 covered source hashes match. The first candidate result is retained
+privately and cannot substitute for its later verifier correction. Separate
+fresh-runner retrieval `37883440083` passed for that exact artifact and reviewed
+dependencies, with all five verifier/configuration sources matching. Normal public
+release gates remain pending; see `STAGING_RUNTIME_DEPENDENCIES.md`. Production
+is unchanged.

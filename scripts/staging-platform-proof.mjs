@@ -15,6 +15,7 @@ import {stagingBrowserProof} from "./staging-browser-proof.mjs";
 import {browserOrigin} from "./staging-browser-tls.mjs";
 import {ownedBuilder} from "./staging-owned-builder.mjs";
 import {exportTestedImages,reloadAfterTrialRemoval} from "./staging-image-artifact.mjs";
+import {runtimeImageLock,dependencyEnvironment,retrieveRuntimeImages,verifyRuntimeImage,assertRuntimeBindings} from "./staging-runtime-images.mjs";
 const docker=(...args)=>execFileSync("docker",args,{encoding:"utf8",timeout:600000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const backend=process.env.FETCHSANDBOX_BACKEND_PATH;
@@ -29,21 +30,24 @@ assert(typedOptIn===undefined||typedOptIn==="isolated","Invalid typed planner op
 const typedPlanning=typedOptIn==="isolated";
 assert(!typedPlanning||(browserEnabled&&process.env.LOOPLABS_STAGING_PLANNER_INPUT),"Typed planning requires HTTPS browser and explicit temporary model input");
 if(browserEnabled)assert(process.env.GITHUB_ACTIONS==="true","Fresh isolated CI required for browser trust setup");
-assert(process.platform==="linux","Run on a fresh allocated Linux runner; do not resize shared workloads");
+assert(process.platform==="linux"&&process.arch==="x64","Run on a fresh allocated Linux/AMD64 runner; do not resize shared workloads");
+const dependencyLock=runtimeImageLock(JSON.parse(await readFile("config/staging-runtime-images.json","utf8")));
 const source=JSON.parse(await readFile(resolve(backend,"../fixture-source-manifest.json"),"utf8"));
 assert.equal(source.version,1);assert(/^[a-f0-9]{40}$/.test(source.commit));
 const parent=await mkdtemp(resolve(tmpdir(),"ll-platform-")),privateDir=resolve(parent,"runtime"),trial=resolve(parent,"trial"),seed=resolve(parent,"seed"),application=resolve(parent,"application");
 const project=`ll-platform-${randomBytes(6).toString("hex")}`,images={web:`${project}:web`,worker:`${project}:worker`,twin:`${project}:twin`,provisioner:`${project}:provisioner`};
-const env={...process.env,LOOPLABS_STAGING_PRIVATE_DIR:privateDir,LOOPLABS_STAGING_WEB_PORT:"3199",LOOPLABS_STAGING_WEB_IMAGE:images.web,LOOPLABS_STAGING_WORKER_IMAGE:images.worker,LOOPLABS_STAGING_TWIN_IMAGE:images.twin};
+const env={...process.env,...dependencyEnvironment(dependencyLock),LOOPLABS_STAGING_PRIVATE_DIR:privateDir,LOOPLABS_STAGING_WEB_PORT:"3199",LOOPLABS_STAGING_WEB_IMAGE:images.web,LOOPLABS_STAGING_WORKER_IMAGE:images.worker,LOOPLABS_STAGING_TWIN_IMAGE:images.twin};
 const compose=(...args)=>execFileSync("docker",["compose","-p",project,"-f","docker-compose.temporal-platform.yml",...args],{env,encoding:"utf8",timeout:180000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
 const imageBuilder=ownedBuilder(docker,`${project}-build`);
-const uid=`${process.getuid()}:${process.getgid()}`,owned=[],built=[];let stage="prepare",controller,controllerExit=null,outcome,retainedArtifact;
+const uid=`${process.getuid()}:${process.getgid()}`,owned=[],built=[];let stage="prepare",controller,controllerExit=null,outcome,retainedArtifact,dependencyImages;
+let schemaExecutions=0;
 async function until(fn,label,seconds=120){for(const end=Date.now()+seconds*1000;Date.now()<end;){if(await fn())return;await wait(500);}throw Error(label);}
 const container=service=>compose("ps","-aq",service);
 const ready=async services=>until(()=>services.every(s=>{const id=container(s);return id&&docker("inspect","--format","{{.State.Health.Status}}",id)==="healthy";}),"Runtime health unavailable",180);
 function runController(name,network,image,args,mounts,files=[]){owned.push(name);return docker("run","--rm","--name",name,"--network",network,"--user",uid,"--memory","512m","--cpus","0.5","--pids-limit","256","--read-only","--tmpfs","/tmp","--cap-drop","ALL","--security-opt","no-new-privileges",...files.flatMap(path=>["--env-file",path]),...mounts.flatMap(m=>["--mount",m]),image,...args);}
 try{
- await generateTemporalConfiguration(privateDir,`looplabs-staging-${randomBytes(5).toString("hex")}`);
+ stage="dependency-retrieval";dependencyImages=retrieveRuntimeImages(dependencyLock,docker);
+ stage="prepare";await generateTemporalConfiguration(privateDir,`looplabs-staging-${randomBytes(5).toString("hex")}`);
  for(const path of [trial,seed,application])await mkdir(path,{mode:0o700});
  const recoveryEpoch=randomUUID(),password=randomBytes(32).toString("base64url"),token=randomBytes(32).toString("base64url");
  await writeFile(resolve(privateDir,"application-db.env"),`POSTGRES_USER=ll_stage_owner\nPOSTGRES_PASSWORD=${password}\nPOSTGRES_DB=looplabs_staging\n`,{mode:0o600});
@@ -76,8 +80,8 @@ try{
  for(const role of ["web","worker"])await cp(resolve(roleInputs,`${role}.env`),resolve(privateDir,`${role}.env`));
  stage="temporal-schemas";
  for(const [name,kind] of [["temporal","temporal"],["temporal_visibility","visibility"]]){
-  const args=["run","--rm","--network",`${project}_orchestration`,"--memory","256m","--env-file",resolve(privateDir,"offline/schema.env"),"--entrypoint","temporal-sql-tool","temporalio/admin-tools:1.31.0","--plugin","postgres12","--ep","temporal-db","-u","temporal","-p","5432","--db",name];
-  docker(...args,"create");docker(...args,"setup-schema","-v","0.0");docker(...args,"update-schema","-d",`/etc/temporal/schema/postgresql/v12/${kind}/versioned`);
+  const args=["run","--rm","--network",`${project}_orchestration`,"--memory","256m","--env-file",resolve(privateDir,"offline/schema.env"),"--entrypoint","temporal-sql-tool",dependencyLock.images[2].reference,"--plugin","postgres12","--ep","temporal-db","-u","temporal","-p","5432","--db",name];
+  for(const command of [["create"],["setup-schema","-v","0.0"],["update-schema","-d",`/etc/temporal/schema/postgresql/v12/${kind}/versioned`]]){verifyRuntimeImage(dependencyLock,dependencyLock.images[2],docker);docker(...args,...command);schemaExecutions++;}
  }
  stage="provider-seed";compose("create","connector-twin");
  const seedCode="from pathlib import Path; import os,shutil; d=Path('/state'); os.chown(d,1000,1000); os.chmod(d,0o700); [(shutil.copyfile(f,d/f.name),os.chown(d/f.name,1000,1000),os.chmod(d/f.name,0o600)) for f in Path('/seed').glob('*.json')]";
@@ -91,6 +95,8 @@ try{
  stage="eight-service-start";compose("up","-d");await ready(["web","temporal-worker","temporal-scheduler","connector-twin"]);
  const inspection=JSON.parse(docker("inspect",...Object.keys(roles).map(container)));
  assert.equal(inspection.length,8);
+ assert.equal(schemaExecutions,6);
+ dependencyImages={...dependencyImages,...assertRuntimeBindings(dependencyLock,Object.fromEntries(["application-db","temporal-db","temporal"].map(role=>[role,inspection.find(c=>c.Id===container(role)).Image]))),schemaExecutions};
  if(typedPlanning){for(const c of inspection){const cloud=(c.Config.Env||[]).filter(v=>v.startsWith("AWS_")||v.startsWith("LOOPLABS_CHAT_MODEL="));if(c.Name.endsWith("-web-1")){assert.equal(cloud.length,5);assert(cloud.some(v=>v==="LOOPLABS_CHAT_MODEL=us.amazon.nova-lite-v1:0"));}else assert.equal(cloud.length,0,"Non-web roles must not receive cloud credentials");}}
  for(const role of ["web","temporal-worker","temporal-scheduler"]){const c=inspection.find(c=>c.Id===container(role));assert((c.Config.Env||[]).includes(`LOOPLABS_RECOVERY_EPOCH=${recoveryEpoch}`),"All three runtime roles require the enrolled external recovery epoch");}
  for(const c of inspection){assert(c.HostConfig.Memory>0&&c.HostConfig.PidsLimit>0);if(!c.Name.endsWith("-web-1"))assert.equal(Object.keys(c.HostConfig.PortBindings||{}).length,0);}
@@ -162,7 +168,7 @@ try{
  assert.deepEqual(JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json")).effects,retainedProvider.effects);
  const restoreContainment={approvedArchive:true,externalEpochRotated:true,runtimeRoles:3,omittedEpochRefused:true,revivedSessionsRefused:true,restoredApprovalRefused:true,packagedWorkerRefused:true,packagedSchedulerRefused:true,quarantineRevokesAuthority:true,quarantineReplay:true,staleBootstrapRefused:true,retainedEffects:expectedEffects};
  if(artifactDirectory){stage="tested-image-export";retainedArtifact=await exportTestedImages({directory:artifactDirectory,images,buildId:build.buildId,docker});}
- outcome={...result,restoreContainment,...(typedPlanning?{plannerAuthority:{webOnly:true},actualProviderEffects:4}:{}),...(browser?{browser,scope:typedPlanning?"assembled isolated API/runtime and fresh typed HTTPS browser trial":"assembled isolated API/runtime and prepared-plan HTTPS browser trial",notVerified:[...(typedPlanning?[]:["fresh typed chat/model interpretation"]),...result.notVerified.filter(x=>x!=="browser HTTPS and typed chat UX")]}:{}),buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission};
+ outcome={...result,restoreContainment,dependencyImages,...(typedPlanning?{plannerAuthority:{webOnly:true},actualProviderEffects:4}:{}),...(browser?{browser,scope:typedPlanning?"assembled isolated API/runtime and fresh typed HTTPS browser trial":"assembled isolated API/runtime and prepared-plan HTTPS browser trial",notVerified:[...(typedPlanning?[]:["fresh typed chat/model interpretation"]),...result.notVerified.filter(x=>x!=="browser HTTPS and typed chat UX")]}:{}),buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission};
 }catch{
  let detail="";
  try {const report=JSON.parse(await readFile(resolve(trial,"failure.json"),"utf8"));detail=safeTrialFailure(report);}catch{}

@@ -3,10 +3,14 @@ import {readFile,writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {runtimeImageLock} from "./staging-runtime-images.mjs";
+const expectedDependencies=runtimeImageLock(JSON.parse(readFileSync(new URL("../config/staging-runtime-images.json",import.meta.url),"utf8")));
 export function typedReceipt(result,metadata,fingerprints){
  assert(result?.passed===true&&result.browser?.passed===true);
  assert.equal(result.scope,"assembled isolated API/runtime and fresh typed HTTPS browser trial");
  assert.deepEqual(result.browser.planning,{typedRequest:true,clarified:true,model:"us.amazon.nova-lite-v1:0",savedBeforeSubmission:true});
+ assert.deepEqual(result.dependencyImages,{...expectedDependencies,runtimeBindings:3,schemaExecutions:6});
  assert.deepEqual(result.plannerAuthority,{webOnly:true});assert.equal(result.actualProviderEffects,4);
  assert.deepEqual(result.restoreContainment,{approvedArchive:true,externalEpochRotated:true,runtimeRoles:3,omittedEpochRefused:true,revivedSessionsRefused:true,restoredApprovalRefused:true,packagedWorkerRefused:true,packagedSchedulerRefused:true,quarantineRevokesAuthority:true,quarantineReplay:true,staleBootstrapRefused:true,retainedEffects:4});
  assert(result.browser.checks.includes("real typed request and missing-recipient clarification save an exact scoped plan without execution authority"));
@@ -42,7 +46,7 @@ export function typedReceipt(result,metadata,fingerprints){
   assert(Number.isSafeInteger(a.archiveBytes)&&a.archiveBytes>0&&a.archiveBytes<=8*1024**3);
   assert.equal(a.reloadedAfterRemoval,true);assert.equal(a.workerBuildVerified,true);assert.deepEqual(a.images,result.images);
  }
- const keys=["passed","scope","checks","notVerified","plannerAuthority","actualProviderEffects","browser","buildId","sourceCommit","images","services","admission","restoreContainment",...(result.artifact?["artifact"]:[])];
+ const keys=["passed","scope","checks","notVerified","plannerAuthority","actualProviderEffects","browser","buildId","sourceCommit","images","services","admission","restoreContainment","dependencyImages",...(result.artifact?["artifact"]:[])];
  assert.equal(Object.keys(result).sort().join(),keys.sort().join());
  return {...result,sourceFingerprints:fingerprints,executionEvidence:{...metadata,runUrl:`https://github.com/rnagulapalle/sandbox/actions/runs/${metadata.runId}`,actualProviderEffects:4,productionChanged:false,scope:"disposable assembled runtime and real-model trusted HTTPS typed journey"}};
 }
@@ -51,7 +55,7 @@ if(process.argv[1]===fileURLToPath(import.meta.url)){
  assert(input&&output&&process.argv.length===4&&process.env.GITHUB_ACTIONS==="true"&&process.env.LOOPLABS_STAGING_BROWSER_PROOF==="isolated","Actual isolated CI result and explicit receipt path required");
  try{
   const prior=JSON.parse(await readFile("docs/evidence/staging-platform-browser-prepared-proof.json","utf8"));
-  const files=[...new Set([...Object.keys(prior.sourceFingerprints),"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs","scripts/workspace-recovery.ts","scripts/staging-restore-controller.mjs","scripts/staging-image-artifact.mjs"])].sort();
+  const files=[...new Set([...Object.keys(prior.sourceFingerprints),"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs","scripts/workspace-recovery.ts","scripts/staging-restore-controller.mjs","scripts/staging-image-artifact.mjs","scripts/staging-runtime-images.mjs","config/staging-runtime-images.json"])].sort();
   const fingerprints=Object.fromEntries(await Promise.all(files.map(async file=>[file,createHash("sha256").update(await readFile(file)).digest("hex")])));
   const result=typedReceipt(JSON.parse(await readFile(input,"utf8")),{runId:Number(process.env.GITHUB_RUN_ID),privateWorkflowCommit:process.env.GITHUB_SHA,publicBaseCommit:process.env.LOOPLABS_SOURCE_BASE,exactCompressedOverlaySha256:process.env.LOOPLABS_SOURCE_OVERLAY_SHA256},fingerprints);
   await writeFile(output,JSON.stringify(result,null,2)+"\n");console.log(JSON.stringify({recorded:true,runId:result.executionEvidence.runId,sources:files.length,scope:result.scope}));

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "platform": "linux/amd64",
+  "images": [
+    {"role":"postgres","selectionTag":"postgres:16","reference":"postgres@sha256:75adc2a65806c96bc0e59030230bfe3f1c1b0d6d8f8181a8913e2b8b53bdc166","imageId":"sha256:275447c94b11b151decd1f29877965301d5a77032037c46de93d990f739f00a9"},
+    {"role":"temporal","selectionTag":"temporalio/server:1.31.0","reference":"temporalio/server@sha256:d7b3a2f56c599b317494b28e84099c02a096a94005fd20180b54d5ae5a8b3be1","imageId":"sha256:fce8c365ec85e41182bdafac2fc9d93ed72b9dda72db8cbd7d7192cb237f711f"},
+    {"role":"schema","selectionTag":"temporalio/admin-tools:1.31.0","reference":"temporalio/admin-tools@sha256:b396c1dff819b3653236f3acb65cfcde2bc032822c4202842236fd8a5d6d5898","imageId":"sha256:9a860057b10ec4a1e5b33a077c2b253205d4dbe6256d3627a40b83210991b501"}
+  ]
+}

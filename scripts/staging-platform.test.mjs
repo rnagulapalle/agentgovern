@@ -12,7 +12,7 @@ describe("isolated staging platform",()=>{
   const dir=await mkdtemp(join(tmpdir(),"ll-stage-config-"));
   try{
    for(const f of ["web.env","worker.env","application-db.env","temporal-db.env"])await writeFile(join(dir,f),"");
-   const env={...process.env,LOOPLABS_STAGING_PRIVATE_DIR:dir,LOOPLABS_STAGING_WEB_IMAGE:"looplabs-web:config-test",LOOPLABS_STAGING_WORKER_IMAGE:"looplabs-worker:config-test",LOOPLABS_STAGING_TWIN_IMAGE:"looplabs-twin:config-test",LOOPLABS_STAGING_WEB_PORT:"13007"};
+   const env={...process.env,LOOPLABS_STAGING_PRIVATE_DIR:dir,LOOPLABS_STAGING_WEB_IMAGE:"looplabs-web:config-test",LOOPLABS_STAGING_WORKER_IMAGE:"looplabs-worker:config-test",LOOPLABS_STAGING_TWIN_IMAGE:"looplabs-twin:config-test",LOOPLABS_STAGING_WEB_PORT:"13007",LOOPLABS_STAGING_POSTGRES_IMAGE:"postgres@sha256:"+"1".repeat(64),LOOPLABS_STAGING_TEMPORAL_IMAGE:"temporalio/server@sha256:"+"2".repeat(64)};
    const c=JSON.parse(execFileSync("docker",["compose","-p","ll-isolated-config-test","-f","docker-compose.temporal-platform.yml","config","--format","json"],{env,encoding:"utf8",timeout:15000,stdio:["ignore","pipe","pipe"]}));
    expect(Object.keys(c.services)).toHaveLength(8);
    for(const [name,s] of Object.entries(c.services)){
@@ -23,6 +23,9 @@ describe("isolated staging platform",()=>{
     if(!name.endsWith("-db"))expect(s.read_only).toBe(true);
     for(const mount of s.volumes||[])expect(mount.source).not.toContain("docker.sock");
    }
+   for(const role of ["application-db","temporal-db"]){expect(c.services[role].image).toBe(env.LOOPLABS_STAGING_POSTGRES_IMAGE);expect(c.services[role].platform).toBe("linux/amd64");}
+   expect(c.services.temporal.image).toBe(env.LOOPLABS_STAGING_TEMPORAL_IMAGE);expect(c.services.temporal.platform).toBe("linux/amd64");
+   for(const key of ["LOOPLABS_STAGING_POSTGRES_IMAGE","LOOPLABS_STAGING_TEMPORAL_IMAGE"]){const missing={...env};delete missing[key];expect(()=>execFileSync("docker",["compose","-f","docker-compose.temporal-platform.yml","config"],{env:missing,timeout:15000,stdio:"pipe"})).toThrow(new RegExp(key));}
    expect(c.services.web.ports[0].host_ip).toBe("127.0.0.1");
    expect(c.services.web.env_file).toBeUndefined(); // Compose resolved inputs, not a production env-file shortcut.
    expect(c.networks.application.internal).toBe(true);expect(c.networks.orchestration.internal).toBe(true);

@@ -1,6 +1,7 @@
 # Tested staging image retention
 
-Custom image retention and independent retrieval passed isolated acceptance.
+Custom image retention, reviewed runtime dependencies and independent retrieval
+passed isolated acceptance.
 Public review and operational acceptance remain separate. Production is unchanged.
 The prior complete trial removed all four images after recording their IDs; those
 IDs alone could not supply a future deployment with the exact tested content.
@@ -59,7 +60,7 @@ browser journey, restore containment and unchanged full quality gate (421 tests)
 Its four-image archive is 2,399,583,744 bytes; private GitHub artifact
 `11593736628` was uploaded after those gates. All 95 runtime-source fingerprints
 matched the candidate before the actual receipt was imported into
-`docs/evidence/staging-platform-browser-proof.json`.
+`docs/evidence/staging-platform-browser-before-dependency-proof.json`.
 
 Independent run `37879011443` used a separate fresh runner with read-only
 contents/actions permission and no model input. It refused incompatible provenance,
@@ -67,7 +68,7 @@ downloaded the exact retained artifact, verified the externally supplied manifes
 digest and archive bytes, cold-loaded all four identical image IDs, checked the
 same worker build and removed the validation images. No rebuild or application
 service start occurred. Both retrieval-code hashes matched the candidate before
-importing `docs/evidence/staging-artifact-retrieval-proof.json`. Its test binds the
+importing `docs/evidence/staging-artifact-retrieval-before-dependency-proof.json`. Its test binds the
 retrieval to the originating runtime artifact and current code.
 
 Local full quality passed 425 tests and 52 rendered internal destinations after
@@ -95,9 +96,12 @@ Historical prepared and typed-before-restore records remain unchanged.
 
 ## Open acceptance
 
-This proves retention/retrieval of the four custom images only. PostgreSQL `16`
-and Temporal `1.31.0` service tags still need content-digest pinning and verified
-retrieval. Promotion/rollback with pending runs, longer retention, persistent
-hosting, sustained load and operator/security/provider acceptance remain open.
+The dependency increment now also pins and verifies PostgreSQL, Temporal and
+the offline schema tool: corrected trial `37881876443` passed runtime and all 429
+tests with 97 matched sources; independent retrieval `37883440083` verified its
+exact artifact `11594324205`, custom image IDs/build and reviewed dependency IDs.
+All five retrieval sources match. New receipts are in the current evidence files;
+prior records remain hash-preserved. See `STAGING_RUNTIME_DEPENDENCIES.md`.
+Promotion/rollback with pending runs, longer retention, persistent hosting, sustained load and operator/security/provider acceptance remain open.
 No enterprise production, SLA, arbitrary workflow or Temporal-superiority claim
 is supported. See `ENTERPRISE_ACCEPTANCE.md` for the remaining release boundary.

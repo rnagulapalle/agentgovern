@@ -31,7 +31,8 @@ services:
 
   application-db:
     <<: *hardening
-    image: postgres:16
+    image: ${LOOPLABS_STAGING_POSTGRES_IMAGE:?Provide the reviewed PostgreSQL digest}
+    platform: linux/amd64
     env_file: ["${LOOPLABS_STAGING_PRIVATE_DIR}/application-db.env"]
     mem_limit: 512m
     cpus: 0.5
@@ -47,7 +48,8 @@ services:
 
   temporal-db:
     <<: *hardening
-    image: postgres:16
+    image: ${LOOPLABS_STAGING_POSTGRES_IMAGE:?Provide the reviewed PostgreSQL digest}
+    platform: linux/amd64
     env_file: ["${LOOPLABS_STAGING_PRIVATE_DIR}/temporal-db.env"]
     mem_limit: 512m
     cpus: 0.5
@@ -62,7 +64,8 @@ services:
 
   temporal:
     <<: *hardening
-    image: temporalio/server:1.31.0
+    image: ${LOOPLABS_STAGING_TEMPORAL_IMAGE:?Provide the reviewed Temporal digest}
+    platform: linux/amd64
     entrypoint: [temporal-server, --config-file, /run/staging/server.yaml, start]
     environment:
       TEMPORAL_SERVICES: frontend,matching,history,worker,internal-frontend
