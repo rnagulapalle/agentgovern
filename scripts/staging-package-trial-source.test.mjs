@@ -1,0 +1,20 @@
+import {test,expect} from "vitest";
+import {readFileSync} from "node:fs";
+import {spawnSync} from "node:child_process";
+import {retainedPackageTrial} from "./staging-package-trial-source.mjs";
+const parent=readFileSync("scripts/staging-platform-proof.mjs","utf8");
+test("retained trial preserves existing runtime/typed/TLS/restore gates, adds two pending transitions, and removes building",()=>{
+ const source=retainedPackageTrial(parent);
+ for(const required of ['stage="host-admission"','stage="runtime-crash"','stage="approved-archive"','stage="archive-restore-containment"','stage="restored-packaged-role-refusal"','stage="restored-omitted-epoch-refusal"','quarantine();quarantine();','await stagingBrowserProof(trial,{typedPlanning})','assert.equal(Object.keys(provider.effects).length,4)','assert.equal(schemaExecutions,6)','await assertPending();','[[0,1],[1,0]]','Every loaded release image must be removed'])expect(source).toContain(required);
+ expect(source).not.toContain('imageBuilder.start()');expect(source).not.toContain('imageBuilder.build(');
+ const checked=spawnSync(process.execPath,["--check","--input-type=module"],{input:source,encoding:"utf8",timeout:10000});expect(checked.status).toBe(0);
+});
+test("changed, missing or duplicated parent anchors refuse instrumentation",()=>{
+ for(const anchor of ['const docker=(...args)=>','let schemaExecutions=0;',' stage="images";imageBuilder.start();',' imageBuilder.close();\n const build=',' await checkpoint("held.json");',' outcome={...result,restoreContainment,dependencyImages,','if(outcome&&!process.exitCode){']){
+  expect(()=>retainedPackageTrial(parent.replace(anchor,"changed"))).toThrow();expect(()=>retainedPackageTrial(parent+"\n"+anchor)).toThrow();
+ }
+ expect(()=>retainedPackageTrial(null)).toThrow();
+});
+test("actual drill refuses ordinary local invocation without Docker or exposing inputs",()=>{
+ const child=spawnSync(process.execPath,["scripts/staging-package-proof.mjs"],{env:{PATH:process.env.PATH},encoding:"utf8",timeout:10000});expect(child.status).toBe(1);expect(child.stdout).toBe("");expect(child.stderr.trim()).toBe("Retained package drill refused; no raw runtime output, payload or credentials printed.");
+});
