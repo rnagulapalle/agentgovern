@@ -21,6 +21,8 @@ try{
   const stage=/Complete isolated platform trial failed at ([a-z-]+)/.exec(run.stderr||"")?.[1];
   const release=/Package release input refused at (directories|retained-receipts|source-fingerprints|image-inventory|package-load-[01])( with storage exhaustion)?;/.exec(run.stderr||"");
   if(release)console.error(`Retained loader checkpoint ${release[1]}${release[2]||""} failed; no raw output printed.`);
+  const transition=/Package transition refused at (inputs|target-images|target-build|current-containers|pending-before-stop|writer-stop|stopped-writers|pending-after-stop|replacement-start|replacement-readiness|replacement-identity|application-configuration|application-env|application-user|application-command|application-entrypoint|application-healthcheck|application-mounts|application-host|retained-infrastructure|pending-after-replacement|containment-stop|containment-verification);/.exec(run.stderr||"");
+  if(transition)console.error(`Retained transition checkpoint ${transition[1]} failed; no raw output printed.`);
   throw Error(stage?`Runtime checkpoint ${stage} failed`:"Runtime trial did not complete");
  }
  const result=JSON.parse(run.stdout.trim()),{packageTransitions,packageOrigins,pendingPackageBrowser,...runtime}=result;

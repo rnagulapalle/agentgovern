@@ -1,10 +1,13 @@
-import {test,expect} from "vitest";
+import {test,expect,vi,beforeEach,afterEach} from "vitest";
 import {transitionRuntimePackage} from "./staging-package-transition.mjs";
 const id=n=>`sha256:${String(n).repeat(64)}`;
 const buildId=`ack-${"a".repeat(64)}`;
 const current={buildId,web:id(1),worker:id(2)},target={buildId,web:id(3),worker:id(4)};
 const project="ll-platform-aabbccddeeff";
 const services=["web","temporal-worker","temporal-scheduler"],retained=["application-db","temporal-db","temporal","authorization","connector-twin"];
+let diagnostic;
+beforeEach(()=>{diagnostic=vi.spyOn(console,"error").mockImplementation(()=>{});});
+afterEach(()=>{diagnostic.mockRestore();});
 function fixture(){
  const calls=[],containers={};let serial=0,pendingChecks=0;
  function container(service,image){return {Id:(++serial).toString(16).padStart(64,"0"),Image:image,Config:{Labels:{"com.docker.compose.project":project,"com.docker.compose.service":service},Env:["PRIVATE_AUTHORITY=not-for-output"],User:"node",Cmd:["unchanged"],Entrypoint:["node"],Healthcheck:{Test:["ready"]}},Mounts:[{Source:"owned-data",Destination:"/state",RW:true}],HostConfig:{Memory:512*1024**2,ReadonlyRootfs:true},State:{Running:true,Health:{Status:"healthy"}}};}
@@ -67,4 +70,11 @@ test("failed stop cannot admit new packages; health, retained-state or authority
 test("failed containment is a failure, not a rollback success",async()=>{
  const f=fixture();const docker=(...args)=>{if(args[0]==="compose"&&args[5]==="stop")return "";return f.docker(...args);};
  await expect(transitionRuntimePackage({...input(f),docker})).rejects.toThrow("could not contain");
+ expect(diagnostic.mock.calls).toEqual([["Package transition refused at containment-verification; no raw configuration or output printed."]]);
+});
+test("sanitized checkpoints retain the original failure after successful containment without exposing Docker errors",async()=>{
+ const f=fixture(),docker=(...args)=>{if(args[0]==="compose"&&args[5]==="up")throw Error("PRIVATE_AUTHORITY=secret provider payload");return f.docker(...args);};
+ await expect(transitionRuntimePackage({...input(f),docker})).rejects.toThrow();
+ expect(diagnostic.mock.calls).toEqual([["Package transition refused at replacement-start; no raw configuration or output printed."]]);
+ for(const s of services)expect(f.containers[s].State.Running).toBe(false);
 });
