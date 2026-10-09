@@ -18,7 +18,7 @@ arbitrary agents, arbitrary graphs and connectors are outside this acceptance.
 | --- | --- | --- |
 | Approval and containment | Existing connector and managed-workflow tests; self-approval, stale source/policy, replay and revoked identity refusal | Repeat through the deployed invited UI using separate requester/reviewer accounts and the actual approved provider binding |
 | Crash recovery and scheduling | Actual worker containers, Temporal/PG/HTTP-twin proof; worker/scheduler/service/persistence SIGKILL, stable IDs and exclusive ownership | Same drills on the staging worker image, including crash after each real test-provider effect |
-| Version compatibility | Pinned old/new routing; persisted dev-service restart; compatible replay and incompatible rejection; retained same-worker-build A→B→A application package transitions preserve held authority and the actual signed-in 390px UI; exact custom/dependency image identities verified | Semantic worker-version upgrade with old pending histories; persistent operator promotion/reversion; long-term artifact/namespace retention and drain policy |
+| Version compatibility | Pinned old/new routing; persisted dev-service restart; compatible replay and incompatible rejection; retained same-worker-build A→B→A application package transitions preserve held authority and the actual signed-in 390px UI; exact custom/dependency image identities verified; disposable content-distinct worker upgrade with old pending histories, old-image recovery and actual incompatible replay refusal | Atomic retirement admission/reset fencing; persistent operator promotion/reversion; long-term artifact/namespace retention and drain policy |
 | Database connectivity loss | Packaged roles become unready; replacement resumes 25 held histories; self-hosted Temporal PG crash and pre-effect snapshot restore do not duplicate effects; actual application archive restore fences resurrected authority and quarantines before read-back | Remote application database restore, managed database-service outage and replica failover drills; reconcile external effects; agree and measure disaster RPO/RTO |
 | Secure operations | Real self-hosted mTLS/JWT namespace authorization, reader write refusal, invalid/expired/tampered token and certificate rejection, signing-key rotation; workload revocation and content-bound artifacts | Repeat secure connectivity and rotation in remote hardened staging; production key lifecycle; least-privilege database/network access and independent security review |
 | Provider correctness | Private atomic source-version/idempotency/read-back twin contracts; saved plan/action destination binding refuses retargeting | Actual hosted/provider guarantees, including concurrent changes, duplicate request, lost response, outage and delivery semantics; hosted CRM atomic version gate remains blocked |
@@ -313,3 +313,24 @@ This closes a disposable same-build application release/reversion gap. Semantic
 worker-version upgrades, persistent operator acceptance, retention/drain, sustained
 service objectives, live providers, enterprise security and production cutover
 remain open. Prior refused trials are preserved, not counted as acceptance.
+
+
+## Content-distinct worker lifecycle: October 9
+
+Private run `37901080849` completed successfully, including the following full
+quality gate. Two actual content-distinct worker images used independent enrolled
+records and immutable routes against authenticated PostgreSQL-backed Temporal.
+The old worker was killed with pending work; the new worker completed only its own
+record. Restoring the exact old image completed the original history/actions.
+Read-back confirmed exactly four effects, with no replay effects. Both correct
+history/bundle replays passed and both incompatible replays refused with actual SDK
+nondeterminism errors. Original typed HTTPS/mobile, named approval, crash/lost-response
+and archive-restore checks stayed intact. The retained receipt matches 106 sources.
+See [SEMANTIC_WORKER_VERSION_PROOF.md](SEMANTIC_WORKER_VERSION_PROOF.md).
+
+This closes the disposable semantic-upgrade/recovery gap, not build retirement.
+New assignments currently have no atomic active/draining registry fence. Retention,
+reset/recovery admission, persistent operator acceptance, agreed sustained service
+objectives, hosted provider guarantees and enterprise security remain open.
+Production remains on the legacy runner. No Temporal superiority or enterprise
+production acceptance follows from this trial.

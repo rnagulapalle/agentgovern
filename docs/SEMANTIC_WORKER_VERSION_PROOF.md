@@ -1,6 +1,7 @@
 # Semantic worker-version lifecycle proof
 
-Implementation in progress. No semantic upgrade acceptance is claimed.
+The bounded two-image upgrade/recovery trial passed on October 9, 2026.
+Retirement and enterprise acceptance remain incomplete.
 Production remains on the legacy runner. The accepted same-worker-build package
 proof is in [STAGING_PENDING_PACKAGE_TRANSITIONS.md](STAGING_PENDING_PACKAGE_TRANSITIONS.md).
 
@@ -21,7 +22,8 @@ feature. Generated source is exclusive and temporary; normal builds are unchange
 case. Both cases keep the existing packaged service, pinned dependency lock and
 content-bound manifest pipeline. Its context excludes credentials and private local
 data. The incompatible bundle has compiled locally with a distinct content-bound
-build ID; no packaged worker has executed it and no lifecycle acceptance follows yet.
+build ID. Both packaged implementations have now executed against the isolated
+authenticated PostgreSQL-backed Temporal service; see the measured result below.
 
 ## Required actual acceptance
 
@@ -66,10 +68,10 @@ The shared replay gate verifies manifest identity against service/workflow/lock
 bytes, requires identical service and dependency bytes but different workflow
 bytes, uses those verified workflow bytes directly rather than reopening a mutable
 path, and rejects failed, truncated, reordered or activity-free histories.
-`staging-semantic-controller.mjs` is the pending actual-runtime controller. It uses
+`staging-semantic-controller.mjs` is the actual-runtime controller. It uses
 existing named sessions, normal enrollment/grants/approvals and immutable scoped
 outbox routes. Its Docker host checkpoints, admission and isolated provider setup
-are now wired through a strict derived fresh-host parent, but have not executed yet. A controller checkpoint file alone is never proof
+executed through a strict derived fresh-host parent. A controller checkpoint file alone is never proof
 that a worker stopped, recovered, or is safe to retire.
 
 ## Full fresh-host driver
@@ -90,6 +92,46 @@ containers are temporarily attached to a private semantic network, then detached
 before the original restore proof. New provider effects are measured separately
 from the original four effects. Failed runs produce no acceptance receipt.
 
-This driver remains unexecuted until the pinned private CI run supplies actual
-outcomes. Retirement admission/reset fencing and long-term retention remain open;
-no merge, production cutover or enterprise acceptance follows from wiring alone.
+Retirement admission/reset fencing and long-term retention remain open. This
+measured trial does not authorize production cutover or enterprise acceptance.
+
+
+## Actual disposable service result: October 9
+
+[Private CI run 37901080849](https://github.com/rnagulapalle/sandbox/actions/runs/37901080849)
+completed successfully, including the complete quality gate after the actual runtime
+trial. It checked public source `e9d4df0551e94efe3cd846c293308378b91df9f2`
+and private workflow `76f3b4e4b17062c5f021266c0ddb3e268d1a1b5b`.
+The retained receipt is [staging-semantic-proof.json](evidence/staging-semantic-proof.json),
+SHA-256 `279b89b24fdcca7ba88e8c01c97292ff0cc89fd917c303a601f5264b62468430`.
+Artifact 11602713275 has archive digest
+`b555f2c4b081d39a268e6754dd13749c49fd3bbba181a96fd86839f1338d9b37`;
+its seven-day CI retention is temporary, not a long-term retention service.
+
+The authenticated trial built distinct actual images and content-bound worker IDs.
+With both independent records held, the separate provider had zero effects. After
+SIGKILL of the old worker, the new worker completed only its own two effects while
+old approved work stayed pending. Recreating the exact old image resumed the old
+history and completed its two effects. Provider read-back confirmed four total
+effects, with the intended records and recipients; replay added none. The captured
+histories had 58 and 39 events. Both matching replays passed, and both cross-version
+replays threw the SDK's actual nondeterminism error. Additional writers stopped.
+The original typed HTTPS/mobile browser, independent approval, lost-response,
+crash/recovery and archive-restore containment checks also passed unchanged.
+All 106 measured source fingerprints match the checked implementation.
+
+`validateSemanticReceipt` and its adversarial tests keep this recorded evidence
+consistent with those exact sources and refuse missing coverage, changed build/image
+identities, weaker admission, altered replay outcomes or lost authority checks.
+They do not authenticate CI origin or substitute for running a new trial. A future
+covered implementation change must obtain fresh runtime evidence.
+
+### Next acceptance gap: retiring a build
+
+The current outbox requires a correctly formed build ID and saves the route
+immutably. It has no registry that atomically stops new assignments when a build
+begins draining. A quiet worker or zero observed open histories does not close that
+race. Next work must fence admission without modifying existing routes or approvals,
+check both durable route ownership and Temporal history, and define retained-image,
+reset/recovery and closed-history query rules before any deletion. No build deletion,
+route override or production rollout was performed in this trial.
