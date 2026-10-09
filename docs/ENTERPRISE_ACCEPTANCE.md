@@ -353,3 +353,26 @@ normal bootstrap or deployed. Its reset/archive recovery and retention policy ar
 not established by the parent's earlier archive snapshot. Persistent operator
 acceptance, sustained agreed service objectives, live-provider guarantees, enterprise
 security and production cutover remain required. No Temporal superiority follows.
+
+
+## Actual reset/archive assembly acceptance: October 9
+
+Corrected private CI run `37932460184` passed the full disposable assembly at
+public source `95f5a086c77b4537c0bfe1e4ddb547ae572b4886`. The subsequent full
+quality gate, receipt upload and owned cleanup passed. The retained
+[evidence/staging-reset-proof.json](evidence/staging-reset-proof.json) matches all
+129 covered source hashes and preserves the earlier drain acceptance.
+
+One actual reset RPC, lost-response uncertainty, duplicate refusal in a fresh
+owner process and independently observed lineage retain the original four effects.
+A pending-intent archive restored under a rotated external epoch preserves 12
+action identities and reservations, revokes restored authority, refuses stale or
+replacement intents and retains two draining builds. The exact artifact digest
+and authenticated CI provenance are recorded in
+[RESET_ASSEMBLY_BOOTSTRAP.md](RESET_ASSEMBLY_BOOTSTRAP.md); the offline validator
+checks consistency and source freshness, not a cryptographic attestation.
+
+This supersedes the earlier open disposable reset/archive gap. Migration14 remains
+unreleased; long-term artifact/history retention, retirement/deletion permission,
+persistent staging/operator acceptance, live-provider guarantees, enterprise
+identity/isolation and production cutover remain open. Production is unchanged.

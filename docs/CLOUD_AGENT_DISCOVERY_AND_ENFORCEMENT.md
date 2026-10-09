@@ -126,8 +126,9 @@ minimization. A log of a request is not proof of its effect.
 - Add Azure and Google adapters using the same evidence contract but their actual
   identity and API semantics. No generic all-cloud parity promise.
 
-The ongoing reset/archive trial is separate and must still pass. Cloud discovery
-must not weaken its reliability gates or automatically migrate production dispatch.
+The disposable reset/archive trial now passes, with its exact scope recorded in
+`RESET_ASSEMBLY_BOOTSTRAP.md`. Cloud discovery must preserve those covered sources
+or require fresh evidence, and must not automatically migrate production dispatch.
 Production release remains clean pushed main, full quality/CI and `./deploy.sh`.
 
 ## Primary references checked October 9

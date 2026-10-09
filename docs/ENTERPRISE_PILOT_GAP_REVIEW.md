@@ -1,8 +1,8 @@
 # Enterprise agent pilot: current-state review
 
 October 9, 2026. Review of Raj's FetchSandbox proposal against candidate branch
-`codex/looplabs-worker-version-lifecycle`, diagnostic commit
-`5278093a17c9cfd4569e0c5447eb6305e90bd6dc`. This is an acceptance plan, not a
+`codex/looplabs-worker-version-lifecycle`, inventory foundation commit
+`0dbba75ed5ddeaef6c0b9cc6297b7fa2d649533a`. This is an acceptance plan, not a
 production-readiness statement. The proposal extends the existing control services;
 it does not authorize a parallel execution engine or production cutover.
 
@@ -14,21 +14,27 @@ different facts. This review has not independently inspected the production sche
 image identities or provider configuration; deployed coverage remains unverified
 here. Production is not authorized to switch dispatch ownership in this phase.
 
-Local full quality and normal pre-push quality passed 523 tests across 95 files
-and 52 rendered internal destinations for the diagnostic candidate. Those checks
+Local full quality and normal pre-push quality passed 535 tests across 96 files
+and 52 rendered internal destinations for the inventory candidate; all three
+exact-head CI jobs in run `37934221392` also passed. Those checks
 do not prove a cloud connection, live destination enforcement or enterprise SSO.
 Accepted drain trial `37911844347` covers actual worker loss/recovery, two distinct
 worker artifacts, correct replay/incompatible replay refusal, outbox admission
 races, named approvals and typed HTTPS/mobile operation with private twins. Its
-113 source fingerprints remain unchanged. Full reset/archive attempts
-`37924267547` and `37926465198` failed; no accepted full reset receipt exists.
+113 source fingerprints remain unchanged. Earlier reset/archive trials remain
+failed. Corrected run `37932460184` passed the actual reset/archive assembly,
+following quality gate and cleanup. Its retained receipt covers 129 current source
+fingerprints, one reset RPC, fresh-process duplicate refusal, four unchanged effects
+and restored containment of 12 actions across two draining builds. See
+[RESET_ASSEMBLY_BOOTSTRAP.md](RESET_ASSEMBLY_BOOTSTRAP.md). This closes a disposable
+assembly gap, not persistent operations or live provider readiness.
 
 ## Proposal coverage matrix
 
 | Requirement | Current implementation and evidence | Gap / extension and acceptance |
 | --- | --- | --- |
 | 1. Reuse current platform | `ConnectorControl`, workflow guards, enquiry submission, immutable requests, record grants, Temporal outbox/activities and provider readback already form one controlled path. See `lib/connectors/service.ts`, `lib/workflows/guard.ts`, `lib/enquiries/submission.ts`, `runtime/temporal/`. | Add discovery/enrollment and caller identity at existing boundaries. Do not introduce a second dispatch, approval or effect journal. Deployment facts need separate inspection. |
-| 2. Native discovery | `registerAgentIn` manually creates a scoped agent, profile and token. Record onboarding is an administrator-configured private catalog, not agent discovery. `CLOUD_AGENT_DISCOVERY_AND_ENFORCEMENT.md` is design only. | Read-only provider adapters, scoped immutable snapshots, version/tool/schema evidence, pagination/completeness/freshness and explicit unknowns. No discovery path calls registration or issues a token. Partial scans cannot erase prior agents. |
+| 2. Native discovery | `registerAgentIn` manually creates a scoped agent, profile and token. Record onboarding is an administrator-configured private catalog, not agent discovery. `cloud-discovery.ts` now adds an injected read-only AWS runtime collector and strict inventory preservation, with ten adversarial tests. No signed native client, stored inventory or discovery UI is wired. | Read-only provider adapters, scoped immutable snapshots, version/tool/schema evidence, pagination/completeness/freshness and explicit unknowns. No discovery path calls registration or issues a token. Partial scans cannot erase prior agents. |
 | 2. MCP/A2A | No production MCP discovery adapter or A2A import was established in the inspected implementation. | Treat MCP `tools/list` as declared capability evidence; A2A cards as declared service capabilities. Neither proves internal tools, effective permissions or enforceability. Restrict authenticated endpoints and outbound destinations; schemas/descriptions remain untrusted data. |
 | 2. Coverage presentation | Existing directory exposes enrolled agents and tools; existing run presentation distinguishes verified, pending and uncertain outcomes. | Inventory shows independent facts: discovered, ownership mapped, activity connected, enforcement verified for one named action. Enforcement is not an agent-wide badge. Missing telemetry is unknown, not zero activity. |
 | 3. Human/workload identity | `lib/workspace/auth.ts` provides invited passwords and hashed eight-hour sessions. `identity.ts` checks active members/current sessions. `lib/durable/service.ts` checks active scoped tokens again. | Enterprise IdP mapping and lifecycle integration are absent. Separate employee, guest/contractor, company workload and partner-agent principals. Local token schema has no expiry; do not call it federated short-lived identity. |
@@ -37,7 +43,7 @@ races, named approvals and typed HTTPS/mobile operation with private twins. Its
 | 3. Revocation latency | Current database authority is queried during consequential attempts and after provider calls. Already sent requests may complete and remain uncertain. | No measured end-to-end IdP-to-provider revocation bound exists. Measure event/poll ingestion, cache lifetime and in-flight exposure. State the observed delay; never promise recall of an already accepted action. |
 | 4. Exact action controls | Saved connector snapshots bind method/resource/body/source condition/destination; `valid`, workflow guards and record-grant versions recheck current authority, policy and independent 15-minute approval. | Enroll one actual partner action and workload version. Map discovery identity to enrolled identity explicitly; preserve upstream and downstream resource permissions. No caller-supplied agent ID establishes identity. |
 | 4. Mandatory path / sidecar | Private fixture credentials belong to trusted execution; current HTTP agent APIs accept scoped registered callers. No customer-side sidecar, federated broker or actual provider bypass proof exists. | Prove gateway/SDK/sidecar caller identity, exact-request checks and removal of alternate credentials/direct access. A network proxy or cloud token alone is insufficient. If bypass is possible, label monitored/partially protected. |
-| 5. Durability and failures | Existing action keys, leases, uncertain-state reconciliation, immutable proposals, dependency checks, one-way outbox ownership, worker pinning/replay and restore containment have bounded component/disposable proofs. | Complete the failing assembled reset/archive trial and retained two-version recovery. Add real provider rate-limit/retry-contract acceptance, representative sustained operation, alerts and operator resolution. Do not retry an uncertain write merely because evidence is missing. |
+| 5. Durability and failures | Existing action keys, leases, uncertain-state reconciliation, immutable proposals, dependency checks, one-way outbox ownership, worker pinning/replay and restore containment have bounded component/disposable proofs. | Disposable reset/archive acceptance now passes; complete long-term two-version artifact/history retention and persistent operator recovery. Add real provider rate-limit/retry-contract acceptance, representative sustained operation, alerts and operator resolution. Do not retry an uncertain write merely because evidence is missing. |
 | 5. Atomic source-state writes | Private twin enforces the approved CRM version atomically. `HostedFetchSandboxConnectors.write` refuses CRM mutation because the hosted contract lacks that guarantee. | Hosted CRM path remains blocked. Require a destination-supported conditional write or a reviewed action redesign. GET then unconditional PATCH does not close this gap. A new twin capability proves rehearsal semantics, not real HubSpot concurrency. |
 | 6. Understandable proof | Saved request/message presentation, independent action approval, provider observations, action events and full-run verification already exist. `runProgress` refuses a completion receipt without both verified effects. | Add version/identity provenance, attempt visibility and discovery gaps to existing views. Human-readable outcome first; technical request evidence expandable. Persist only allowlisted/minimized metadata. Rehearsal and live evidence must remain distinct. |
 | 7. Actual UI acceptance | Accepted disposable typed HTTPS/390px journey demonstrates the fixed acknowledgement and named approvals. Existing API/HTTP proofs cover revoked, stale, replay, lost response and tenant refusals within their recorded scope. | Imported cloud agent journey and direct-provider bypass tests are absent. Extend the actual journey from connected account to selected action, with independent provider evidence and current source fingerprints; scripted fixtures cannot substitute for cloud enrollment UI. |
@@ -75,11 +81,11 @@ access to customer hosts and the database remains an explicit trusted boundary.
 
 ## Implementation order and reuse
 
-1. Finish the currently failing assembled reset/archive proof. Preserve the accepted
-   drain receipt and frozen sources. Retain the exact two worker artifacts/histories
+1. Preserve the accepted drain and reset/archive receipts and their covered sources.
+   Retain the exact two worker artifacts/histories
    and prove fresh retrieval before operational acceptance. No production cutover.
-2. Add the shared read-only inventory and AWS adapter as the first independently
-   testable integration candidate. AWS is an engineering starting point, not a claim
+2. Wire the tested shared read-only inventory collector to a signed AWS client,
+   durable snapshots and reviewed enrollment as the first integration candidate. AWS is an engineering starting point, not a claim
    about any partner's stack. Confirm partner platform/action before a live pilot.
    Keep discovery storage separate from `ll_agents` authority, with explicit links
    only after reviewed enrollment. Add new migrations; preserve applied migrations.

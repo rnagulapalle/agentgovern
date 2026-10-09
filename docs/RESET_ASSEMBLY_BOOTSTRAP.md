@@ -147,3 +147,33 @@ with the failing actual-outbox-ID regression, it identifies a concrete correctio
 the corrected source still needs fresh full assembled acceptance. The trial
 produced no accepted receipt and skipped post-runtime quality. Its temporary
 planner secret had already been consumed, deleted and absence verified.
+
+## Accepted disposable assembly: October 9
+
+Corrected private run `37932460184` completed successfully at private workflow
+`77b7f304b44fc962f1c963822e035cfda9d81064` and public source
+`95f5a086c77b4537c0bfe1e4ddb547ae572b4886`. Actual runtime, following full quality
+(525 tests), receipt upload and owned cleanup all passed. The temporary model
+input was consumed and its GitHub secret deleted/absence verified during the run.
+
+The receipt records one actual reset RPC followed by intentionally lost response,
+committed uncertainty, a fresh owner OS process whose repeated claim refuses
+dispatch, and independent completed lineage/pinned-build readback. The four
+lifecycle effects are unchanged. Pending-intent archive restoration into a fresh
+owned database under a rotated external epoch preserves 12 action identities and
+reservations, revokes restored authority, refuses stale/replacement reset intents,
+and leaves both retained builds draining. Original typed HTTPS/mobile, approvals,
+crash/lost-response/replay and both admission/drain races remain required.
+
+Downloaded artifact `11617640833` was checked against its GitHub archive digest
+`4b6a18450648c17d26a4d4d2a1586c4e090e35cee8bf304856dfb1c9c9c2b711`.
+The retained `docs/evidence/staging-reset-proof.json` has SHA-256
+`9ac40f8a6dff8c8edad8e635bfa3b1f31f830703a14bcb140e6fd01f9d839e60`.
+All 129 covered source hashes match; the parent's accepted 113 sources are
+unchanged. `staging-reset-record.mjs` validates receipt consistency and freshness;
+it is not an independent signature or a substitute for authenticated CI provenance.
+
+This closes the disposable assembled reset/archive gap. It does not authorize
+complete artifact retirement/deletion, establish long-term two-version retention,
+persistent operator acceptance, live-provider guarantees, production cutover or an
+enterprise service objective. Earlier failed trials remain preserved as failures.
