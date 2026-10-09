@@ -66,19 +66,19 @@
   "images": [
     {
       "role": "web",
-      "id": "sha256:d8c5c97e4ac69acc45d6d7abafe30c45d5b2b13f15782a36a62d33143e158605"
+      "id": "sha256:72978ef3f80c583e2a4866dd1b1bab4d5f06dc5ceb579045392d35d590506c3b"
     },
     {
       "role": "worker",
-      "id": "sha256:6ffa4c1c380053bcf27f47eade2879a6be11a3b3d6a45f760849e7da290a9d08"
+      "id": "sha256:0ef5b0db37f946c2527e74ff2e0f2f83297a6102583f06e41eb40fc3b4413706"
     },
     {
       "role": "twin",
-      "id": "sha256:4297f7e6efac9aa9e245a9100b2513d6894e4dc87147a43ac52e13c113c7b843"
+      "id": "sha256:009a78e8a806942753e7075e0b4531b896f5740f639540b704ffcabe7c412e37"
     },
     {
       "role": "provisioner",
-      "id": "sha256:9d0f9553d1238544ad3f5c6e6516416a2fc041861e9342fe0a813c39d4da585b"
+      "id": "sha256:d4730c3152916fc62f90c87e8610d2ccea9a8b17388fb6b971ea94579b94d3bd"
     }
   ],
   "services": [
@@ -137,33 +137,8 @@
     "existingBytes": 0,
     "plannedBytes": 4697620480,
     "hostReserveBytes": 2147483648,
-    "totalBytes": 8323969024,
-    "availableBytes": 7015571456
-  },
-  "artifact": {
-    "manifestSha256": "a889c3af2859a52c0532df533eb4dc0ef749430f235b239c780188b92231788b",
-    "archiveSha256": "94f0afc3b160655649b724105a9c5d86757b96c3d7858b8f62a335896fe7e624",
-    "archiveBytes": 2399583744,
-    "images": [
-      {
-        "role": "web",
-        "id": "sha256:d8c5c97e4ac69acc45d6d7abafe30c45d5b2b13f15782a36a62d33143e158605"
-      },
-      {
-        "role": "worker",
-        "id": "sha256:6ffa4c1c380053bcf27f47eade2879a6be11a3b3d6a45f760849e7da290a9d08"
-      },
-      {
-        "role": "twin",
-        "id": "sha256:4297f7e6efac9aa9e245a9100b2513d6894e4dc87147a43ac52e13c113c7b843"
-      },
-      {
-        "role": "provisioner",
-        "id": "sha256:9d0f9553d1238544ad3f5c6e6516416a2fc041861e9342fe0a813c39d4da585b"
-      }
-    ],
-    "reloadedAfterRemoval": true,
-    "workerBuildVerified": true
+    "totalBytes": 8322924544,
+    "availableBytes": 7004790784
   },
   "sourceFingerprints": {
     "Dockerfile": "05dbe233a49d567443185c627767141a48b985d433f9dc031ea24b90735a3eb5",
@@ -245,29 +220,28 @@
     "runtime/temporal/workflow.ts": "5ed74bf103edbae5d6345f258f77da6b6e6baf340ccec866d340065ffd607c14",
     "scripts/build-temporal-worker.mjs": "c7c96a323aedd51e0544e50e050301ff1efab1cdb00bfaac690b01d25d109510",
     "scripts/staging-browser-proof.mjs": "428e2ecdf26cc01d7c2d0940cce0cbf876a00455d96acb84bc8b50e8c814cf30",
-    "scripts/staging-browser-record.mjs": "e9a797d602c6d02b0403402b0f45ba28c39bb8817b92462355028ae2410e32f7",
+    "scripts/staging-browser-record.mjs": "6fa1c2cfdf754e2dcd689f0bf72177acb35ff07247df98034cb67d2216041998",
     "scripts/staging-browser-tls.mjs": "9b6e13b2dad7999e598989b3a5a53c2a30a6421b917c2abb68e9eb495cc35bb8",
     "scripts/staging-database-bootstrap.mjs": "76cfc8cc58c724efc46b8d37915fb7515976dc5f28af5065e3c0c956e924cb57",
     "scripts/staging-fixture-source.mjs": "76e404f688009c9b08322ab4d5a57dc057b5bf2221837c61945a4a5f19e76296",
     "scripts/staging-host-inventory.py": "c67130cbd6353ceb6c716ca20284f9fcd52beedd05e25e0dd33437c2cc7955c8",
-    "scripts/staging-image-artifact.mjs": "cf78d67c833418417f2bb64bce784b96cf6fe682f92abd8f43fa6da0165cebd1",
     "scripts/staging-namespace-bootstrap.mjs": "97d7738a68feaeded8e42ef17f7662880a7b5a31cfdb9b662afa9d5389d805d2",
     "scripts/staging-owned-builder.mjs": "4db747484d100c3cdd45a668589096cd753f16a87347f4b973a72c34148132f6",
     "scripts/staging-planner-attachment.mjs": "021115f6afad958f5b0c5e92074788efe864497b17f156f69994ff0e66f335b4",
     "scripts/staging-planner-inputs.mjs": "bb5f7b0e582e274336dd8c68fb9fbe52ffa3b72c8e4e28c3d4e8ffdb30868f4c",
     "scripts/staging-platform-controller.mjs": "242a7d354cebd473dfee9cda60d088e7b4401ad98bcfddb3e8afb7a6d3eeb588",
-    "scripts/staging-platform-proof.mjs": "685cf005888670390841c7c630a0447c12cd052f170a2a100828d334cabb0523",
+    "scripts/staging-platform-proof.mjs": "1839f89fe77753ea4afae8c3cb1def809f989d94b3a3992ba6a35431b156e57a",
     "scripts/staging-restore-controller.mjs": "0ef5bae8e436c44bb87289d9041d7242dc9d14aeb00cba9b92344e4da57b8ad5",
     "scripts/staging-runtime-inputs.mjs": "9438eda08e7af7fcf7a0726379de42d1852982e8a1af16cd2d31217e10e2f9b6",
     "scripts/staging-temporal-config.mjs": "2aacddbd5688e033def992b088c2e51efb0e329e9c18d763a11ac7736ed5dd5c",
     "scripts/workspace-recovery.ts": "46ca583a30482edbb3345a2f2643e50b745d3f81be1a99c74076f52ac140d605"
   },
   "executionEvidence": {
-    "runId": 37877500571,
-    "privateWorkflowCommit": "5eef23d39dc4fcdc96aa55eede4e971730cbf000",
-    "publicBaseCommit": "d344d1569d8883853af99c0fc6d636492641c693",
-    "exactCompressedOverlaySha256": "07966cdb25a839552e1505da9b85f0c4f80432057b41b44cb3f07a3ae0b2961d",
-    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37877500571",
+    "runId": 37873330354,
+    "privateWorkflowCommit": "d486e4959cc1889856ab98c3dfa0ddf1c4251c7e",
+    "publicBaseCommit": "b14879236c1181614b0965897028e02360de0985",
+    "exactCompressedOverlaySha256": "699403ff275ae5643168cfa4c8f0a5bfc2f841db366cc1c9c9151e35685c9847",
+    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37873330354",
     "actualProviderEffects": 4,
     "productionChanged": false,
     "scope": "disposable assembled runtime and real-model trusted HTTPS typed journey"

@@ -540,3 +540,13 @@ an overall CI pass. The corrected fixtures and current candidate passed local
 full quality (414 tests). The current measured receipt covers 94 runtime sources;
 historical prepared/typed receipts remain retained. Exact-head CI and persistent
 operational acceptance are still required; production remains unchanged.
+
+
+## Exact custom image retention
+
+The opt-in private retention path now passed full runtime and quality in run
+`37877500571`, then independent retrieval/cold-load in `37879011443`. See
+`STAGING_IMAGE_RETENTION.md` and the two current evidence records. The four custom
+images are retained after checksum verification; runtime credentials, volumes and
+state are never exported. Third-party image digest pinning, promotion/rollback and
+persistent operational acceptance remain separate open gates.

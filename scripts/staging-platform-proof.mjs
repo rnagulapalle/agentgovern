@@ -14,10 +14,13 @@ import {safeTrialFailure,safeProviderFailure,safeBrowserFailure,safeRestoreFailu
 import {stagingBrowserProof} from "./staging-browser-proof.mjs";
 import {browserOrigin} from "./staging-browser-tls.mjs";
 import {ownedBuilder} from "./staging-owned-builder.mjs";
+import {exportTestedImages,reloadAfterTrialRemoval} from "./staging-image-artifact.mjs";
 const docker=(...args)=>execFileSync("docker",args,{encoding:"utf8",timeout:600000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const backend=process.env.FETCHSANDBOX_BACKEND_PATH;
 assert(process.env.LOOPLABS_STAGING_PLATFORM_PROOF==="isolated"&&backend,"Explicit disposable trial and prepared private source required");
+const artifactDirectory=process.env.LOOPLABS_STAGING_IMAGE_ARTIFACT;
+assert(artifactDirectory===undefined||(process.env.GITHUB_ACTIONS==="true"&&artifactDirectory.startsWith("/")&&!artifactDirectory.includes("..")),"Private CI absolute image artifact destination required");
 const browserOptIn=process.env.LOOPLABS_STAGING_BROWSER_PROOF;
 assert(browserOptIn===undefined||browserOptIn==="isolated","Invalid browser proof opt-in");
 const browserEnabled=browserOptIn==="isolated";
@@ -34,7 +37,7 @@ const project=`ll-platform-${randomBytes(6).toString("hex")}`,images={web:`${pro
 const env={...process.env,LOOPLABS_STAGING_PRIVATE_DIR:privateDir,LOOPLABS_STAGING_WEB_PORT:"3199",LOOPLABS_STAGING_WEB_IMAGE:images.web,LOOPLABS_STAGING_WORKER_IMAGE:images.worker,LOOPLABS_STAGING_TWIN_IMAGE:images.twin};
 const compose=(...args)=>execFileSync("docker",["compose","-p",project,"-f","docker-compose.temporal-platform.yml",...args],{env,encoding:"utf8",timeout:180000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
 const imageBuilder=ownedBuilder(docker,`${project}-build`);
-const uid=`${process.getuid()}:${process.getgid()}`,owned=[],built=[];let stage="prepare",controller,controllerExit=null;
+const uid=`${process.getuid()}:${process.getgid()}`,owned=[],built=[];let stage="prepare",controller,controllerExit=null,outcome,retainedArtifact;
 async function until(fn,label,seconds=120){for(const end=Date.now()+seconds*1000;Date.now()<end;){if(await fn())return;await wait(500);}throw Error(label);}
 const container=service=>compose("ps","-aq",service);
 const ready=async services=>until(()=>services.every(s=>{const id=container(s);return id&&docker("inspect","--format","{{.State.Health.Status}}",id)==="healthy";}),"Runtime health unavailable",180);
@@ -158,7 +161,8 @@ try{
  stage="quarantined-http-authority";compose("start","web");await ready(["web"]);assert.equal(restoreController("after").passed,true);
  assert.deepEqual(JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json")).effects,retainedProvider.effects);
  const restoreContainment={approvedArchive:true,externalEpochRotated:true,runtimeRoles:3,omittedEpochRefused:true,revivedSessionsRefused:true,restoredApprovalRefused:true,packagedWorkerRefused:true,packagedSchedulerRefused:true,quarantineRevokesAuthority:true,quarantineReplay:true,staleBootstrapRefused:true,retainedEffects:expectedEffects};
- console.log(JSON.stringify({...result,restoreContainment,...(typedPlanning?{plannerAuthority:{webOnly:true},actualProviderEffects:4}:{}),...(browser?{browser,scope:typedPlanning?"assembled isolated API/runtime and fresh typed HTTPS browser trial":"assembled isolated API/runtime and prepared-plan HTTPS browser trial",notVerified:[...(typedPlanning?[]:["fresh typed chat/model interpretation"]),...result.notVerified.filter(x=>x!=="browser HTTPS and typed chat UX")]}:{}),buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission},null,2));
+ if(artifactDirectory){stage="tested-image-export";retainedArtifact=await exportTestedImages({directory:artifactDirectory,images,buildId:build.buildId,docker});}
+ outcome={...result,restoreContainment,...(typedPlanning?{plannerAuthority:{webOnly:true},actualProviderEffects:4}:{}),...(browser?{browser,scope:typedPlanning?"assembled isolated API/runtime and fresh typed HTTPS browser trial":"assembled isolated API/runtime and prepared-plan HTTPS browser trial",notVerified:[...(typedPlanning?[]:["fresh typed chat/model interpretation"]),...result.notVerified.filter(x=>x!=="browser HTTPS and typed chat UX")]}:{}),buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission};
 }catch{
  let detail="";
  try {const report=JSON.parse(await readFile(resolve(trial,"failure.json"),"utf8"));detail=safeTrialFailure(report);}catch{}
@@ -174,4 +178,16 @@ finally{
  controller?.kill("SIGTERM");try{compose("down","--volumes","--remove-orphans");}catch{}
  for(const image of built.reverse())try{docker("image","rm",image);}catch{}
  await rm(parent,{recursive:true,force:true});
+}
+
+if(outcome&&!process.exitCode){
+ try{
+  if(retainedArtifact){
+   // Cleanup has removed original trial tags and containers. Loading must not rebuild.
+   stage="tested-image-reload";
+   await reloadAfterTrialRemoval({directory:artifactDirectory,artifact:retainedArtifact,docker});
+   outcome.artifact={...retainedArtifact,reloadedAfterRemoval:true,workerBuildVerified:true};
+  }
+  console.log(JSON.stringify(outcome,null,2));
+ }catch{console.error("Tested image artifact reload failed; no artifact acceptance or credentials printed.");process.exitCode=1;}
 }

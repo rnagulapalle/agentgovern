@@ -18,7 +18,7 @@ arbitrary agents, arbitrary graphs and connectors are outside this acceptance.
 | --- | --- | --- |
 | Approval and containment | Existing connector and managed-workflow tests; self-approval, stale source/policy, replay and revoked identity refusal | Repeat through the deployed invited UI using separate requester/reviewer accounts and the actual approved provider binding |
 | Crash recovery and scheduling | Actual worker containers, Temporal/PG/HTTP-twin proof; worker/scheduler/service/persistence SIGKILL, stable IDs and exclusive ownership | Same drills on the staging worker image, including crash after each real test-provider effect |
-| Version compatibility | Pinned old/new routing; persisted dev-service restart; compatible replay and incompatible rejection | Retained immutable images; promote/rollback drill with old pending runs; namespace retention and drain policy |
+| Version compatibility | Pinned old/new routing; persisted dev-service restart; compatible replay and incompatible rejection; exact four custom images retained and independently retrieved with matched checksums/build | Pin and verify third-party runtime image digests; promote/rollback drill with old pending runs; long-term artifact/namespace retention and drain policy |
 | Database connectivity loss | Packaged roles become unready; replacement resumes 25 held histories; self-hosted Temporal PG crash and pre-effect snapshot restore do not duplicate effects; actual application archive restore fences resurrected authority and quarantines before read-back | Remote application database restore, managed database-service outage and replica failover drills; reconcile external effects; agree and measure disaster RPO/RTO |
 | Secure operations | Real self-hosted mTLS/JWT namespace authorization, reader write refusal, invalid/expired/tampered token and certificate rejection, signing-key rotation; workload revocation and content-bound artifacts | Repeat secure connectivity and rotation in remote hardened staging; production key lifecycle; least-privilege database/network access and independent security review |
 | Provider correctness | Private atomic source-version/idempotency/read-back twin contracts; saved plan/action destination binding refuses retargeting | Actual hosted/provider guarantees, including concurrent changes, duplicate request, lost response, outage and delivery semantics; hosted CRM atomic version gate remains blocked |
@@ -272,3 +272,13 @@ missing-epoch refusal; current local full quality passed all 414 tests. Exact-he
 release checks remain required. This closes a disposable assembled restore proof,
 not persistent staging, remote RPO/RTO, operator acceptance, real-provider safety,
 enterprise production readiness or a production ownership cutover.
+
+
+## Custom artifact retention and retrieval
+
+`STAGING_IMAGE_RETENTION.md` records actual complete trial `37877500571` (421 tests)
+and independent fresh-runner retrieval `37879011443`. The archive and all four
+custom image IDs/build match; loaded validation images were removed. Their current
+source fingerprints match and the earlier restore receipt is hash-preserved.
+This supplies tested custom artifacts; it does not accept dependency tags,
+application promotion/rollback, a persistent deployment or production operations.
