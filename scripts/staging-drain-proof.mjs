@@ -4,7 +4,7 @@ import {readFile,writeFile,rm} from "node:fs/promises";
 import {spawnSync} from "node:child_process";
 import {randomUUID,createHash} from "node:crypto";
 import {resolve} from "node:path";
-import {drainPlatform,drainHost,drainController,writeDrainController} from "./staging-drain-source.mjs";
+import {drainPlatform,drainHost,drainController,writeDrainController,drainAdmissionRefusal} from "./staging-drain-source.mjs";
 import {typedReceipt} from "./staging-browser-record.mjs";
 const hash=bytes=>createHash("sha256").update(bytes).digest("hex");
 const generatedFiles=[];let generated,owned=false;
@@ -26,6 +26,7 @@ try{
 
  const run=spawnSync(process.execPath,["--import","tsx",generated],{env:process.env,encoding:"utf8",timeout:30*60*1000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]});
  if(run.status!==0){
+  const refused=drainAdmissionRefusal(run.stderr);if(refused)console.error(JSON.stringify(refused));
   const detail=/Semantic host refused at ([a-z-]+(?:\/[a-z-]+)?);/.exec(run.stderr||"")?.[1];
   const parent=/Complete isolated platform trial failed at ([a-z-]+)/.exec(run.stderr||"")?.[1];
   if(detail)console.error(`Verified semantic checkpoint ${detail} failed; no raw child output printed.`);

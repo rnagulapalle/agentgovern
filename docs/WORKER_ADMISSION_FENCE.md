@@ -117,3 +117,10 @@ generated source prevents the non-root controller from reading it. Generated
 controller source now uses mode644; host scripts and credential files retain
 mode600. Exclusive creation refuses existing files and symlinks. This correction
 is not a successful drain runtime measurement; a fresh full trial is required.
+
+Corrected attempt 37909926306 stopped earlier at host admission, before any
+drain runtime acceptance. The child-log wrapper now retains only known admission
+blocker codes and bounded numeric memory facts. It rejects malformed/private
+diagnostics and never prints arbitrary child output. This supplies a diagnosis
+for a refused host; it does not reduce reservations, bypass admission or establish
+that the corrected controller has executed successfully.

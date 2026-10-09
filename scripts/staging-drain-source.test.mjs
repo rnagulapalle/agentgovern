@@ -4,7 +4,7 @@ import {mkdtemp,stat,readFile,rm,symlink} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {drainController,drainHost,drainPlatform,writeDrainController} from './staging-drain-source.mjs';
+import {drainController,drainHost,drainPlatform,writeDrainController,drainAdmissionRefusal} from './staging-drain-source.mjs';
 const sources=['controller','host','platform'].map(n=>readFileSync(`scripts/staging-${n==='platform'?'platform-proof':`semantic-${n}`}.mjs`,'utf8'));
 test('strict drain extensions preserve real authority, pinned recovery, replay, original peak and archive/UI gates',()=>{
  const derived=[drainController(sources[0]),drainHost(sources[1],'scripts/.drain-controller-abc.mjs'),drainPlatform(sources[2],'.drain-host-abc.mjs')];
@@ -37,4 +37,11 @@ test('generated controller source remains readable after root COPY; occupied fil
   await expect(writeDrainController(link,'replacement')).rejects.toThrow();expect(await readFile(file,'utf8')).toBe(source);
   await expect(writeDrainController(resolve(dir,'worker.env'),'secret')).rejects.toThrow();
  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('private child-log diagnostic emits only bounded admission codes and resource numbers',()=>{
+ const value={failedStage:'host-admission',admitted:false,blockers:['available_memory_insufficient'],existingBytes:0,plannedBytes:4480,hostReserveBytes:2048,totalBytes:7900,availableBytes:6400};
+ expect(drainAdmissionRefusal('noise\n'+JSON.stringify({...value,credentials:'must never escape',payload:{private:true}}))).toEqual(value);
+ for(const change of [{blockers:['secret-code']},{plannedBytes:'secret'},{totalBytes:-1},{availableBytes:Infinity},{admitted:true},{failedStage:'controller'},{blockers:[]}])expect(drainAdmissionRefusal(JSON.stringify({...value,...change}))).toBeNull();
+ expect(drainAdmissionRefusal(null)).toBeNull();expect(drainAdmissionRefusal('{invalid')).toBeNull();expect(drainAdmissionRefusal(JSON.stringify({...value,extra:'x'.repeat(4096)}))).toBeNull();
 });

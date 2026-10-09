@@ -58,3 +58,19 @@ export async function writeDrainController(path,source){
  try{await file.writeFile(source);await file.chmod(0o644);complete=true;}
  finally{await file.close();if(!complete)await rm(path,{force:true});}
 }
+
+// Only bounded resource facts may cross the private child-log boundary.
+export function drainAdmissionRefusal(stderr){
+ const allowed=new Set(['host_inventory_invalid','host_inventory_stale_or_future','container_inventory_incomplete','container_inventory_invalid','existing_container_memory_unbounded','staging_resource_plan_invalid','staging_resource_plan_incomplete','resource_budget_overflow','reserved_memory_exceeds_host','available_memory_insufficient']);
+ const fields=['existingBytes','plannedBytes','hostReserveBytes','totalBytes','availableBytes'];
+ if(typeof stderr!=='string')return null;
+ for(const line of stderr.split('\n')){
+  if(line.length>4096||!line.startsWith('{'))continue;
+  let value;try{value=JSON.parse(line);}catch{continue;}
+  if(value?.failedStage!=='host-admission'||value.admitted!==false||!Array.isArray(value.blockers)||!value.blockers.length||value.blockers.some(x=>!allowed.has(x)))continue;
+  const result={failedStage:'host-admission',admitted:false,blockers:[...new Set(value.blockers)]};
+  for(const field of fields){if(!Number.isSafeInteger(value[field])||value[field]<0)return null;result[field]=value[field];}
+  return result;
+ }
+ return null;
+}
