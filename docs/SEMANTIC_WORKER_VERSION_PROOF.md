@@ -135,3 +135,11 @@ race. Next work must fence admission without modifying existing routes or approv
 check both durable route ownership and Temporal history, and define retained-image,
 reset/recovery and closed-history query rules before any deletion. No build deletion,
 route override or production rollout was performed in this trial.
+
+
+The next opt-in admission increment has now passed actual disposable trial
+37911844347; see [WORKER_ADMISSION_FENCE.md](WORKER_ADMISSION_FENCE.md). Both
+lock-race orders and existing-route idempotency passed with a deliberately pending
+old route. This does not authorize retirement, reset/move to another build, artifact
+deletion, production rollout or enterprise acceptance. The earlier semantic result
+and its 106-source record remain unchanged.

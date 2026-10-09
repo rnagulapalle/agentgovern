@@ -329,8 +329,27 @@ and archive-restore checks stayed intact. The retained receipt matches 106 sourc
 See [SEMANTIC_WORKER_VERSION_PROOF.md](SEMANTIC_WORKER_VERSION_PROOF.md).
 
 This closes the disposable semantic-upgrade/recovery gap, not build retirement.
-New assignments currently have no atomic active/draining registry fence. Retention,
+That result predates the opt-in atomic active/draining registry fence measured below. Retention,
 reset/recovery admission, persistent operator acceptance, agreed sustained service
 objectives, hosted provider guarantees and enterprise security remain open.
 Production remains on the legacy runner. No Temporal superiority or enterprise
 production acceptance follows from this trial.
+
+
+## Actual outbox admission/drain acceptance: October 9
+
+Private run `37911844347` passed both actual PostgreSQL lock-race orders around the
+normal outbox, refused/rolled back the drain-first transfer, and retained duplicate
+transfer identity. It enrolled both actual inspected worker images through the
+separate owner, retained one additional pending old route, and repeated the original
+semantic recovery/replay, typed HTTPS/mobile and archive-containment gates. The
+following complete quality gate and cleanup passed. All 113 covered sources match
+[evidence/staging-drain-proof.json](evidence/staging-drain-proof.json). See
+[WORKER_ADMISSION_FENCE.md](WORKER_ADMISSION_FENCE.md) for provenance and scope.
+
+This closes the disposable admission/drain gap, not retirement/deletion permission.
+The pending old route deliberately prevents retirement. Migration14 is not in
+normal bootstrap or deployed. Its reset/archive recovery and retention policy are
+not established by the parent's earlier archive snapshot. Persistent operator
+acceptance, sustained agreed service objectives, live-provider guarantees, enterprise
+security and production cutover remain required. No Temporal superiority follows.
