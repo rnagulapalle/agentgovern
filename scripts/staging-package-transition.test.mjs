@@ -78,3 +78,21 @@ test("sanitized checkpoints retain the original failure after successful contain
  expect(diagnostic.mock.calls).toEqual([["Package transition refused at replacement-start; no raw configuration or output printed."]]);
  for(const s of services)expect(f.containers[s].State.Running).toBe(false);
 });
+test("identical unique environment entries may reorder but exact authority values remain bound",async()=>{
+ const f=fixture();
+ for(const c of Object.values(f.containers))c.Config.Env.push("BOUNDARY=unchanged");
+ const ready=async()=>{for(const s of services)f.containers[s].Config.Env=["BOUNDARY=unchanged","PRIVATE_AUTHORITY=not-for-output"];};
+ const result=await transitionRuntimePackage({...input(f),ready});
+ expect(result.evidence.pendingAuthorityChecks).toBe(3);
+ const changed=fixture();await expect(transitionRuntimePackage({...input(changed),ready:async()=>{changed.containers.web.Config.Env=["PRIVATE_AUTHORITY=changed"];}})).rejects.toThrow("Runtime authority");
+ for(const s of services)expect(changed.containers[s].State.Running).toBe(false);
+});
+test("malformed or duplicate environment names refuse before stopping and after replacement",async()=>{
+ for(const entries of [["NAME=one","NAME=one"],["NAME=one","NAME=two"],["missing-equals"],["=value"],["INVALID-NAME=value"],["NAME=with\0null"],[null]]){
+  const before=fixture();before.containers.web.Config.Env=entries;
+  await expect(transitionRuntimePackage(input(before))).rejects.toThrow();
+  expect(before.calls.some(a=>a[5]==="stop"||a[5]==="up")).toBe(false);
+  const after=fixture();await expect(transitionRuntimePackage({...input(after),ready:async()=>{after.containers.web.Config.Env=entries;}})).rejects.toThrow();
+  for(const s of services)expect(after.containers[s].State.Running).toBe(false);
+ }
+});

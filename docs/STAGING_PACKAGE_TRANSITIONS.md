@@ -13,6 +13,17 @@ or a replaced archive path refuse deletion; no Docker pruning or shared-file
 cleanup is used. Three focused tests cover this disk-lifetime change. A new full
 runtime trial remains required.
 
+Trial `37889334975` subsequently reached promotion and refused it. Fixed sanitized
+diagnostics in trial `37890439330` localized the refusal to application environment
+comparison. A separate local Compose metadata experiment recreated three owned,
+never-started containers from one immutable image and an unchanged synthetic env
+file. Docker returned different entry orders with identical key/value entries;
+all owned containers were removed. The comparator now sorts validated unique
+entries in memory, preserving exact values and rejecting duplicate names and
+malformed entries before stopping and after replacement. It does not exempt any
+environment variable. This corrects an order-dependent check; the new full trial
+still has to prove actual promotion and reversion.
+
 The next disposable trial will cold-load the two independently retrieved private
 release artifacts from runs `37877500571` and `37881876443`. Their web and worker
 image IDs differ, but their content-bound acknowledgement worker build is the same.

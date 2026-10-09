@@ -24,8 +24,21 @@ function inspect(docker,compose,service,project){
  assert(Array.isArray(c.Config.Env)&&Array.isArray(c.Mounts));
  return c;
 }
+function environmentEntries(entries){
+ assert(Array.isArray(entries),"Explicit runtime environment entries required");
+ const keys=new Set();
+ for(const entry of entries){
+  assert(typeof entry==="string"&&!entry.includes("\0"),"Malformed runtime environment entry");
+  const separator=entry.indexOf("="),key=entry.slice(0,separator);
+  assert(separator>0&&/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)&&!keys.has(key),"Malformed or duplicate runtime environment name");
+  keys.add(key);
+ }
+ // Docker Compose can reorder unique environment entries during recreation.
+ // Values remain exact; duplicates are refused because their ordering can matter.
+ return [...entries].sort();
+}
 function configuration(c){
- return {env:c.Config.Env,user:c.Config.User,command:c.Config.Cmd,entrypoint:c.Config.Entrypoint,healthcheck:c.Config.Healthcheck,mounts:c.Mounts,host:c.HostConfig};
+ return {env:environmentEntries(c.Config.Env),user:c.Config.User,command:c.Config.Cmd,entrypoint:c.Config.Entrypoint,healthcheck:c.Config.Healthcheck,mounts:c.Mounts,host:c.HostConfig};
 }
 function unchangedConfiguration(c){
  // Compare sensitive environment/configuration in memory; return only its digest.
@@ -56,6 +69,7 @@ export async function transitionRuntimePackage({project,environment,current,targ
  assert.equal(build.buildId,to.buildId,"Target packaged worker build mismatch");
  phase="current-containers";
  const before=Object.fromEntries([...services,...retained].map(s=>[s,inspect(docker,compose,s,project)]));
+ for(const c of Object.values(before))unchangedConfiguration(c);
  for(const s of services){assert(before[s].State.Running,"Current application role must be running");assert.equal(before[s].Image,s==="web"?from.web:from.worker);}
  for(const s of retained)assert(before[s].State.Running,"Retained infrastructure must be running");
  phase="pending-before-stop";await assertPending();
