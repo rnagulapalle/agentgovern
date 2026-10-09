@@ -69,5 +69,27 @@ path, and rejects failed, truncated, reordered or activity-free histories.
 `staging-semantic-controller.mjs` is the pending actual-runtime controller. It uses
 existing named sessions, normal enrollment/grants/approvals and immutable scoped
 outbox routes. Its Docker host checkpoints, admission and isolated provider setup
-are not wired or executed yet. A controller checkpoint file alone is never proof
+are now wired through a strict derived fresh-host parent, but have not executed yet. A controller checkpoint file alone is never proof
 that a worker stopped, recovered, or is safe to retire.
+
+## Full fresh-host driver
+
+`staging-semantic-proof.mjs` requires disposable Linux/AMD64 CI and the original
+fresh typed HTTPS/browser gates. It validates all measured parent fingerprints
+before deriving the trial; the parent file and existing four-effect restore proof
+are unchanged. It builds the incompatible image with the owned builder, reserves
+an additional bounded worker in a separate phase admission, and stops the original
+web/poller/provider roles before that phase. The original browser memory reserve
+is retained; the later phase runs without Chromium and has its own reserve.
+
+The host verifies actual Docker image/instance identities, non-OOM SIGKILL,
+replacement readiness, independent provider read-back and stopped additional
+writers. Each new container/network/volume has an exclusive owner label; cleanup
+cannot remove a foreign resource. The two original owned database/service
+containers are temporarily attached to a private semantic network, then detached
+before the original restore proof. New provider effects are measured separately
+from the original four effects. Failed runs produce no acceptance receipt.
+
+This driver remains unexecuted until the pinned private CI run supplies actual
+outcomes. Retirement admission/reset fencing and long-term retention remain open;
+no merge, production cutover or enterprise acceptance follows from wiring alone.

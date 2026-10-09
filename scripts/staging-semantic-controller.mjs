@@ -18,7 +18,7 @@ import {TemporalOutbox} from "../runtime/temporal/outbox.ts";
 import {semanticArtifact,semanticPair,replaySemanticPair} from "./temporal-semantic-replay.mjs";
 const dir="/run/trial",phaseDir=dir+"/semantic";
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-let phase="inputs",db,connection;
+let phase="inputs",db,connection,optedIn=false;
 async function until(fn,label,seconds=180){
  for(const end=Date.now()+seconds*1000;Date.now()<end;){if(await fn())return;await wait(250);}throw Error(label);
 }
@@ -26,6 +26,7 @@ async function checkpoint(name){await until(async()=>{try{await access(`${phaseD
 const mark=(name,value)=>writeFile(`${phaseDir}/${name}.json`,JSON.stringify(value),{flag:"wx",mode:0o600});
 async function main(){
  assert.equal(process.env.LOOPLABS_SEMANTIC_LIFECYCLE,"isolated");
+ optedIn=true;
  const env=parseEnv(await readFile(`${dir}/worker.env`,"utf8"));
  const input=JSON.parse(await readFile(`${phaseDir}/input.json`,"utf8"));
  assert(/^ll-platform-[a-f0-9]{12}-semantic$/.test(input.taskQueue));
@@ -128,4 +129,4 @@ async function main(){
  assert.deepEqual(JSON.parse(await readFile(`${phaseDir}/post-replay-provider-readback.json`,"utf8")).effects,effects,"Replay must not change provider effects");
  await mark("replay-completed",{passed:true,replay,actualEffects:4,scope:"Authenticated isolated scoped version lifecycle; host checkpoints and retirement still require independent verification",notVerified:["retirement admission fence","long-term retention","production cutover","enterprise acceptance"]});
 }
-main().catch(async()=>{await writeFile(`${phaseDir}/failure.json`,JSON.stringify({phase}),{mode:0o600}).catch(()=>{});console.error("Staged semantic lifecycle controller failed; no raw authority, payload or SDK error printed.");process.exitCode=1;}).finally(async()=>{await connection?.close();await db?.end();});
+main().catch(async()=>{if(optedIn)await writeFile(`${phaseDir}/failure.json`,JSON.stringify({phase}),{mode:0o600}).catch(()=>{});console.error("Staged semantic lifecycle controller failed; no raw authority, payload or SDK error printed.");process.exitCode=1;}).finally(async()=>{await connection?.close();await db?.end();});
