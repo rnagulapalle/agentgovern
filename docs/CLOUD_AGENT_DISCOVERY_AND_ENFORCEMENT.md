@@ -3,7 +3,7 @@
 October 9, 2026. Raj added cloud discovery and sidecar-based enforcement to the
 platform scope. This document is the implementation contract, not a shipped
 integration claim. Current LoopLabs controls operate enrolled identities and
-bounded private provider twins. A staged AWS inventory candidate now stores scoped observations and exposes manual read-only scanning through a reviewed private binding; actual AWS account discovery remains unproved. Azure/Google discovery, a credential broker and customer-side enforcement sidecar remain unimplemented. See `CLOUD_INVENTORY_PERSISTENCE.md`.
+bounded private provider twins. A staged AWS inventory candidate now stores scoped observations and exposes manual read-only scanning through a reviewed private binding; actual AWS account discovery remains unproved. Azure/Google collectors, project scope persistence/review and a private Google read binding now exist as staged candidates; manual Google scan integration is under validation. Native cloud reads, Azure broker/transport, workload federation and customer-side enforcement remain unproved. See `CLOUD_INVENTORY_PERSISTENCE.md`.
 
 ## Product journey
 

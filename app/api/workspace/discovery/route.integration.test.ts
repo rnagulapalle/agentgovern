@@ -56,6 +56,34 @@ it("real session authentication and PostgreSQL persist only tenant-owned observa
     expect((await POST(request(token, { ...project, projectNumber: "999999999999" }))).status).toBe(409);
     expect((await POST(request(token, { ...project, token: "SECRET" }))).status).toBe(400);
     expect((await POST(request(token, { operation: "scan", connectionId: "google-a", kind: "project" }))).status).toBe(400);
+    // Actual invited route + private file + fixed native HTTP transport + PG.
+    // HTTP responses are controlled fixtures, not live Google account evidence.
+    expect((await POST(request(token, { operation: "scan-project", connectionId: "google-a" }))).status).toBe(503);
+    const googlePath = join(privateDir, "google-binding.json"), resource = `projects/${projectScope.projectNumber}/locations/${projectScope.location}/reasoningEngines/1234`;
+    await writeFile(googlePath, JSON.stringify({ scope: projectScope, session: { token: "DUMMY_GOOGLE_READ_TOKEN_123456789", expiresAt: new Date(Date.now() + 600000).toISOString() } }), { mode: 0o600 });
+    vi.stubEnv("LOOPLABS_GOOGLE_DISCOVERY_BINDING_FILE", googlePath);
+    let revokeDuringRead = false;
+    const fetcher = vi.fn(async (url: string | URL | Request) => {
+      const target = String(url);
+      if (target === `https://cloudresourcemanager.googleapis.com/v3/projects/${projectScope.projectNumber}`) return Response.json({ name: `projects/${projectScope.projectNumber}`, projectId: projectScope.projectId, state: "ACTIVE" });
+      if (target === `https://${projectScope.location}-aiplatform.googleapis.com/v1/${resource}`) {
+        if (revokeDuringRead) await db!.query("UPDATE ll_members SET active=false WHERE email='owner@example.test'");
+        return Response.json({ name: resource, spec: { serviceAccount: `agent-reader@${projectScope.projectId}.iam.gserviceaccount.com` }, description: "PRIVATE_PROMPT" });
+      }
+      if (target === `https://${projectScope.location}-aiplatform.googleapis.com/v1/projects/${projectScope.projectNumber}/locations/${projectScope.location}/reasoningEngines?pageSize=100`) return Response.json({ reasoningEngines: [{ name: resource }] });
+      throw Error("Unexpected fixture HTTP destination");
+    });
+    vi.stubGlobal("fetch", fetcher);
+    expect(await (await GET(request(token, undefined, "?kind=project"))).json()).toMatchObject({ connections: [{ scanReady: true }], scanningAvailable: true }); expect(fetcher).not.toHaveBeenCalled();
+    const projectScan = await POST(request(token, { operation: "scan-project", connectionId: "google-a" })); expect(projectScan.status).toBe(200);
+    expect(await projectScan.json()).toMatchObject({ completeness: "complete-api-traversal", records: [{ record: { resource, version: null, coverage: { enforcement: "unverified" } } }] });
+    expect((await POST(request(otherToken, { operation: "scan-project", connectionId: "google-a" }))).status).toBe(404);
+    revokeDuringRead = true;
+    expect((await POST(request(token, { operation: "scan-project", connectionId: "google-a" }))).status).toBe(403);
+    expect((await db.query("SELECT count(*)::int n FROM ll_cloud_project_scans")).rows[0].n).toBe(2);
+    expect(JSON.stringify((await db.query("SELECT * FROM ll_cloud_project_observations")).rows)).not.toContain("PRIVATE_PROMPT");
+    await db.query("UPDATE ll_members SET active=true WHERE email='owner@example.test'");
+    vi.unstubAllGlobals();
     expect((await db.query("SELECT count(*)::int n FROM ll_cloud_project_connections")).rows[0].n).toBe(1);
     for (const table of ["ll_agents", "ll_actions", "ll_tokens"]) expect((await db.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n).toBe(0);
     await db.query("UPDATE ll_members SET active=false WHERE email='owner@example.test'");
@@ -64,5 +92,5 @@ it("real session authentication and PostgreSQL persist only tenant-owned observa
     await db.query("UPDATE ll_members SET active=true WHERE email='owner@example.test'"); await db.query("UPDATE ll_sessions SET expires_at=now()-interval '1 second' WHERE hash=$1", [digest(token)]);
     expect((await GET(request(token))).status).toBe(401);
     expect((await db.query("SELECT count(*)::int n FROM ll_cloud_scans")).rows[0].n).toBe(2);
-  } finally { binding.db = null; vi.unstubAllEnvs(); await db?.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); await rm(privateDir, { recursive: true, force: true }); }
+  } finally { binding.db = null; vi.unstubAllGlobals(); vi.unstubAllEnvs(); await db?.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); await rm(privateDir, { recursive: true, force: true }); }
 });

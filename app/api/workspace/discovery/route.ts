@@ -18,7 +18,7 @@ export async function GET(r: NextRequest) {
       throw new ControlError(400, "Choose one saved discovery connection.");
     const connectionId = params.get("connectionId"), store = new CloudInventoryStore(db);
     if (connectionId !== null && !id.test(connectionId)) throw new ControlError(400, "Choose one saved discovery connection.");
-    if (params.get("kind") === "project") return Response.json(connectionId === null ? await store.projectConnections(actor) : await store.latestProject(actor, connectionId), { headers });
+    if (params.get("kind") === "project") return Response.json(connectionId === null ? await new CloudDiscoveryOperations(store).projectConnections(actor) : await store.latestProject(actor, connectionId), { headers });
     return Response.json(connectionId === null ? await new CloudDiscoveryOperations(store).connections(actor) : await store.latest(actor, connectionId), { headers });
   } catch (e) { return failure(e); }
 }
@@ -38,6 +38,9 @@ export async function POST(r: NextRequest) {
         : { provider: "google-agent-engine", tenantId: actor.orgId, connectionId: value.connectionId, projectId: value.projectId as string, projectNumber: value.projectNumber as string, location: value.location as string }); }
       catch { throw new ControlError(400, "Enter a valid reviewed Azure or Google project scope."); }
       return Response.json(await new CloudInventoryStore(db).configureProjectConnection(actor, scope), { headers });
+    }
+    if (Object.keys(value).sort().join() === "connectionId,operation" && value.operation === "scan-project" && typeof value.connectionId === "string" && id.test(value.connectionId)) {
+      return Response.json(await new CloudDiscoveryOperations(new CloudInventoryStore(db)).scanProject(actor, value.connectionId), { headers });
     }
     if (Object.keys(value).sort().join() === "connectionId,operation" && value.operation === "scan" && typeof value.connectionId === "string" && id.test(value.connectionId)) {
       return Response.json(await new CloudDiscoveryOperations(new CloudInventoryStore(db)).scan(actor, value.connectionId), { headers });

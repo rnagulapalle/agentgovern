@@ -40,7 +40,8 @@ traversal completeness means only that these bounded reads completed successfull
   It rereads scope and expiry before every operation. It neither acquires tokens
   nor identifies a workload principal. Native Resource Manager still verifies
   active project identity before inventory reads. No ambient login or planner
-  fallback exists; this adapter is not connected to the workspace scan route.
+  fallback exists. The next candidate connects this adapter to the invited manual
+  scan route through the existing CloudDiscoveryOperations service.
   Tests use temporary files and controlled HTTP, not native cloud credentials.
 - Add Azure's supported broker association and native project reads. Clients must
   not treat opaque Azure API access tokens as locally authoritative JWTs. Reference:
@@ -49,11 +50,15 @@ traversal completeness means only that these bounded reads completed successfull
   production installation remains open. Applied AWS migration16 is unchanged.
 - The candidate provider selector exposes Azure/Google configuration and saved
   evidence review in the existing discovery page, with unknown authority and
-  unavailable native scanning explicit. Exact-tree isolated CI run37970299556
+  binding availability separate from verified observations. Azure native scanning
+  remains unavailable; Google manual scanning requires a matching private binding.
+  Exact-tree isolated CI run37970299556
   passed612 tests,19 actual gateway checks and21 browser checks; desktop/mobile
   captures and source/artifact hashes were reviewed. Project observations in
   that browser proof were normalized database fixtures, not native cloud reads.
-  A subsequent credential-reader change requires a fresh browser proof.
+  The credential-reader change passed fresh617-test,19-gateway,21-browser CI
+  run37972097445. The subsequent manual Google scan integration requires fresh
+  full regression and browser acceptance.
 - Prove actual native reads with explicitly authorized project bindings. Fixture
   tests do not establish live cloud access, federation or enforcement.
 - Enroll accountable owners and workload attestation before joining a cloud agent
@@ -73,3 +78,28 @@ file,64KiB limit, full read and unchanged size/time checks. FIFO, malformed JSON
 traversal and missing files refuse with sanitized errors. Returning parsed unknown
 is not credential validation; each provider separately validates exact scope,
 contract and lifetime. Keep files out of Git, screenshots and browser requests.
+
+## Manual Google scan candidate
+
+The invited route accepts only `{ operation: "scan-project", connectionId }`.
+Tenant and project scope come from current authentication and immutable saved
+configuration. Configuration readiness reads the server file without contacting
+Google. A scan verifies native project identity before each bounded GET, preserves
+partial traversal and rechecks membership/recovery before storing minimized
+observations. Both AWS and project scans share the45-second admission budget;
+each native read has its own15-second deadline. Independent role/principal,
+effective permissions, owner mapping and enforcement remain unknown.
+
+`LOOPLABS_GOOGLE_DISCOVERY_BINDING_FILE` must refer to an explicitly provisioned
+private file containing exactly `scope` and `session`. Scope must match the saved
+Google connection, including the LoopLabs tenant/connection, project ID/number and
+location; session contains only a short-lived `token` and `expiresAt`. No token
+acquisition, secret-store integration or automatic refresh is provided. Provision
+and rotate it privately through the administrator; never put it in a browser,
+Git or screenshot. The token must have the intended provider read permissions.
+
+The actual authenticated API/PostgreSQL test uses controlled native-shaped HTTP
+responses and proves successful minimized persistence plus refusal after membership
+revocation during a read. This is not a native Google account proof. Browser proof
+still uses saved project fixtures and must show no scan control without a matching
+binding. Real cloud scope/credentials and reviewed enrollment remain outstanding.

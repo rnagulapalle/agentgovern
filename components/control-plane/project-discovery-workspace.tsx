@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { Cloud, UserRound, Cable, ShieldQuestion } from "lucide-react";
 import Link from "next/link";
 import { workspaceJson } from "@/lib/workspace/response";
+import type { CloudDiscoveryOperations } from "@/lib/workspace/cloud-operations";
 import type { CloudInventoryStore } from "@/lib/workspace/cloud-inventory";
-type Connections = Awaited<ReturnType<CloudInventoryStore["projectConnections"]>>;
+type Connections = Awaited<ReturnType<CloudDiscoveryOperations["projectConnections"]>>;
 type Inventory = Awaited<ReturnType<CloudInventoryStore["latestProject"]>>;
 export function ProjectDiscoveryWorkspace({ provider }: { provider: "azure-foundry" | "google-agent-engine" }) {
   const [connections, setConnections] = useState<Connections | null>(null), [inventory, setInventory] = useState<Inventory | null>(null);
@@ -36,9 +37,18 @@ export function ProjectDiscoveryWorkspace({ provider }: { provider: "azure-found
     } catch (e) { setError(e instanceof Error ? e.message : "Saved evidence could not be loaded."); }
     finally { setBusy(false); }
   }
+  async function scan(id: string) {
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const r = await fetch("/api/workspace/discovery", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ operation: "scan-project", connectionId: id }) });
+      const value = await workspaceJson(r); if (!r.ok) throw Error(value.error);
+      setInventory(value); setNotice("Read-only project scan saved. No agent enrollment or execution permission was created.");
+    } catch (e) { setError(e instanceof Error ? e.message : "Project scan could not be verified. Prior evidence remains saved."); }
+    finally { setBusy(false); }
+  }
   const saved = connections?.connections.filter(c => c.scope.provider === provider);
   return <>
-    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> {azure ? "Azure Foundry" : "Google Agent Engine"} inventory</h2><p>Save the project scope reviewed by your administrator and inspect saved observations. Native scanning is not connected to this workspace yet.</p><p>Saving a scope does not contact the cloud, import agents or grant execution permission. Enter no passwords, access keys or tokens.</p></section>
+    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> {azure ? "Azure Foundry" : "Google Agent Engine"} inventory</h2><p>Save the project scope reviewed by your administrator and inspect saved observations. {azure ? "Native scanning is not connected to this workspace yet." : "Google scanning requires an administrator-reviewed server binding. Configured access is not a verified scan."}</p><p>Saving a scope does not contact the cloud, import agents or grant execution permission. Enter no passwords, access keys or tokens.</p></section>
     {error && <p role="alert" className="cp-durable-message is-error">{error}</p>}
     {notice && <p role="status" className="cp-durable-message">{notice}</p>}
     <section className="cp-panel cp-durable-card"><h2>Save a project scope</h2>
@@ -52,7 +62,7 @@ export function ProjectDiscoveryWorkspace({ provider }: { provider: "azure-found
       {!connections && !error && <p role="status">Loading saved project scopes…</p>}
       {saved && !saved.length && <p>No scopes for this provider are shown. This does not mean your cloud has no agents.</p>}
       {connections?.truncated && <p>Showing the first 100 project scopes across providers. Remaining scopes may not appear here; ask your administrator for the full inventory.</p>}
-      {saved?.map(c => <div className="cp-durable-card" key={c.scope.connectionId}><h3>{c.scope.connectionId}</h3><p>Scope configured · {c.scope.provider === "azure-foundry" ? "Azure Foundry" : `${c.scope.projectId} · ${c.scope.location}`}</p><p>Native scanning is not connected yet. A saved scope is not cloud access or enforcement.</p><button className="cp-button secondary" disabled={busy} onClick={() => void read(c.scope.connectionId)}>Review saved project evidence</button></div>)}
+      {saved?.map(c => <div className="cp-durable-card" key={c.scope.connectionId}><h3>{c.scope.connectionId}</h3><p>Scope configured · {c.scope.provider === "azure-foundry" ? "Azure Foundry" : `${c.scope.projectId} · ${c.scope.location}`}</p><p>{c.scanReady ? "Read-only server binding configured. Scan to verify scoped cloud access." : "Native scanning is unavailable: a reviewed supported server binding is required."} A saved scope is not cloud access or enforcement.</p>{c.scanReady && <button className="cp-button" disabled={busy} onClick={() => void scan(c.scope.connectionId)}>Scan project inventory</button>}<button className="cp-button secondary" disabled={busy} onClick={() => void read(c.scope.connectionId)}>Review saved project evidence</button></div>)}
     </section>
     {inventory && <section className="cp-panel cp-durable-card"><h2>{inventory.scope.connectionId}: project evidence</h2>
       <div className="cp-discovery-coverage"><span><UserRound size={18} aria-hidden="true" /> Owner not mapped</span><span><Cable size={18} aria-hidden="true" /> Activity not connected</span><span><ShieldQuestion size={18} aria-hidden="true" /> Action enforcement not verified</span></div>

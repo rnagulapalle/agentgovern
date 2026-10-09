@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
 import { beforeEach, expect, it, vi } from "vitest";
 import { ControlError } from "@/lib/durable/contracts";
-const mocks = vi.hoisted(() => ({ authenticate: vi.fn(), connections: vi.fn(), latest: vi.fn(), configureConnection: vi.fn(), scan: vi.fn(), projectConnections: vi.fn(), latestProject: vi.fn(), configureProjectConnection: vi.fn() }));
+const mocks = vi.hoisted(() => ({ authenticate: vi.fn(), connections: vi.fn(), latest: vi.fn(), configureConnection: vi.fn(), scan: vi.fn(), scanProject: vi.fn(), projectConnections: vi.fn(), latestProject: vi.fn(), configureProjectConnection: vi.fn() }));
 vi.mock("@/lib/durable/database", () => ({ database: () => ({}) }));
 vi.mock("@/lib/durable/service", () => ({ authenticate: mocks.authenticate }));
 vi.mock("@/lib/workspace/cloud-inventory", () => ({ CloudInventoryStore: class { connections = mocks.connections; latest = mocks.latest; configureConnection = mocks.configureConnection; projectConnections = mocks.projectConnections; latestProject = mocks.latestProject; configureProjectConnection = mocks.configureProjectConnection; } }));
-vi.mock("@/lib/workspace/cloud-operations", () => ({ CloudDiscoveryOperations: class { connections = mocks.connections; scan = mocks.scan; } }));
+vi.mock("@/lib/workspace/cloud-operations", () => ({ CloudDiscoveryOperations: class { connections = mocks.connections; scan = mocks.scan; projectConnections = mocks.projectConnections; scanProject = mocks.scanProject; } }));
 import { GET, POST } from "./route";
 const actor = { orgId: "company-a", role: "operator", subject: "member" };
 const req = (content?: string, query = "", origin = "https://looplabs.run") => new NextRequest(`https://looplabs.run/api/workspace/discovery${query}`, { method: content === undefined ? "GET" : "POST", headers: { origin, authorization: "Bearer member", "Content-Type": "application/json" }, ...(content === undefined ? {} : { body: content }) });
@@ -56,4 +56,14 @@ it("project configuration derives tenant and refuses credentials, ambiguous sele
   expect(mocks.configureProjectConnection).not.toHaveBeenCalled();
   for (const query of ["?kind=project&kind=project", "?kind=other", "?kind=project&tenantId=other", "?kind=project&connectionId=a&connectionId=b"]) expect((await GET(req(undefined, query))).status).toBe(400);
   mocks.projectConnections.mockRejectedValue(Error("SECRET provider connection")); const response = await GET(req(undefined, "?kind=project")); expect(response.status).toBe(503); expect(await response.text()).not.toContain("SECRET");
+});
+
+it("project scan dispatch accepts only a saved ID, derives actor and refuses raw scope/secrets", async () => {
+  mocks.scanProject.mockResolvedValue({ completeness: "partial", enforcement: "unverified" });
+  const r = await POST(req(JSON.stringify({ operation: "scan-project", connectionId: "google-a" })));
+  expect(r.status).toBe(200); expect(r.headers.get("Cache-Control")).toBe("no-store"); expect(mocks.scanProject).toHaveBeenCalledWith(actor, "google-a");
+  mocks.scanProject.mockClear();
+  for (const bad of [{ operation: "scan-project", connectionId: "../foreign" }, { operation: "scan-project", connectionId: "google-a", tenantId: "other" }, { operation: "scan-project", connectionId: "google-a", token: "SECRET" }, { operation: "scan-project", connectionId: "google-a", projectNumber: "123456789012" }]) expect((await POST(req(JSON.stringify(bad)))).status).toBe(400);
+  expect(mocks.scanProject).not.toHaveBeenCalled();
+  mocks.scanProject.mockRejectedValue(new ControlError(503, "Reviewed discovery access unavailable.")); expect((await POST(req(JSON.stringify({ operation: "scan-project", connectionId: "google-a" })))).status).toBe(503);
 });
