@@ -44,6 +44,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm quality
+        env:
+          # Scoped archive tests use this job's PostgreSQL17 client, not an older host client.
+          LOOPLABS_TEST_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
 
   staging-temporal-service:
     name: staging-temporal-service
