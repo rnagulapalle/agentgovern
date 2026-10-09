@@ -28,8 +28,17 @@ traversal completeness means only that these bounded reads completed successfull
 
 ## Remaining integration and proof
 
-- Add reviewed read-only HTTP transports with short-lived credentials, verified
-  scope, fixed endpoints, response bounds, deadlines and refusal of redirects.
+- The Google HTTP transport candidate uses native Resource Manager project readback,
+  fixed resource endpoints and one credential snapshot/shared15-second deadline
+  per operation, including broker acquisition. Every operation verifies active
+  project identity; responses are limited to1MiB and redirects are refused. Tests
+  use controlled HTTP responses, not an authorized live cloud account.
+- Connect that transport to an explicitly reviewed short-lived credential broker.
+  No credential file, ambient login, planner fallback or token acquisition exists
+  in this candidate.
+- Add Azure's supported broker association and native project reads. Clients must
+  not treat opaque Azure API access tokens as locally authoritative JWTs. Reference:
+  [Microsoft client guidance](https://learn.microsoft.com/en-us/entra/identity-platform/claims-validation).
 - Add a new provider-specific persistence migration; do not reinterpret or edit
   applied AWS migration16. Retain prior observations through partial/empty scans.
 - Extend existing connection and inventory review UX; surface evidence gaps first.
@@ -41,3 +50,7 @@ traversal completeness means only that these bounded reads completed successfull
 No production migration, deployment, cloud mutation or credential acquisition is
 performed by this candidate. Full regression validation remains required before
 commit; public push and release gates remain unchanged.
+
+Google project verification additionally requires `resourcemanager.projects.get`;
+it does not establish the calling workload's principal or effective permissions.
+Reference: [native project read](https://docs.cloud.google.com/resource-manager/reference/rest/v3/projects/get).
