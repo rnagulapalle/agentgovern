@@ -51,3 +51,25 @@ or enterprise-ready merely because the binding is configured.
 Sources: [Azure CLI token contract](https://learn.microsoft.com/en-us/cli/azure/account?view=azure-cli-latest#az-account-get-access-token),
 [Azure CLI authentication](https://learn.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest),
 [opaque token client guidance](https://learn.microsoft.com/en-us/entra/identity-platform/claims-validation).
+
+## Invited scan proof increment
+
+The broker commit passed exact-tree CI run37981056667:634 tests,19 actual gateway
+checks and21 browser checks. Source/bundle/archive and screenshot hashes were
+verified. That browser run reviewed normalized project observations; it did not
+exercise a successful Azure scan click.
+
+The next proof increment exercises authenticated route → private binding → actual
+CLI fixture → fixed HTTP adapter → PostgreSQL. It covers cross-company refusal,
+wrong broker directory, membership revocation during the version read and scan
+throttling while retaining minimized evidence and zero execution identities.
+
+The extended browser harness uses a child-only explicit preload fixture. It refuses
+startup without isolated opt-in, accepts only fixed dummy-authenticated GETs and
+blocks other external destinations. No provider URL override or authentication
+bypass is added to application code. The signed-in evaluator saves scope, sees
+scanning unavailable, receives an administrator-provisioned fixture binding,
+executes a scan, reloads its saved version and encounters changed-binding refusal
+without losing prior evidence. Azure390px and desktop captures are required.
+This proves UI/service integration over fixtures, not native cloud compatibility.
+Fresh full regression and actual browser acceptance remain required.

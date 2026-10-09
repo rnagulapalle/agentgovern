@@ -94,3 +94,43 @@ it("real session authentication and PostgreSQL persist only tenant-owned observa
     expect((await db.query("SELECT count(*)::int n FROM ll_cloud_scans")).rows[0].n).toBe(2);
   } finally { binding.db = null; vi.unstubAllGlobals(); vi.unstubAllEnvs(); await db?.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); await rm(privateDir, { recursive: true, force: true }); }
 });
+
+it("Azure invited scan uses the explicit CLI binding, persists minimized versions and refuses directory substitution or revoked membership", async () => {
+  if (!process.env.LOOPLABS_TEST_DATABASE_URL) throw new Error("Dedicated PostgreSQL required; never skip.");
+  const admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL }), schema = `azure_http_${randomBytes(8).toString("hex")}`, epoch = randomUUID(), token = randomBytes(32).toString("base64url"), foreignToken = randomBytes(32).toString("base64url");
+  const dir = await mkdtemp(join(tmpdir(), "ll-azure-http-")); let db: Pool | undefined;
+  const scope = { provider: "azure-foundry" as const, tenantId: "company-a", connectionId: "azure-a", directoryId: "22222222-2222-4222-8222-222222222222", endpoint: "https://example.services.ai.azure.com/api/projects/reviewed" };
+  const request = (session: string, payload?: object, query = "") => new NextRequest(`https://looplabs.run/api/workspace/discovery${query}`, { method: payload ? "POST" : "GET", headers: { origin: "https://looplabs.run", cookie: `${WORKSPACE_COOKIE}=${session}`, "Content-Type": "application/json" }, ...(payload ? { body: JSON.stringify(payload) } : {}) });
+  try {
+    await admin.query(`CREATE SCHEMA ${schema}`); db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` }); binding.db = db;
+    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/durable/recovery-schema.sql", "lib/workspace/cloud-inventory-schema.sql", "lib/workspace/cloud-project-schema.sql"]) await db.query(await readFile(file,"utf8"));
+    await db.query("INSERT INTO ll_orgs(id) VALUES('company-a'),('company-b')"); await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('company-a',$1),('company-b',$1)",[epoch]); vi.stubEnv("LOOPLABS_RECOVERY_EPOCH",epoch);
+    await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('owner@example.test','company-a','Owner','test'),('other@example.test','company-b','Other','test')");
+    await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,'owner@example.test',now()+interval '1 hour'),($2,'other@example.test',now()+interval '1 hour')",[digest(token),digest(foreignToken)]);
+    const { tenantId: _tenant, ...configuration } = scope; void _tenant;
+    expect((await POST(request(token,{operation:"configure-project",...configuration}))).status).toBe(200);
+    expect(await(await GET(request(token,undefined,"?kind=project"))).json()).toMatchObject({connections:[{scanReady:false}],scanningAvailable:false});
+    const { mkdir } = await import("node:fs/promises"); const executable=join(dir,'az-fixture'), configDirectory=join(dir,'config'), path=join(dir,'binding.json'), marker=join(dir,'calls'); await mkdir(configDirectory,{mode:0o700});
+    let directory=scope.directoryId;
+    const writeCli = () => writeFile(executable,`#!/bin/sh\nprintf x >> '${marker}'\nif [ "$1" = cloud ]; then printf '%s' '${JSON.stringify({name:'AzureCloud',authority:'https://login.microsoftonline.com',management:'https://management.azure.com/'})}'; else printf '%s' '${JSON.stringify({token:'DUMMY_AZURE_NATIVE_TOKEN_123456',expires:Math.floor(Date.now()/1000)+600,tenant:directory,type:'Bearer'})}'; fi\n`,{mode:0o700});
+    await writeCli(); await writeFile(path,JSON.stringify({scope,executable,configDirectory}),{mode:0o600}); vi.stubEnv('LOOPLABS_AZURE_DISCOVERY_BINDING_FILE',path);
+    let revoke=false; const version={object:'agent.version',id:'version-one',name:'customer-ops',version:'1'};
+    const fetcher=vi.fn(async(input:string|URL|Request,init?:RequestInit)=>{
+      expect(init).toMatchObject({method:'GET',redirect:'manual',headers:{Authorization:'Bearer DUMMY_AZURE_NATIVE_TOKEN_123456',Accept:'application/json'}});
+      const url=new URL(String(input));expect(url.searchParams.get('api-version')).toBe('v1');expect(url.origin+url.pathname).toMatch(new RegExp('^'+scope.endpoint.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
+      if(url.pathname.endsWith('/versions/1')){if(revoke)await db!.query("UPDATE ll_members SET active=false WHERE email='owner@example.test'");return Response.json({...version,definition:{instructions:'PRIVATE_PROMPT',tools:[{token:'PRIVATE_TOKEN'}]}});}
+      if(url.pathname.endsWith('/versions')){expect(url.searchParams.get('include_drafts')).toBe('false');return Response.json({data:[version],has_more:false});}
+      return Response.json({data:[{object:'agent',id:'agent-one',name:'customer-ops'}],has_more:false});
+    });vi.stubGlobal('fetch',fetcher);
+    expect(await(await GET(request(token,undefined,'?kind=project'))).json()).toMatchObject({connections:[{scanReady:true}],scanningAvailable:true});expect(fetcher).not.toHaveBeenCalled();await expect(readFile(marker)).rejects.toThrow();
+    const scan=await POST(request(token,{operation:'scan-project',connectionId:scope.connectionId}));expect(scan.status).toBe(200);
+    expect(await scan.json()).toMatchObject({completeness:'complete-api-traversal',enforcement:'unverified',records:[{record:{resource:scope.endpoint+'/agents/customer-ops/versions/1',version:'1',identityReference:null,coverage:{ownership:'unmapped',enforcement:'unverified'}}}]});
+    expect(fetcher).toHaveBeenCalledTimes(4);const calls=await readFile(marker,'utf8');expect(calls.length).toBe(8);
+    expect((await POST(request(foreignToken,{operation:'scan-project',connectionId:scope.connectionId}))).status).toBe(404);expect(await readFile(marker,'utf8')).toBe(calls);
+    directory='33333333-3333-4333-8333-333333333333';await writeCli();fetcher.mockClear();expect((await POST(request(token,{operation:'scan-project',connectionId:scope.connectionId}))).status).toBe(503);expect(fetcher).not.toHaveBeenCalled();
+    directory=scope.directoryId;await writeCli();revoke=true;expect((await POST(request(token,{operation:'scan-project',connectionId:scope.connectionId}))).status).toBe(403);
+    await db.query("UPDATE ll_members SET active=true WHERE email='owner@example.test'");fetcher.mockClear();expect((await POST(request(token,{operation:'scan-project',connectionId:scope.connectionId}))).status).toBe(429);expect(fetcher).not.toHaveBeenCalled();
+    expect((await db.query('SELECT count(*)::int n FROM ll_cloud_project_scans')).rows[0].n).toBe(1);const rows=(await db.query('SELECT * FROM ll_cloud_project_observations')).rows;expect(JSON.stringify(rows)).not.toContain('PRIVATE');expect(JSON.stringify(rows)).not.toContain('DUMMY_AZURE');
+    for(const table of ['ll_agents','ll_actions','ll_tokens'])expect((await db.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n).toBe(0);
+  } finally {binding.db=null;vi.unstubAllGlobals();vi.unstubAllEnvs();await db?.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);await admin.end();await rm(dir,{recursive:true,force:true});}
+});
