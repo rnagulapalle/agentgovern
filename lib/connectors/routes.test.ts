@@ -312,6 +312,14 @@ it("serves the tool client over real HTTP with held approval, response-loss reco
     const created = await enrolled.json();
     const run = await (await workflows.GET(new NextRequest(`https://looplabs.run/api/durable/workflows?run=${created.id}`, { headers: { Authorization: `Bearer ${tokens.operator}` } }))).json();
     const actionId = run.steps[0].action_id as string, proposal = { actionId, connector: "crm" as const, payload: { lifecycle: "customer" as const } };
+    // No saved action yet: do not expose or mutate authority through an enrolled but unproposed ID.
+    for (const operation of ["approve", "execute"]) {
+      const response = await fetch(`${origin}/api/durable/connectors`, { method: "POST", headers: { authorization: `Bearer ${tokens.agent}`, "content-type": "application/json" }, body: JSON.stringify({ operation, actionId, ...(operation === "approve" ? { payloadHash: "a".repeat(64) } : {}) }) });
+      expect(response.status).toBe(404);
+    }
+    expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE id=$1", [actionId])).rows[0].n).toBe(0);
+    expect((await db.query("SELECT reserved FROM ll_agents WHERE org_id='http' AND id='agent'")).rows[0].reserved).toBe(reservedBefore);
+    expect(providerWrites.count).toBe(writesBefore);
     drop = true; await expect(client.propose(proposal)).rejects.toMatchObject({ outcome: "unconfirmed" }); expect(droppedStatus, droppedError).toBe(200);
     expect((await client.read(actionId)).state).toBe("held"); expect((await client.propose(proposal)).state).toBe("held");
     expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE id=$1", [actionId])).rows[0].n).toBe(1);

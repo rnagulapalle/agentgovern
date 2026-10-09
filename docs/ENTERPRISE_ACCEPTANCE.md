@@ -376,3 +376,18 @@ This supersedes the earlier open disposable reset/archive gap. Migration14 remai
 unreleased; long-term artifact/history retention, retirement/deletion permission,
 persistent staging/operator acceptance, live-provider guarantees, enterprise
 identity/isolation and production cutover remain open. Production is unchanged.
+
+## Disposable mandatory-path proof: October 9
+
+Private CI `37960618067` passed the full gate and actual isolated TLS/Next-handler/
+PostgreSQL/FetchSandbox trial. Its retained receipt matches 44 sources and three
+independently rebuilt component byte hashes. Nineteen assertions cover agent
+network/credential separation, forbidden privilege operations, epoch mismatch,
+independent approval, outage refusal, durable held/uncertain states, exact two
+native effects, provider SIGKILL persistence, terminal verification refusal,
+revocation and owned cleanup. See `GATEWAY_BYPASS_PROOF.md`.
+
+This closes one disposable enforcement experiment. Customer installation, cloud
+workload federation, joined persistent staging, live providers, sustained service
+objectives and enterprise security/operational acceptance remain open. Production
+and its dispatcher are unchanged; no Temporal superiority follows.

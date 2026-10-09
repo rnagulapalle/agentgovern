@@ -70,3 +70,13 @@ actual direct-request denial, no effects on blocked paths, current workload
 identity checks, independent approvals, outage containment, restart and observed
 provider effects. A voluntary SDK wrapper alone cannot prevent bypass. See
 `CLOUD_AGENT_DISCOVERY_AND_ENFORCEMENT.md` and `ENTERPRISE_PILOT_GAP_REVIEW.md`.
+
+## Isolated mandatory-path increment
+
+`GATEWAY_BYPASS_PROOF.md` records a successful disposable trial using this exact
+client and the actual route handlers. Healthy private backends were unreachable
+from the isolated agent; independent approval, outage refusal, restart, lost-response
+reconciliation, exact native CRM/email readback and revocation passed. Its retained
+receipt matches 44 sources and three rebuilt component byte hashes. This proves
+that specific Docker network/TLS/twin boundary, not customer installation, cloud
+federation, same-pod sidecar isolation or a production gateway.

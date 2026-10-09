@@ -206,3 +206,13 @@ References for this transport:
 ## Scoped tool integration candidate
 
 `AGENT_TOOL_CLIENT.md` describes the new thin connector API client and actual HTTP/PostgreSQL route checks. It keeps agent identity and idempotency fixed, refuses redirects and uncertain-response resends, and exposes no approval/execution operation. It reuses the existing services; it is not a mandatory gateway, cloud federation or direct-provider bypass proof.
+
+## Disposable gateway boundary increment
+
+`GATEWAY_BYPASS_PROOF.md` now records actual direct provider/DB denial from an
+isolated scoped agent and a completed CRM-to-email twin workflow with independent
+approval, outage refusal, epoch mismatch containment, lost-response recovery and
+SIGKILL readback. The accepted receipt matches 44 sources and three rebuilt byte
+hashes. This closes the disposable transport-bypass experiment; it does not import
+or attest a cloud workload, establish a customer sidecar or combine the separate
+Temporal and cloud discovery proofs into one customer deployment.
