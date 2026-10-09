@@ -486,3 +486,24 @@ supersedes their earlier awaiting-trial status. Preparation still uses the fixtu
 API, so fresh typed model planning is not established by this proof. Persistent
 remote staging, live delivery, sustained independent-tenant load, remote restore,
 operator alerts/security acceptance and production cutover remain open.
+
+
+## Fresh typed planning increment
+
+The historical prepared-plan result above is preserved. Actual CI run
+`37863416303` now passed a fresh typed HTTPS request and recipient clarification
+against the real bounded model, followed by the same exact scoped-plan, independent
+approval, effect-verification and mobile-reload journey. Only the actual web
+container received the temporary STS session; all seven other roles carried no
+AWS/model fields. The API trial retained crash recovery, lost-response readback and
+history replay, with exactly four provider effects across both runs. The full
+quality gate passed. See `STAGING_TYPED_JOURNEY.md` and the current measured
+`docs/evidence/staging-platform-browser-proof.json`.
+
+The measured receipt retains all previously covered sources and adds the planner
+input, web-only attachment and recorder. The prior receipt is hash-preserved; no
+source-freshness gate is waived. Public merge still requires local quality, the
+normal pre-push gate and exact-head CI. Temporary repository/local credential
+inputs were removed and verified. Persistent hosting, sustained load, remote
+restore/alerts/operator acceptance, live-provider safety and production cutover
+remain unproved; this is not an enterprise production acceptance.

@@ -6,6 +6,7 @@ import {tmpdir} from "node:os";
 import {resolve} from "node:path";
 import assert from "node:assert/strict";
 import {generateTemporalConfiguration} from "./staging-temporal-config.mjs";
+import {attachPlannerInputs} from "./staging-planner-attachment.mjs";
 import {assembleRuntimeInputs} from "./staging-runtime-inputs.mjs";
 import {stagingHostAdmission} from "../runtime/temporal/staging-host.ts";
 import {safeTrialFailure,safeProviderFailure,safeBrowserFailure} from "./staging-trial-failure.mjs";
@@ -19,6 +20,10 @@ assert(process.env.LOOPLABS_STAGING_PLATFORM_PROOF==="isolated"&&backend,"Explic
 const browserOptIn=process.env.LOOPLABS_STAGING_BROWSER_PROOF;
 assert(browserOptIn===undefined||browserOptIn==="isolated","Invalid browser proof opt-in");
 const browserEnabled=browserOptIn==="isolated";
+const typedOptIn=process.env.LOOPLABS_STAGING_TYPED_PLANNER;
+assert(typedOptIn===undefined||typedOptIn==="isolated","Invalid typed planner opt-in");
+const typedPlanning=typedOptIn==="isolated";
+assert(!typedPlanning||(browserEnabled&&process.env.LOOPLABS_STAGING_PLANNER_INPUT),"Typed planning requires HTTPS browser and explicit temporary model input");
 if(browserEnabled)assert(process.env.GITHUB_ACTIONS==="true","Fresh isolated CI required for browser trust setup");
 assert(process.platform==="linux","Run on a fresh allocated Linux runner; do not resize shared workloads");
 const source=JSON.parse(await readFile(resolve(backend,"../fixture-source-manifest.json"),"utf8"));
@@ -62,7 +67,9 @@ try{
  const database=resolve(application,"database");
  const assembly=resolve(parent,"assembled");await writeFile(resolve(parent,"settings.json"),JSON.stringify({origin:browserEnabled?browserOrigin:"https://looplabs-staging.example.test",buildId:build.buildId,taskQueue:`${project}-ack`,records,connectorToken:token}),{mode:0o600});
  await assembleRuntimeInputs(database,privateDir,resolve(parent,"settings.json"),assembly);
- for(const role of ["web","worker"])await cp(resolve(assembly,`${role}.env`),resolve(privateDir,`${role}.env`));
+ let roleInputs=assembly;
+ if(typedPlanning){roleInputs=resolve(parent,"planner-attached");await attachPlannerInputs(assembly,process.env.LOOPLABS_STAGING_PLANNER_INPUT,roleInputs);}
+ for(const role of ["web","worker"])await cp(resolve(roleInputs,`${role}.env`),resolve(privateDir,`${role}.env`));
  stage="temporal-schemas";
  for(const [name,kind] of [["temporal","temporal"],["temporal_visibility","visibility"]]){
   const args=["run","--rm","--network",`${project}_orchestration`,"--memory","256m","--env-file",resolve(privateDir,"offline/schema.env"),"--entrypoint","temporal-sql-tool","temporalio/admin-tools:1.31.0","--plugin","postgres12","--ep","temporal-db","-u","temporal","-p","5432","--db",name];
@@ -79,7 +86,9 @@ try{
  await until(()=>{try{runController(`${project}-namespace`,`${project}_orchestration`,images.worker,["node","scripts/staging-namespace-bootstrap.mjs","/run/installation"],mounts,[resolve(parent,"namespace.env")]);return true;}catch{return false;}},"Authenticated namespace unavailable");
  stage="eight-service-start";compose("up","-d");await ready(["web","temporal-worker","temporal-scheduler","connector-twin"]);
  const inspection=JSON.parse(docker("inspect",...Object.keys(roles).map(container)));
- assert.equal(inspection.length,8);for(const c of inspection){assert(c.HostConfig.Memory>0&&c.HostConfig.PidsLimit>0);if(!c.Name.endsWith("-web-1"))assert.equal(Object.keys(c.HostConfig.PortBindings||{}).length,0);}
+ assert.equal(inspection.length,8);
+ if(typedPlanning){for(const c of inspection){const cloud=(c.Config.Env||[]).filter(v=>v.startsWith("AWS_")||v.startsWith("LOOPLABS_CHAT_MODEL="));if(c.Name.endsWith("-web-1")){assert.equal(cloud.length,5);assert(cloud.some(v=>v==="LOOPLABS_CHAT_MODEL=us.amazon.nova-lite-v1:0"));}else assert.equal(cloud.length,0,"Non-web roles must not receive cloud credentials");}}
+ for(const c of inspection){assert(c.HostConfig.Memory>0&&c.HostConfig.PidsLimit>0);if(!c.Name.endsWith("-web-1"))assert.equal(Object.keys(c.HostConfig.PortBindings||{}).length,0);}
  stage="api-execution";
  await cp(resolve(database,".local/workspace-accounts.json"),resolve(trial,"accounts.json"));await cp(resolve(privateDir,"worker.env"),resolve(trial,"worker.env"));await cp(resolve(privateDir,"client-tls"),resolve(trial,"tls"),{recursive:true});
  const controlName=`${project}-trial`;owned.push(controlName);
@@ -95,8 +104,8 @@ try{
  await until(()=>controllerExit!==null,"Trial did not finish");assert.equal(controllerExit,0);
  const result=JSON.parse(output.trim());assert.equal(result.passed,true);
  let browser;
- if(browserEnabled){stage="browser-https";const observed=await stagingBrowserProof(trial);const provider=JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"));assert.equal(Object.keys(provider.effects).length,4);for(const id of observed.actionIds)assert(provider.effects[id]);const {actionIds,...sanitized}=observed;assert.equal(actionIds.length,2);browser=sanitized;}
- console.log(JSON.stringify({...result,...(browser?{browser,scope:"assembled isolated API/runtime and prepared-plan HTTPS browser trial",notVerified:["fresh typed chat/model interpretation",...result.notVerified.filter(x=>x!=="browser HTTPS and typed chat UX")]}:{}),buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission},null,2));
+ if(browserEnabled){stage="browser-https";const observed=await stagingBrowserProof(trial,{typedPlanning});const provider=JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"));assert.equal(Object.keys(provider.effects).length,4);for(const id of observed.actionIds)assert(provider.effects[id]);const {actionIds,...sanitized}=observed;assert.equal(actionIds.length,2);browser=sanitized;}
+ console.log(JSON.stringify({...result,...(typedPlanning?{plannerAuthority:{webOnly:true},actualProviderEffects:4}:{}),...(browser?{browser,scope:typedPlanning?"assembled isolated API/runtime and fresh typed HTTPS browser trial":"assembled isolated API/runtime and prepared-plan HTTPS browser trial",notVerified:[...(typedPlanning?[]:["fresh typed chat/model interpretation"]),...result.notVerified.filter(x=>x!=="browser HTTPS and typed chat UX")]}:{}),buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission},null,2));
 }catch{
  let detail="";
  try {const report=JSON.parse(await readFile(resolve(trial,"failure.json"),"utf8"));detail=safeTrialFailure(report);}catch{}
