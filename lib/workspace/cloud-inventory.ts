@@ -5,6 +5,8 @@ import { ControlError, type Actor } from "../durable/contracts";
 import { memberAuthority } from "./identity";
 import { throttle } from "./auth";
 import { preserveRuntimeInventory, type CloudDiscoveryScope, type DiscoveredRuntime, type RuntimeInventoryScan } from "./cloud-discovery";
+import { projectDiscoveryScope, type ProjectDiscoveryScope, type ProjectInventoryScan, type ProjectObservation } from "./cloud-project-discovery";
+import { canonicalProjectScan } from "./cloud-project-evidence";
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const failures = ["list-unavailable", "invalid-page", "invalid-resource", "detail-unavailable", "invalid-detail", "pagination-cycle", "page-limit"];
 async function authority(c: PoolClient, actor: Actor) {
@@ -33,8 +35,82 @@ async function connection(c: PoolClient, org: string, id: string): Promise<Cloud
   if (!row) throw new ControlError(404, "Discovery connection unavailable.");
   return { tenantId: org, connectionId: id, accountId: row.account_id, region: row.region };
 }
+function projectRow(org: string, row: Record<string, string>): ProjectDiscoveryScope {
+  return projectDiscoveryScope(row.provider === "azure-foundry"
+    ? { provider: "azure-foundry", tenantId: org, connectionId: row.id, directoryId: row.directory_id, endpoint: row.endpoint }
+    : { provider: "google-agent-engine", tenantId: org, connectionId: row.id, projectId: row.project_id, projectNumber: row.project_number, location: row.location });
+}
+async function projectConnection(c: PoolClient, org: string, id: string) {
+  const row = (await c.query("SELECT * FROM ll_cloud_project_connections WHERE org_id=$1 AND id=$2", [org, id])).rows[0];
+  if (!row) throw new ControlError(404, "Project discovery connection unavailable.");
+  return projectRow(org, row);
+}
 export class CloudInventoryStore {
   constructor(private readonly db: Pool) {}
+  async configureProjectConnection(actor: Actor, input: ProjectDiscoveryScope) {
+    let scope: ProjectDiscoveryScope;
+    try { scope = projectDiscoveryScope(input); } catch { throw new ControlError(400, "Valid project discovery scope required."); }
+    if (scope.tenantId !== actor.orgId) throw new ControlError(403, "Project discovery tenant differs.");
+    return transaction(this.db, actor.orgId, async c => {
+      await authority(c, actor);
+      const row = (await c.query("SELECT * FROM ll_cloud_project_connections WHERE org_id=$1 AND id=$2", [actor.orgId, scope.connectionId])).rows[0];
+      if (row && JSON.stringify(projectRow(actor.orgId, row)) !== JSON.stringify(scope)) throw new ControlError(409, "Project discovery connection identity is immutable.");
+      if (!row) await c.query("INSERT INTO ll_cloud_project_connections(org_id,id,provider,directory_id,endpoint,project_id,project_number,location,created_by) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+        [actor.orgId, scope.connectionId, scope.provider, scope.provider === "azure-foundry" ? scope.directoryId : null, scope.provider === "azure-foundry" ? scope.endpoint : null,
+          scope.provider === "google-agent-engine" ? scope.projectId : null, scope.provider === "google-agent-engine" ? scope.projectNumber : null, scope.provider === "google-agent-engine" ? scope.location : null, actor.subject]);
+      return { scope, status: "configured" as const, authorityGranted: false as const };
+    });
+  }
+  async projectConnections(actor: Actor) {
+    return transaction(this.db, actor.orgId, async c => {
+      await authority(c, actor);
+      const rows = (await c.query("SELECT * FROM ll_cloud_project_connections WHERE org_id=$1 ORDER BY created_at,id LIMIT 101", [actor.orgId])).rows;
+      return { connections: rows.slice(0, 100).map(row => ({ scope: projectRow(actor.orgId, row), status: "configured" as const })), truncated: rows.length > 100, scanningAvailable: false as const, enforcement: "unverified" as const };
+    });
+  }
+  async beginProjectScan(actor: Actor, id: string) {
+    return transaction(this.db, actor.orgId, async c => {
+      await authority(c, actor);
+      const scope = await projectConnection(c, actor.orgId, id);
+      return { scope, allowed: await throttle(c, `cloud-project-discovery:${actor.orgId}:${id}`, 3, 60) };
+    });
+  }
+  async recordProjectScan(actor: Actor, scanId: string, input: ProjectInventoryScan) {
+    if (!uuid.test(scanId)) throw new ControlError(400, "Stable project scan identity required.");
+    let scan: ProjectInventoryScan;
+    try { scan = canonicalProjectScan(input); } catch { throw new ControlError(400, "Valid minimized project discovery evidence required."); }
+    if (scan.scope.tenantId !== actor.orgId || Date.parse(scan.observedAt) > Date.now() + 300_000) throw new ControlError(400, "Project discovery scope or observation time differs.");
+    const hash = createHash("sha256").update(JSON.stringify(scan)).digest("hex");
+    return transaction(this.db, actor.orgId, async c => {
+      await authority(c, actor);
+      const scope = await projectConnection(c, actor.orgId, scan.scope.connectionId);
+      if (JSON.stringify(scope) !== JSON.stringify(scan.scope)) throw new ControlError(409, "Project discovery connection scope differs.");
+      const old = (await c.query("SELECT canonical_sha256 FROM ll_cloud_project_scans WHERE org_id=$1 AND connection_id=$2 AND id=$3", [actor.orgId, scope.connectionId, scanId])).rows[0];
+      if (old) {
+        if (old.canonical_sha256 !== hash) throw new ControlError(409, "Project discovery scan replay changed evidence.");
+        return { scanId, repeated: true, authorityGranted: false as const };
+      }
+      await c.query("INSERT INTO ll_cloud_project_scans(org_id,connection_id,id,observed_at,completeness,failures,canonical_sha256) VALUES($1,$2,$3,$4,$5,$6,$7)", [actor.orgId, scope.connectionId, scanId, scan.observedAt, scan.completeness, scan.failures, hash]);
+      for (const r of scan.records) await c.query("INSERT INTO ll_cloud_project_observations(org_id,connection_id,scan_id,resource,provider_version,identity_kind,identity_reference) VALUES($1,$2,$3,$4,$5,$6,$7)", [actor.orgId, scope.connectionId, scanId, r.resource, r.version ?? "", r.identityKind, r.identityReference]);
+      return { scanId, repeated: false, authorityGranted: false as const };
+    });
+  }
+  async latestProject(actor: Actor, id: string) {
+    return transaction(this.db, actor.orgId, async c => {
+      await authority(c, actor);
+      const scope = await projectConnection(c, actor.orgId, id);
+      const latest = (await c.query("SELECT id,observed_at,completeness,failures FROM ll_cloud_project_scans WHERE org_id=$1 AND connection_id=$2 ORDER BY observed_at DESC,recorded_at DESC,id DESC LIMIT 1", [actor.orgId, id])).rows[0];
+      if (!latest) return { scope, status: "no-scan" as const, records: [], enforcement: "unverified" as const };
+      const rows = (await c.query("SELECT DISTINCT ON(o.resource,o.provider_version) o.*,s.observed_at FROM ll_cloud_project_observations o JOIN ll_cloud_project_scans s ON s.org_id=o.org_id AND s.connection_id=o.connection_id AND s.id=o.scan_id WHERE o.org_id=$1 AND o.connection_id=$2 ORDER BY o.resource,o.provider_version,s.observed_at DESC,s.recorded_at DESC,s.id DESC LIMIT 2001", [actor.orgId, id])).rows;
+      const records = rows.slice(0, 2000).map(row => {
+        const version = scope.provider === "azure-foundry" ? row.provider_version : null;
+        const record: ProjectObservation = { scope: { ...scope }, resource: row.resource, version, identityKind: row.identity_kind, identityReference: row.identity_reference, observedAt: row.observed_at.toISOString(),
+          gaps: [...(!row.identity_reference ? ["workload-principal-unresolved"] : []), ...(version === null ? ["execution-version-unresolved"] : []), "effective-permissions-unknown", "declared-tools-unknown"], coverage: { ownership: "unmapped", activity: "unconnected", enforcement: "unverified" } };
+        return { record, observedInCurrentScan: row.scan_id === latest.id, stale: Date.now() - row.observed_at.getTime() > 900_000 };
+      });
+      return { scope, status: "observed" as const, scanId: latest.id, observedAt: latest.observed_at.toISOString(), stale: Date.now() - latest.observed_at.getTime() > 900_000, completeness: latest.completeness as ProjectInventoryScan["completeness"], failures: latest.failures as ProjectInventoryScan["failures"], records, historyTruncated: rows.length > 2000, enforcement: "unverified" as const };
+    });
+  }
   async connections(actor: Actor) {
     return transaction(this.db, actor.orgId, async c => {
       await authority(c, actor);

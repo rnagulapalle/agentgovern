@@ -190,3 +190,50 @@ cloud enrollment or enforcement. Those remain separate acceptance requirements.
 The existing required `quality-gates` CI job now runs this desktop/mobile proof
 after the normal full gate and retains sanitized receipt/images for 14 days.
 This evidence retention does not satisfy long-term worker/history retention.
+
+## Azure and Google persistence candidate (October 9)
+
+Optional migration17 extends the same `CloudInventoryStore`, workspace lock,
+invited-member checks and external recovery fence with project-scoped observations.
+It leaves migration16 and the AWS route unchanged. The new store methods are
+server-side only: no Azure/Google browser configuration or scan route is wired yet.
+Configured scopes do not mean connected accounts. Actual cloud-account reads and
+reviewed credentials remain unproved.
+
+Azure observations retain exact Foundry agent versions under the enrolled project
+endpoint. Google observations retain the native project number, location, resource
+and reported identity kind; an unresolved execution version stays null. A service
+account reference must belong to the configured project. Agent Identity remains a
+separate kind with an unresolved principal. Effective permissions and tools stay
+unknown. No discovery observation enrolls an execution agent or grants approval.
+
+Stable scan UUIDs provide concurrent replay consistency. Changed evidence refuses;
+partial, empty and out-of-order scans preserve earlier observations. The latest
+view caps resource/version history at 2,000 rows and scope lists at 100, with explicit
+truncation. These display limits do not delete database history. Fifteen minutes is
+only a stale-display threshold. Canonical hashes are consistency checks, not cloud
+attestations or cryptographic receipts.
+
+Apply only with an explicit offline migration owner:
+
+```sh
+node --env-file=.env.local --import tsx scripts/cloud-project-setup.ts
+```
+
+The script requires unchanged prerequisite migrations1/3/10/16, verifies ownership,
+serializes application and refuses migration17 digest drift. It grants an existing
+`ll_runtime` only SELECT/INSERT on the three optional tables. Triggers reject
+UPDATE/DELETE and foreign project/version/principal substitution. The trusted
+database owner retains administration; compromised-service tenant isolation and
+customer privacy/retention policies remain open. Normal bootstrap and deployment
+do not install this migration.
+
+Focused dedicated-PostgreSQL tests cover both provider scopes, concurrent exact
+replay, changed replay, fresh-client readback, partial/empty/out-of-order preservation,
+revoked membership and recovery containment, malformed/raw/authority-bearing input,
+direct SQL boundary rejection, restricted-role UPDATE/DELETE/TRUNCATE denial,
+bounded views without deletion, committed scan throttles, and actual optional CLI
+concurrent setup, non-owner/prerequisite/digest refusal. These use fixtures, not
+live cloud accounts. Full regression and refreshed browser/gateway proofs are
+required before committing this candidate or claiming acceptance. Production is
+unchanged.
