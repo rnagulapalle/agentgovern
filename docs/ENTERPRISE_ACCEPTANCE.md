@@ -212,10 +212,28 @@ HTTPS sign-in, exact prepared-plan review, scoped agent selection, separate-memb
 approvals, hostile-origin refusal, verified effects and 390px saved-outcome reload.
 The full quality gate passed with 400 tests. The private provider journal retained
 exactly four intended effects across the API/crash/replay and browser runs. See
-[evidence/staging-platform-browser-proof.json](evidence/staging-platform-browser-proof.json).
+[evidence/staging-platform-browser-prepared-proof.json](evidence/staging-platform-browser-prepared-proof.json).
 
 This closes the manually handled-cookie/browser-transport gap for the disposable
 prepared-plan journey. It does not close fresh typed planning in that environment,
 persistent remote staging, sustained tenant load, restore/alert/operator acceptance,
 live-provider guarantees, independent security review or production ownership
 cutover. Production remains on the legacy runner; enterprise acceptance is incomplete.
+
+
+## Fresh typed HTTPS journey — October 8
+
+Private CI run `37863416303` passed the assembled eight-role stack plus actual
+typed request, missing-recipient clarification, real bounded model interpretation,
+exact scoped plan review, existing-agent selection, independent named approvals,
+verified effects and 390px saved-outcome reload. The parent verified that only the
+web container received the temporary model session. API/crash/lost-response/replay
+checks remained intact; independent provider readback retained exactly four effects.
+The unchanged full quality gate passed after generating the measured receipt.
+See [STAGING_TYPED_JOURNEY.md](STAGING_TYPED_JOURNEY.md) and the current
+[evidence/staging-platform-browser-proof.json](evidence/staging-platform-browser-proof.json).
+
+This closes fresh typed planning in the disposable assembled environment; it does
+not establish persistent remote staging, sustained tenant capacity, remote restore,
+operator alert delivery, independent security review, live-provider guarantees or
+production ownership cutover. Enterprise acceptance remains incomplete.

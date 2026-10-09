@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "scope": "assembled isolated API/runtime and fresh typed HTTPS browser trial",
+  "scope": "assembled isolated API/runtime and prepared-plan HTTPS browser trial",
   "checks": [
     "separate secure named sessions",
     "unauthenticated and self-approval refusal",
@@ -12,25 +12,15 @@
     "real authenticated Temporal history replay without new actions"
   ],
   "notVerified": [
+    "fresh typed chat/model interpretation",
     "remote persistent staging",
     "sustained load, restore and operator alert acceptance",
     "live provider guarantees"
   ],
-  "plannerAuthority": {
-    "webOnly": true
-  },
-  "actualProviderEffects": 4,
   "browser": {
     "passed": true,
-    "scope": "trusted HTTPS Chromium fresh typed planning/review/approval over disposable assembled runtime",
-    "planning": {
-      "typedRequest": true,
-      "clarified": true,
-      "model": "us.amazon.nova-lite-v1:0",
-      "savedBeforeSubmission": true
-    },
+    "scope": "trusted HTTPS Chromium prepared-plan review/approval over disposable assembled runtime",
     "checks": [
-      "real typed request and missing-recipient clarification save an exact scoped plan without execution authority",
       "untrusted CA refused before sign-in",
       "trusted CA and secure browser context",
       "separate named form sign-ins with Secure/HttpOnly/Strict cookies",
@@ -42,6 +32,7 @@
       "Secure session cookie not sent over plain HTTP"
     ],
     "notVerified": [
+      "fresh typed chat/model interpretation",
       "persistent remote staging",
       "live-provider delivery",
       "sustained tenant load, restore and operator acceptance"
@@ -52,19 +43,19 @@
   "images": [
     {
       "role": "web",
-      "id": "sha256:b1f91d09b948b7a0f40797c032ab85dfdef54b918a0aa0bdb078eadcf7e32ffb"
+      "id": "sha256:7ae22eafab1e9dc8863462a0c7533bf31d83a7494219b4ee7284244403a8fd92"
     },
     {
       "role": "worker",
-      "id": "sha256:364caa43355c8ce2114c7ee843598b132cd4c5fc26240cefa114e87696ff7f39"
+      "id": "sha256:7de35c863686b3bbd3a8c51ed734c4537b15106ab0a542cbe029f7a14e5a1c2d"
     },
     {
       "role": "twin",
-      "id": "sha256:109bfe24c0c0b7c4482efa712ca473b8a01bf1f2fa77bea9f300b239af3d4777"
+      "id": "sha256:e0d25d4b1b6a4a83538268e655377b5b6358c15342f9c91631cce333c225f10e"
     },
     {
       "role": "provisioner",
-      "id": "sha256:b95a6768698fb31b54a712f5a7ba9f237241b57d1843d45d0f5487b6a1167a51"
+      "id": "sha256:80561457135d7f20b7c6c873b61a51df0cc362fd72ff5aba6fd4466f89b79657"
     }
   ],
   "services": [
@@ -123,8 +114,8 @@
     "existingBytes": 0,
     "plannedBytes": 4697620480,
     "hostReserveBytes": 2147483648,
-    "totalBytes": 8323964928,
-    "availableBytes": 6920626176
+    "totalBytes": 8322932736,
+    "availableBytes": 7027818496
   },
   "sourceFingerprints": {
     "Dockerfile": "05dbe233a49d567443185c627767141a48b985d433f9dc031ea24b90735a3eb5",
@@ -205,29 +196,28 @@
     "runtime/temporal/workflow-v2.ts": "9fe1f067454651ae30cf692ba9357cf0afd5123b18014ef72994bbc9b8004ed5",
     "runtime/temporal/workflow.ts": "5ed74bf103edbae5d6345f258f77da6b6e6baf340ccec866d340065ffd607c14",
     "scripts/build-temporal-worker.mjs": "c7c96a323aedd51e0544e50e050301ff1efab1cdb00bfaac690b01d25d109510",
-    "scripts/staging-browser-proof.mjs": "428e2ecdf26cc01d7c2d0940cce0cbf876a00455d96acb84bc8b50e8c814cf30",
-    "scripts/staging-browser-record.mjs": "0737b62e9466aaa4b66cd896c2a42d168af7767921d778d87059eda3e217e51b",
+    "scripts/staging-browser-proof.mjs": "95a8b6b06d770c4c8567ecb8bffa5893140745dccddb5acd1b5043adaffac9a9",
     "scripts/staging-browser-tls.mjs": "9b6e13b2dad7999e598989b3a5a53c2a30a6421b917c2abb68e9eb495cc35bb8",
     "scripts/staging-database-bootstrap.mjs": "b8d240236a686d29bf7e699ef0efb2416cd08684807ee80f70e6dd454296900a",
     "scripts/staging-fixture-source.mjs": "76e404f688009c9b08322ab4d5a57dc057b5bf2221837c61945a4a5f19e76296",
     "scripts/staging-host-inventory.py": "c67130cbd6353ceb6c716ca20284f9fcd52beedd05e25e0dd33437c2cc7955c8",
     "scripts/staging-namespace-bootstrap.mjs": "97d7738a68feaeded8e42ef17f7662880a7b5a31cfdb9b662afa9d5389d805d2",
     "scripts/staging-owned-builder.mjs": "4db747484d100c3cdd45a668589096cd753f16a87347f4b973a72c34148132f6",
-    "scripts/staging-planner-attachment.mjs": "021115f6afad958f5b0c5e92074788efe864497b17f156f69994ff0e66f335b4",
-    "scripts/staging-planner-inputs.mjs": "bb5f7b0e582e274336dd8c68fb9fbe52ffa3b72c8e4e28c3d4e8ffdb30868f4c",
     "scripts/staging-platform-controller.mjs": "a1547616e2e5f96fc8d46142ee257d5de488bfc5b1e6eb3b639674aca3233245",
-    "scripts/staging-platform-proof.mjs": "957be3f74acf80578f16c735abe83dabd36b8be36405908ee8d76687590ab05b",
+    "scripts/staging-platform-proof.mjs": "ab800cc806974de7933d1dc89ab6d6d4bab93df7e56096e25120e04eb2a4dc50",
     "scripts/staging-runtime-inputs.mjs": "27a56bafc6ea1d0467dc8633dd3b69b4ce26e6943aa8228b1f2615d38c3ac25f",
     "scripts/staging-temporal-config.mjs": "2aacddbd5688e033def992b088c2e51efb0e329e9c18d763a11ac7736ed5dd5c"
   },
   "executionEvidence": {
-    "runId": 37863416303,
-    "privateWorkflowCommit": "762e30e9652adfd799707dcd5bf47af2c624aaf0",
-    "publicBaseCommit": "710502edb2f6fb0deb0cc080e40293374c764926",
-    "exactCompressedOverlaySha256": "3fd37192d522632a08bcee411e3ec893fa963e57d0523ef8508b225cedc86535",
-    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37863416303",
+    "runId": 37859172131,
+    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37859172131",
+    "privateWorkflowCommit": "d547f8d35deeb5d71ca271c7c0729c447499c131",
+    "publicBaseCommit": "6865dcc8411479d40998a643950e0a9d2d23eec8",
+    "publicSourceCommit": "fefcf320bf6017d0ec5b66f80feb88188bbb7530",
+    "exactCompressedOverlaySha256": "58501cd6eeb43401d9f4db01783fe3ec7a0be30ab850dbda1b87903b30b49339",
+    "qualityTests": 400,
     "actualProviderEffects": 4,
     "productionChanged": false,
-    "scope": "disposable assembled runtime and real-model trusted HTTPS typed journey"
+    "scope": "disposable assembled API/runtime plus trusted HTTPS prepared-plan browser trial"
   }
 }
