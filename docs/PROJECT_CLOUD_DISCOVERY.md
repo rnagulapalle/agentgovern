@@ -35,8 +35,13 @@ traversal completeness means only that these bounded reads completed successfull
   project identity; responses are limited to1MiB and redirects are refused. Tests
   use controlled HTTP responses, not an authorized live cloud account.
 - Connect that transport to an explicitly reviewed short-lived credential broker.
-  No credential file, ambient login, planner fallback or token acquisition exists
-  in this candidate.
+  A server-only Google file binding candidate now accepts only exact scope and
+  short-lived session fields from an explicitly configured private regular file.
+  It rereads scope and expiry before every operation. It neither acquires tokens
+  nor identifies a workload principal. Native Resource Manager still verifies
+  active project identity before inventory reads. No ambient login or planner
+  fallback exists; this adapter is not connected to the workspace scan route.
+  Tests use temporary files and controlled HTTP, not native cloud credentials.
 - Add Azure's supported broker association and native project reads. Clients must
   not treat opaque Azure API access tokens as locally authoritative JWTs. Reference:
   [Microsoft client guidance](https://learn.microsoft.com/en-us/entra/identity-platform/claims-validation).
@@ -44,8 +49,11 @@ traversal completeness means only that these bounded reads completed successfull
   production installation remains open. Applied AWS migration16 is unchanged.
 - The candidate provider selector exposes Azure/Google configuration and saved
   evidence review in the existing discovery page, with unknown authority and
-  unavailable native scanning explicit. Full browser acceptance is pending for
-  this new UI candidate; previous AWS browser proof does not prove it.
+  unavailable native scanning explicit. Exact-tree isolated CI run37970299556
+  passed612 tests,19 actual gateway checks and21 browser checks; desktop/mobile
+  captures and source/artifact hashes were reviewed. Project observations in
+  that browser proof were normalized database fixtures, not native cloud reads.
+  A subsequent credential-reader change requires a fresh browser proof.
 - Prove actual native reads with explicitly authorized project bindings. Fixture
   tests do not establish live cloud access, federation or enforcement.
 - Enroll accountable owners and workload attestation before joining a cloud agent
@@ -58,3 +66,10 @@ commit; public push and release gates remain unchanged.
 Google project verification additionally requires `resourcemanager.projects.get`;
 it does not establish the calling workload's principal or effective permissions.
 Reference: [native project read](https://docs.cloud.google.com/resource-manager/reference/rest/v3/projects/get).
+
+Private-file handling is shared with AWS: absolute path, final-component symlink
+refusal, current process ownership, no group/other permissions, regular single-link
+file,64KiB limit, full read and unchanged size/time checks. FIFO, malformed JSON,
+traversal and missing files refuse with sanitized errors. Returning parsed unknown
+is not credential validation; each provider separately validates exact scope,
+contract and lifetime. Keep files out of Git, screenshots and browser requests.

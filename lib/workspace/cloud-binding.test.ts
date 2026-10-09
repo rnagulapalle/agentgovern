@@ -20,12 +20,12 @@ it("matching private binding creates only fixed read transport and rereads rotat
   expect(await api.callerIdentity()).toEqual({ Account: scope.accountId }); expect(child.calls).toBe(1);
 }));
 it("missing, broad-readable, linked, oversized, malformed and foreign-scope bindings refuse without cloud requests", async () => fixture(async (path, dir) => {
-  for (const missing of [join(dir, "missing"), "relative.json"]) await expect(cloudDiscoveryBinding(scope, missing, () => now)).rejects.toThrow("access is unavailable");
+  for (const missing of [join(dir, "missing"), "relative.json", `${dir}/../binding.json`]) await expect(cloudDiscoveryBinding(scope, missing, () => now)).rejects.toThrow("access is unavailable");
   await chmod(path, 0o640); await expect(cloudDiscoveryBinding(scope, path, () => now)).rejects.toThrow("access is unavailable"); await chmod(path, 0o600);
   const sym = join(dir, "symlink"); await symlink(path, sym); await expect(cloudDiscoveryBinding(scope, sym, () => now)).rejects.toThrow("access is unavailable");
   const fifo = join(dir, "fifo"); execFileSync("mkfifo", [fifo], { timeout: 1000 }); await chmod(fifo, 0o600); await expect(cloudDiscoveryBinding(scope, fifo, () => now)).rejects.toThrow("access is unavailable");
   const hard = join(dir, "hardlink"); await link(path, hard); await expect(cloudDiscoveryBinding(scope, path, () => now)).rejects.toThrow("access is unavailable"); await rm(hard);
-  const bad = ["x".repeat(65537), "broken", JSON.stringify({ ...value(), raw: "private" }), JSON.stringify({ ...value(), scope: { ...scope, tenantId: "company-b" } }), JSON.stringify({ ...value(), executable: "relative" }), JSON.stringify({ ...value(), session: { ...value().session, expiresAt: new Date(now - 1).toISOString() } })];
+  const bad = ["null", "[]", '"not-a-binding"', "x".repeat(65537), "broken", JSON.stringify({ ...value(), raw: "private" }), JSON.stringify({ ...value(), scope: { ...scope, tenantId: "company-b" } }), JSON.stringify({ ...value(), executable: "relative" }), JSON.stringify({ ...value(), session: { ...value().session, expiresAt: new Date(now - 1).toISOString() } })];
   for (const input of bad) { await writeFile(path, input); await expect(cloudDiscoveryBinding(scope, path, () => now)).rejects.toThrow(); }
   expect(child.calls).toBe(0);
 }));

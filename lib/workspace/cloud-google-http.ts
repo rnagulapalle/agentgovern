@@ -1,5 +1,13 @@
 import { projectDiscoveryScope, type ProjectDiscoveryScope, type ProjectInventoryApi } from "./cloud-project-discovery";
 export interface ProjectReadSession { token: string; expiresAt: string }
+export function projectReadSession(value: unknown, at: number): ProjectReadSession {
+  const v = value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+  const remaining = typeof v?.expiresAt === "string" ? Date.parse(v.expiresAt) - at : NaN;
+  if (!v || Object.keys(v).sort().join() !== "expiresAt,token" || typeof v.token !== "string"
+    || !/^[a-zA-Z0-9_.~+/-]{16,16384}={0,2}$/.test(v.token) || !Number.isFinite(remaining) || remaining < 30_000 || remaining > 3_600_000)
+    throw Error("Discovery credential unavailable");
+  return { token: v.token, expiresAt: v.expiresAt as string };
+}
 // Server-only adapter. Credentials must come from an explicitly configured,
 // reviewed broker; no browser token, ambient login or planner fallback exists.
 export function googleProjectInventoryApi(input: ProjectDiscoveryScope, session: (signal: AbortSignal) => Promise<ProjectReadSession>, options: { fetch?: typeof fetch; now?: () => number } = {}): ProjectInventoryApi {
@@ -43,10 +51,7 @@ export function googleProjectInventoryApi(input: ProjectDiscoveryScope, session:
         signal.addEventListener("abort", abort, { once: true });
         Promise.resolve().then(() => session(signal)).then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
       });
-      const remaining = typeof value?.expiresAt === "string" ? Date.parse(value.expiresAt) - now() : NaN;
-      if (!value || Object.keys(value).sort().join() !== "expiresAt,token" || typeof value.token !== "string"
-        || !/^[a-zA-Z0-9_.~+/-]{16,16384}={0,2}$/.test(value.token) || !Number.isFinite(remaining) || remaining < 30_000 || remaining > 3_600_000) throw Error();
-      const token = value.token; // A broker mutation cannot switch credentials after verification.
+      const token = projectReadSession(value, now()).token; // Snapshot before verification + read.
       // One shared deadline and one credential snapshot cover verification + read.
       signal.throwIfAborted();
       const project = await request(projectUrl, token, signal);
