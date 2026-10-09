@@ -1,0 +1,535 @@
+{
+  "passed": true,
+  "scope": "Disposable named-approval worker reset/restart and pending-intent archive containment with private record twins",
+  "resetAssembly": {
+    "builds": [
+      "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+      "ack-5ce13bbdfe72514eeb30f646d9e6bd298f78be052f1ca5d4756f13e82bc3ff0a"
+    ],
+    "images": [
+      "sha256:5659e104f45fe059e84c4e13ff57464d9bce462f3a07aff865f7ab5f15ace70d",
+      "sha256:8918e3b68ad36374c6bc5a1f9f8f8ddef4e655fceb199f677833180284d8f075"
+    ],
+    "enrollmentCompleted": true
+  },
+  "semanticLifecycle": {
+    "resetArchive": {
+      "passed": true,
+      "staleResetRefused": true,
+      "replacementIntentRefused": true,
+      "restoredAuthorityRevoked": true,
+      "actionIdentitiesPreserved": true,
+      "reservationsPreserved": true,
+      "buildsDraining": 2,
+      "actions": 12,
+      "actionIdentitySha256": "c3662c32e6fb6b2e5cf82a1f0d59c547d94bd7144045c6d66cde024213b9d0a1",
+      "backupSha256": "9676425e64c9c50c06b6b704fa0106e103a92985b647b232cacb65fc1b34cf4c",
+      "isolatedCopy": true,
+      "externalEpochRotatedBeforeRestore": true
+    },
+    "resetEvidence": {
+      "passed": true,
+      "newProcessRetryRefused": true,
+      "independentLineageObserved": true,
+      "resetRunId": "8ee80bea-e739-48d5-8892-175a82c51299",
+      "workerBuildId": "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+      "rpcCalls": 1,
+      "committedUncertainty": true,
+      "pendingArchiveSha256": "9676425e64c9c50c06b6b704fa0106e103a92985b647b232cacb65fc1b34cf4c",
+      "effects": {
+        "2c6ea81f-23ac-4ee3-a38d-5e0cbf7dd7e0": {
+          "actionId": "2c6ea81f-23ac-4ee3-a38d-5e0cbf7dd7e0",
+          "connector": "crm",
+          "body": {
+            "properties": {
+              "lifecyclestage": "lead"
+            }
+          },
+          "recordId": "3002",
+          "resource": "/crm/v3/objects/contacts/3002",
+          "reference": "3002",
+          "observedVersion": "218423ce2ef7c050ce9d77b980b7162de2eba677145f0afc30b36e8b0ad591a6",
+          "response": {
+            "id": "3002",
+            "properties": {
+              "email": "new-version@example.test",
+              "lifecyclestage": "lead"
+            },
+            "createdAt": "2026-10-08T00:00:00Z",
+            "updatedAt": "enrolled-3002",
+            "archived": false
+          }
+        },
+        "9b24fd62-cf43-49a8-a23b-e550275014d3": {
+          "actionId": "9b24fd62-cf43-49a8-a23b-e550275014d3",
+          "connector": "email",
+          "body": {
+            "to": [
+              "new-version@example.test"
+            ],
+            "from": "LoopLabs <support@looplabs.example>",
+            "text": "Your request was received. A team member will review it.",
+            "subject": "We received your case"
+          },
+          "recordId": "3002",
+          "resource": "/emails",
+          "reference": "a46fefe0-09b4-4f1b-82dc-085881d1b78d",
+          "observedVersion": null,
+          "response": {
+            "id": "a46fefe0-09b4-4f1b-82dc-085881d1b78d",
+            "to": [
+              "new-version@example.test"
+            ],
+            "from": "LoopLabs <support@looplabs.example>",
+            "text": "Your request was received. A team member will review it.",
+            "subject": "We received your case"
+          }
+        },
+        "ed6f19c3-ad57-469b-89ba-24681d327f28": {
+          "actionId": "ed6f19c3-ad57-469b-89ba-24681d327f28",
+          "connector": "crm",
+          "body": {
+            "properties": {
+              "lifecyclestage": "lead"
+            }
+          },
+          "recordId": "3001",
+          "resource": "/crm/v3/objects/contacts/3001",
+          "reference": "3001",
+          "observedVersion": "83e5fcf119435a953aa64fd59910e1b21f9dadd6e5c9cfc6f0b60d67e34af4a2",
+          "response": {
+            "id": "3001",
+            "properties": {
+              "email": "old-version@example.test",
+              "lifecyclestage": "lead"
+            },
+            "createdAt": "2026-10-08T00:00:00Z",
+            "updatedAt": "enrolled-3001",
+            "archived": false
+          }
+        },
+        "42dfdce5-3a4f-44f7-9e11-aea23e69490f": {
+          "actionId": "42dfdce5-3a4f-44f7-9e11-aea23e69490f",
+          "connector": "email",
+          "body": {
+            "to": [
+              "old-version@example.test"
+            ],
+            "from": "LoopLabs <support@looplabs.example>",
+            "text": "Your request was received. A team member will review it.",
+            "subject": "We received your case"
+          },
+          "recordId": "3001",
+          "resource": "/emails",
+          "reference": "b8eb0dc0-161f-42f4-9877-2db94cf8bc11",
+          "observedVersion": null,
+          "response": {
+            "id": "b8eb0dc0-161f-42f4-9877-2db94cf8bc11",
+            "to": [
+              "old-version@example.test"
+            ],
+            "from": "LoopLabs <support@looplabs.example>",
+            "text": "Your request was received. A team member will review it.",
+            "subject": "We received your case"
+          }
+        }
+      }
+    },
+    "admissionFence": {
+      "passed": true,
+      "admissionFirstCommitted": true,
+      "drainFirstRefused": true,
+      "failedTransferRolledBack": true,
+      "existingTransfersIdempotent": true,
+      "additionalHeldRoute": 1,
+      "noRetirementAuthorized": true
+    },
+    "passed": true,
+    "builds": [
+      "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+      "ack-5ce13bbdfe72514eeb30f646d9e6bd298f78be052f1ca5d4756f13e82bc3ff0a"
+    ],
+    "images": [
+      "sha256:5659e104f45fe059e84c4e13ff57464d9bce462f3a07aff865f7ab5f15ace70d",
+      "sha256:8918e3b68ad36374c6bc5a1f9f8f8ddef4e655fceb199f677833180284d8f075"
+    ],
+    "oldWorkerKilled": true,
+    "oldWorkerRecreated": true,
+    "newWorkerContinued": true,
+    "heldEffects": 0,
+    "newWhileOldAbsentEffects": 2,
+    "finalEffects": 4,
+    "replay": {
+      "checks": [
+        {
+          "historyBuild": "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+          "replayBuild": "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+          "result": "compatible"
+        },
+        {
+          "historyBuild": "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+          "replayBuild": "ack-5ce13bbdfe72514eeb30f646d9e6bd298f78be052f1ca5d4756f13e82bc3ff0a",
+          "result": "nondeterminism-refused"
+        },
+        {
+          "historyBuild": "ack-5ce13bbdfe72514eeb30f646d9e6bd298f78be052f1ca5d4756f13e82bc3ff0a",
+          "replayBuild": "ack-5ce13bbdfe72514eeb30f646d9e6bd298f78be052f1ca5d4756f13e82bc3ff0a",
+          "result": "compatible"
+        },
+        {
+          "historyBuild": "ack-5ce13bbdfe72514eeb30f646d9e6bd298f78be052f1ca5d4756f13e82bc3ff0a",
+          "replayBuild": "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+          "result": "nondeterminism-refused"
+        }
+      ],
+      "histories": [
+        {
+          "events": 58,
+          "sha256": "339e105729387b166b1a86a6da906d45db3f8269bc54e6c07ab53102cbf1d739"
+        },
+        {
+          "events": 39,
+          "sha256": "0e40d6a0f901836516eeaf83887a21e631083e995458545b7573bd52766dbfdf"
+        }
+      ]
+    },
+    "additionalWritersStopped": true,
+    "notVerified": [
+      "retirement admission fence",
+      "long-term retention",
+      "production cutover",
+      "enterprise acceptance"
+    ]
+  },
+  "semanticAdmission": {
+    "admitted": true,
+    "blockers": [],
+    "existingBytes": 0,
+    "plannedBytes": 5502926848,
+    "hostReserveBytes": 1073741824,
+    "totalBytes": 8322932736,
+    "availableBytes": 6897397760
+  },
+  "runtime": {
+    "passed": true,
+    "scope": "assembled isolated API/runtime and fresh typed HTTPS browser trial",
+    "checks": [
+      "separate secure named sessions",
+      "unauthenticated and self-approval refusal",
+      "API enrollment and per-agent record grants",
+      "saved plan and duplicate-safe submission",
+      "held work and sessions survive runtime SIGKILL",
+      "named approval and two verified private effects",
+      "lost-response reconciliation without a duplicated effect",
+      "real authenticated Temporal history replay without new actions"
+    ],
+    "notVerified": [
+      "remote persistent staging",
+      "sustained load, restore and operator alert acceptance",
+      "live provider guarantees"
+    ],
+    "restoreContainment": {
+      "approvedArchive": true,
+      "externalEpochRotated": true,
+      "runtimeRoles": 3,
+      "omittedEpochRefused": true,
+      "revivedSessionsRefused": true,
+      "restoredApprovalRefused": true,
+      "packagedWorkerRefused": true,
+      "packagedSchedulerRefused": true,
+      "quarantineRevokesAuthority": true,
+      "quarantineReplay": true,
+      "staleBootstrapRefused": true,
+      "retainedEffects": 4
+    },
+    "dependencyImages": {
+      "version": 1,
+      "platform": "linux/amd64",
+      "images": [
+        {
+          "role": "postgres",
+          "selectionTag": "postgres:16",
+          "reference": "postgres@sha256:75adc2a65806c96bc0e59030230bfe3f1c1b0d6d8f8181a8913e2b8b53bdc166",
+          "imageId": "sha256:275447c94b11b151decd1f29877965301d5a77032037c46de93d990f739f00a9"
+        },
+        {
+          "role": "temporal",
+          "selectionTag": "temporalio/server:1.31.0",
+          "reference": "temporalio/server@sha256:d7b3a2f56c599b317494b28e84099c02a096a94005fd20180b54d5ae5a8b3be1",
+          "imageId": "sha256:fce8c365ec85e41182bdafac2fc9d93ed72b9dda72db8cbd7d7192cb237f711f"
+        },
+        {
+          "role": "schema",
+          "selectionTag": "temporalio/admin-tools:1.31.0",
+          "reference": "temporalio/admin-tools@sha256:b396c1dff819b3653236f3acb65cfcde2bc032822c4202842236fd8a5d6d5898",
+          "imageId": "sha256:9a860057b10ec4a1e5b33a077c2b253205d4dbe6256d3627a40b83210991b501"
+        }
+      ],
+      "runtimeBindings": 3,
+      "schemaExecutions": 6
+    },
+    "plannerAuthority": {
+      "webOnly": true
+    },
+    "actualProviderEffects": 4,
+    "browser": {
+      "passed": true,
+      "scope": "trusted HTTPS Chromium fresh typed planning/review/approval over disposable assembled runtime",
+      "planning": {
+        "typedRequest": true,
+        "clarified": true,
+        "model": "us.amazon.nova-lite-v1:0",
+        "savedBeforeSubmission": true
+      },
+      "checks": [
+        "real typed request and missing-recipient clarification save an exact scoped plan without execution authority",
+        "untrusted CA refused before sign-in",
+        "trusted CA and secure browser context",
+        "separate named form sign-ins with Secure/HttpOnly/Strict cookies",
+        "anonymous and requester self-approval refusal",
+        "real hostile-origin browser POST with reviewer cookie refused before approval",
+        "UI exact-plan review, scoped agent selection and submission",
+        "independent UI approvals and actual verified completion",
+        "saved outcome and exact recipient survive 390px reload without overflow",
+        "Secure session cookie not sent over plain HTTP"
+      ],
+      "notVerified": [
+        "persistent remote staging",
+        "live-provider delivery",
+        "sustained tenant load, restore and operator acceptance"
+      ]
+    },
+    "buildId": "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+    "sourceCommit": "08372aadbaa6fb8f37368c6900323b8619c10f2c",
+    "images": [
+      {
+        "role": "web",
+        "id": "sha256:3e07de3bc8683c71a79e4079c2a91670ceb5805b74ccaa51825eb9d6022d8161"
+      },
+      {
+        "role": "worker",
+        "id": "sha256:5659e104f45fe059e84c4e13ff57464d9bce462f3a07aff865f7ab5f15ace70d"
+      },
+      {
+        "role": "twin",
+        "id": "sha256:ae0a1c8b726515abff7ee909f857ae918be762e9351333900e14999f4e37f1af"
+      },
+      {
+        "role": "provisioner",
+        "id": "sha256:fc72b291587260ad4a9ffe50b53942dc3a5922e7a18a880c350d28d59bfb8a69"
+      }
+    ],
+    "services": [
+      {
+        "memoryBytes": 536870912,
+        "readOnly": true,
+        "pids": 256,
+        "health": "healthy"
+      },
+      {
+        "memoryBytes": 536870912,
+        "readOnly": false,
+        "pids": 256,
+        "health": "healthy"
+      },
+      {
+        "memoryBytes": 536870912,
+        "readOnly": false,
+        "pids": 256,
+        "health": "healthy"
+      },
+      {
+        "memoryBytes": 1610612736,
+        "readOnly": true,
+        "pids": 256,
+        "health": "not-configured"
+      },
+      {
+        "memoryBytes": 805306368,
+        "readOnly": true,
+        "pids": 256,
+        "health": "healthy"
+      },
+      {
+        "memoryBytes": 268435456,
+        "readOnly": true,
+        "pids": 256,
+        "health": "healthy"
+      },
+      {
+        "memoryBytes": 268435456,
+        "readOnly": true,
+        "pids": 256,
+        "health": "healthy"
+      },
+      {
+        "memoryBytes": 134217728,
+        "readOnly": true,
+        "pids": 256,
+        "health": "healthy"
+      }
+    ],
+    "admission": {
+      "admitted": true,
+      "blockers": [],
+      "existingBytes": 0,
+      "plannedBytes": 4697620480,
+      "hostReserveBytes": 2147483648,
+      "totalBytes": 8322932736,
+      "availableBytes": 6897397760
+    },
+    "sourceFingerprints": {},
+    "executionEvidence": {
+      "runId": 37932460184,
+      "privateWorkflowCommit": "77b7f304b44fc962f1c963822e035cfda9d81064",
+      "publicBaseCommit": "95f5a086c77b4537c0bfe1e4ddb547ae572b4886",
+      "exactCompressedOverlaySha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37932460184",
+      "actualProviderEffects": 4,
+      "productionChanged": false,
+      "scope": "disposable assembled runtime and real-model trusted HTTPS typed journey"
+    }
+  },
+  "sourceFingerprints": {
+    "Dockerfile": "05dbe233a49d567443185c627767141a48b985d433f9dc031ea24b90735a3eb5",
+    "Dockerfile.connector-twin": "2cb9d96b9b8f9a7adfce7c05d597cbd3d1ccd327ce3ebecd99a1137b2e614b70",
+    "Dockerfile.staging-provisioner": "135d0bd0544efd3a9c3dd82c07d9e47a57241513ab8add93159c3d216a6a49d4",
+    "Dockerfile.temporal": "28c6f712ead0df4c86607e7d56a66eefc8978957d63e089cda5c96bd73ea09c2",
+    "Dockerfile.temporal-version-proof": "8f3117ee5903b548722bb3f935b5ebad3e11aaadee959bceeaf3eefc71f7088e",
+    "Dockerfile.temporal-version-proof.dockerignore": "2e02ef19dd1776558086bf6b9aa9eeb1470f4c58c3311d70eb3d623bddf84396",
+    "app/api/durable/connectors/route.ts": "cba1fdad383a132abf98b8d869ca0c07cd016defa3b8ac0d8b108b752e406a56",
+    "app/api/durable/refunds/route.ts": "027465bcc5ad53a06ac9cec4cbf4e0c2ecf85280bd88f55fcd591bf1fe5dba1c",
+    "app/api/durable/route.ts": "00428275e2e007d47d9db375b3d8516a8c87d72f8d7278da1126fa824d990f81",
+    "app/api/durable/session/route.ts": "49147eb0d2c9fc74961413f205cd62ce9a46f0b5ba95d7ee86403ac8aec770ce",
+    "app/api/durable/workflows/route.ts": "d1462ef5bdfd9f445bdb7103d1c00c4dc2d36fc69f47b6695239f0008b818faf",
+    "app/api/workspace/agents/route.ts": "d1e93f7e4665373c4cb2930dc8a50971d4d05ab2ab00a65f4eed692b31b2c9a8",
+    "app/api/workspace/enquiries/execution/route.ts": "cdadb819afbb66fdb2cfbba7ac9b73322cb181c03f8701e84092fb7e31edc0e0",
+    "app/api/workspace/enquiries/route.ts": "573c8410c704fa4745d4bebf6f75f951093aed7f2b22abee9fe49a50635a8995",
+    "app/api/workspace/records/route.ts": "e2995705c965eca518f342106bf23755b21e2449d863a7f60ce0b54b888b5b27",
+    "app/api/workspace/session/route.ts": "adf8e024c4fef51179fd3240e396a4d9f383dbd6b32f4c38508b27e2da439330",
+    "app/control-plane/work/page.tsx": "d56f08ebfbfcb7deed94fb1a73de0fd1be9dc1f40f065871b7fcb31a02ceb617",
+    "app/sign-in/page.tsx": "d2b1e434ca0e98ca604048126ae0cbb906ea3733adb1b9d9ffb999ecf7a4e485",
+    "components/control-plane/enquiry-execution.tsx": "01305c3088ea8e8393a7cd9796f063889429212890bcd0e9e70aeda037dfaa9c",
+    "components/control-plane/enquiry-progress.tsx": "901fee30e82392ede3b59f52ea44979e08d6d05bb0c908ffe5c61bde38351079",
+    "components/control-plane/enquiry-workspace.tsx": "34b24c121b49dc76450e7d993647455486c9291ea1c147b35b8b70bc687850e0",
+    "config/staging-runtime-images.json": "3e53fe690cfe0527084f654344e3e8092d02130d39c71574bbc76e398cf66b5f",
+    "docker-compose.temporal-platform.yml": "c485242fb8438a1c2cfc7eaa2c9fb98ae142f526db0288c2784756682270ccd4",
+    "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
+    "lib/connectors/content.ts": "b37017e9f6dc0fc44b6f3d80f9e1b74afd4bf1352719bd5bf62e8d5e80719291",
+    "lib/connectors/contracts.ts": "f1bf1c4431877f6beabb026e2df85fdf6e1feed5d21dd46ddbd7e8a3cc109394",
+    "lib/connectors/hosted.ts": "72e67b5ae33fec3201641928bd7389abd98dc97b03de3b4990588d8e9063f79a",
+    "lib/connectors/record-scope.ts": "d84de98f4e00e4a0d50ae3b8ecf6f30d3286c62d3d64546145d8d1a2b8dd04f7",
+    "lib/connectors/request.ts": "37584ef57721d52bc77995e97c68a6b69f06f69e63da73c7ea67408a92c0344c",
+    "lib/connectors/routing.ts": "0cf3e90dabf348fbb4443bb5ec841237d33cdb53b1394c88939d9198457c9e02",
+    "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
+    "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
+    "lib/connectors/scopes.ts": "bb5b7eb5b80011b1d487a8c59246e25a3f047eca1f6d65a590aeaa6ef404cfee",
+    "lib/connectors/service.ts": "adcce693094fe31f9ce75df459fba1d783b9620baf59c02c28d254b1a1b06aed",
+    "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
+    "lib/durable/client.ts": "978fc254d1b98af1b7a4e303e8b11d361640e2972167a9b08d69ec0959125bb9",
+    "lib/durable/contracts.ts": "6ea08e75c6304e68d951b93e98e1fedc1af53988428394dfa2a00eee7678f7b6",
+    "lib/durable/database.ts": "ad8feee5de5b98415ab7ebd0c3459e7b6a3f6f80c34729c564e4786facdcc625",
+    "lib/durable/http.ts": "b1c0813e3b094e5b40c9e51adf99d1074851e00b2287af61cb7ec95a7f38bcce",
+    "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
+    "lib/durable/recovery-schema.sql": "75af0b8e95425de3d0b88f927e8612ed50ade36db85969da322c98c17eefe395",
+    "lib/durable/recovery.ts": "836b90a85dc4f8e8b8bd6bafc4297f4af0937c894decb190d892956669f31343",
+    "lib/durable/schema.sql": "1443e0d0ed90ab054d30d8c6ae1359a18e7fd104408ba305f2d6abe96f304d05",
+    "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
+    "lib/enquiries/chat-contract.ts": "56a0571860e42a57ddb0b8a08bee617f54e7f63969ab1c596d7fe308769cde38",
+    "lib/enquiries/chat.ts": "605561277227a7e120709e659d8043dccff56ac7e49fed90c52e4973a45bcca4",
+    "lib/enquiries/contracts.ts": "f5158c75f45ef6dfef14043b0bfa809210f205441d9028aa37ccaca80b119b80",
+    "lib/enquiries/dispatch.ts": "4cc5701be853ae7c24e3092c8d9344eafb97f97844b7c29c8a8916ba27d09058",
+    "lib/enquiries/managed-schema.sql": "88818301d4bff0dbfc6d61740f12abe0b0c080045dde7785766b870ac74c92be",
+    "lib/enquiries/presentation.ts": "edb014691065618456bf5db2a92720c3ba04663b8585cc8a0671a705eb5b229c",
+    "lib/enquiries/record-routing-schema.sql": "05c2c214c09e14b9567402206a1efe6b4fb1f064d07203386f7a7e23947e8267",
+    "lib/enquiries/reset-intent-schema.sql": "907e8dc8168d4f538a576c4a79bceab4f9ed12bc5fbd9a742565a63343828297",
+    "lib/enquiries/runner.ts": "931eba28f2a011ba5290ac8af01ac38701a9fe6dea25caf51b53b3578226c864",
+    "lib/enquiries/schema.sql": "8e9c620147658f3bd59cd2948d0a46f872eb74066d67eba9f844bc5410fdd743",
+    "lib/enquiries/service.ts": "a87d145adfd3809e5119fcf51f96002b4db6febb20de01431b1eee9e5d11ddc6",
+    "lib/enquiries/submission.ts": "4d6f3613e6cca9f409852f435e25ccb51a047ade9d67cb99d50d624bb7c6cf91",
+    "lib/enquiries/temporal-schema.sql": "72705c41e2674baadeda22b7e324e9e232947e1a40a7d5717d0cf1280b3736da",
+    "lib/enquiries/worker-admission-schema.sql": "8fa0d638e759fec11b0f529e56383a0fd4b7e8cecf13f432b096128e6e70fa73",
+    "lib/workflows/guard.ts": "3af43bf26bc065066a140e4e9e2fd2d601ef4089e4a22f6499b64072081a8d11",
+    "lib/workflows/request.ts": "3dc1cfcfc429977ffbf7d627ef07dc80081c089fb7e2b2adbc396b0c9180b1ff",
+    "lib/workflows/schema.sql": "fad98c6bed6e4cdc0168b5248ca5cbf7411c35ec49cd3bcbd24b27eb11bf3e4d",
+    "lib/workflows/service.ts": "861a42c6f3547bc0efe69f6f55e24ea561fe72854b987d25fcf4c653c5362214",
+    "lib/workspace/agents.ts": "a7dc16a213f2699679593dc11a2e8aead7533d4832df6180372a9133ea810fe2",
+    "lib/workspace/auth.ts": "d58f5bdeac77ef3bd5b86f8590b9c17e99508f74df690998439f6137f3541972",
+    "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
+    "lib/workspace/navigation.ts": "1cf72ddc34e3b4d530fc41d521adb409be1eabafbf70689e6222c89c92fbab26",
+    "lib/workspace/presentation.ts": "d9006b165518bc432df25ca924101f0e621d8849242f158181cb7f0e181a1904",
+    "lib/workspace/response.ts": "5854dd6e0d588cd62ad1e643746d2f2a96993ce131146ee90f929b34bad35a18",
+    "lib/workspace/sales-options.ts": "000dc67e6a6d3be9dfafdabd2fb970442ddb13ea4b13d74bc89eca65a8078bd9",
+    "lib/workspace/sales.ts": "548cb64b31a260fa0ea2cc08ccd9613f6b830009a0776bfb38aafbefb457c8e6",
+    "lib/workspace/schema.sql": "5efa86906dd872f6eb059cb4be7c73a1790b5fd4b5910dc480f7e1b4e231725e",
+    "runtime/temporal/activities.ts": "9be7fd957c81efbfdc6d365ad583c89fe7cdfe9ed931627ec8690aa65e5d8ab0",
+    "runtime/temporal/alert-monitor.ts": "aab9a74fc19fe55be720039bf3087530c28564668951231575b3486805ad828f",
+    "runtime/temporal/operations.ts": "4913dc9dcc16c04625f46f5e3a1eedaaaf5f0e553f357af1612729cc08f8270e",
+    "runtime/temporal/outbox.ts": "0ff85aa200865cd858e25c4f795f52be619cab1f748a592c33514ee19e9d608c",
+    "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
+    "runtime/temporal/record-routing.ts": "cfca7823cefedcfd561460332c56871afb9e34d9fa1697ba3525c02ae3396536",
+    "runtime/temporal/staging-host.ts": "7b1b0ef2d6a79df9546622b8b2177c1ae49722e40d19f5b1fdb5b49041b956c8",
+    "runtime/temporal/staging-preflight.ts": "53b210606319eae30fbfc9ff6ec87f46a6bb8c1c748720c77eaa690bd8cfabf1",
+    "runtime/temporal/version-contract.ts": "80fd2948beed1f9f9c0318ed2ac24e59fb3c0820538b718891e179f047c3b921",
+    "runtime/temporal/workflow-v2.ts": "9fe1f067454651ae30cf692ba9357cf0afd5123b18014ef72994bbc9b8004ed5",
+    "runtime/temporal/workflow.ts": "5ed74bf103edbae5d6345f258f77da6b6e6baf340ccec866d340065ffd607c14",
+    "scripts/build-temporal-semantic-variant.mjs": "3d5c65392bc37925ee1f273157c96f322b5511a1d2bea1cb7c4e9a8935f468ff",
+    "scripts/build-temporal-worker.mjs": "c7c96a323aedd51e0544e50e050301ff1efab1cdb00bfaac690b01d25d109510",
+    "scripts/reset-assembly-enrollment.mjs": "339576859f57165b8b5b085c4585e758209fd14e7cc024371cd913cef7babc28",
+    "scripts/reset-intent-setup.ts": "74bdc03355547831c4de4c8d867438e8fb035cfc364d869baca9b2edbeb125f9",
+    "scripts/reset-intent-store.mjs": "8101d539ec2ebbacd181775c56e92c0ef06fd5a38a22b4d9f2b7af6ca2a6456e",
+    "scripts/reset-owner-diagnostic.mjs": "ab4d066f0e2ee84ab066eae0856ebfe29d4093b4da18aa4c37efbd903935d28d",
+    "scripts/restored-reset-verification.mjs": "74646184712e8913bf36d60e58077609ba6ad40e071024556bbf7b883b3f1e2e",
+    "scripts/restored-worker-containment.mjs": "54fa87422e25b84ebab10b9950bde30c40d1527860b6cc5b4830a97b4301cb44",
+    "scripts/staging-browser-proof.mjs": "428e2ecdf26cc01d7c2d0940cce0cbf876a00455d96acb84bc8b50e8c814cf30",
+    "scripts/staging-browser-record.mjs": "955a318a4c9843916683894bf34773f48c3761f5be9ad43c7e417c0ff62480d2",
+    "scripts/staging-browser-tls.mjs": "9b6e13b2dad7999e598989b3a5a53c2a30a6421b917c2abb68e9eb495cc35bb8",
+    "scripts/staging-database-bootstrap.mjs": "76cfc8cc58c724efc46b8d37915fb7515976dc5f28af5065e3c0c956e924cb57",
+    "scripts/staging-drain-exercise.mjs": "0199045109676bcdcffb6fe89b14ee868724135421710936b7f5b69dab6d9940",
+    "scripts/staging-drain-owner.mjs": "9f7eab216fd0591bd8151cd6610b0276965194b29c45bf7dba0b1f554584c51e",
+    "scripts/staging-drain-proof.mjs": "35b1aedf9d294069e4c4749d82cd426f03b2e836a99aa4a8b8e7029b6009fbd0",
+    "scripts/staging-drain-source.mjs": "17710299ce8271a6df350f4a1b7e491b4d8d9bea1d353f79d95dab11e3a42c8c",
+    "scripts/staging-fixture-source.mjs": "76e404f688009c9b08322ab4d5a57dc057b5bf2221837c61945a4a5f19e76296",
+    "scripts/staging-host-inventory.py": "c67130cbd6353ceb6c716ca20284f9fcd52beedd05e25e0dd33437c2cc7955c8",
+    "scripts/staging-image-artifact.mjs": "cf78d67c833418417f2bb64bce784b96cf6fe682f92abd8f43fa6da0165cebd1",
+    "scripts/staging-namespace-bootstrap.mjs": "97d7738a68feaeded8e42ef17f7662880a7b5a31cfdb9b662afa9d5389d805d2",
+    "scripts/staging-owned-builder.mjs": "4db747484d100c3cdd45a668589096cd753f16a87347f4b973a72c34148132f6",
+    "scripts/staging-planner-attachment.mjs": "021115f6afad958f5b0c5e92074788efe864497b17f156f69994ff0e66f335b4",
+    "scripts/staging-planner-inputs.mjs": "bb5f7b0e582e274336dd8c68fb9fbe52ffa3b72c8e4e28c3d4e8ffdb30868f4c",
+    "scripts/staging-platform-controller.mjs": "242a7d354cebd473dfee9cda60d088e7b4401ad98bcfddb3e8afb7a6d3eeb588",
+    "scripts/staging-platform-proof.mjs": "04dab89b699c9b15ad0a3da6a533329d9bc28cd01908ecee06bfa067b8ae40c3",
+    "scripts/staging-reset-archive.mjs": "ab900739dd4aef4e9d4ab75599b72665910956ee6df27d96142743a2804decdc",
+    "scripts/staging-reset-bootstrap.mjs": "8a6952789fab38b55604e70b95354d9303d2531b2b27e6e7a0eb511a432ec9d6",
+    "scripts/staging-reset-enroll.mjs": "96c2d7db9995f5bd1e505371c568a139ad5b5171adc04c8cf34bc311dd72ec59",
+    "scripts/staging-reset-owner.mjs": "8d604b828d4e74ee706071494a853119ce4216e21563dd2ff41d5aa4c30f615d",
+    "scripts/staging-reset-proof.mjs": "004cb44eedf25abffc17591cee9a9f517106475549d023c56a54b2157eeaad7f",
+    "scripts/staging-reset-restore-owner.mjs": "3fd308fb5da0cf764a3d07bce3ec2d851e7fde85b3b637109ab9014ba5896cd8",
+    "scripts/staging-reset-source.mjs": "77ca919a4d0bea85cae8c81feefd034bb75e1175e8ae6835be91e246aa669fc1",
+    "scripts/staging-restore-controller.mjs": "0ef5bae8e436c44bb87289d9041d7242dc9d14aeb00cba9b92344e4da57b8ad5",
+    "scripts/staging-runtime-images.mjs": "29891a47d7bf259b865d56ebfe5558681ed456716aeb8f638727b0064603c6d6",
+    "scripts/staging-runtime-inputs.mjs": "9438eda08e7af7fcf7a0726379de42d1852982e8a1af16cd2d31217e10e2f9b6",
+    "scripts/staging-semantic-controller.mjs": "37ffcca0ea5096c8952762b77e0eb90b620211d21efe230c464aeeb1fb45f5e1",
+    "scripts/staging-semantic-host.mjs": "b14e2add60cafe0eeff8fec4e6b7d5c6a202f672933ccff7c20c563929175f83",
+    "scripts/staging-semantic-proof.mjs": "62a4194d38ab437cdf0d29ac5224a5777e76438f00e5761268a027329be1d313",
+    "scripts/staging-semantic-trial-source.mjs": "67e26778630f02581730cf5019bbdd711797252575121f9dacb5a3019a8209a0",
+    "scripts/staging-temporal-config.mjs": "2aacddbd5688e033def992b088c2e51efb0e329e9c18d763a11ac7736ed5dd5c",
+    "scripts/temporal-completed-reset.mjs": "d61f48c01606d51f70981f8c43f882a5287a90f044b92be7805b24148013872d",
+    "scripts/temporal-semantic-replay.mjs": "48cc9542fca27e105568bb0e37b6764b85d31d751b6e6f59c247b970fa571f5e",
+    "scripts/temporal-semantic-variant.mjs": "e1fbcc76378db3e9ce2b4261929753c9bd8fcf521d1eec56ac8bf1807751d8f3",
+    "scripts/worker-admission-setup.ts": "e3891b469731fa31a0977c704aebc047096d0751b47de546e01678226f5ce204",
+    "scripts/worker-artifact-enrollment.mjs": "0afd3de8b4d3fc38b7863d34b508af2c475ecb184dcccdd6cfdd45d32f710dc5",
+    "scripts/worker-restore-contain.mjs": "6ed1bb170b9f6342267bff0e4941f49d7a0442d1aab2c0f0e0a9cbf7b996a126",
+    "scripts/workspace-recovery.ts": "46ca583a30482edbb3345a2f2643e50b745d3f81be1a99c74076f52ac140d605"
+  },
+  "generatedTrialSha256": "5bd8eab5c05d3ec66fffce8557ddfa4c7a29d09dfef749eeb502a0c2036dd004",
+  "generatedControllerSha256": "5fc948246fe7aa944b44564ea004f680d4300a213f7dac23b6f779281e8cf917",
+  "generatedHostSha256": "52dc85ab21e69e9f1827241ca0fafa1ccc9af5122b61bcaa44612bd2e4e7d469",
+  "notVerified": [
+    "complete retirement and artifact deletion policy",
+    "long-term image and history retention",
+    "persistent remote operator acceptance",
+    "live providers",
+    "production cutover",
+    "enterprise production SLA"
+  ]
+}

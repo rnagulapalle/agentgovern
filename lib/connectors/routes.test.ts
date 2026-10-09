@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { tokenHash } from "../durable/service";
 let db: Pool, admin: Pool;
+const providerWrites = vi.hoisted(() => ({ count: 0 }));
 const schema = `connector_http_${randomBytes(8).toString("hex")}`;
 const tokens = {
   operator: randomBytes(32).toString("base64url"),
@@ -24,6 +25,7 @@ vi.mock("./twin", async original => ({
       return "v1";
     }
     async write() {
+      providerWrites.count++;
       return {
         outcome: "verified",
         reference: "test",
@@ -281,4 +283,54 @@ it("workflow HTTP enrollment is authenticated, strict and cannot grant an agent 
       )
     ).status,
   ).toBe(403);
+});
+
+it("serves the tool client over real HTTP with held approval, response-loss recovery and agent privilege refusal", async () => {
+  const { createServer } = await import("node:http");
+  const { LoopLabsToolClient } = await import("./tool-client");
+  let drop = false, droppedStatus = 0, droppedError = "";
+  const server = createServer(async (req, res) => {
+    const chunks: Buffer[] = []; for await (const chunk of req) chunks.push(chunk);
+    const address = server.address(); if (!address || typeof address === "string") throw Error("No listener");
+    const request = new NextRequest(`http://127.0.0.1:${address.port}${req.url}`, {
+      method: req.method, headers: { authorization: req.headers.authorization || "", "content-type": "application/json" },
+      ...(req.method === "POST" ? { body: Buffer.concat(chunks) } : {}),
+    });
+    const response = await (req.method === "POST" ? POST(request) : GET(request));
+    if (drop && req.method === "POST") { droppedStatus = response.status; droppedError = (await response.clone().json()).error || ""; drop = false; res.destroy(); return; }
+    res.writeHead(response.status, Object.fromEntries(response.headers)); res.end(await response.text());
+  });
+  await new Promise<void>(r => server.listen(0, "127.0.0.1", r));
+  try {
+    const address = server.address(); if (!address || typeof address === "string") throw Error("No listener");
+    const origin = `http://127.0.0.1:${address.port}`;
+    const client = new LoopLabsToolClient(origin, "agent", async () => tokens.agent);
+    const writesBefore = providerWrites.count;
+    const reservedBefore = (await db.query("SELECT reserved FROM ll_agents WHERE org_id='http' AND id='agent'")).rows[0].reserved;
+    const workflows = await import("@/app/api/durable/workflows/route");
+    const enrolled = await workflows.POST(req({ operation: "create", crmAgent: "agent", emailAgent: "agent", runId: randomUUID() })); expect(enrolled.status).toBe(200);
+    const created = await enrolled.json();
+    const run = await (await workflows.GET(new NextRequest(`https://looplabs.run/api/durable/workflows?run=${created.id}`, { headers: { Authorization: `Bearer ${tokens.operator}` } }))).json();
+    const actionId = run.steps[0].action_id as string, proposal = { actionId, connector: "crm" as const, payload: { lifecycle: "customer" as const } };
+    drop = true; await expect(client.propose(proposal)).rejects.toMatchObject({ outcome: "unconfirmed" }); expect(droppedStatus, droppedError).toBe(200);
+    expect((await client.read(actionId)).state).toBe("held"); expect((await client.propose(proposal)).state).toBe("held");
+    expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE id=$1", [actionId])).rows[0].n).toBe(1);
+    expect((await db.query("SELECT reserved FROM ll_agents WHERE org_id='http' AND id='agent'")).rows[0].reserved).toBe(reservedBefore + 1);
+    await expect(client.propose({ ...proposal, payload: { lifecycle: "lead" } })).rejects.toMatchObject({ outcome: "refused", status: 409 });
+    for (const operation of ["approve", "execute", "contain"]) {
+      const response = await fetch(`${origin}/api/durable/connectors`, { method: "POST", headers: { authorization: `Bearer ${tokens.agent}`, "content-type": "application/json" }, body: JSON.stringify(operation === "contain" ? { operation, connector: "crm" } : { operation, actionId, ...(operation === "approve" ? { payloadHash: (await client.read(actionId)).payload_hash } : {}) }) });
+      expect(response.status).toBe(403);
+    }
+    expect((await client.read(actionId)).state).toBe("held");
+    const wrong = new LoopLabsToolClient(origin, "other-agent", async () => tokens.agent);
+    await expect(wrong.propose({ ...proposal, actionId: randomUUID() })).rejects.toMatchObject({ outcome: "refused", status: 403 });
+    const hash = (await client.read(actionId)).payload_hash;
+    expect((await POST(req({ operation: "approve", actionId, payloadHash: hash }, "second"))).status).toBe(200);
+    expect((await client.read(actionId)).state).toBe("ready"); expect(providerWrites.count).toBe(writesBefore);
+    await db.query("UPDATE ll_tokens SET active=false WHERE hash=$1", [tokenHash(tokens.agent)]);
+    await expect(client.read(actionId)).rejects.toMatchObject({ outcome: "refused", status: 401 });
+  } finally {
+    await db.query("UPDATE ll_tokens SET active=true WHERE hash=$1", [tokenHash(tokens.agent)]);
+    server.closeAllConnections(); await new Promise<void>(r => server.close(() => r()));
+  }
 });

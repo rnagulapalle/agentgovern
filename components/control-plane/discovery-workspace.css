@@ -1,0 +1,30 @@
+.cp-discovery h2,
+.cp-discovery h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.cp-discovery h2 svg,
+.cp-discovery h3 svg,
+.cp-discovery-coverage svg {
+  flex-shrink: 0;
+}
+.cp-discovery-coverage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 12px 0 20px;
+  color: var(--cp-muted);
+}
+.cp-discovery-coverage span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.cp-discovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}

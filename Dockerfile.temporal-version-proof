@@ -1,0 +1,23 @@
+# Disposable semantic-version fault injection; not a production worker replacement.
+FROM node:22-bookworm-slim AS build
+WORKDIR /app
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --ignore-scripts
+COPY tsconfig.json ./
+COPY lib ./lib
+COPY runtime ./runtime
+COPY scripts/build-temporal-worker.mjs scripts/temporal-service.ts scripts/build-temporal-semantic-variant.mjs scripts/temporal-semantic-variant.mjs ./scripts/
+COPY docs/evidence/staging-platform-browser-proof.json ./docs/evidence/staging-platform-browser-proof.json
+ARG LOOPLABS_VERSION_CASE
+RUN case "$LOOPLABS_VERSION_CASE" in baseline) node scripts/build-temporal-worker.mjs ;; incompatible) LOOPLABS_SEMANTIC_VERSION_BUILD=isolated node scripts/build-temporal-semantic-variant.mjs ;; *) exit 1 ;; esac
+
+FROM node:22-bookworm-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/.worker ./.worker
+COPY --from=build /app/pnpm-lock.yaml ./pnpm-lock.yaml
+USER node
+CMD ["node", ".worker/temporal-service.cjs", "worker"]

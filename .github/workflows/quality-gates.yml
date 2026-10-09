@@ -44,6 +44,22 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm quality
+        env:
+          # Scoped archive tests use this job's PostgreSQL17 client, not an older host client.
+          LOOPLABS_TEST_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+      - name: Install isolated browser dependencies
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Prove invited cloud inventory desktop and mobile
+        run: node --import tsx scripts/discovery-browser-proof.mjs "$RUNNER_TEMP/looplabs-discovery-browser"
+        env:
+          LOOPLABS_DISCOVERY_BROWSER_PROOF: isolated
+      - name: Retain sanitized cloud inventory UI proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: looplabs-discovery-browser-${{ github.run_id }}
+          path: ${{ runner.temp }}/looplabs-discovery-browser
+          if-no-files-found: error
+          retention-days: 14
 
   staging-temporal-service:
     name: staging-temporal-service
