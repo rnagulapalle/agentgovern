@@ -23,7 +23,7 @@ async function main(){
   let rpcCalls=0,lost=false;
   try{await dispatchResetOnce(db,input,async request=>{
    rpcCalls++;const response=await connection.withDeadline(Date.now()+15000,()=>client.workflowService.resetWorkflowExecution(request));
-   assert(/^[a-f0-9-]{36}$/.test(response.runId)&&response.runId!==input.original_run_id);
+   assert(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(response.runId)&&response.runId!==input.original_run_id);
    throw new DiscardedResponse();
   });}catch(error){if(!(error instanceof DiscardedResponse))throw error;lost=true;}
   assert(lost&&rpcCalls===1,'Fresh intent must actually send one reset then discard its response');

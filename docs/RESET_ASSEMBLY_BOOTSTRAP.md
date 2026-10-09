@@ -57,3 +57,42 @@ The full entry-point/receipt validation and pending-intent archive restoration a
 still incomplete. In particular, restoring an archive captured before the reset
 intent is inserted cannot prove stale-intent recovery. Unavailable history stays
 uncertain; do not retry the RPC to manufacture a passing outcome.
+
+## Pending-intent archive and fresh runtime entry point
+
+The host captures a genuine full PostgreSQL custom archive after the first reset
+owner exits with committed uncertainty, before the second owner resolves it.
+After both semantic workers stop, it rotates an independent external recovery
+epoch and restores that archive into a newly created disposable database on the
+same already bounded PostgreSQL service. No runtime receives the copy's URL.
+The primary trial database, its Temporal service and providers are preserved.
+
+The separate copy owner requires the archived uncertain intent to match the exact
+operation, original execution, retained image and history metadata. Old-epoch
+claims refuse; quarantine revokes restored members, sessions, tokens, agents,
+scopes and approvals. Worker admission stays draining. New intent identities
+cannot replace the original, reservations and action IDs/hashes remain unchanged,
+and the old intent stays uncertain. The host independently checks provider effects
+and removes only the database it just created. It does not restore Temporal
+persistence or prove a coordinated application/provider backup.
+
+The primary parent's earlier approved archive now contains the actual enrolled
+builds and empty migration15 table. Following its original restore/quarantine
+checks, the separate worker-containment command runs twice. No old optional table
+or FK is removed to force archive compatibility.
+
+`scripts/staging-reset-proof.mjs` is the new opt-in fresh Linux/AMD64 private-CI
+entry point. It verifies all113 accepted drain source fingerprints unchanged,
+adds the reset/restore sources, preserves the original typed UI, admission, worker
+loss/recovery, replay and provider checks, and hashes generated modules before
+retaining an exclusive private receipt. Runtime acceptance requires one reset RPC,
+a new-process duplicate refusal, exact lineage, unchanged four lifecycle effects,
+and pending-intent archive containment. A successful verifier is consistency
+checking, not a signed certificate. No full packaged-worker reset receipt has yet
+been recorded. Long-term retention, persistent operator evaluation, live providers,
+sustained SLOs, complete retirement/deletion policy and cutover remain unproved.
+
+The dedicated schema-level PostgreSQL archive test now invokes the same recovery
+verification against a real restored pending intent and an approval-bearing fixture
+with a reserved budget. It proves that bounded helper behavior using synthetic
+metadata, not the full named-approval packaged-worker/provider assembly.

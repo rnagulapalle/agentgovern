@@ -8,6 +8,7 @@ test('strict reset extension enrolls before the actual archive without replacing
  expect(source.indexOf('await bootstrapResetAssembly')).toBeLessThan(source.indexOf('"pg_dump"'));
  for(const text of ['restoreContainment','semanticLifecycle','semanticAdmission','workspace-recovery.ts','quarantine();quarantine();'])expect(source).toContain(text);
  expect(source).toContain('resetAssembly,semanticLifecycle');
+ expect(source).toContain('workerContain();workerContain();');expect(source).toContain('2 retained builds draining.');
  expect(()=>resetPlatform(original+'\n const database=resolve(application,"database");','.drain-host-a1-b2.mjs')).toThrow('ambiguous');
  expect(()=>resetPlatform(original.replace(' const database=resolve(application,"database");','moved'),'.drain-host-a1-b2.mjs')).toThrow('missing');
 });

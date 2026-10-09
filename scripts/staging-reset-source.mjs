@@ -8,6 +8,9 @@ export function resetPlatform(source,hostFile){
  replace(' const database=resolve(application,"database");',` stage="reset-assembly-enrollment";
  const resetAssembly=await bootstrapResetAssembly({project,parent,images:{baseline:images.worker,incompatible:semanticImage,provisioner:images.provisioner},ownerEnv:resolve(parent,"owner.env"),docker,runController});
  const database=resolve(application,"database");`);
+ replace(' stage="offline-restore-quarantine";quarantine();quarantine();',` stage="offline-restore-quarantine";quarantine();quarantine();
+ const workerContain=()=>{const result=runController(project+"-worker-restore-contain",project+"_application",images.provisioner,["node","scripts/worker-restore-contain.mjs"],[\`type=bind,src=\${application},dst=/run/private,readonly\`],[resolve(parent,"quarantine.env")]);assert.equal(result,"Restored worker admission contained: 2 retained builds draining. No reset sent, authority granted or artifact removed.");};
+ workerContain();workerContain();`);
  replace(' outcome={...result,semanticLifecycle,',' outcome={...result,resetAssembly,semanticLifecycle,');
  return out;
 }
@@ -39,6 +42,8 @@ import {completedResetRequest,pinnedBuild} from "./temporal-completed-reset.mjs"
 }
 export function resetHost(source,controllerFile){
  const replace=resetEditor(drainHost(source,controllerFile));let out;
+ out=replace('import {semanticArtifact,semanticPair} from "./temporal-semantic-replay.mjs";',`import {semanticArtifact,semanticPair} from "./temporal-semantic-replay.mjs";
+import {capturePendingResetArchive,restorePendingResetArchive} from "./staging-reset-archive.mjs";`);
  out=replace('  phase="replay";await checkpoint("post-replay-effects-ready");',`  phase="reset-owner-dispatch";await checkpoint("reset-request");
   await until(()=>ownerExit!==null);assert.equal(ownerExit,0);
   const beforeReset=state().effects;assert.equal(Object.keys(beforeReset).length,4);
@@ -55,11 +60,16 @@ export function resetHost(source,controllerFile){
   }
   await resetOwner("dispatch");
   const discarded=JSON.parse(await readFile(resolve(dir,"reset-response-discarded.json"),"utf8"));assert.deepEqual(discarded,{passed:true,rpcCalls:1,committedUncertainty:true});
+  const pendingArchiveSha256=await capturePendingResetArchive({project,database,trial,docker});
   phase="reset-owner-restart";await resetOwner("reconcile");
   const resetReadback=JSON.parse(await readFile(resolve(dir,"reset-owner-readback.json"),"utf8"));assert(resetReadback.passed===true&&resetReadback.newProcessRetryRefused===true&&resetReadback.independentLineageObserved===true);
   assert.deepEqual(state().effects,beforeReset,"Reset must not duplicate actual provider effects");
-  await mark("reset-provider-readback",{...resetReadback,effects:state().effects});
+  await mark("reset-provider-readback",{...resetReadback,rpcCalls:discarded.rpcCalls,committedUncertainty:discarded.committedUncertainty,pendingArchiveSha256,effects:state().effects});
   phase="replay";await checkpoint("post-replay-effects-ready");`);
- out=replace('return {admissionFence:receipt.admissionFence,passed:true,','return {resetEvidence:receipt.resetEvidence,admissionFence:receipt.admissionFence,passed:true,');
+ out=replace('  return {admissionFence:receipt.admissionFence,passed:true,',`  phase="pending-reset-archive-restore";
+  const resetArchive=await restorePendingResetArchive({project,database,trial,ownerURL,images,docker,writers:[restored.Id,next.Id],ownerLabel:owner});
+  assert.deepEqual(state().effects,effects,"Restoring the isolated copy cannot create provider effects");
+  assert.equal(resetArchive.backupSha256,pendingArchiveSha256);
+  return {resetArchive,resetEvidence:receipt.resetEvidence,admissionFence:receipt.admissionFence,passed:true,`);
  return out;
 }

@@ -9,16 +9,17 @@ import {scopedArchiveClient} from './reset-archive-client.mjs';
 import {containRestoredWorkerBuilds} from './restored-worker-containment.mjs';
 import {claimResetIntent,observeResetIntent} from './reset-intent-store.mjs';
 import {quarantineRestore} from '../lib/durable/recovery.ts';
+import {verifyRestoredPendingReset} from './restored-reset-verification.mjs';
 const migrations=[[1,'lib/durable/schema.sql'],[3,'lib/workspace/schema.sql'],[2,'lib/refunds/schema.sql'],[4,'lib/connectors/schema.sql'],[5,'lib/workflows/schema.sql'],[11,'lib/durable/proposal-schema.sql'],[7,'lib/enquiries/schema.sql'],[8,'lib/enquiries/managed-schema.sql'],[9,'lib/enquiries/temporal-schema.sql'],[10,'lib/durable/recovery-schema.sql'],[12,'lib/connectors/scope-schema.sql'],[13,'lib/enquiries/record-routing-schema.sql'],[14,'lib/enquiries/worker-admission-schema.sql']];
 const hash=b=>createHash('sha256').update(b).digest('hex');
 test('real post15 archive contains stale intents and active builds until explicit recovery quarantine',async()=>{
  const url=process.env.LOOPLABS_TEST_DATABASE_URL;if(!url)throw Error('Dedicated PostgreSQL required; archive tests must not skip.');
  const schema=`reset_archive_${randomBytes(8).toString('hex')}`,role=`${schema}_role`,admin=new Pool({connectionString:url});let db,runtime,roleCreated=false,archiveDir;
- const previous={epoch:process.env.LOOPLABS_RECOVERY_EPOCH,ack:process.env.LOOPLABS_RESTORE_ACK};
+ const previous={epoch:process.env.LOOPLABS_RECOVERY_EPOCH,ack:process.env.LOOPLABS_RESTORE_ACK,reset:process.env.LOOPLABS_STAGING_RESET_PROOF};
  const epoch=randomUUID(),next=randomUUID(),plan=randomUUID(),scope=randomUUID(),build=`ack-${'a'.repeat(64)}`,image=`sha256:${'a'.repeat(64)}`;
  const input={org_id:'proof',operation_id:randomUUID(),plan_id:plan,namespace:'default',workflow_id:`archive-proof-${plan}`,original_run_id:randomUUID(),task_finish_event_id:4,original_history_sha256:'b'.repeat(64),worker_build_id:build,image_id:image,recovery_epoch:epoch};
  try{
-  process.env.LOOPLABS_RECOVERY_EPOCH=epoch;delete process.env.LOOPLABS_RESTORE_ACK;
+  process.env.LOOPLABS_RECOVERY_EPOCH=epoch;process.env.LOOPLABS_STAGING_RESET_PROOF='isolated';delete process.env.LOOPLABS_RESTORE_ACK;
   await admin.query(`CREATE SCHEMA ${schema}`);db=new Pool({connectionString:url,options:`-c search_path=${schema}`});
   await db.query('CREATE TABLE ll_migrations(version int PRIMARY KEY,digest text NOT NULL)');
   for(const [version,file] of migrations){const bytes=await readFile(file);await db.query(bytes.toString());await db.query('INSERT INTO ll_migrations VALUES($1,$2)',[version,hash(bytes)]);}
@@ -32,6 +33,8 @@ test('real post15 archive contains stale intents and active builds until explici
   await db.query("INSERT INTO ll_temporal_dispatch(org_id,plan_id,workflow_id,plan_hash,plan_version,connector_version,state) VALUES('proof',$1,$2,$3,'acknowledgement-1','private-record-twin-2','started')",[plan,input.workflow_id,'b'.repeat(64)]);
   await db.query('INSERT INTO ll_temporal_worker_builds(worker_build_id,image_id,workflow_sha256,service_sha256,lock_sha256) VALUES($1,$2,$3,$3,$3)',[build,image,'a'.repeat(64)]);
   await db.query("INSERT INTO ll_temporal_record_routes(org_id,plan_id,scope_id,worker_build_id,scope_version,binding_id) VALUES('proof',$1,$2,$3,1,$4)",[plan,scope,build,'c'.repeat(64)]);
+  await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('proof','crm')");
+  await db.query("INSERT INTO ll_connector_actions(org_id,id,agent_id,connector,payload,payload_hash,policy_version,state,reason,proposed_by,approved_by) VALUES('proof',$1,'fixture-agent','crm','{}',$2,1,'ready','Fixture','owner@example.test','owner@example.test')",[randomUUID(),'b'.repeat(64)]);
   const client=scopedArchiveClient(url,schema),pre15=client.dump();
   const sql=await readFile('lib/enquiries/reset-intent-schema.sql');await db.query(sql.toString());await db.query('INSERT INTO ll_migrations VALUES(15,$1)',[hash(sql)]);
   await claimResetIntent(db,input);const archive=client.dump(),backupHash=hash(archive);
@@ -50,6 +53,7 @@ test('real post15 archive contains stale intents and active builds until explici
   await expect(containRestoredWorkerBuilds(db,{orgId:'proof',epoch:next,backupHash})).rejects.toThrow();
   process.env.LOOPLABS_RESTORE_ACK='WRITERS_STOPPED_AND_EPOCH_ROTATED';
   await expect(containRestoredWorkerBuilds(db,{orgId:'proof',epoch:next,backupHash})).rejects.toThrow('quarantine must complete');
+  const verified=await verifyRestoredPendingReset(db,{input,epoch:next,backupHash});expect(verified).toMatchObject({passed:true,staleResetRefused:true,replacementIntentRefused:true,restoredAuthorityRevoked:true,actionIdentitiesPreserved:true,reservationsPreserved:true,buildsDraining:1,actions:1});
   await quarantineRestore(db,'proof',next,backupHash);
   await db.query("UPDATE ll_migrations SET digest='changed' WHERE version=15");
   await expect(containRestoredWorkerBuilds(db,{orgId:'proof',epoch:next,backupHash})).rejects.toThrow('Compatible post-admission archive');
@@ -83,6 +87,7 @@ test('real post15 archive contains stale intents and active builds until explici
   await expect(containRestoredWorkerBuilds(db,{orgId:'proof',epoch:next,backupHash})).rejects.toThrow('Single-workspace');
   expect((await db.query('SELECT state FROM ll_temporal_worker_builds WHERE worker_build_id=$1',[otherBuild])).rows[0].state).toBe('active');
  }finally{
+  if(previous.reset===undefined)delete process.env.LOOPLABS_STAGING_RESET_PROOF;else process.env.LOOPLABS_STAGING_RESET_PROOF=previous.reset;
   if(previous.epoch===undefined)delete process.env.LOOPLABS_RECOVERY_EPOCH;else process.env.LOOPLABS_RECOVERY_EPOCH=previous.epoch;
   if(previous.ack===undefined)delete process.env.LOOPLABS_RESTORE_ACK;else process.env.LOOPLABS_RESTORE_ACK=previous.ack;
   await runtime?.end();await db?.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
