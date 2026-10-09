@@ -43,7 +43,8 @@ import {completedResetRequest,pinnedBuild} from "./temporal-completed-reset.mjs"
 export function resetHost(source,controllerFile){
  const replace=resetEditor(drainHost(source,controllerFile));let out;
  out=replace('import {semanticArtifact,semanticPair} from "./temporal-semantic-replay.mjs";',`import {semanticArtifact,semanticPair} from "./temporal-semantic-replay.mjs";
-import {capturePendingResetArchive,restorePendingResetArchive} from "./staging-reset-archive.mjs";`);
+import {capturePendingResetArchive,restorePendingResetArchive} from "./staging-reset-archive.mjs";
+import {resetOwnerDiagnosticLine} from "./reset-owner-diagnostic.mjs";`);
  out=replace('  phase="replay";await checkpoint("post-replay-effects-ready");',`  phase="reset-owner-dispatch";await checkpoint("reset-request");
   await until(()=>ownerExit!==null);assert.equal(ownerExit,0);
   const beforeReset=state().effects;assert.equal(Object.keys(beforeReset).length,4);
@@ -53,10 +54,10 @@ import {capturePendingResetArchive,restorePendingResetArchive} from "./staging-r
   assert(Object.values(resetValues).every(v=>typeof v==="string"&&v.length>0&&!/[\\r\\n\\0]/.test(v)));
   await writeFile(resetEnv,Object.entries(resetValues).map(([k,v])=>k+"="+v).join("\\n")+"\\n",{flag:"wx",mode:0o600});
   async function resetOwner(mode){
-   const name=project+"-reset-owner-"+mode;names.push(name);let finished=null;
+   const name=project+"-reset-owner-"+mode;names.push(name);let finished=null,diagnostics="";
    const process=spawn("docker",["run","--rm","--name",name,...hardened(256*1024**2),"--user",uid,"--env-file",resetEnv,"--mount",\`type=bind,src=\${trial},dst=/run/trial\`,images.controller,"node","--import","tsx","scripts/staging-reset-owner.mjs",mode],{stdio:["ignore","ignore","pipe"]});
-   process.stderr.resume();process.on("exit",code=>{finished=code??127;});process.on("error",()=>{finished=127;});
-   try{await until(()=>finished!==null);assert.equal(finished,0);}finally{process.kill("SIGTERM");}
+   process.stderr.on("data",bytes=>{if(diagnostics.length<4096)diagnostics+=(bytes.toString().slice(0,4096-diagnostics.length));});process.on("exit",code=>{finished=code??127;});process.on("error",()=>{finished=127;});
+   try{await until(()=>finished!==null);if(finished!==0){const diagnostic=resetOwnerDiagnosticLine(diagnostics);if(diagnostic)console.error(diagnostic);}assert.equal(finished,0);}finally{process.kill("SIGTERM");}
   }
   await resetOwner("dispatch");
   const discarded=JSON.parse(await readFile(resolve(dir,"reset-response-discarded.json"),"utf8"));assert.deepEqual(discarded,{passed:true,rpcCalls:1,committedUncertainty:true});

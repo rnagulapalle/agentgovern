@@ -96,3 +96,20 @@ The dedicated schema-level PostgreSQL archive test now invokes the same recovery
 verification against a real restored pending intent and an approval-bearing fixture
 with a reserved budget. It proves that bounded helper behavior using synthetic
 metadata, not the full named-approval packaged-worker/provider assembly.
+
+## October 9 assembled attempt: refused
+
+Private trial `37924267547` tested public source
+`ab4c6ab72b7155cdeb38f1b549e2d683791c4fa3`. It reached
+`reset-owner-dispatch/reset-existing-approved-run` and failed there. The post-runtime
+quality step and receipt upload were skipped; temporary-input cleanup succeeded.
+This is a failed assembled acceptance, not a reset or archive pass. The initial
+sanitized checkpoint did not establish whether the owner failed input validation,
+intent insertion, Temporal connection, RPC or response verification.
+
+The next candidate adds fixed owner-phase diagnostics and bounded numeric gRPC or
+SQLSTATE codes. Exception messages, details, stacks, histories, URLs and credentials
+remain excluded. The host retains at most 4 KiB of private child stderr and forwards
+only the exact allowlisted diagnostic line; the top-level driver applies the same
+parser. No permission, state, resource, effect or receipt acceptance condition changes.
+A fresh complete runtime and regression run is required after exact-head CI.

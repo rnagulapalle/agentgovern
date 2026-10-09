@@ -6,6 +6,7 @@ import {randomUUID,createHash} from "node:crypto";
 import {resolve} from "node:path";
 import {writeDrainController,drainAdmissionRefusal} from "./staging-drain-source.mjs";
 import {resetPlatform,resetHost,resetController} from "./staging-reset-source.mjs";
+import {resetOwnerDiagnosticLine} from "./reset-owner-diagnostic.mjs";
 import {typedReceipt} from "./staging-browser-record.mjs";
 const hash=bytes=>createHash("sha256").update(bytes).digest("hex");
 const generatedFiles=[];let generated,owned=false;
@@ -13,7 +14,7 @@ try{
  assert(process.platform==="linux"&&process.arch==="x64"&&process.env.GITHUB_ACTIONS==="true"&&process.env.LOOPLABS_STAGING_SEMANTIC_PROOF==="isolated"&&process.env.LOOPLABS_STAGING_DRAIN_PROOF==="isolated"&&process.env.LOOPLABS_STAGING_RESET_PROOF==="isolated");
  assert(process.env.LOOPLABS_STAGING_TYPED_PLANNER==="isolated"&&process.env.LOOPLABS_STAGING_BROWSER_PROOF==="isolated"&&!process.env.LOOPLABS_STAGING_IMAGE_ARTIFACT);
  const baseline=JSON.parse(await readFile("docs/evidence/staging-drain-proof.json","utf8"));
- const additional=["lib/enquiries/reset-intent-schema.sql","scripts/reset-intent-setup.ts","scripts/reset-intent-store.mjs","scripts/temporal-completed-reset.mjs","scripts/reset-assembly-enrollment.mjs","scripts/staging-reset-enroll.mjs","scripts/staging-reset-bootstrap.mjs","scripts/staging-reset-source.mjs","scripts/staging-reset-owner.mjs","scripts/staging-reset-archive.mjs","scripts/staging-reset-restore-owner.mjs","scripts/restored-reset-verification.mjs","scripts/restored-worker-containment.mjs","scripts/worker-restore-contain.mjs","scripts/staging-reset-proof.mjs"];
+ const additional=["lib/enquiries/reset-intent-schema.sql","scripts/reset-intent-setup.ts","scripts/reset-intent-store.mjs","scripts/temporal-completed-reset.mjs","scripts/reset-assembly-enrollment.mjs","scripts/staging-reset-enroll.mjs","scripts/staging-reset-bootstrap.mjs","scripts/staging-reset-source.mjs","scripts/staging-reset-owner.mjs","scripts/reset-owner-diagnostic.mjs","scripts/staging-reset-archive.mjs","scripts/staging-reset-restore-owner.mjs","scripts/restored-reset-verification.mjs","scripts/restored-worker-containment.mjs","scripts/worker-restore-contain.mjs","scripts/staging-reset-proof.mjs"];
  const files=[...Object.keys(baseline.sourceFingerprints),...additional].sort();
  assert.equal(new Set(files).size,files.length);
  const fingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,hash(await readFile(f))])));
@@ -27,6 +28,7 @@ try{
 
  const run=spawnSync(process.execPath,["--import","tsx",generated],{env:process.env,encoding:"utf8",timeout:30*60*1000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]});
  if(run.status!==0){
+  const resetFailure=resetOwnerDiagnosticLine(run.stderr);if(resetFailure)console.error(resetFailure);
   const refused=drainAdmissionRefusal(run.stderr);if(refused)console.error(JSON.stringify(refused));
   const detail=/Semantic host refused at ([a-z-]+(?:\/[a-z-]+)?);/.exec(run.stderr||"")?.[1];
   const parent=/Complete isolated platform trial failed at ([a-z-]+)/.exec(run.stderr||"")?.[1];
