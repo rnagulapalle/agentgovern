@@ -5,8 +5,9 @@ export function retainedPackageTrial(source){
  function replace(before,after){assert.equal(source.split(before).length,2,"Measured trial anchor is missing or ambiguous");source=source.replace(before,after);}
  replace('const docker=(...args)=>',`import {loadPackageReleases} from "./staging-package-releases.mjs";
 import {transitionRuntimePackage} from "./staging-package-transition.mjs";
+import {withPendingPackageBrowser} from "./staging-package-browser.mjs";
 const docker=(...args)=>`);
- replace('let schemaExecutions=0;',`let schemaExecutions=0;let packageReleases;const packageTransitions=[];
+ replace('let schemaExecutions=0;',`let schemaExecutions=0;let packageReleases,pendingPackageBrowser;const packageTransitions=[];
 assert(artifactDirectory===undefined,"This trial retrieves existing releases; never builds or exports a replacement artifact");`);
  const start=' stage="images";imageBuilder.start();';
  const end=' imageBuilder.close();\n const build=';
@@ -27,13 +28,16 @@ assert(artifactDirectory===undefined,"This trial retrieves existing releases; ne
  const transitionDocker=(...args)=>{const options=typeof args.at(-1)==="object"?args.pop():undefined;return options?execFileSync("docker",args,{env:options.env,encoding:"utf8",timeout:180000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim():docker(...args);};
  const transitionReady=async(selected,services)=>until(()=>services.every(s=>{const id=selected("ps","-aq",s);return id&&docker("inspect","--format","{{.State.Health.Status}}",id)==="healthy";}),"Replacement roles unavailable",90);
  const contract=p=>({buildId:p.buildId,web:p.web,worker:p.worker});
+ pendingPackageBrowser=await withPendingPackageBrowser(trial,async verifyUI=>{
+ await verifyUI();
  for(const [from,to] of [[0,1],[1,0]]){
   stage=from===0?"pending-package-promotion":"pending-package-reversion";
   const switched=await transitionRuntimePackage({project,environment:env,current:contract(packageReleases.packages[from]),target:contract(packageReleases.packages[to]),docker:transitionDocker,assertPending,ready:transitionReady});
-  Object.assign(env,switched.environment);packageTransitions.push(switched.evidence);
+  Object.assign(env,switched.environment);packageTransitions.push(switched.evidence);await verifyUI();
  }
+ });
  await assertPending();`);
- replace(' outcome={...result,restoreContainment,dependencyImages,',' outcome={...result,packageTransitions,packageOrigins:packageReleases.origins,restoreContainment,dependencyImages,');
+ replace(' outcome={...result,restoreContainment,dependencyImages,',' outcome={...result,packageTransitions,pendingPackageBrowser,packageOrigins:packageReleases.origins,restoreContainment,dependencyImages,');
  replace('if(outcome&&!process.exitCode){',`if(outcome&&!process.exitCode){
  const remaining=docker("image","ls","--no-trunc","--quiet").split("\\n").filter(Boolean);
  assert(built.every(id=>!remaining.includes(id)),"Every loaded release image must be removed after the trial");`);

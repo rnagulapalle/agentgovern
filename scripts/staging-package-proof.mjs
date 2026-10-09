@@ -19,9 +19,12 @@ try{
  if(run.status!==0){
   // Parent emits only reviewed sanitized diagnostics; do not forward raw child output.
   const stage=/Complete isolated platform trial failed at ([a-z-]+)/.exec(run.stderr||"")?.[1];
+  const release=/Package release input refused at (directories|retained-receipts|source-fingerprints|image-inventory|package-load-[01])( with storage exhaustion)?;/.exec(run.stderr||"");
+  if(release)console.error(`Retained loader checkpoint ${release[1]}${release[2]||""} failed; no raw output printed.`);
   throw Error(stage?`Runtime checkpoint ${stage} failed`:"Runtime trial did not complete");
  }
- const result=JSON.parse(run.stdout.trim()),{packageTransitions,packageOrigins,...runtime}=result;
+ const result=JSON.parse(run.stdout.trim()),{packageTransitions,packageOrigins,pendingPackageBrowser,...runtime}=result;
+ assert.deepEqual(pendingPackageBrowser,{trustedHTTPS:true,namedFormSession:true,sameSession:true,savedPendingReloads:3,sameActionHashes:true,heldWithoutApproval:true,noSelfApproval:true,mobileWidth:390,noHorizontalOverflow:true});
  assert(Array.isArray(packageTransitions)&&packageTransitions.length===2&&Array.isArray(packageOrigins)&&packageOrigins.length===2);
  const receipts=await Promise.all(["staging-platform-browser-before-dependency-proof.json","staging-platform-browser-proof.json"].map(async name=>JSON.parse(await readFile(`docs/evidence/${name}`,"utf8"))));
  const packages=receipts.map(r=>Object.fromEntries(r.images.map(x=>[x.role,x.id])));
@@ -33,9 +36,9 @@ try{
  const metadata={runId:Number(process.env.GITHUB_RUN_ID),privateWorkflowCommit:process.env.GITHUB_SHA,publicBaseCommit:process.env.LOOPLABS_SOURCE_BASE,exactCompressedOverlaySha256:process.env.LOOPLABS_SOURCE_OVERLAY_SHA256};
  // Existing complete typed/TLS/restore/effect acceptance is mandatory, not replaced.
  const checked=typedReceipt(runtime,metadata,{});
- const files=[...Object.keys(baseline.sourceFingerprints),"scripts/staging-package-transition.mjs","scripts/staging-package-pending.mjs","scripts/staging-package-pending-controller.mjs","scripts/staging-package-releases.mjs","scripts/staging-package-trial-source.mjs","scripts/staging-package-proof.mjs"];
+ const files=[...Object.keys(baseline.sourceFingerprints),"scripts/staging-package-transition.mjs","scripts/staging-package-pending.mjs","scripts/staging-package-pending-controller.mjs","scripts/staging-package-releases.mjs","scripts/staging-package-trial-source.mjs","scripts/staging-package-proof.mjs","scripts/staging-package-browser.mjs"];
  const sourceFingerprints=Object.fromEntries(await Promise.all(files.sort().map(async p=>[p,createHash("sha256").update(await readFile(p)).digest("hex")])));
- const receipt={passed:true,scope:"same-worker-build retained application package promotion/reversion with unapproved pending API work",packageTransitions,packageOrigins,releaseImagesRemoved:true,generatedTrialSha256:createHash("sha256").update(source).digest("hex"),runtime:checked,sourceFingerprints,notVerified:["pending-work UI across promotion/reversion","semantic worker-version upgrade","persistent staging and operator rollback acceptance","live providers and enterprise production SLA"]};
+ const receipt={passed:true,scope:"same-worker-build retained application package promotion/reversion with unapproved pending API and trusted HTTPS UI work",packageTransitions,packageOrigins,pendingPackageBrowser,releaseImagesRemoved:true,generatedTrialSha256:createHash("sha256").update(source).digest("hex"),runtime:checked,sourceFingerprints,notVerified:["semantic worker-version upgrade","persistent staging and operator rollback acceptance","live providers and enterprise production SLA"]};
  assert(typeof process.env.LOOPLABS_STAGING_PACKAGE_RECEIPT==="string"&&process.env.LOOPLABS_STAGING_PACKAGE_RECEIPT.startsWith("/"));
  await writeFile(process.env.LOOPLABS_STAGING_PACKAGE_RECEIPT,JSON.stringify(receipt,null,2)+"\n",{mode:0o600,flag:"wx"});
  console.log(JSON.stringify(receipt,null,2));
