@@ -21,7 +21,7 @@ feature. Generated source is exclusive and temporary; normal builds are unchange
 case. Both cases keep the existing packaged service, pinned dependency lock and
 content-bound manifest pipeline. Its context excludes credentials and private local
 data. The incompatible bundle has compiled locally with a distinct content-bound
-build ID; no worker has executed it and no lifecycle acceptance follows yet.
+build ID; no packaged worker has executed it and no lifecycle acceptance follows yet.
 
 ## Required actual acceptance
 
@@ -49,3 +49,24 @@ No forced reset or versioning override of existing histories is part of this pro
 References inspected October 9:
 - https://docs.temporal.io/production-deployment/worker-deployments
 - https://github.com/temporalio/documentation/blob/main/docs/production-deployment/worker-deployments/recover-pinned-workflows.mdx
+
+## Replay calibration measured October 9
+
+A real local Temporal dev service captured two completed histories with the
+content-distinct baseline and incompatible bundles: 11 and 16 events. Each matching
+bundle replayed successfully. Both cross-version replays threw the SDK's actual
+`DeterminismViolationError`; arbitrary exceptions cannot count as incompatibility.
+The inert activity ran once for each history and was not invoked by replay.
+The private observation is `semantic-replay-calibration-20261009.json` in the
+local research directory. This calibrates the fixture and replay gate; it does not
+prove authenticated PostgreSQL service, worker containers, connector authority,
+loss/recovery, retirement or enterprise acceptance.
+
+The shared replay gate verifies manifest identity against service/workflow/lock
+bytes, requires identical service and dependency bytes but different workflow
+bytes, and rejects failed, truncated, reordered or activity-free histories.
+`staging-semantic-controller.mjs` is the pending actual-runtime controller. It uses
+existing named sessions, normal enrollment/grants/approvals and immutable scoped
+outbox routes. Its Docker host checkpoints, admission and isolated provider setup
+are not wired or executed yet. A controller checkpoint file alone is never proof
+that a worker stopped, recovered, or is safe to retire.
