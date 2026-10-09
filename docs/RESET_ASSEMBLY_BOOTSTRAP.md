@@ -32,3 +32,28 @@ missing opt-in and symlink refusal. These use generated artifact files, not actu
 packaged Linux workers. The host extraction and the newly derived parent remain
 unaccepted until a full isolated runtime run verifies them. Production bootstrap,
 operator APIs and the legacy production runner remain unchanged.
+
+## Completed-run reset checkpoints
+
+The derived controller now prepares a reset intent from the actual completed old
+execution and its captured history, task boundary, retained image identity and
+external recovery epoch. The host waits for its prior admission owner to exit,
+then uses that stopped role's reserved256MiB allocation for two successive reset
+owner containers. Their environment has only the separate owner URL, recovery
+fence and Temporal connection fields; no application worker token or AWS fields.
+The owner remains trusted and the mounted private trial directory contains runtime
+configuration; this is not tenant-level credential isolation.
+
+The first process commits uncertainty and sends one actual reset RPC, deliberately
+discarding its successful response before exiting. The second has a fresh pool and
+connection; a duplicate claim must refuse dispatch. Only completed pinned history
+with the exact persisted reset lineage can resolve uncertainty. Host-side provider
+readback must match all four pre-reset effects, and the controller rechecks action
+identity, payload hashes, independent named approver and unchanged reservations.
+The original replay/provider and writer-stop checkpoints remain in place.
+
+These are implemented trial checkpoints, not a recorded packaged-worker result.
+The full entry-point/receipt validation and pending-intent archive restoration are
+still incomplete. In particular, restoring an archive captured before the reset
+intent is inserted cannot prove stale-intent recovery. Unavailable history stays
+uncertain; do not retry the RPC to manufacture a passing outcome.
