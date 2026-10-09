@@ -76,3 +76,36 @@ trusted business code, runtime health, image retention or retirement safety. The
 existing real two-image lifecycle acceptance is unchanged and predates the fence.
 Next, run this command on its reviewed runnable images and prove concurrent actual
 outbox transfer/drain with pending old history and retained authority.
+
+
+## Assembled race driver — wired, not executed
+
+`staging-drain-proof.mjs` strictly derives the measured parent, host and controller;
+the accepted source files remain unchanged. It requires fresh disposable Linux CI
+and preserves the original browser/crash/restore/replay gates and peak reservations.
+The separate offline owner uses the reserved stopped scheduler's 256MiB allocation.
+Only that owner gets the migration URL. Runtime controller and workers receive
+restricted credentials, never the owner connection or model session.
+
+After image extraction, the host records inspected IDs and mounts verified bytes
+read-only to the owner. The private provisioner-only enrollment helper rechecks
+those bytes and the exact migration14 digest; host identity checks bind them to
+the actual worker images. This helper is not a public enrollment API. Ordinary
+offline enrollment continues to require direct immutable-image inspection.
+
+The controller creates additional held plans through normal named authority,
+scoped grants, fixed enquiry planning and proposal APIs. It instruments only the
+real outbox's before/after INSERT observation barriers; SQL and transactions are
+unchanged. The owner requires actual pg_blocking_pids evidence in both race orders.
+Admission-first commits its original route before drain; drain-first refuses and
+rolls back dispatch/route ownership. Existing transfers remain idempotent. The
+additional admitted old-build route deliberately stays pending, proving that a
+successful drain is not permission to remove old artifacts or history.
+
+The original two pinned histories must then finish through independent approval,
+old-worker loss/restoration and actual correct/incompatible replay, with exactly
+four provider effects. A new receipt is emitted only after these runtime outcomes
+and original typed HTTPS/mobile/archive checks pass and all measured/generated
+source hashes remain unchanged. No driver receipt exists yet. Applying migration14
+after the parent's archive snapshot does not establish migration14 reset/restore
+semantics; that remains a separately declared acceptance gap.

@@ -6,7 +6,7 @@ import {resolve,basename} from 'node:path';
 import {randomBytes,createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {Pool} from 'pg';
-import {inspectedWorkerArtifact,enrollInspectedWorker} from './worker-artifact-enrollment.mjs';
+import {inspectedWorkerArtifact,enrollInspectedWorker,enrollExtractedWorker} from './worker-artifact-enrollment.mjs';
 const bytes={service:'// inert image extraction fixture\n',workflow:'// inert workflow fixture\n',lock:'fixture lock bytes\n'};
 const hash=createHash('sha256').update(bytes.service).update(bytes.workflow).update(bytes.lock).digest('hex');
 const fixture={'temporal-manifest.json':JSON.stringify({version:1,artifactHash:hash,buildId:`ack-${hash}`}),'temporal-service.cjs':bytes.service,'temporal-workflow.cjs':bytes.workflow,'pnpm-lock.yaml':bytes.lock};
@@ -66,3 +66,9 @@ test('actual nonexecuted image extraction enrolls bytes idempotently; changed di
   await rm(dir,{recursive:true,force:true});
  }
 },30000);
+
+test('isolated provisioner enrollment refuses before reading artifacts or database without opt-in',async()=>{
+ const old=process.env.LOOPLABS_STAGING_DRAIN_PROOF;delete process.env.LOOPLABS_STAGING_DRAIN_PROOF;
+ try{await expect(enrollExtractedWorker(null,`sha256:${'a'.repeat(64)}`,'/unavailable')).rejects.toThrow();}
+ finally{if(old!==undefined)process.env.LOOPLABS_STAGING_DRAIN_PROOF=old;}
+});

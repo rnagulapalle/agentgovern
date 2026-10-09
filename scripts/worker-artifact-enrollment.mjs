@@ -31,7 +31,17 @@ export async function inspectedWorkerArtifact(imageId,docker){
 }
 export async function enrollInspectedWorker(db,imageId,docker){
  // Deliberately no API taking caller-supplied artifact metadata.
- const artifact=await inspectedWorkerArtifact(imageId,docker),client=await db.connect();
+ return saveEnrollment(db,await inspectedWorkerArtifact(imageId,docker));
+}
+// Private isolated provisioner only: host has already inspected the immutable image.
+export async function enrollExtractedWorker(db,imageId,directory){
+ assert.equal(process.env.LOOPLABS_STAGING_DRAIN_PROOF,"isolated");
+ assert(/^sha256:[a-f0-9]{64}$/.test(imageId));
+ const {buildId,serviceHash,workflowHash,lockHash}=await semanticArtifact(directory);
+ return saveEnrollment(db,{buildId,imageId,serviceHash,workflowHash,lockHash});
+}
+async function saveEnrollment(db,artifact){
+ const client=await db.connect();
  try{
   await client.query("BEGIN");await client.query("SELECT pg_advisory_xact_lock(68391204)");
   const ownership=(await client.query("SELECT pg_get_userbyid(relowner)=current_user AS owned FROM pg_class WHERE oid=to_regclass('ll_temporal_worker_builds')")).rows;
