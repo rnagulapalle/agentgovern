@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   CircleHelp,
+  Cloud,
   Command,
   Database,
   GitBranch,
@@ -37,6 +38,7 @@ const groups = [
       { key: "overview", label: "Overview", icon: LayoutGrid },
       { key: "work", label: "Work with agents", icon: MessageSquare },
       { key: "agents", label: "Agents and boundaries", icon: Bot },
+      { key: "discovery", label: "Cloud inventory", icon: Cloud },
       { key: "connectors", label: "Connectors", icon: Database },
       { key: "records", label: "Records and access", icon: ShieldCheck },
       { key: "actions", label: "Actions", icon: SlidersHorizontal },
@@ -72,6 +74,7 @@ export function ControlShell({
     "work",
     "actions",
     "agents",
+    "discovery",
     "connectors",
     "records",
     "requests",
@@ -182,6 +185,7 @@ export function ControlShell({
                   }
                   className={`cp-nav-item ${section === item.key ? "is-active" : ""}`}
                   aria-current={section === item.key ? "page" : undefined}
+                  onClick={() => setMenu(false)}
                 >
                   <item.icon size={17} strokeWidth={1.5} />
                   <span>{item.label}</span>

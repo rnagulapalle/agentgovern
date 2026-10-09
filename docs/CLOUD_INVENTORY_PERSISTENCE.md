@@ -35,8 +35,9 @@ secrets, separates configured scope from saved observation, shows partial/stale
 and retained history, and keeps owner mapping, activity and enforcement explicitly
 unverified. Technical identity references are expandable rather than raw JSON.
 A scan button appears only for a matching current private server binding. There is no import button or automatic enrollment. Azure and Google
-remain unsupported. The direct candidate route is not added to production or the
-shared navigation; real account discovery and browser acceptance remain open.
+remain unsupported. The candidate route is included in the private workspace navigation and classified
+as saved controls, not browser-local examples. It is not deployed to production;
+real account discovery remains open.
 
 Every scan and resource observation is append-only. Normalized columns exclude
 raw API bodies, environment values, descriptions, tool schemas and credentials.
@@ -150,3 +151,42 @@ runtime version through the actual collector and store, then returns it through
 the authenticated route. Missing binding refuses; no agent/action/token is created.
 This proves actual local process-to-API-to-PostgreSQL plumbing, not AWS signing,
 network access, live discovery or an authenticated remote browser journey.
+
+## Browser experience gate
+
+A real desktop and 390px Chromium journey passed against the compiled application,
+invited sign-in, a fresh dedicated PostgreSQL schema and a local CLI fixture. It
+proved anonymous denial, separate company visibility, configuration-before-scan,
+actual scan persistence, refresh persistence, expired-binding refusal with prior
+inventory preservation, current-page mobile menu dismissal, expandable identity references,
+revoked access, no raw JSON and no execution agents/actions/tokens. Long runtime
+names fit the mobile viewport and input text is at least 16px. Visual inspection
+found and corrected the shell's previous Example settings/browser-local
+classification and separated icon/status layouts. The private Cloud inventory
+navigation now opens the correct saved-controls view.
+
+The full existing `pnpm chat:proof` was rerun after the shell change. Real model
+interpretation, independent approvals, provider-twin effects, response loss,
+worker SIGKILL/restart, replay, saved recipients and mobile containment all passed.
+Its generated receipt and screenshots replace the stale proof; hashes were not
+manually changed to bypass the gate.
+
+Reproduce against a built checkout and dedicated loopback test database with:
+
+```sh
+LOOPLABS_DISCOVERY_BROWSER_PROOF=isolated node --env-file=.env.local --import tsx \
+  scripts/discovery-browser-proof.mjs /absolute/private/new-evidence-directory
+```
+
+Output must be a new directory. The harness creates only an owned temporary
+schema, processes, synthetic memberships and private fixture/TLS files, then
+removes them before writing its sanitized completion receipt and screenshot
+digests. It refuses implicit execution, missing/remote test databases and unsafe
+output paths. No global Docker, browser profile or certificate trust is modified.
+The browser accepts its disposable self-signed loopback certificate; this proof
+does not establish production TLS, actual AWS signing/discovery, live providers,
+cloud enrollment or enforcement. Those remain separate acceptance requirements.
+
+The existing required `quality-gates` CI job now runs this desktop/mobile proof
+after the normal full gate and retains sanitized receipt/images for 14 days.
+This evidence retention does not satisfy long-term worker/history retention.

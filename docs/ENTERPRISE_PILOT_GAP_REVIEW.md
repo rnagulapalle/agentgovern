@@ -13,8 +13,13 @@ Branch implementation, accepted disposable proof and production deployment are
 different facts. This review has not independently inspected the production schema,
 image identities or provider configuration; deployed coverage remains unverified
 here. Production is not authorized to switch dispatch ownership in this phase.
+The manual-discovery candidate `c6403e642e34413ab5c8cc84a639a7416e3e2d28`
+subsequently passed 571 tests across 106 files and all three CI jobs in run 37944623486.
+The UI follow-up proves an actual local authenticated desktop/mobile journey and
+refreshes the full real-model chat proof; it does not establish real cloud access.
 
-Local full quality and normal pre-push quality passed 535 tests across 96 files
+At the inventory foundation revision above, local full quality and normal pre-push
+quality passed 535 tests across 96 files
 and 52 rendered internal destinations for the inventory candidate; all three
 exact-head CI jobs in run `37934221392` also passed. Those checks
 do not prove a cloud connection, live destination enforcement or enterprise SSO.
@@ -34,7 +39,7 @@ assembly gap, not persistent operations or live provider readiness.
 | Requirement | Current implementation and evidence | Gap / extension and acceptance |
 | --- | --- | --- |
 | 1. Reuse current platform | `ConnectorControl`, workflow guards, enquiry submission, immutable requests, record grants, Temporal outbox/activities and provider readback already form one controlled path. See `lib/connectors/service.ts`, `lib/workflows/guard.ts`, `lib/enquiries/submission.ts`, `runtime/temporal/`. | Add discovery/enrollment and caller identity at existing boundaries. Do not introduce a second dispatch, approval or effect journal. Deployment facts need separate inspection. |
-| 2. Native discovery | `registerAgentIn` manually creates a scoped agent, profile and token. Record onboarding is an administrator-configured private catalog, not agent discovery. `cloud-discovery.ts` now adds an injected read-only AWS runtime collector and strict inventory preservation, with ten adversarial tests. An isolated signed CLI transport and optional PostgreSQL inventory store now extend this foundation; no live cloud scan or discovery UI is wired. See `CLOUD_INVENTORY_PERSISTENCE.md`. | Read-only provider adapters, scoped immutable snapshots, version/tool/schema evidence, pagination/completeness/freshness and explicit unknowns. No discovery path calls registration or issues a token. Partial scans cannot erase prior agents. |
+| 2. Native discovery | `registerAgentIn` manually creates a scoped agent, profile and token. Record onboarding is an administrator-configured private catalog, not agent discovery. `cloud-discovery.ts` now adds an injected read-only AWS runtime collector and strict inventory preservation, with ten adversarial tests. An isolated signed CLI transport and optional PostgreSQL inventory store now extend this foundation; manual scanning and invited inventory UI are wired through a private exact-scope temporary-session binding. Actual local CLI/API/PostgreSQL and desktop/mobile browser proof passed; no real cloud account was scanned. See `CLOUD_INVENTORY_PERSISTENCE.md`. | Read-only provider adapters, scoped immutable snapshots, version/tool/schema evidence, pagination/completeness/freshness and explicit unknowns. No discovery path calls registration or issues a token. Partial scans cannot erase prior agents. |
 | 2. MCP/A2A | No production MCP discovery adapter or A2A import was established in the inspected implementation. | Treat MCP `tools/list` as declared capability evidence; A2A cards as declared service capabilities. Neither proves internal tools, effective permissions or enforceability. Restrict authenticated endpoints and outbound destinations; schemas/descriptions remain untrusted data. |
 | 2. Coverage presentation | Existing directory exposes enrolled agents and tools; existing run presentation distinguishes verified, pending and uncertain outcomes. | Inventory shows independent facts: discovered, ownership mapped, activity connected, enforcement verified for one named action. Enforcement is not an agent-wide badge. Missing telemetry is unknown, not zero activity. |
 | 3. Human/workload identity | `lib/workspace/auth.ts` provides invited passwords and hashed eight-hour sessions. `identity.ts` checks active members/current sessions. `lib/durable/service.ts` checks active scoped tokens again. | Enterprise IdP mapping and lifecycle integration are absent. Separate employee, guest/contractor, company workload and partner-agent principals. Local token schema has no expiry; do not call it federated short-lived identity. |
@@ -84,8 +89,9 @@ access to customer hosts and the database remains an explicit trusted boundary.
 1. Preserve the accepted drain and reset/archive receipts and their covered sources.
    Retain the exact two worker artifacts/histories
    and prove fresh retrieval before operational acceptance. No production cutover.
-2. Wire the tested shared read-only inventory collector to a signed AWS client,
-   durable snapshots and reviewed enrollment as the first integration candidate. AWS is an engineering starting point, not a claim
+2. The tested read-only collector, signed CLI bridge, durable snapshots and
+   invited manual-scan UI are now wired as a candidate. Configure and prove a real
+   read-only cloud binding, then add reviewed enrollment as the next integration. AWS is an engineering starting point, not a claim
    about any partner's stack. Confirm partner platform/action before a live pilot.
    Keep discovery storage separate from `ll_agents` authority, with explicit links
    only after reviewed enrollment. Add new migrations; preserve applied migrations.

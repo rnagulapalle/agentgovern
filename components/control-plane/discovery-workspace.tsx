@@ -6,6 +6,7 @@ import { PageTitle } from "./ui";
 import { workspaceJson } from "@/lib/workspace/response";
 import type { CloudInventoryStore } from "@/lib/workspace/cloud-inventory";
 import type { CloudDiscoveryOperations } from "@/lib/workspace/cloud-operations";
+import "./discovery-workspace.css";
 type Connections = Awaited<ReturnType<CloudDiscoveryOperations["connections"]>>;
 type Inventory = Awaited<ReturnType<CloudInventoryStore["latest"]>>;
 const date = (at: string) => new Date(at).toLocaleString();
@@ -46,7 +47,7 @@ export function DiscoveryWorkspace() {
     } catch (e) { setError(e instanceof Error ? e.message : "The scan could not be verified. Refresh saved evidence before trying again."); }
     finally { setBusy(false); }
   }
-  return <div className="cp-durable">
+  return <div className="cp-durable cp-discovery">
     <PageTitle eyebrow="CLOUD INVENTORY" title="Discover agents" description="Review saved cloud inventory before deciding which agents should enter your control plane." />
     <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> AWS AgentCore discovery</h2><p>This candidate supports saved AWS account and region scopes plus read-only inventory evidence. Scanning requires a reviewed server binding. Azure and Google discovery are not available.</p><p>Saving a scope does not contact AWS or import agents. A configured binding allows read-only scans; it does not prove cloud permissions or enable controlled execution.</p></section>
     {error && <p role="alert" className="cp-durable-message is-error">{error}</p>}
@@ -63,11 +64,11 @@ export function DiscoveryWorkspace() {
       {!connections && !error && <p role="status">Loading saved scopes…</p>}
       {connections && !connections.connections.length && <p>No discovery scopes have been saved. This does not mean your cloud has no agents.</p>}
       {connections?.truncated && <p>Showing the first 100 saved scopes. Ask your administrator for the remaining inventory.</p>}
-      {connections?.connections.map(c => <div className="cp-durable-card" key={c.scope.connectionId}><h3>{c.scope.connectionId}</h3><p>Account {c.scope.accountId} · {c.scope.region} · Scope configured</p><p>{c.scanReady ? "Read-only binding configured. Cloud identity will be checked during the scan." : "Scanning unavailable. Ask your administrator to configure reviewed read-only access."}</p><button className="cp-button secondary" disabled={busy} onClick={() => void read(c.scope.connectionId)}>Review saved evidence</button>{c.scanReady && <button className="cp-button" disabled={busy} onClick={() => void scan(c.scope.connectionId)}>Scan cloud inventory</button>}</div>)}
+      {connections?.connections.map(c => <div className="cp-durable-card" key={c.scope.connectionId}><h3>{c.scope.connectionId}</h3><p>Account {c.scope.accountId} · {c.scope.region} · Scope configured</p><p>{c.scanReady ? "Read-only binding configured. Cloud identity will be checked during the scan." : "Scanning unavailable. Ask your administrator to configure reviewed read-only access."}</p><div className="cp-discovery-actions"><button className="cp-button secondary" disabled={busy} onClick={() => void read(c.scope.connectionId)}>Review saved evidence</button>{c.scanReady && <button className="cp-button" disabled={busy} onClick={() => void scan(c.scope.connectionId)}>Scan cloud inventory</button>}</div></div>)}
     </section>
     {selected && busy && <p role="status">Loading saved evidence…</p>}
     {inventory && <section className="cp-panel cp-durable-card"><h2>{inventory.scope.connectionId}: discovery evidence</h2>
-      <p><UserRound size={18} aria-hidden="true" /> Owner not mapped · <Cable size={18} aria-hidden="true" /> Activity not connected · <ShieldQuestion size={18} aria-hidden="true" /> Action enforcement not verified</p>
+      <div className="cp-discovery-coverage"><span><UserRound size={18} aria-hidden="true" /> Owner not mapped</span><span><Cable size={18} aria-hidden="true" /> Activity not connected</span><span><ShieldQuestion size={18} aria-hidden="true" /> Action enforcement not verified</span></div>
       {inventory.status === "no-scan" ? <p>No scan has been saved. Cloud resources, roles and actions are unknown.</p> : <>
         <p>{inventory.completeness === "partial" ? "Partial scan: some reads could not be verified." : "API traversal completed within this saved account and region."} Observed {date(inventory.observedAt)}. {inventory.stale ? "This evidence is stale." : "This is a saved observation, not a live authority check."}</p>
         {inventory.historyTruncated && <p>Showing 2,000 resource versions. Full saved history remains in the workspace database.</p>}
