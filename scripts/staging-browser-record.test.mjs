@@ -20,3 +20,9 @@ it("refuses absent, partial, inflated or unexpected restore evidence",()=>{
  }
  expect(()=>typedReceipt({...result,restoreContainment:{...result.restoreContainment,secret:"private"}},metadata,{})).toThrow();
 });
+
+it("accepts only exact image-retention evidence and refuses inflated or unknown fields",()=>{
+ const artifact={archiveBytes:123,archiveSha256:"a".repeat(64),manifestSha256:"b".repeat(64),images:result.images,reloadedAfterRemoval:true,workerBuildVerified:true};
+ expect(typedReceipt({...result,artifact},metadata,{}).artifact).toEqual(artifact);
+ for(const change of [{archiveBytes:0},{archiveBytes:9*1024**3},{manifestSha256:""},{archiveSha256:""},{images:[]},{reloadedAfterRemoval:false},{workerBuildVerified:false},{secret:"private"}])expect(()=>typedReceipt({...result,artifact:{...artifact,...change}},metadata,{})).toThrow();
+});
