@@ -1,5 +1,179 @@
 {
-  "at": "2026-10-09T00:48:40.270Z",
+  "loadMeasurement": {
+    "additionalRuns": 24,
+    "independentRecords": 24,
+    "sharedAgents": 4,
+    "waves": [
+      {
+        "wave": 1,
+        "observedAtMs": 4641,
+        "effects": 12,
+        "held": 40
+      },
+      {
+        "wave": 2,
+        "observedAtMs": 40006,
+        "effects": 20,
+        "held": 32
+      },
+      {
+        "wave": 3,
+        "observedAtMs": 98184,
+        "effects": 28,
+        "held": 24
+      },
+      {
+        "wave": 4,
+        "observedAtMs": 132279,
+        "effects": 36,
+        "held": 16
+      },
+      {
+        "wave": 5,
+        "observedAtMs": 172996,
+        "effects": 44,
+        "held": 8
+      },
+      {
+        "wave": 6,
+        "observedAtMs": 207787,
+        "effects": 52,
+        "held": 0
+      }
+    ],
+    "windowMs": 207787,
+    "samples": [
+      {
+        "company": "company-a",
+        "ordinal": 1,
+        "approvalToObservedCompletionMs": 3582
+      },
+      {
+        "company": "company-a",
+        "ordinal": 2,
+        "approvalToObservedCompletionMs": 3527
+      },
+      {
+        "company": "company-b",
+        "ordinal": 13,
+        "approvalToObservedCompletionMs": 4225
+      },
+      {
+        "company": "company-b",
+        "ordinal": 14,
+        "approvalToObservedCompletionMs": 4491
+      },
+      {
+        "company": "company-b",
+        "ordinal": 15,
+        "approvalToObservedCompletionMs": 250
+      },
+      {
+        "company": "company-a",
+        "ordinal": 3,
+        "approvalToObservedCompletionMs": 4304
+      },
+      {
+        "company": "company-a",
+        "ordinal": 4,
+        "approvalToObservedCompletionMs": 4223
+      },
+      {
+        "company": "company-b",
+        "ordinal": 16,
+        "approvalToObservedCompletionMs": 5210
+      },
+      {
+        "company": "company-b",
+        "ordinal": 17,
+        "approvalToObservedCompletionMs": 20849
+      },
+      {
+        "company": "company-b",
+        "ordinal": 18,
+        "approvalToObservedCompletionMs": 20818
+      },
+      {
+        "company": "company-a",
+        "ordinal": 6,
+        "approvalToObservedCompletionMs": 21345
+      },
+      {
+        "company": "company-a",
+        "ordinal": 5,
+        "approvalToObservedCompletionMs": 28063
+      },
+      {
+        "company": "company-b",
+        "ordinal": 20,
+        "approvalToObservedCompletionMs": 3022
+      },
+      {
+        "company": "company-b",
+        "ordinal": 19,
+        "approvalToObservedCompletionMs": 3161
+      },
+      {
+        "company": "company-a",
+        "ordinal": 7,
+        "approvalToObservedCompletionMs": 4066
+      },
+      {
+        "company": "company-a",
+        "ordinal": 8,
+        "approvalToObservedCompletionMs": 3986
+      },
+      {
+        "company": "company-b",
+        "ordinal": 22,
+        "approvalToObservedCompletionMs": 4275
+      },
+      {
+        "company": "company-a",
+        "ordinal": 9,
+        "approvalToObservedCompletionMs": 5114
+      },
+      {
+        "company": "company-a",
+        "ordinal": 10,
+        "approvalToObservedCompletionMs": 5062
+      },
+      {
+        "company": "company-b",
+        "ordinal": 21,
+        "approvalToObservedCompletionMs": 10635
+      },
+      {
+        "company": "company-b",
+        "ordinal": 23,
+        "approvalToObservedCompletionMs": 4139
+      },
+      {
+        "company": "company-b",
+        "ordinal": 24,
+        "approvalToObservedCompletionMs": 4124
+      },
+      {
+        "company": "company-a",
+        "ordinal": 12,
+        "approvalToObservedCompletionMs": 4593
+      },
+      {
+        "company": "company-a",
+        "ordinal": 11,
+        "approvalToObservedCompletionMs": 4783
+      }
+    ],
+    "effects": 52,
+    "heldBeforeApproval": 48,
+    "replayedHistories": 24,
+    "workerFaultIsolation": true,
+    "lostResponseRecords": 2,
+    "reservationsPreserved": true,
+    "duplicateSubmissions": 24,
+    "duplicateApprovals": 48
+  },
+  "at": "2026-10-09T00:47:57.439Z",
   "checks": [
     "Actual LOGIN runtime uses 29 provisioner grants with no owner membership, schema creation, table ownership or privileged role flags",
     "Thirteen actual restricted-database attacks refuse proposal rewrites, identity revocation, event mutation, deletion, truncation, trigger disabling and DDL without effects; shared role still reads both companies (no RLS claim)",
@@ -10,7 +184,8 @@
     "Company-b independently approved workflow completes two correct effects while company-a worker is confirmed stopped; no company-a effect or replacement authority",
     "Replacement packaged worker preserves company-a original actions and recovers its actual lost CRM response; exactly four intended HTTP effects across companies and no cross-company destination",
     "Both actual company histories replay without new effects, credential leakage or replacement action identities",
-    "Repeated completed activity calls retain four effects and each company's original action identities"
+    "Repeated completed activity calls retain four effects and each company's original action identities",
+    "Six paced two-company waves complete 24 independently scoped workflows with shared agents, duplicate-safe submissions/approvals, isolated worker crash, lost-response readback and 52 exact effects; histories replay without changing reservations"
   ],
   "sourceFingerprints": {
     "scripts/durable-runtime-role.ts": "bf20ebccb8fdd0d7474c4dd79e3e8fe054297d0bdd210463e40f4d59813438f8",
@@ -58,16 +233,16 @@
     "runtimeGrantStatements": 29,
     "restrictedDatabaseLogin": true,
     "databaseTenantRls": false,
-    "effects": 4,
+    "effects": 52,
     "taskQueues": 2,
-    "workerProcesses": 3,
+    "workerProcesses": 4,
     "schedulerProcesses": 2,
-    "crashedWorkers": 1,
-    "replayedHistories": 2
+    "crashedWorkers": 2,
+    "replayedHistories": 26
   },
   "workflowIds": [
-    "looplabs:company-a:ack:d39c1581-4ab7-43ae-b1cb-dd2120dd2388",
-    "looplabs:company-b:ack:7f56ba6b-a050-47db-8bab-98abcdb849ea"
+    "looplabs:company-a:ack:d223ae08-7c4a-4da8-a929-ea38a9c59490",
+    "looplabs:company-b:ack:094aaf50-5274-4eb3-8aa0-b73b57fd6db2"
   ],
   "buildId": "ack-1cfac314a32ef6cb0ff45a022ea9480f35f676416788a9eee511c8611ea5a12b",
   "scope": "Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"
