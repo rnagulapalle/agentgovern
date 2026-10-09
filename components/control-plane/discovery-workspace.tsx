@@ -6,11 +6,12 @@ import { PageTitle } from "./ui";
 import { workspaceJson } from "@/lib/workspace/response";
 import type { CloudInventoryStore } from "@/lib/workspace/cloud-inventory";
 import type { CloudDiscoveryOperations } from "@/lib/workspace/cloud-operations";
+import { ProjectDiscoveryWorkspace } from "./project-discovery-workspace";
 import "./discovery-workspace.css";
 type Connections = Awaited<ReturnType<CloudDiscoveryOperations["connections"]>>;
 type Inventory = Awaited<ReturnType<CloudInventoryStore["latest"]>>;
 const date = (at: string) => new Date(at).toLocaleString();
-export function DiscoveryWorkspace() {
+function AwsDiscoveryWorkspace() {
   const [connections, setConnections] = useState<Connections | null>(null), [inventory, setInventory] = useState<Inventory | null>(null);
   const [selected, setSelected] = useState(""), [error, setError] = useState(""), [busy, setBusy] = useState(false), [notice, setNotice] = useState("");
   useEffect(() => {
@@ -48,8 +49,7 @@ export function DiscoveryWorkspace() {
     finally { setBusy(false); }
   }
   return <div className="cp-durable cp-discovery">
-    <PageTitle eyebrow="CLOUD INVENTORY" title="Discover agents" description="Review saved cloud inventory before deciding which agents should enter your control plane." />
-    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> AWS AgentCore discovery</h2><p>This candidate supports saved AWS account and region scopes plus read-only inventory evidence. Scanning requires a reviewed server binding. Azure and Google discovery are not available.</p><p>Saving a scope does not contact AWS or import agents. A configured binding allows read-only scans; it does not prove cloud permissions or enable controlled execution.</p></section>
+    <section className="cp-panel cp-durable-card"><h2><Cloud size={22} aria-hidden="true" /> AWS AgentCore discovery</h2><p>This candidate supports saved AWS account and region scopes plus read-only inventory evidence. Scanning requires a reviewed server binding. Azure and Google project scopes can be saved separately; native project scanning is not connected yet.</p><p>Saving a scope does not contact AWS or import agents. A configured binding allows read-only scans; it does not prove cloud permissions or enable controlled execution.</p></section>
     {error && <p role="alert" className="cp-durable-message is-error">{error}</p>}
     {notice && <p role="status" className="cp-durable-message">{notice}</p>}
     <section className="cp-panel cp-durable-card"><h2>Save a discovery scope</h2><p>Use the account and region reviewed by your workspace administrator. Enter no passwords, access keys or tokens.</p>
@@ -77,5 +77,14 @@ export function DiscoveryWorkspace() {
       </>}
       <p>Discovered identities do not authorize actions. Reviewed owner mapping and cloud enrollment remain required.</p><Link href="/control-plane/agents" prefetch={false}>View existing scoped workspace agents →</Link>
     </section>}
+  </div>;
+}
+
+export function DiscoveryWorkspace() {
+  const [provider, setProvider] = useState("aws");
+  return <div className="cp-durable cp-discovery">
+    <PageTitle eyebrow="CLOUD INVENTORY" title="Discover agents" description="Review saved cloud inventory before deciding which agents should enter your control plane." />
+    <section className="cp-panel cp-durable-card workspace-workflow-select"><label>Cloud provider<select aria-label="Cloud provider" value={provider} onChange={e => setProvider(e.target.value)}><option value="aws">AWS AgentCore</option><option value="azure-foundry">Azure Foundry</option><option value="google-agent-engine">Google Agent Engine</option></select></label><p>A saved scope is not an enrolled agent or execution authority.</p></section>
+    {provider === "aws" ? <AwsDiscoveryWorkspace /> : <ProjectDiscoveryWorkspace key={provider} provider={provider === "azure-foundry" ? "azure-foundry" : "google-agent-engine"} />}
   </div>;
 }

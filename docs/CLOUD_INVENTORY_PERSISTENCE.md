@@ -35,7 +35,8 @@ secrets, separates configured scope from saved observation, shows partial/stale
 and retained history, and keeps owner mapping, activity and enforcement explicitly
 unverified. Technical identity references are expandable rather than raw JSON.
 A scan button appears only for a matching current private server binding. There is no import button or automatic enrollment. Azure and Google
-remain unsupported. The candidate route is included in the private workspace navigation and classified
+project scopes and saved observations are available in the new candidate provider
+selector; native project scanning remains unavailable. The candidate route is included in the private workspace navigation and classified
 as saved controls, not browser-local examples. It is not deployed to production;
 real account discovery remains open.
 
@@ -195,8 +196,9 @@ This evidence retention does not satisfy long-term worker/history retention.
 
 Optional migration17 extends the same `CloudInventoryStore`, workspace lock,
 invited-member checks and external recovery fence with project-scoped observations.
-It leaves migration16 and the AWS route unchanged. The new store methods are
-server-side only: no Azure/Google browser configuration or scan route is wired yet.
+It leaves migration16 and the AWS route unchanged. The new store methods now back candidate Azure/Google scope configuration and
+saved evidence review in the existing invited discovery route. Native scanning
+remains unwired.
 Configured scopes do not mean connected accounts. Actual cloud-account reads and
 reviewed credentials remain unproved.
 
@@ -237,3 +239,21 @@ concurrent setup, non-owner/prerequisite/digest refusal. These use fixtures, not
 live cloud accounts. Full regression and refreshed browser/gateway proofs are
 required before committing this candidate or claiming acceptance. Production is
 unchanged.
+
+## Project review UI candidate
+
+The existing provider selector separates AWS AgentCore, Azure Foundry and Google
+Agent Engine. The same invited session, same-origin mutation check, workspace
+transaction and recovery fence protect configuration and reads. The browser sends
+no credentials or tenant selector. `kind=project` selects only saved project evidence;
+it cannot select an organization. Extra/duplicate selectors, raw observations,
+credential-bearing input and scope substitution refuse. Project scans are not
+accepted by the public route. Native access is not inferred from configuration.
+
+Unknown principals and Google execution versions remain explicit; technical
+references are expandable and no raw JSON is presented. Provider selection remounts
+the review view so one provider's pending response cannot display as another.
+Full browser proof must start from the form, save both scopes, inject distinctly
+labeled normalized database fixtures, reload, review unknown evidence at390px,
+and reject cross-company and revoked access. Fixtures do not establish native
+Azure/Google reads. Production and execution authorizers remain unchanged.

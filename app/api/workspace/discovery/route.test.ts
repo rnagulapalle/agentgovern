@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { beforeEach, expect, it, vi } from "vitest";
 import { ControlError } from "@/lib/durable/contracts";
-const mocks = vi.hoisted(() => ({ authenticate: vi.fn(), connections: vi.fn(), latest: vi.fn(), configureConnection: vi.fn(), scan: vi.fn() }));
+const mocks = vi.hoisted(() => ({ authenticate: vi.fn(), connections: vi.fn(), latest: vi.fn(), configureConnection: vi.fn(), scan: vi.fn(), projectConnections: vi.fn(), latestProject: vi.fn(), configureProjectConnection: vi.fn() }));
 vi.mock("@/lib/durable/database", () => ({ database: () => ({}) }));
 vi.mock("@/lib/durable/service", () => ({ authenticate: mocks.authenticate }));
-vi.mock("@/lib/workspace/cloud-inventory", () => ({ CloudInventoryStore: class { connections = mocks.connections; latest = mocks.latest; configureConnection = mocks.configureConnection; } }));
+vi.mock("@/lib/workspace/cloud-inventory", () => ({ CloudInventoryStore: class { connections = mocks.connections; latest = mocks.latest; configureConnection = mocks.configureConnection; projectConnections = mocks.projectConnections; latestProject = mocks.latestProject; configureProjectConnection = mocks.configureProjectConnection; } }));
 vi.mock("@/lib/workspace/cloud-operations", () => ({ CloudDiscoveryOperations: class { connections = mocks.connections; scan = mocks.scan; } }));
 import { GET, POST } from "./route";
 const actor = { orgId: "company-a", role: "operator", subject: "member" };
@@ -38,4 +38,22 @@ it("refuses ambiguous scope selectors and sanitizes underlying errors", async ()
   for (const query of ["?tenantId=company-b", "?connectionId=aws-a&connectionId=aws-b", "?connectionId=", "?connectionId=../other"]) expect((await GET(req(undefined, query))).status).toBe(400);
   expect(mocks.latest).not.toHaveBeenCalled(); mocks.latest.mockRejectedValue(new ControlError(404, "Discovery connection unavailable.")); expect((await GET(req(undefined, "?connectionId=aws-b"))).status).toBe(404);
   mocks.connections.mockRejectedValue(new Error("secret database URL and raw provider body")); const r = await GET(req()); expect(r.status).toBe(503); expect(await r.text()).not.toContain("secret");
+});
+
+it("project configuration derives tenant and refuses credentials, ambiguous selectors and malformed scope", async () => {
+  mocks.projectConnections.mockResolvedValue({ connections: [], enforcement: "unverified" }); mocks.latestProject.mockResolvedValue({ status: "no-scan" }); mocks.configureProjectConnection.mockResolvedValue({ authorityGranted: false });
+  for (const query of ["?kind=project", "?kind=project&connectionId=project-a"]) expect((await GET(req(undefined, query))).status).toBe(200);
+  expect(mocks.latestProject).toHaveBeenCalledWith(actor, "project-a");
+  const google = { operation: "configure-project", provider: "google-agent-engine", connectionId: "project-a", projectId: "company-agents", projectNumber: "123456789012", location: "us-central1" };
+  const azure = { operation: "configure-project", provider: "azure-foundry", connectionId: "project-a", directoryId: "12345678-1234-1234-1234-123456789012", endpoint: "https://company.services.ai.azure.com/api/projects/ops" };
+  for (const input of [google, azure]) {
+    expect((await POST(req(JSON.stringify(input)))).status).toBe(200);
+    const scope = { ...input }; delete (scope as Partial<typeof input>).operation;
+    expect(mocks.configureProjectConnection).toHaveBeenLastCalledWith(actor, { ...scope, tenantId: "company-a" });
+  }
+  mocks.configureProjectConnection.mockClear();
+  for (const bad of [{ ...google, tenantId: "other" }, { ...google, token: "SECRET" }, { ...google, projectNumber: 123456789012 }, { ...google, location: "global" }, { ...azure, endpoint: "http://localhost" }, { ...azure, directoryId: "bad" }, { ...azure, identity: {} }]) expect((await POST(req(JSON.stringify(bad)))).status).toBe(400);
+  expect(mocks.configureProjectConnection).not.toHaveBeenCalled();
+  for (const query of ["?kind=project&kind=project", "?kind=other", "?kind=project&tenantId=other", "?kind=project&connectionId=a&connectionId=b"]) expect((await GET(req(undefined, query))).status).toBe(400);
+  mocks.projectConnections.mockRejectedValue(Error("SECRET provider connection")); const response = await GET(req(undefined, "?kind=project")); expect(response.status).toBe(503); expect(await response.text()).not.toContain("SECRET");
 });

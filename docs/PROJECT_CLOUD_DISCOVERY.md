@@ -1,8 +1,9 @@
 # Azure and Google read-only discovery candidate
 
 The provider collectors in `lib/workspace/cloud-project-discovery.ts` are pure
-read-only collection logic. They are not yet connected to administrator bindings,
-the durable inventory tables or the invited UI. They confer no execution authority.
+read-only collection logic. They are not yet connected to administrator bindings or native scans in the
+invited UI. Optional migration17 and the shared inventory store retain their
+normalized evidence; a candidate UI saves scopes and reviews that evidence. They confer no execution authority.
 The existing AWS collector, migration16 and control engine remain unchanged.
 
 Azure collection uses an explicitly enrolled directory and Foundry project endpoint,
@@ -39,9 +40,12 @@ traversal completeness means only that these bounded reads completed successfull
 - Add Azure's supported broker association and native project reads. Clients must
   not treat opaque Azure API access tokens as locally authoritative JWTs. Reference:
   [Microsoft client guidance](https://learn.microsoft.com/en-us/entra/identity-platform/claims-validation).
-- Add a new provider-specific persistence migration; do not reinterpret or edit
-  applied AWS migration16. Retain prior observations through partial/empty scans.
-- Extend existing connection and inventory review UX; surface evidence gaps first.
+- Migration17 and persistence are verified against dedicated PostgreSQL fixtures;
+  production installation remains open. Applied AWS migration16 is unchanged.
+- The candidate provider selector exposes Azure/Google configuration and saved
+  evidence review in the existing discovery page, with unknown authority and
+  unavailable native scanning explicit. Full browser acceptance is pending for
+  this new UI candidate; previous AWS browser proof does not prove it.
 - Prove actual native reads with explicitly authorized project bindings. Fixture
   tests do not establish live cloud access, federation or enforcement.
 - Enroll accountable owners and workload attestation before joining a cloud agent
