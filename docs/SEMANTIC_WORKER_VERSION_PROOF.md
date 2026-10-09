@@ -57,14 +57,15 @@ content-distinct baseline and incompatible bundles: 11 and 16 events. Each match
 bundle replayed successfully. Both cross-version replays threw the SDK's actual
 `DeterminismViolationError`; arbitrary exceptions cannot count as incompatibility.
 The inert activity ran once for each history and was not invoked by replay.
-The private observation is `semantic-replay-calibration-20261009.json` in the
+The private observation is `semantic-replay-bytes-calibration-20261009.json` in the
 local research directory. This calibrates the fixture and replay gate; it does not
 prove authenticated PostgreSQL service, worker containers, connector authority,
 loss/recovery, retirement or enterprise acceptance.
 
 The shared replay gate verifies manifest identity against service/workflow/lock
 bytes, requires identical service and dependency bytes but different workflow
-bytes, and rejects failed, truncated, reordered or activity-free histories.
+bytes, uses those verified workflow bytes directly rather than reopening a mutable
+path, and rejects failed, truncated, reordered or activity-free histories.
 `staging-semantic-controller.mjs` is the pending actual-runtime controller. It uses
 existing named sessions, normal enrollment/grants/approvals and immutable scoped
 outbox routes. Its Docker host checkpoints, admission and isolated provider setup

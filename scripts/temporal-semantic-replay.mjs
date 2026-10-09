@@ -18,7 +18,7 @@ export async function semanticArtifact(directory){
  assert.deepEqual(Object.keys(m).sort(),["artifactHash","buildId","version"]);
  const hash=createHash("sha256").update(service).update(workflow).update(lock).digest("hex");
  assert.equal(m.version,1);assert.equal(m.artifactHash,hash);assert.equal(m.buildId,`ack-${hash}`);
- return {buildId:m.buildId,serviceHash:digest(service),workflowHash:digest(workflow),lockHash:digest(lock),codePath:resolve(directory,"temporal-workflow.cjs")};
+ return {buildId:m.buildId,serviceHash:digest(service),workflowHash:digest(workflow),lockHash:digest(lock),code:workflow.toString("utf8"),codePath:resolve(directory,"temporal-workflow.cjs")};
 }
 export function semanticPair(artifacts){
  assert(Array.isArray(artifacts)&&artifacts.length===2);
@@ -27,6 +27,7 @@ export function semanticPair(artifacts){
   assert(a&&/^ack-[a-f0-9]{64}$/.test(a.buildId));
   for(const field of ["serviceHash","workflowHash","lockHash"])assert(/^[a-f0-9]{64}$/.test(a[field]));
   assert(typeof a.codePath==="string"&&a.codePath.length>0);
+  assert(typeof a.code==="string"&&digest(a.code)===a.workflowHash,"Replay must use the exact verified workflow bytes");
  }
  assert.notEqual(old.buildId,next.buildId,"Build labels must be content-distinct");
  assert.notEqual(old.workflowHash,next.workflowHash,"Workflow code must actually change");
@@ -50,10 +51,10 @@ export async function replaySemanticPair(artifacts,histories){
  assert.notEqual(historyEvidence[0].sha256,historyEvidence[1].sha256,"Two independent captures required");
  const checks=[];
  for(let i=0;i<2;i++){
-  await Worker.runReplayHistory({workflowBundle:{codePath:artifacts[i].codePath}},histories[i]);
+  await Worker.runReplayHistory({workflowBundle:{code:artifacts[i].code}},histories[i]);
   checks.push({historyBuild:artifacts[i].buildId,replayBuild:artifacts[i].buildId,result:"compatible"});
   let refused=false;
-  try{await Worker.runReplayHistory({workflowBundle:{codePath:artifacts[1-i].codePath}},histories[i]);}
+  try{await Worker.runReplayHistory({workflowBundle:{code:artifacts[1-i].code}},histories[i]);}
   catch(error){
    // Missing libraries, corrupt bundles and transport errors are NOT incompatible-code proof.
    if(!(error instanceof DeterminismViolationError))throw Error("Cross-version replay failed without verified nondeterminism");

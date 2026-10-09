@@ -16,7 +16,7 @@ try{
  for(let i=0;i<2;i++){
   const taskQueue=`semantic-calibration-${randomUUID()}`;
   const worker=await Worker.create({connection:environment.nativeConnection,taskQueue,
-   workflowBundle:{codePath:artifacts[i].codePath},
+   workflowBundle:{code:artifacts[i].code},
    activities:{async advanceContract(){calls[i]++;return "completed";}},
    shutdownGraceTime:"1 second"});
   await worker.runUntil(async()=>{
