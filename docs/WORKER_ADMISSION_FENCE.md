@@ -11,8 +11,9 @@ The registry retains build, image, workflow, service and lock hashes. Runtime
 connections have read access only. The owner may enroll a build and move it once
 from active to draining; identity changes, reactivation and deletion refuse.
 There is deliberately no retired state or artifact/history garbage collection.
-Registry metadata is owner-supplied, not a cryptographic attestation. A subsequent
-artifact-enrollment command and actual assembled lifecycle proof remain required.
+The offline artifact-enrollment command below inspects exact image bytes; it is
+not a cryptographic attestation or CI-provenance check. The owner must select a
+reviewed release image. Actual assembled lifecycle acceptance remains required.
 
 Every new route insert locks the enrolled build row with FOR SHARE and requires
 active state. Draining takes a conflicting row lock in the same PostgreSQL
@@ -44,3 +45,34 @@ No public runtime enrollment/retirement endpoint, automatic rollout, build delet
 route rewrite or production cutover is provided. Next acceptance must verify exact
 artifact enrollment, concurrent real outbox transfer/drain, pinned old-history
 completion, reset/recovery containment and retained artifact/history availability.
+
+
+## Offline artifact enrollment candidate
+
+`worker-artifact-enroll.mjs` requires a separate registry-owner connection and an
+immutable `sha256:` image ID. It inspects Linux/AMD64 identity, refuses unexpected
+image volumes, creates a uniquely labeled non-running/no-network extraction
+container, and reads four regular bounded files. The manifest must match the
+service, workflow and lock bytes together. Symlinks, missing/corrupt manifests,
+mutable tags or changed image identity refuse. The container is never started.
+Cleanup checks its owner label and removes only its own resources.
+
+The transaction checks table ownership and exact migration14 digest, serializes
+with migration/enrollment operations, and records build/image/component hashes.
+Duplicate enrollment is idempotent only for the same active identity. Same build
+bytes in a different image conflict; a draining record cannot be reactivated.
+Runtime member/workload credentials cannot enroll an artifact. No action, plan,
+route, approval, worker process or retirement decision is created by enrollment.
+
+With the separate owner environment configured, the explicit command is:
+
+    node scripts/worker-artifact-enroll.mjs sha256:<reviewed-image-id>
+
+Measured tests build two actual inert extraction images on Docker, use dedicated
+PostgreSQL, and prove exact-byte/idempotent enrollment, image conflict, non-owner
+refusal, corrupt migration refusal and draining refusal. These fixtures are not
+runnable Temporal workers. Manifest consistency does not establish CI provenance,
+trusted business code, runtime health, image retention or retirement safety. The
+existing real two-image lifecycle acceptance is unchanged and predates the fence.
+Next, run this command on its reviewed runnable images and prove concurrent actual
+outbox transfer/drain with pending old history and retained authority.
