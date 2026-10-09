@@ -78,7 +78,7 @@ Next, run this command on its reviewed runnable images and prove concurrent actu
 outbox transfer/drain with pending old history and retained authority.
 
 
-## Assembled race driver — wired, not executed
+## Assembled race driver — runtime acceptance still pending
 
 `staging-drain-proof.mjs` strictly derives the measured parent, host and controller;
 the accepted source files remain unchanged. It requires fresh disposable Linux CI
@@ -109,3 +109,11 @@ and original typed HTTPS/mobile/archive checks pass and all measured/generated
 source hashes remain unchanged. No driver receipt exists yet. Applying migration14
 after the parent's archive snapshot does not establish migration14 reset/restore
 semantics; that remains a separately declared acceptance gap.
+
+October 9 runtime attempt 37907740158 failed at controller startup and produced
+no accepted drain receipt; following runtime-dependent quality/upload steps were
+not reached. A local Docker reproduction confirmed that root COPY of mode600
+generated source prevents the non-root controller from reading it. Generated
+controller source now uses mode644; host scripts and credential files retain
+mode600. Exclusive creation refuses existing files and symlinks. This correction
+is not a successful drain runtime measurement; a fresh full trial is required.

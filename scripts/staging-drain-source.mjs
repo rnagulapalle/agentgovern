@@ -1,5 +1,7 @@
 // Strict extensions: preserve measured sources, never silently accept moved anchors.
 import assert from 'node:assert/strict';
+import {open,rm} from 'node:fs/promises';
+import {basename} from 'node:path';
 import {semanticPlatformTrial} from './staging-semantic-trial-source.mjs';
 function editor(source){assert(typeof source==='string');return (before,after)=>{assert.equal(source.split(before).length,2,'Drain source anchor missing or ambiguous');source=source.replace(before,after);return source;};}
 export function drainController(source){
@@ -45,4 +47,14 @@ export function drainPlatform(source,hostFile){
  out=replace('from "./staging-semantic-host.mjs"',`from "./${hostFile}"`);
  out=replace('database:container("application-db"),temporal:container("temporal"),docker});','database:container("application-db"),temporal:container("temporal"),ownerEnv:resolve(parent,"owner.env"),docker});');
  return out;
+}
+
+// Generated controller is source code copied as root into a non-root image.
+// Never use this writer for environment files, credentials or runtime records.
+export async function writeDrainController(path,source){
+ assert(/^\.drain-controller-[a-f0-9-]+\.mjs$/.test(basename(path)));
+ assert(typeof source==='string'&&source.length>0);
+ const file=await open(path,'wx',0o600);let complete=false;
+ try{await file.writeFile(source);await file.chmod(0o644);complete=true;}
+ finally{await file.close();if(!complete)await rm(path,{force:true});}
 }

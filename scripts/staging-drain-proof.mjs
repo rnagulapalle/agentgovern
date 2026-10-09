@@ -4,7 +4,7 @@ import {readFile,writeFile,rm} from "node:fs/promises";
 import {spawnSync} from "node:child_process";
 import {randomUUID,createHash} from "node:crypto";
 import {resolve} from "node:path";
-import {drainPlatform,drainHost,drainController} from "./staging-drain-source.mjs";
+import {drainPlatform,drainHost,drainController,writeDrainController} from "./staging-drain-source.mjs";
 import {typedReceipt} from "./staging-browser-record.mjs";
 const hash=bytes=>createHash("sha256").update(bytes).digest("hex");
 const generatedFiles=[];let generated,owned=false;
@@ -20,7 +20,7 @@ try{
  const id=randomUUID(),controllerFile=`.drain-controller-${id}.mjs`,hostFile=`.drain-host-${id}.mjs`;
  const controller=drainController(await readFile("scripts/staging-semantic-controller.mjs","utf8"));
  const host=drainHost(await readFile("scripts/staging-semantic-host.mjs","utf8"),`scripts/${controllerFile}`);
- for(const [file,content] of [[controllerFile,controller],[hostFile,host]]){const path=resolve("scripts",file);await writeFile(path,content,{flag:"wx",mode:0o600});generatedFiles.push(path);}
+ for(const [file,content] of [[controllerFile,controller],[hostFile,host]]){const path=resolve("scripts",file);if(file===controllerFile)await writeDrainController(path,content);else await writeFile(path,content,{flag:"wx",mode:0o600});generatedFiles.push(path);}
  const source=drainPlatform(await readFile("scripts/staging-platform-proof.mjs","utf8"),hostFile);
  generated=resolve("scripts",`.drain-trial-${id}.mjs`);await writeFile(generated,source,{flag:"wx",mode:0o600});owned=true;
 

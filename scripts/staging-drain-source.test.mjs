@@ -1,7 +1,10 @@
 import {test,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
+import {mkdtemp,stat,readFile,rm,symlink} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {drainController,drainHost,drainPlatform} from './staging-drain-source.mjs';
+import {drainController,drainHost,drainPlatform,writeDrainController} from './staging-drain-source.mjs';
 const sources=['controller','host','platform'].map(n=>readFileSync(`scripts/staging-${n==='platform'?'platform-proof':`semantic-${n}`}.mjs`,'utf8'));
 test('strict drain extensions preserve real authority, pinned recovery, replay, original peak and archive/UI gates',()=>{
  const derived=[drainController(sources[0]),drainHost(sources[1],'scripts/.drain-controller-abc.mjs'),drainPlatform(sources[2],'.drain-host-abc.mjs')];
@@ -21,4 +24,17 @@ test('drain proof and owner refuse without explicit isolated opt-in before priva
   const r=spawnSync(process.execPath,['--import','tsx',file],{env:{PATH:process.env.PATH},encoding:'utf8',timeout:10000});
   expect(r.status).toBe(1);expect(r.stdout).toBe('');expect(r.stderr.trim()).toBe(message);
  }
+});
+
+test('generated controller source remains readable after root COPY; occupied files and symlinks are never replaced',async()=>{
+ const dir=await mkdtemp(resolve(tmpdir(),'ll-drain-source-'));
+ try{
+  const file=resolve(dir,'.drain-controller-abc.mjs'),source=drainController(sources[0]);
+  await writeDrainController(file,source);
+  expect((await stat(file)).mode&0o777).toBe(0o644);expect(await readFile(file,'utf8')).toBe(source);
+  await expect(writeDrainController(file,'replacement')).rejects.toThrow();expect(await readFile(file,'utf8')).toBe(source);
+  const link=resolve(dir,'.drain-controller-def.mjs');await symlink(file,link);
+  await expect(writeDrainController(link,'replacement')).rejects.toThrow();expect(await readFile(file,'utf8')).toBe(source);
+  await expect(writeDrainController(resolve(dir,'worker.env'),'secret')).rejects.toThrow();
+ }finally{await rm(dir,{recursive:true,force:true});}
 });
