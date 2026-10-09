@@ -1,7 +1,10 @@
-# Pending-work application package transitions
+# Historical package-transition validation and refusals
 
-Implementation under validation. No actual promotion/reversion acceptance yet;
-production remains on its existing runner.
+The sections below preserve the pre-acceptance implementation and failed-trial
+history. Subsequent actual run `37893973887` passed promotion/reversion and the
+complete regression gate. Current acceptance and its exact limits are recorded in
+[STAGING_PENDING_PACKAGE_TRANSITIONS.md](STAGING_PENDING_PACKAGE_TRANSITIONS.md).
+Production remains on its existing runner.
 
 The first retained-load trial (`37887325116`) failed before promotion. The next
 trial (`37888383459`) identified storage exhaustion while loading the second
