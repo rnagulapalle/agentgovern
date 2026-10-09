@@ -118,3 +118,16 @@ it("bounded inventory view explicitly reports truncation while database history 
   const latest = await store.latest(actor, scope.connectionId); expect(latest).toMatchObject({ historyTruncated: true, enforcement: "unverified" }); expect(latest.records).toHaveLength(2000);
   expect((await db.query("SELECT count(*)::int n FROM ll_cloud_runtime_observations")).rows[0].n).toBe(2001);
 }));
+
+it("lists only current member's tenant scopes and reports the connection view limit", async () => fixture(async (db, store, actor) => {
+  expect(await store.connections(actor)).toMatchObject({ connections: [], truncated: false, scanningAvailable: false, enforcement: "unverified" });
+  await store.configureConnection(actor, scope);
+  const other: Actor = { orgId: "company-b", subject: "other@example.test", tokenHash: "session-b", role: "operator" };
+  await store.configureConnection(other, { ...scope, tenantId: "company-b", connectionId: "private-b" });
+  expect((await store.connections(actor)).connections.map(c => c.scope.connectionId)).toEqual([scope.connectionId]);
+  await expect(store.connections({ ...actor, tokenHash: "unknown" })).rejects.toThrow("member required");
+  await db.query("INSERT INTO ll_cloud_connections(org_id,id,account_id,region,created_by) SELECT $1,'scope-'||i,'123456789012','us-west-2','owner@example.test' FROM generate_series(1,100) i", [tenant]);
+  const bounded = await store.connections(actor); expect(bounded.truncated).toBe(true); expect(bounded.connections).toHaveLength(100);
+  expect((await db.query("SELECT count(*)::int n FROM ll_cloud_connections WHERE org_id=$1", [tenant])).rows[0].n).toBe(101);
+  await db.query("UPDATE ll_members SET active=false WHERE email='owner@example.test'"); await expect(store.connections(actor)).rejects.toThrow("member required");
+}));

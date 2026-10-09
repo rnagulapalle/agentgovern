@@ -34,6 +34,13 @@ async function connection(c: PoolClient, org: string, id: string): Promise<Cloud
 }
 export class CloudInventoryStore {
   constructor(private readonly db: Pool) {}
+  async connections(actor: Actor) {
+    return transaction(this.db, actor.orgId, async c => {
+      await authority(c, actor);
+      const rows = (await c.query("SELECT id,account_id,region FROM ll_cloud_connections WHERE org_id=$1 ORDER BY created_at,id LIMIT 101", [actor.orgId])).rows;
+      return { connections: rows.slice(0, 100).map(row => ({ scope: { tenantId: actor.orgId, connectionId: row.id, accountId: row.account_id, region: row.region }, status: "configured" as const })), truncated: rows.length > 100, scanningAvailable: false as const, enforcement: "unverified" as const };
+    });
+  }
   async configureConnection(actor: Actor, scope: CloudDiscoveryScope) {
     // Validating an empty evidence shape reuses the collector's scope contract.
     const checked = canonicalScan({ scope, observedAt: new Date().toISOString(), completeness: "partial", records: [], failures: [] }).scope;

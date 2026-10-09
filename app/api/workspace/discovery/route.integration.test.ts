@@ -1,0 +1,42 @@
+import { expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { Pool } from "pg";
+import { readFile } from "node:fs/promises";
+import { randomBytes, randomUUID } from "node:crypto";
+import { digest, WORKSPACE_COOKIE } from "@/lib/workspace/identity";
+import { CloudInventoryStore } from "@/lib/workspace/cloud-inventory";
+const binding = vi.hoisted(() => ({ db: null as Pool | null }));
+vi.mock("@/lib/durable/database", async original => ({ ...await original<object>(), database: () => { if (!binding.db) throw new Error("Test database unavailable"); return binding.db; } }));
+import { GET, POST } from "./route";
+it("real session authentication and PostgreSQL persist only tenant-owned observations, refuse stale sessions and never enroll an execution agent", async () => {
+  if (!process.env.LOOPLABS_TEST_DATABASE_URL) throw new Error("Dedicated PostgreSQL required; never skip.");
+  const admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL }), schema = `discovery_http_${randomBytes(8).toString("hex")}`, epoch = randomUUID();
+  const token = randomBytes(32).toString("base64url"), otherToken = randomBytes(32).toString("base64url"); let db: Pool | undefined;
+  const request = (session: string, payload?: object, query = "") => new NextRequest(`https://looplabs.run/api/workspace/discovery${query}`, { method: payload ? "POST" : "GET", headers: { origin: "https://looplabs.run", cookie: `${WORKSPACE_COOKIE}=${session}`, "Content-Type": "application/json" }, ...(payload ? { body: JSON.stringify(payload) } : {}) });
+  try {
+    await admin.query(`CREATE SCHEMA ${schema}`); db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` }); binding.db = db;
+    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/durable/recovery-schema.sql", "lib/workspace/cloud-inventory-schema.sql"]) await db.query(await readFile(file, "utf8"));
+    await db.query("INSERT INTO ll_orgs(id) VALUES('company-a'),('company-b')");
+    await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('company-a',$1),('company-b',$1)", [epoch]); vi.stubEnv("LOOPLABS_RECOVERY_EPOCH", epoch);
+    await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('owner@example.test','company-a','Owner','test'),('other@example.test','company-b','Other','test')");
+    await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,'owner@example.test',now()+interval '1 hour'),($2,'other@example.test',now()+interval '1 hour')", [digest(token), digest(otherToken)]);
+    const input = { operation: "configure", connectionId: "aws-a", accountId: "123456789012", region: "us-west-2" };
+    expect((await POST(request(token, input))).status).toBe(200); expect((await POST(request(token, input))).status).toBe(200);
+    expect((await db.query("SELECT count(*)::int n FROM ll_cloud_connections")).rows[0].n).toBe(1);
+    const listing = await GET(request(token)); expect(listing.headers.get("Cache-Control")).toBe("no-store");
+    expect(await listing.json()).toMatchObject({ connections: [{ scope: { tenantId: "company-a", connectionId: "aws-a" } }], scanningAvailable: false });
+    expect(await (await GET(request(otherToken))).json()).toMatchObject({ connections: [] });
+    expect((await GET(request(otherToken, undefined, "?connectionId=aws-a"))).status).toBe(404);
+    const scope = { tenantId: "company-a", connectionId: "aws-a", accountId: "123456789012", region: "us-west-2" };
+    await new CloudInventoryStore(db).recordScan({ orgId: "company-a", subject: "owner@example.test", tokenHash: digest(token), role: "operator" }, randomUUID(), { scope, observedAt: new Date().toISOString(), completeness: "partial", records: [], failures: ["list-unavailable"] });
+    expect(await (await GET(request(token, undefined, "?connectionId=aws-a"))).json()).toMatchObject({ status: "observed", completeness: "partial", failures: ["list-unavailable"], enforcement: "unverified" });
+    expect((await POST(request(token, { ...input, tenantId: "company-b" }))).status).toBe(400);
+    expect((await POST(request(token, { ...input, accountId: "999999999999" }))).status).toBe(409);
+    for (const table of ["ll_agents", "ll_actions", "ll_tokens"]) expect((await db.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n).toBe(0);
+    await db.query("UPDATE ll_members SET active=false WHERE email='owner@example.test'");
+    expect((await GET(request(token))).status).toBe(401); expect((await POST(request(token, input))).status).toBe(401);
+    await db.query("UPDATE ll_members SET active=true WHERE email='owner@example.test'"); await db.query("UPDATE ll_sessions SET expires_at=now()-interval '1 second' WHERE hash=$1", [digest(token)]);
+    expect((await GET(request(token))).status).toBe(401);
+    expect((await db.query("SELECT count(*)::int n FROM ll_cloud_scans")).rows[0].n).toBe(1);
+  } finally { binding.db = null; vi.unstubAllEnvs(); await db?.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); }
+});

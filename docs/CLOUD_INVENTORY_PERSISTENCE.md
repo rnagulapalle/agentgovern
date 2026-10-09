@@ -20,6 +20,24 @@ invited authority and deployment recovery state are checked inside the existing
 workspace transaction. No public write route for raw discovery evidence is added.
 Cloud transport and scheduled scanning are not wired to the application yet.
 
+The candidate `/control-plane/discovery` page inherits the existing invited
+workspace gate. `/api/workspace/discovery` additionally authenticates each request
+and the store rechecks current invited membership, tenant and recovery state.
+GET lists at most 100 tenant-owned scopes (with explicit truncation) or reads one
+saved inventory. POST accepts only `configure`, connection name, account and
+commercial region; it derives tenant from authenticated identity. Browser
+credentials, endpoints, raw observations, scan requests, extra tenant selectors
+and ambiguous connection selectors are refused. Mutations require the existing
+same-origin check and successful responses forbid caching.
+
+The screen uses shared workspace typography and form components. It asks for no
+secrets, separates configured scope from saved observation, shows partial/stale
+and retained history, and keeps owner mapping, activity and enforcement explicitly
+unverified. Technical identity references are expandable rather than raw JSON.
+There is no enabled scan/import button or automatic enrollment. Azure and Google
+remain unsupported. The direct candidate route is not added to production or the
+shared navigation; real account discovery and browser acceptance remain open.
+
 Every scan and resource observation is append-only. Normalized columns exclude
 raw API bodies, environment values, descriptions, tool schemas and credentials.
 Partial and complete-empty scans retain all earlier resource/version observations;
@@ -63,14 +81,24 @@ session and connect only to administrator-reviewed transport/session bindings.
 
 ## Measured proof and remaining work
 
-Nine focused tests passed using a required dedicated PostgreSQL database. They
+Ten focused persistence/setup tests passed using a required dedicated PostgreSQL database. They
 exercise concurrent idempotence, changed replay refusal, partial/empty/out-of-order
 preservation, fresh connection reads, current identity/recovery/tenant refusal,
 raw/authority-bearing evidence rejection, immutable database boundaries, actual
 restricted-role UPDATE/DELETE/TRUNCATE refusal and the real optional setup CLI's
 concurrent application, actual non-owner refusal and digest refusal. A 2,001-row
 database case proves explicit view truncation without history deletion. No test is skipped without PostgreSQL.
-The test scans are fixtures, not AWS-account discovery evidence.
+The test scans are fixtures, not AWS-account discovery evidence. Four API boundary
+tests also exercise current authentication, same-origin rejection, session-derived
+tenant, invalid/raw/credential-bearing input, duplicate selectors and sanitized
+failure responses. A server-rendered screen contract check verifies unsupported
+scanning and secret-free configuration are explicit; it is not an authenticated
+browser or actual cloud scan proof.
+An additional in-process HTTP-route integration test uses real cookie sessions,
+the actual authenticator and dedicated PostgreSQL. It proves repeated configuration
+persists once, tenant-derived listing, cross-company 404, saved partial-scan reads,
+scope-change refusal, revoked/expired session denial and zero new execution
+agents/actions/tokens. This is a route/database proof, not a remote browser journey.
 
 Before calling the cloud slice ready, wire the supporting signed transport to
 server-owned scoped credentials, store actual results, add invited inventory and
