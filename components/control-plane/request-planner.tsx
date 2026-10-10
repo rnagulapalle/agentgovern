@@ -13,7 +13,7 @@ export function RequestPlanner({ onReview }: { onReview: (reviewed: boolean) => 
     setReviewed(false);
     onReview(false);
   }
-  return <section className="cp-panel cp-durable-card cp-conversation" aria-label="Prepare work with agents">
+  return <section className="cp-panel cp-durable-card cp-conversation" aria-label="Prepare a workflow plan">
     <div className="cp-conversation-heading"><MessageSquare size={24} aria-hidden="true" /><div><h2>What would you like done?</h2><p>Start with a prepared customer handoff. Request understanding is limited to this example; no AI model runs.</p></div></div>
     <button className="cp-button" onClick={() => change(handoffRequest)}>Try the customer handoff</button>
     <form onSubmit={(event) => { event.preventDefault(); setAnswer(reviewRequest(request)); setReviewed(false); onReview(false); }}>

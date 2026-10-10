@@ -40,7 +40,7 @@ export function ConnectorsWorkspace() {
     <div className="cp-durable">
       <PageTitle
         eyebrow="ALLOWED SYSTEMS"
-        title="Connectors"
+        title="Connections"
         description="A connector defines where an agent may act. These supported workflows use prepared sample systems; customer systems remain separate."
       />
       {error && (

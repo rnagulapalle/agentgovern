@@ -338,6 +338,7 @@ export function DurableWorkspace() {
                     <div className="cp-durable-buttons">
                       {a.state === "held" && (
                         <>
+                          <p>A different named member must approve a request you submitted.</p>
                           <button
                             className="cp-button cp-button-dark"
                             disabled={busy}

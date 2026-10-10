@@ -1,5 +1,5 @@
 // Actual browser -> Next app -> model API -> PostgreSQL -> isolated FetchSandbox twins.
-import { chromium, expect, type Page, type Browser } from "@playwright/test";
+import { chromium, expect, type Page, type Browser, type Route } from "@playwright/test";
 import { Pool } from "pg";
 import { randomBytes, randomUUID, createHash } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
@@ -23,6 +23,9 @@ async function main() {
   if (!process.env.LOOPLABS_TEST_DATABASE_URL) throw Error("Dedicated test PostgreSQL required.");
   await mkdir(".local", { recursive: true, mode: 0o700 });
   const dir = await mkdtemp(resolve(".local/chat-ui-proof-"));
+  // Only the Next web process needs the bounded model session. Fixture/runtime
+  // children must not inherit it or fall back to the laptop's AWS profile files.
+  const noCloudEnvironment=()=>({NODE_ENV:process.env.NODE_ENV,...Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith("AWS_")&&key!=="LOOPLABS_CHAT_MODEL")),AWS_CONFIG_FILE:resolve(dir,"absent-aws-config"),AWS_SHARED_CREDENTIALS_FILE:resolve(dir,"absent-aws-credentials"),AWS_EC2_METADATA_DISABLED:"true"});
   const recoveryEpoch=randomUUID();
   const schema = `chat_ui_${randomBytes(8).toString("hex")}`, token = randomBytes(32).toString("base64url"), password = randomBytes(24).toString("base64url");
   const admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
@@ -41,7 +44,7 @@ async function main() {
     throw Error("UI app unavailable");
   }
   async function startWorker() {
-    worker = spawn("pnpm", ["exec", "tsx", "scripts/enquiry-worker.ts"], { detached: true, env: { ...process.env, LOOPLABS_RECOVERY_EPOCH:recoveryEpoch, LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_ENQUIRY_WORKER_TOKEN: workerToken, LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token }, stdio: ["ignore", "pipe", "pipe"] });
+    worker = spawn("pnpm", ["exec", "tsx", "scripts/enquiry-worker.ts"], { detached: true, env: { ...noCloudEnvironment(), LOOPLABS_RECOVERY_EPOCH:recoveryEpoch, LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_ENQUIRY_WORKER_TOKEN: workerToken, LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token }, stdio: ["ignore", "pipe", "pipe"] });
     for (let i = 0; i < 100; i++) { if ((await db.query("SELECT 1 FROM ll_enquiry_worker_status WHERE last_tick>now()-interval '10 seconds'")).rows[0]) return; await delay(100); }
     throw Error("Background worker unavailable");
   }
@@ -51,9 +54,9 @@ async function main() {
     const result = await chat(page, enquiryRequest + " Use customer@example.test.");
     assert(result.saved?.id);
     await page.getByRole("checkbox").check();
-    const [submitted] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Rehearse this plan", exact: true }).click()]);
+    const [submitted] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Submit for approval", exact: true }).click()]);
     assert.equal((await submitted).status(), 200);
-    await expect(page.getByRole("region", { name: "Rehearsal progress" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Run progress" })).toBeVisible();
     return result.saved.id as string;
   }
   async function approveManaged(page: Page, id: string) {
@@ -77,29 +80,63 @@ async function main() {
     await page.getByLabel("Email", { exact: true }).fill(email); await page.getByLabel("Password").fill(password);
     const [signedIn] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/session") && r.request().method() === "POST"), page.getByRole("button", { name: "Sign in", exact: true }).click()]);
     const result = await signedIn; assert.equal(result.status(), 200, `UI sign-in: ${JSON.stringify(await result.json())}`);
-    await expect(page.getByRole("heading", { name: "Describe the work. Rehearse it first." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Describe the work." })).toBeVisible();
   }
   async function open(page: Page, id: string) {
     await page.goto(origin + "/control-plane/work");
     await page.getByRole("button", { name: new RegExp(id.slice(0, 8)) }).click();
     await expect(page.getByRole("heading", { name: /Customer handoff/ })).toBeVisible();
   }
-  async function chat(page: Page, text: string) {
+  let pendingConversationObserved = false;
+  async function chat(page: Page, text: string, observePending = false) {
     await page.getByLabel("Your request or clarification").fill(text);
-    const [result] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Send request", exact: true }).click()]);
-    const response = await result; assert.equal(response.status(), 200); return response.json();
+    if (!observePending) {
+      const [result] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Send request", exact: true }).click()]);
+      assert.equal(result.status(), 200); return result.json();
+    }
+    let intercepted = false, chatRequests = 0;
+    let releaseRequest!: () => void;
+    const released = new Promise<void>(resolve => { releaseRequest = resolve; });
+    const chatRoute = async (route: Route) => {
+      if (route.request().method() === "POST" && route.request().postDataJSON().operation === "chat") {
+        chatRequests++; intercepted = true; await released;
+      }
+      await route.continue();
+    };
+    await page.route("**/api/workspace/enquiries*", chatRoute);
+    const result = page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST");
+    try {
+      await page.getByRole("button", { name: "Send request", exact: true }).evaluate(button => { if (!(button instanceof HTMLButtonElement)) throw Error("Send button unavailable"); button.click(); button.click(); });
+      try {
+        await expect.poll(() => intercepted, { timeout: 15000 }).toBe(true);
+        const conversation = page.getByRole("log", { name: "Workflow conversation" });
+        await expect(conversation.getByText(text, { exact: true })).toBeVisible();
+        await expect(conversation.getByRole("status").filter({ hasText: "Preparing your plan…" })).toBeVisible();
+        await expect(conversation.locator("article")).toHaveCount(2);
+        await expect(page.getByRole("button", { name: "Preparing…", exact: false })).toBeDisabled();
+        assert.equal(chatRequests, 1, "Double-submit must send one real model-planning request");
+        await page.screenshot({ path: "docs/evidence/chat-ui-pending.png", fullPage: true });
+      } finally { releaseRequest(); }
+      const response = await result; assert.equal(response.status(), 200);
+      const data = await response.json();
+      await expect(page.getByRole("log", { name: "Workflow conversation" }).locator("article")).toHaveCount(2);
+      await expect(page.getByRole("status").filter({ hasText: "Preparing your plan…" })).toHaveCount(0);
+      assert.equal(chatRequests, 1, "Pending work must not retry planning automatically");
+      pendingConversationObserved = true;
+      return data;
+    } finally { releaseRequest(); await page.unroute("**/api/workspace/enquiries*", chatRoute); }
   }
   async function prepare(page: Page) {
     await page.goto(origin + "/control-plane/work");
-    assert((await chat(page, enquiryRequest)).clarification);
-    const { saved } = await chat(page, "Use customer@example.test for this rehearsal. Keep ask-first approval.");
+    assert((await chat(page, enquiryRequest, !pendingConversationObserved)).clarification);
+    const { saved } = await chat(page, "Use customer@example.test. Validate with simulated systems and keep ask-first approval.");
     assert(saved?.id); assert.equal(saved.run_id, null);
     assert.equal((await db.query("SELECT count(*) FROM ll_workflow_runs WHERE id=$1", [saved.id])).rows[0].count, "0");
-    await expect(page.getByRole("heading", { name: "2. Review this exact plan" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Review this exact plan" })).toBeVisible();
     await page.getByText("Advanced: use registered agents", { exact: true }).click();
     await page.getByLabel(/^CRM agent/).selectOption("crm-agent"); await page.getByLabel(/^Messaging agent/).selectOption("email-agent");
     await page.getByRole("checkbox").check();
-    await page.getByRole("button", { name: "Create this reviewed workflow" }).click();
+    await page.getByRole("button", { name: "Create this reviewed workflow", exact: true }).click();
     await expect(page.getByRole("heading", { name: /Customer handoff/ })).toBeVisible();
     return saved;
   }
@@ -119,7 +156,7 @@ async function main() {
   async function run(page: Page, id: string) { return (await page.request.get(origin + "/api/durable/workflows?run=" + id)).json(); }
   async function complete(page: Page) {
     await page.getByRole("button", { name: "Verify and complete", exact: true }).click();
-    await expect(page.getByRole("region", { name: "Verification receipt" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Verification evidence" })).toBeVisible();
   }
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
@@ -138,7 +175,7 @@ async function main() {
     await writeFile(`${dir}/connector-twin-faults.json`,JSON.stringify({loseResponseRecords:["2002"]}),{mode:0o600});
     await writeFile(`${dir}/connector-twin-credentials.json`, JSON.stringify({ token }), { mode: 0o600 });
     const backend = process.env.FETCHSANDBOX_BACKEND_PATH || `${process.env.HOME}/sandbox/backend`;
-    twin = spawn(`${backend}/.venv/bin/python`, ["scripts/connector-twin.py"], { env: { ...process.env, LOOPLABS_CONNECTOR_STATE_DIR: dir }, stdio: ["ignore", "pipe", "pipe"] });
+    twin = spawn(`${backend}/.venv/bin/python`, ["scripts/connector-twin.py"], { env: { ...noCloudEnvironment(), LOOPLABS_CONNECTOR_STATE_DIR: dir }, stdio: ["ignore", "pipe", "pipe"] });
     for (let i = 0; i < 100; i++) { try { if ((await fetch("http://127.0.0.1:8018/crm/crm/v3/objects/contacts/1001", { headers: { Authorization: `Bearer ${token}` } })).ok) break; } catch {} await delay(100); }
     recordBuildId=JSON.parse(await readFile(".worker/temporal-manifest.json","utf8")).buildId;
     await startApp(); browser = await chromium.launch({ headless: true });
@@ -224,7 +261,7 @@ async function main() {
     for (const id of Object.keys(lostEffects)) assert.deepEqual(recoveredEffects[id], lostEffects[id]);
     check("Real app and worker restart automatically read back a lost CRM response, dispatch only the held email, and save a full verification receipt without another CRM write");
     await page.goto(origin + "/control-plane/work"); await page.getByRole("button", { name: new RegExp(recovery.slice(0,8)) }).click();
-    await expect(page.getByRole("region", { name: "Verification receipt" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Verification evidence" })).toBeVisible();
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.screenshot({ path: "docs/evidence/enquiry-managed-desktop.png", fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
@@ -266,7 +303,7 @@ async function main() {
     await page.screenshot({ path: "docs/evidence/enquiry-temporal-mobile.png", fullPage: true });
     check("Typed chat and invited UI transfer one saved run to Temporal without granting approval; second-member approvals complete exactly two effects and reload preserves ownership");
     const until=async(test:()=>Promise<boolean>,label:string,timeout=90000)=>{const start=Date.now();while(!(await test())){if(Date.now()-start>timeout)throw Error(`Timed out: ${label}`);await delay(100);}};
-    const packagedService=(role:"worker"|"scheduler")=>{const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{env:{...process.env,LOOPLABS_RECOVERY_EPOCH:recoveryEpoch,LOOPLABS_DATABASE_URL:url.toString(),LOOPLABS_TEMPORAL_WORKER_TOKEN:temporalToken,LOOPLABS_TEMPORAL_ADDRESS:temporal!.address,LOOPLABS_TEMPORAL_NAMESPACE:"default",LOOPLABS_TEMPORAL_TASK_QUEUE:"scoped-ui-"+schema,LOOPLABS_TEMPORAL_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",LOOPLABS_TEMPORAL_API_KEY:"",LOOPLABS_TEMPORAL_CERT_PATH:"",LOOPLABS_TEMPORAL_KEY_PATH:"",LOOPLABS_TEMPORAL_CA_PATH:"",LOOPLABS_TEMPORAL_POLL_MS:"250",LOOPLABS_TEMPORAL_HEALTH_PORT:role==="worker"?"19340":"19341",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:""},stdio:"ignore"});packaged.push(child);return child;};
+    const packagedService=(role:"worker"|"scheduler")=>{const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{env:{...noCloudEnvironment(),LOOPLABS_RECOVERY_EPOCH:recoveryEpoch,LOOPLABS_DATABASE_URL:url.toString(),LOOPLABS_TEMPORAL_WORKER_TOKEN:temporalToken,LOOPLABS_TEMPORAL_ADDRESS:temporal!.address,LOOPLABS_TEMPORAL_NAMESPACE:"default",LOOPLABS_TEMPORAL_TASK_QUEUE:"scoped-ui-"+schema,LOOPLABS_TEMPORAL_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",LOOPLABS_TEMPORAL_API_KEY:"",LOOPLABS_TEMPORAL_CERT_PATH:"",LOOPLABS_TEMPORAL_KEY_PATH:"",LOOPLABS_TEMPORAL_CA_PATH:"",LOOPLABS_TEMPORAL_POLL_MS:"250",LOOPLABS_TEMPORAL_HEALTH_PORT:role==="worker"?"19340":"19341",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:""},stdio:"ignore"});packaged.push(child);return child;};
     const ready=async(port:number)=>{try{return (await fetch(`http://127.0.0.1:${port}/health/ready`,{signal:AbortSignal.timeout(1000)})).ok;}catch{return false;}};
     let scopedWorker=packagedService("worker");packagedService("scheduler");await until(async()=>await ready(19340)&&await ready(19341),"scoped packaged readiness");
     await page.goto(origin+"/control-plane/records");
@@ -280,13 +317,16 @@ async function main() {
     const beforeScoped=await effects();
     for(const recipient of ["alice@example.test","bob@example.test"]){
       const record=records.find((r:{recipient:string})=>r.recipient===recipient);
-      await page.goto(origin+"/control-plane/work");await page.getByLabel("Customer record for this conversation").selectOption(record.id);
-      await page.getByLabel("Your request or clarification").fill(`Check the CRM record for ${recipient}, prepare an acknowledgement, and ask me before sending. Rehearse it with FetchSandbox first.`);
+      await page.goto(origin+"/control-plane/work");
+      const setup=page.locator("details.cp-chat-setup");
+      if(!await setup.evaluate(el=>(el as HTMLDetailsElement).open))await setup.locator("summary").click();
+      await page.getByLabel("Customer record for this conversation").selectOption(record.id);
+      await page.getByLabel("Your request or clarification").fill(`Check the CRM record for ${recipient}, prepare an acknowledgement, and ask me before sending. Validate it with simulated systems first.`);
       const [interpreted] = await Promise.all([page.waitForResponse(r=>r.url().includes("/api/workspace/enquiries?scope=")&&r.request().method()==="POST"), page.getByRole("button",{name:"Send request",exact:true}).click()]);const answer=await interpreted;assert.equal(answer.status(),200);const value=await answer.json();assert(value.saved);assert.equal(value.saved.plan.contact.email,recipient);scopedPlans.push(value.saved);
       await expect(page.getByText("Prepared reply to "+recipient,{exact:true})).toBeVisible();
       await page.getByLabel(/^CRM agent/).selectOption("crm-agent");await page.getByLabel(/^Messaging agent/).selectOption("email-agent");await page.getByRole("checkbox").check();
       const [submitted] = await Promise.all([page.waitForResponse(r=>r.url().includes("/api/workspace/enquiries?scope=")&&r.request().method()==="POST"), page.getByRole("button",{name:"Submit for independent approval",exact:true}).click()]);assert.equal((await submitted).status(),200);
-      await expect(page.getByRole("region",{name:"Rehearsal progress"})).toBeVisible();await expect(page.getByText("To: "+recipient,{exact:true})).toBeVisible();
+      await expect(page.getByRole("region",{name:"Run progress"})).toBeVisible();await expect(page.getByText("To: "+recipient,{exact:true})).toBeVisible();
       const duplicate=await page.request.post(origin+"/api/workspace/enquiries?scope="+record.id,{headers:{Origin:origin},data:{operation:"submit",id:value.saved.id,planHash:value.saved.plan_hash,crmAgent:"crm-agent",emailAgent:"email-agent"}});assert.equal(duplicate.status(),200);
       assert.equal((await db.query("SELECT count(*) FROM ll_connector_actions a JOIN ll_workflow_steps s ON s.org_id=a.org_id AND s.action_id=a.id WHERE s.run_id=$1 AND a.state='held'",[value.saved.id])).rows[0].count,"2");
     }
@@ -307,9 +347,11 @@ async function main() {
     await page.reload();await page.getByRole("button",{name:new RegExp(scopedPlans[1].id.slice(0,8))}).click();await expect(page.getByRole("heading",{name:"Acknowledgement verified",exact:true})).toBeVisible();await expect(page.getByText("To: bob@example.test",{exact:true})).toBeVisible();
     await expect(page.getByText("Independent action approvals are still required.",{exact:false})).toHaveCount(0);
     await expect(page.getByText("Execution is subject to independent approval and effect verification.",{exact:false})).toBeVisible();
-    await page.screenshot({path:"docs/evidence/scoped-chat-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.getByRole("region",{name:"Rehearsal progress"}).scrollIntoViewIfNeeded();
+    await page.setViewportSize({width:1280,height:900});assert.equal(await page.evaluate(()=>innerWidth),1280);
+    await page.screenshot({path:"docs/evidence/scoped-chat-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.getByRole("region",{name:"Run progress"}).scrollIntoViewIfNeeded();
     assert(await page.locator(".cp-enquiry-progress p").evaluateAll(nodes=>nodes.every(n=>parseFloat(getComputedStyle(n).fontSize)>=16)));
     await page.screenshot({path:"docs/evidence/scoped-chat-mobile.png",fullPage:false});
+    check("Actual scoped desktop screenshot uses 1280px and mobile screenshot uses 390px with readable outcome text and no horizontal overflow");
     assert.deepEqual(await effects(),afterScoped);
     check("Confirmed packaged worker SIGKILL and real app restart preserve both scoped UI runs; independent approvals yield exactly four intended effects, actual lost CRM response reconciles without resend, histories replay and reload/mobile preserve exact recipients");
     // Actual exhausted allowance refusal must remain a human-readable saved draft.
@@ -321,13 +363,13 @@ async function main() {
     const blockedPlan=(await (await blockedChatResponse).json()).saved;assert(blockedPlan?.id);
     await page.getByLabel(/^CRM agent/).selectOption("crm-agent");await page.getByLabel(/^Messaging agent/).selectOption("email-agent");await page.getByRole("checkbox").check();
     const [blockedSubmit] = await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname==="/api/workspace/enquiries"&&r.request().method()==="POST"), page.getByRole("button",{name:"Submit for independent approval",exact:true}).click()]);assert.equal((await blockedSubmit).status(),403);
-    await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Confirm saved submission",exact:true})).toBeVisible();await expect(page.getByRole("region",{name:"Verification receipt"})).toHaveCount(0);
+    await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Confirm saved submission",exact:true})).toBeVisible();await expect(page.getByRole("region",{name:"Verification evidence"})).toHaveCount(0);
     await expect(page.getByText("Action not submitted",{exact:true})).toHaveCount(2);await expect(page.getByText("Submission incomplete · reopen and retry rehearsal",{exact:true})).toHaveCount(0);
     const blockedRun=await run(page,blockedPlan.id);assert(blockedRun.steps.every((s:{state:string|null})=>s.state===null));assert.equal((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch WHERE plan_id=$1",[blockedPlan.id])).rows[0].n,0);assert.deepEqual(await effects(),afterScoped);
-    await page.reload();await page.getByRole("button",{name:new RegExp(blockedPlan.id.slice(0,8))}).click();await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await page.setViewportSize({width:390,height:844});await page.getByRole("region",{name:"Rehearsal progress"}).scrollIntoViewIfNeeded();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:"docs/evidence/chat-ui-submission-blocked.png",fullPage:false});assert.deepEqual(await effects(),afterScoped);
+    await page.reload();await page.getByRole("button",{name:new RegExp(blockedPlan.id.slice(0,8))}).click();await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await page.setViewportSize({width:390,height:844});await page.getByRole("region",{name:"Run progress"}).scrollIntoViewIfNeeded();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:"docs/evidence/chat-ui-submission-blocked.png",fullPage:false});assert.deepEqual(await effects(),afterScoped);
     check("Real typed scoped chat with exhausted registered-agent allowance retains a guided Submission incomplete view after refusal/reload; no submitted actions, Temporal ownership, verification receipt or new effects; 390px layout stays readable");
     const fingerprints: Record<string, string> = {};
-    for (const file of ["docker-compose.yml","deploy.sh","lib/connectors/routing.ts","lib/enquiries/submission.ts","lib/enquiries/presentation.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","lib/connectors/catalog.ts","app/api/workspace/records/route.ts","components/control-plane/records-workspace.tsx","app/control-plane/records/page.tsx","components/control-plane/shell.tsx","lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts","lib/workspace/identity.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
+    for (const file of ["docker-compose.yml","deploy.sh","lib/connectors/routing.ts","lib/enquiries/submission.ts","lib/enquiries/presentation.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","lib/connectors/catalog.ts","app/api/workspace/records/route.ts","components/control-plane/records-workspace.tsx","app/control-plane/records/page.tsx","components/control-plane/shell.tsx","lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts","lib/workspace/identity.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
       fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
     await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: legacyEffects, scopedRuns,blockedRun,scopedEffects:Object.fromEntries(Object.entries(afterScoped).filter(([id])=>!beforeScoped[id])),managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
   } finally {

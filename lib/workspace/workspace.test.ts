@@ -214,7 +214,8 @@ describe("workspace identity boundary", () => {
   it("keeps named approval authority tied to an active member", async () => {
     const { actor } = await signed();
     const service = new DurableControl(db);
-    const a = await service.propose(actor, {
+    const proposer = await authenticate(db, agentToken);
+    const a = await service.propose(proposer, {
       actionId: randomUUID(),
       agentId: "existing-agent",
       discount: 25,

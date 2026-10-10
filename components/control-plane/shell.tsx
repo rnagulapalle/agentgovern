@@ -36,13 +36,13 @@ const groups = [
     name: "WORKSPACE",
     items: [
       { key: "overview", label: "Overview", icon: LayoutGrid },
-      { key: "work", label: "Work with agents", icon: MessageSquare },
-      { key: "agents", label: "Agents and boundaries", icon: Bot },
+      { key: "work", label: "Workflow plans", icon: MessageSquare },
+      { key: "agents", label: "Agents", icon: Bot },
       { key: "discovery", label: "Cloud inventory", icon: Cloud },
-      { key: "connectors", label: "Connectors", icon: Database },
+      { key: "connectors", label: "Connections", icon: Database },
       { key: "records", label: "Records and access", icon: ShieldCheck },
       { key: "actions", label: "Actions", icon: SlidersHorizontal },
-      { key: "verification", label: "Verification", icon: ShieldCheck },
+      { key: "verification", label: "Verification evidence", icon: ShieldCheck },
       { key: "workflow-runs", label: "Workflow runs", icon: Network },
       { key: "requests", label: "Sales requests", icon: BookOpen },
     ],
@@ -50,7 +50,7 @@ const groups = [
   {
     name: "PREPARED EXAMPLES",
     items: [
-      { key: "workflows", label: "Workflow library", icon: Network },
+      { key: "workflows", label: "Workflow examples", icon: Network },
       { key: "gateway", label: "Model access", icon: Activity },
       { key: "runs", label: "Execution traces", icon: GitBranch },
       { key: "outputs", label: "Output checks", icon: ShieldCheck },
@@ -59,6 +59,11 @@ const groups = [
     ],
   },
 ];
+export function ControlScopeNote({ durable }: { durable: boolean }) {
+  return <p>{durable
+    ? "Discounts change a sample record; refunds use a simulated payment provider. Decisions are saved on the server. No real money moves. When configured, AI helps prepare bounded customer acknowledgement plans; it cannot approve or execute actions. Business connectors remain simulated, with no live customer updates or real email delivery."
+    : "These prepared examples use browser-local sample data. Model access, output checks and execution traces are simulated."}</p>;
+}
 export function ControlShell({
   children,
   member,
@@ -429,11 +434,7 @@ export function ControlShell({
           </div>
           <div className="cp-note">
             <BookOpen size={17} />
-            <p>
-              {durable
-                ? "Discounts use a sample record; refunds use a simulated payment provider. Decisions are saved on the server. No real money moves and no AI model runs."
-                : "These prepared examples use browser-local sample data. Model access, output checks and execution traces are simulated."}
-            </p>
+            <ControlScopeNote durable={durable} />
           </div>
         </Modal>
       )}
