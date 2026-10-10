@@ -202,26 +202,28 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
               {s.approved_by && <p>Approved by: {s.approved_by}</p>}
               {s.evidence && <p>Observed effect: {s.evidence.detail} {s.evidence.reference && `Reference: ${s.evidence.reference}`}</p>}
               {s.proposedRequest && <details><summary>Exact proposed connector request</summary><p>{s.proposedRequest.method} · {s.proposedRequest.resource}</p><pre>{JSON.stringify(s.proposedRequest.body, null, 2)}</pre><p>This is the approved request description. The observed effect above confirms what the provider twin reported; a proposed request alone is not execution evidence.</p></details>}
-              <div className="cp-durable-grid">
+              <div className="cp-durable-buttons">
                 {!s.state && (
-                  <button disabled={busy} onClick={() => action(s, "propose")}>
+                  <button className="cp-button" disabled={busy} onClick={() => action(s, "propose")}>
                     Submit prepared action
                   </button>
                 )}
                 {s.state === "held" && (
-                  <button disabled={busy} onClick={() => action(s, "approve")}>
+                  <button className="cp-button" disabled={busy} onClick={() => action(s, "approve")}>
                     Approve exact action
                   </button>
                 )}
                 {s.state === "ready" && (
                   <>
                     <button
+                      className="cp-button"
                       disabled={busy}
                       onClick={() => action(s, "execute")}
                     >
                       Execute
                     </button>
                     <button
+                      className="cp-button"
                       disabled={busy}
                       onClick={() => action(s, "execute", true)}
                     >
@@ -233,6 +235,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
                   s.state || "",
                 ) && (
                   <button
+                    className="cp-button"
                     disabled={busy}
                     onClick={() => action(s, "reconcile")}
                   >

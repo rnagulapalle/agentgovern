@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 
 test("retains current three-provider inventory UI evidence without implying enrollment or execution authority", async () => {
   const bytes = await readFile("docs/evidence/discovery-browser-proof.json");
-  expect(createHash("sha256").update(bytes).digest("hex")).toBe("ee69a559776086c23061863d9b20548eae25104732cdea13e72d9fcb05ccf7d7");
+  expect(createHash("sha256").update(bytes).digest("hex")).toBe("b0d7cd002ed186c71d7267b90fe8e7fdf0247e56c3e5b8112323af825d6fa169");
   const proof = JSON.parse(bytes);
   expect(proof.version).toBe(1);
   expect(proof.proof).toBe("disposable-loopback-cloud-inventory-ui");

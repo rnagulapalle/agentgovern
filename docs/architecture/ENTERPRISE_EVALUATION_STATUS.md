@@ -11,10 +11,10 @@ chat, plan review nor orchestration scheduling grants execution authority.
 
 ## Latest verified application checkpoint
 
-Commit `4555dd7c297116bb386444819a5c3961431a3c0b` is pushed on
+Commit `0a75fa5caf7c1ecdf509e6c3ca553d700fec217e` is pushed on
 `codex/looplabs-worker-version-lifecycle` and under draft PR 82. The final-source
 Mac `pnpm quality` and the normal pre-push hook each passed all ten gates:
-1,119 tests across 153 files, 98.73% line coverage, 96.77% branch coverage,
+1,129 tests across 154 files,
 actual Docker artifact extraction, isolated database bootstrap, worker builds,
 production build and 52 rendered internal destinations. No timeout, threshold
 or security assertion was weakened. A test-only FIFO fixture now uses actual
@@ -24,7 +24,7 @@ Before that final test-only change, independently frozen Linux run `38085781171`
 passed the unchanged full quality gate against all 804 reviewed files. These
 measurements supersede the failed intermediate gate attempts recorded below;
 they do not erase those failures or establish production acceptance. The current
-PR's standard CI run `38087503282` also completed successfully: quality gates,
+PR's standard CI run `38088047490` also completed successfully: quality gates,
 staging database/container and staging Temporal service. Later commits require
 their own review and CI before merge.
 
@@ -214,16 +214,20 @@ Existing contact acknowledgement and the database discount test record do
 The local saved-plan authority read now authenticates the actual requester or
 designated manager separately from the persisted requesting identity. It refuses
 unrelated members, fabricated requester sessions, workers, stale grants/scopes,
-revoked membership and changed recovery epochs. At checkpoint `4555dd7`, owner deactivation followed by reactivation was not a
-permanent revocation fence for this read. Additive migration 22 is the next
-review increment: server-bound member generations prevent old saved authority
-from reviving, while historical plan reads remain available. It requires its own
-final regression gate. Authentication and current authority inside future
-approval/dispatch mutation transactions remain required; this read cannot grant
-execution authority. The quote test family passes 312
-tests; root additionally ran an 82-test quote/store/connector/navigation subset.
-This read grants no approval or dispatch authority, and does not prove a provider
-write. The original requester-only API and exact plan digest remain compatible.
+revoked membership and changed recovery epochs. Additive migration 22 now binds
+saved plans to server-maintained member generations. A committed deactivation or
+workspace move invalidates old saved authority; reactivation does not restore it.
+Historical plans without generations remain readable but cannot authorize work.
+Member deletion/renaming is refused to prevent identity reuse; this is a deliberate
+installation-wide constraint, not general session revocation. The quote family
+passes 322 focused tests, including actual PostgreSQL lifecycle and concurrency
+checks. The final-source full quality gate and normal pre-push hook each passed
+1,129 tests across 154 files; the pushed checkpoint's standard CI also passed.
+
+Authentication and current authority inside future approval/dispatch mutation
+transactions remain required. The authority read grants no approval or dispatch,
+and no quote provider write is established. The original requester-only API and
+exact plan digest remain compatible.
 
 A distributor requests 14% against a 10% delegated limit. LoopLabs holds the exact
 change for an explicitly eligible independent manager, refuses above the hard

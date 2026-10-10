@@ -37,6 +37,7 @@ async function main() {
   let app: ChildProcess | undefined, twin: ChildProcess | undefined, browser: Browser | undefined;
   const checks: { name: string; passed: boolean }[] = [], observed: object[] = [];
   const check = (name: string) => { checks.push({ name, passed: true }); console.log(`PASS ${name}`); };
+  const advancedButtonMeasurements: { label: string; step: number; viewport: number; height: number; lines: number }[] = [];
   const url = new URL(process.env.LOOPLABS_TEST_DATABASE_URL); url.searchParams.set("options", `-c search_path=${schema}`);
   async function startApp() {
     app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...process.env, LOOPLABS_RECOVERY_EPOCH:recoveryEpoch, LOOPLABS_TEMPORAL_WORKSPACE: "staging", LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId, LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_RECORD_CATALOG: JSON.stringify({records:[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"},{version:"record-scope-1",workspaceId:"local-proof",contactId:"2002",recipient:"bob@example.test"}]}), LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
@@ -141,7 +142,44 @@ async function main() {
     return saved;
   }
   function step(page: Page, ordinal: number) { return page.locator("article").filter({ has: page.getByRole("heading", { name: ordinal === 1 ? /^1\. Set/ : /^2\. Send/ }) }); }
+  // Measure the authenticated controls in their actual saved state before its
+  // existing real connector request. Resizing never submits or grants authority.
+  async function measureAdvancedAction(page: Page, ordinal: number, name: string) {
+    const originalViewport = page.viewportSize();
+    assert(originalViewport, "Actual browser viewport required");
+    try {
+      for (const width of [1280, 390]) {
+        await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+        const button = step(page, ordinal).getByRole("button", { name, exact: true });
+        await expect(button).toBeVisible();
+        const measured = await button.evaluate(element => {
+          const box = element.getBoundingClientRect();
+          const ys = new Set<number>();
+          const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+          while (walker.nextNode()) {
+            const node = walker.currentNode;
+            const text = node.textContent || "";
+            const first = text.search(/\S/), last = text.search(/\s*$/);
+            if (first < 0) continue;
+            const range = document.createRange();
+            range.setStart(node, first); range.setEnd(node, last);
+            for (const rect of range.getClientRects()) if (rect.width > 0 && rect.height > 0) ys.add(Math.round(rect.top));
+          }
+          return { height: box.height, lines: ys.size, left: box.left, right: box.right,
+            label: element.textContent?.trim(), viewport: innerWidth,
+            overflow: document.documentElement.scrollWidth > innerWidth || element.scrollWidth > element.clientWidth };
+        });
+        assert.equal(measured.viewport, width);
+        assert.equal(measured.label, name);
+        assert(measured.height >= 44, `Advanced ${name} touch target below 44px at ${width}px`);
+        assert.equal(measured.lines, 1, `Advanced ${name} label wraps at ${width}px`);
+        assert(!measured.overflow && measured.left >= 0 && measured.right <= width, `Advanced ${name} overflows at ${width}px`);
+        advancedButtonMeasurements.push({ label: name, step: ordinal, viewport: width, height: measured.height, lines: measured.lines });
+      }
+    } finally { await page.setViewportSize(originalViewport); }
+  }
   async function clickAction(page: Page, ordinal: number, name: string) {
+    await measureAdvancedAction(page, ordinal, name);
     const [result] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/durable/connectors") && r.request().method() === "POST"), step(page, ordinal).getByRole("button", { name, exact: true }).click()]); return result;
   }
   async function proposeAndApprove(page: Page, reviewer: Page, id: string) {
@@ -368,10 +406,13 @@ async function main() {
     const blockedRun=await run(page,blockedPlan.id);assert(blockedRun.steps.every((s:{state:string|null})=>s.state===null));assert.equal((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch WHERE plan_id=$1",[blockedPlan.id])).rows[0].n,0);assert.deepEqual(await effects(),afterScoped);
     await page.reload();await page.getByRole("button",{name:new RegExp(blockedPlan.id.slice(0,8))}).click();await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await page.setViewportSize({width:390,height:844});await page.getByRole("region",{name:"Run progress"}).scrollIntoViewIfNeeded();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:"docs/evidence/chat-ui-submission-blocked.png",fullPage:false});assert.deepEqual(await effects(),afterScoped);
     check("Real typed scoped chat with exhausted registered-agent allowance retains a guided Submission incomplete view after refusal/reload; no submitted actions, Temporal ownership, verification receipt or new effects; 390px layout stays readable");
+    for (const label of ["Submit prepared action", "Approve exact action", "Execute", "Execute · lose response", "Verify outcome"]) {
+      for (const viewport of [1280, 390]) assert(advancedButtonMeasurements.some(m => m.label === label && m.viewport === viewport), `Missing actual advanced ${label} measurement at ${viewport}px`);
+    }
     const fingerprints: Record<string, string> = {};
     for (const file of ["docker-compose.yml","deploy.sh","lib/connectors/routing.ts","lib/enquiries/submission.ts","lib/enquiries/presentation.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","lib/connectors/catalog.ts","app/api/workspace/records/route.ts","components/control-plane/records-workspace.tsx","app/control-plane/records/page.tsx","components/control-plane/shell.tsx","lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts","lib/workspace/identity.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
       fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
-    await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: legacyEffects, scopedRuns,blockedRun,scopedEffects:Object.fromEntries(Object.entries(afterScoped).filter(([id])=>!beforeScoped[id])),managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
+    await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, advancedButtonMeasurements, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: legacyEffects, scopedRuns,blockedRun,scopedEffects:Object.fromEntries(Object.entries(afterScoped).filter(([id])=>!beforeScoped[id])),managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
   } finally {
     for(const child of packaged)if(child.exitCode===null&&!child.signalCode){child.kill("SIGTERM");for(let i=0;i<250 && child.exitCode===null&&!child.signalCode;i++)await delay(100);if(child.exitCode===null&&!child.signalCode)throw Error("Packaged child failed to shut down");}
     await temporal?.teardown(); await browser?.close(); await stopWorker(); await stopApp(); if (twin?.pid) { twin.kill("SIGTERM"); await delay(400); }

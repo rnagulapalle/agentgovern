@@ -1,9 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { expect, it } from "vitest";
+import { validateAdvancedButtonMeasurements } from "./advanced-measurements";
 import proof from "../../docs/evidence/chat-ui-proof.json";
 it("requires fresh recorded UI/model/twin proof and keeps unsupported hosted execution explicit", async () => {
   expect(proof.checks.length).toBeGreaterThanOrEqual(16);
+  validateAdvancedButtonMeasurements((proof as unknown as { advancedButtonMeasurements?: unknown }).advancedButtonMeasurements);
   expect(proof.checks.some(c=>c.name.includes("guided Submission incomplete view"))).toBe(true);
   expect(proof.checks.every(c => c.passed)).toBe(true);
   expect(proof.checks.some(c => c.name.includes("no background route prefetch"))).toBe(true);

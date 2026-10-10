@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "completedUtc": "2026-10-10T20:39:36.366Z",
+  "completedUtc": "2026-10-10T21:47:53.108Z",
   "proof": "disposable-loopback-cloud-inventory-ui",
   "browser": "153.0.8010.12",
   "sourceFingerprints": {
@@ -80,13 +80,13 @@
     "ownedResourcesRemoved": true
   },
   "screenshots": {
-    "desktop.png": "84660dafd5b075fdc8d2e7fed89af613fd02c57c9be8dcd0ca52b654b897bf34",
-    "mobile.png": "2303e08cf702f17dd1e456bd3ed27a0096d251fc9e2562ffe8c876a4661127e1",
+    "desktop.png": "a31ff902ba54b95f11e57db6759f97d5ddbf74fa8557139ae1651d408949a955",
+    "mobile.png": "48cc720bcdc648c1d53d3aeb9b76fdcda593adfbe68c3827b0810258eef1a31f",
     "expired-access.png": "aa9ba18901a1b1c8618cee82a56a46f7c880aed3fef4b4fb01a79ca479a8f58f",
-    "azure-desktop.png": "c39d226c566fbd87adc10d4d079a2b8e4bc13d7c9f4eba55323d58e7a6af4619",
-    "azure-mobile.png": "9cd9b82dd81e00072c1b6e2b3dea14bf0c61be56bbf0b41e6dab06e069e61454",
-    "project-desktop.png": "d93506893755dcf950bf3f9f63d224a8478b4da83cb2bc964d467adb6918cbdf",
-    "project-mobile.png": "7ad6831b3670f16933ecbc8cc538f0d12979f25274a4d7e70534a9eff8254e94"
+    "azure-desktop.png": "bb6461b2734f69df9979d7dd869ee5a1b7a2dc27b616ab11c2bc591e6b0c8d02",
+    "azure-mobile.png": "f31acc6a8c45f5322a63a7edd46bb73d5acbf93a00fdd97f36d2925fd6b92609",
+    "project-desktop.png": "3a1958f0d5d756adf7bdc5fb89b93996259b3b31af392422ccdc08085a9ae5ec",
+    "project-mobile.png": "5e8a940dd593bf820c984b2defe4689e370e60a0f8c66d834e6364d5e1b40be0"
   },
   "notProved": [
     "Azure and Google native reads",
