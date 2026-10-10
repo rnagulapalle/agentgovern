@@ -16,6 +16,7 @@ it("uses a bounded model call and accepts JSON with an optional markdown fence",
   send.mockResolvedValue({ output: { message: { content: [{ text: '```json\n{"job":"unsupported","customerEmail":null,"askFirst":false,"rehearsal":false,"extraActions":true}\n```' }] } } });
   expect(await new BedrockPlanner().interpret([{ role: "user", text: "Help" }])).toHaveProperty("job", "unsupported");
   expect(send.mock.calls[0][0].input.inferenceConfig.maxTokens).toBe(300);
+  expect(send.mock.calls[0][0].input.system[0].text).toContain("explicit request to validate or test with simulated systems as rehearsal=true");
   expect(send.mock.calls[0][1].abortSignal).toBeDefined(); expect(destroy).toHaveBeenCalled();
 });
 it("fails closed on missing configuration, provider error, malformed JSON and empty content", async () => {

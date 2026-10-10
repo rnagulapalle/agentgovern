@@ -1,4 +1,25 @@
 import { createHash } from "node:crypto";
+import { ControlError } from "../../lib/durable/contracts";
+import type { ConnectorProvider } from "../../lib/connectors/contracts";
+
+export function diagnosticProviderWrite(write: ConnectorProvider["write"], report: (value: {category:string;status:number|null;kind:string;cause:string}) => void): ConnectorProvider["write"] {
+  return async (...args) => {
+    try { return await write(...args); }
+    catch (error) {
+      const message=error instanceof Error ? error.message : "";
+      const category=message.includes("Saved connector request or destination changed") ? "saved_request_binding_refused"
+        : message.includes("original connector request") ? "saved_request_description_refused"
+        : message.includes("Connector evidence unavailable") ? "provider_evidence_unavailable" : "other_provider_failure";
+      try {
+        const nested=error instanceof Error ? error.cause : undefined;
+        const code=nested && typeof nested === "object" && "code" in nested ? nested.code : null;
+        const cause=typeof code === "string" && ["ECONNREFUSED","ECONNRESET","ENOTFOUND","EAI_AGAIN","ETIMEDOUT","UND_ERR_CONNECT_TIMEOUT","UND_ERR_SOCKET","ERR_INVALID_ARG_TYPE","ERR_INVALID_URL"].includes(code) ? code : "unclassified";
+        report({category,cause,status:error instanceof ControlError && [400,401,403,404,409,412,429,500,502,503,504].includes(error.status) ? error.status : null,
+        kind:error instanceof TypeError ? "type_error" : error instanceof ReferenceError ? "reference_error" : "other_error"}); } catch { /* Diagnostics cannot replace the original failure. */ }
+      throw error;
+    }
+  };
+}
 export interface OperationsConfig {
   role: "worker" | "scheduler";
   address: string; namespace: string; taskQueue: string; buildId: string;
