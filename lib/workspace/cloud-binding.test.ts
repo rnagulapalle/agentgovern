@@ -1,8 +1,7 @@
 import { expect, it, vi } from "vitest";
-import { mkdtemp, writeFile, chmod, symlink, link, rm } from "node:fs/promises";
+import { mkdtemp, writeFile, chmod, symlink, link, rm, lstat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
 const child = vi.hoisted(() => ({ calls: 0 }));
 vi.mock("node:child_process", async original => ({ ...await original<object>(), execFile: (_path: string, _args: unknown, _options: unknown, callback: (error: null, out: string) => void) => { child.calls++; callback(null, JSON.stringify({ Account: "123456789012" })); } }));
 import { cloudDiscoveryBinding } from "./cloud-binding";
@@ -23,7 +22,11 @@ it("missing, broad-readable, linked, oversized, malformed and foreign-scope bind
   for (const missing of [join(dir, "missing"), "relative.json", `${dir}/../binding.json`]) await expect(cloudDiscoveryBinding(scope, missing, () => now)).rejects.toThrow("access is unavailable");
   await chmod(path, 0o640); await expect(cloudDiscoveryBinding(scope, path, () => now)).rejects.toThrow("access is unavailable"); await chmod(path, 0o600);
   const sym = join(dir, "symlink"); await symlink(path, sym); await expect(cloudDiscoveryBinding(scope, sym, () => now)).rejects.toThrow("access is unavailable");
-  const fifo = join(dir, "fifo"); execFileSync("mkfifo", [fifo], { timeout: 1000 }); await chmod(fifo, 0o600); await expect(cloudDiscoveryBinding(scope, fifo, () => now)).rejects.toThrow("access is unavailable");
+  const fifo = join(dir, "fifo");
+  const actualChild = await vi.importActual<typeof import("node:child_process")>("node:child_process");
+  await new Promise<void>((resolve, reject) => actualChild.execFile("mkfifo", [fifo], { timeout: 1000 }, error => error ? reject(error) : resolve()));
+  expect((await lstat(fifo)).isFIFO()).toBe(true);
+  await chmod(fifo, 0o600); await expect(cloudDiscoveryBinding(scope, fifo, () => now)).rejects.toThrow("access is unavailable");
   const hard = join(dir, "hardlink"); await link(path, hard); await expect(cloudDiscoveryBinding(scope, path, () => now)).rejects.toThrow("access is unavailable"); await rm(hard);
   const bad = ["null", "[]", '"not-a-binding"', "x".repeat(65537), "broken", JSON.stringify({ ...value(), raw: "private" }), JSON.stringify({ ...value(), scope: { ...scope, tenantId: "company-b" } }), JSON.stringify({ ...value(), executable: "relative" }), JSON.stringify({ ...value(), session: { ...value().session, expiresAt: new Date(now - 1).toISOString() } })];
   for (const input of bad) { await writeFile(path, input); await expect(cloudDiscoveryBinding(scope, path, () => now)).rejects.toThrow(); }
