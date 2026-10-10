@@ -8,6 +8,7 @@ export { quotePlanDigest } from "./digest";
 import { validateQuotePlan, type QuotePlan } from "./plan";
 import { validateQuotePlanV2, assertBoundQuotePlanContract, type QuotePlanV2 } from "./plan-v2";
 import { sameQuoteAuthority, type QuoteAuthoritySnapshot } from "./authority";
+import { currentSavedQuoteMembership } from "./membership";
 
 export type QuoteContextLoader = (
   client: PoolClient, actor: Actor,
@@ -102,6 +103,8 @@ export class QuotePlanStore {
         if (await authority(client,actor) !== epoch) throw new ControlError(409,"Workspace recovery changed while preparing the quote.");
         if (old.created_by !== actor.subject || old.proposal_hash !== proposalHash || old.plan_hash !== planHash)
           throw new ControlError(409, "This quote proposal ID already belongs to different saved work.");
+        if (plan.version === "distributor-quote-plan-2" && !(await currentSavedQuoteMembership(client, old)))
+          throw new ControlError(409, "Saved quote membership authority changed. Prepare fresh bound work.");
         return saved(old, actor, epoch);
       }
       const collisions = await client.query("SELECT 1 FROM ll_quote_plans WHERE org_id=$1 AND (id=ANY($2::uuid[]) OR quote_action_id=ANY($2::uuid[]) OR message_action_id=ANY($2::uuid[]))",

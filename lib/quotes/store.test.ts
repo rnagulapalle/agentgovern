@@ -259,10 +259,10 @@ it("malformed references/read IDs refuse before authority or context access", as
   expect(load).not.toHaveBeenCalled();
 }));
 
-async function v2Fixture(run:(db:Pool,store:QuotePlanStore,p:QuotePlanProposalV2,context:QuotePlanContextV2,control:QuoteAuthorityControl,legacyId:string,schema:string)=>Promise<void>) {
+async function v2Fixture(run:(db:Pool,store:QuotePlanStore,p:QuotePlanProposalV2,context:QuotePlanContextV2,control:QuoteAuthorityControl,legacyId:string,schema:string)=>Promise<void>, installMembership = true) {
  await fixture(async(db,legacy,p,pricing,_loader,epoch,schema)=>{
   await legacy.save(owner,p);const legacyId=p.planId;
-  for(const file of ["lib/connectors/scope-schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql"])await db.query(await readFile(file,"utf8"));
+  for(const file of ["lib/connectors/scope-schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql",...(installMembership?["lib/quotes/membership-schema.sql"]:[])])await db.query(await readFile(file,"utf8"));
   const control=new QuoteAuthorityControl(db,{contract:"private-quote-twin-1",workspaceId:owner.orgId,quoteId:p.quote.id,distributorId:p.quote.distributorId,recipient:p.quote.recipient,sender:pricing.email.from,quoteBinding:pricing.provider.binding,emailBinding:"b".repeat(64)}),scope=randomUUID();
   await control.enroll(owner,scope);await control.grantManager(owner,scope,manager.subject,3);
   const snapshot=await transaction(db,owner.orgId,c=>control.currentAuthority(c,owner,scope,manager.subject,3));if(!snapshot)throw Error("Fixture authority absent");expect(snapshot.recoveryEpoch).toBe(epoch);
@@ -385,11 +385,13 @@ it("saved-plan authority refuses unrelated member, fabricated requester actor, f
  await expect(altered.currentSavedPlanAuthority(manager,p.planId)).rejects.toThrow("not found");
 }));
 it("saved-plan authority requires current owner and designated manager membership, not session substitution",async()=>v2Fixture(async(db,store,p,_c,control)=>{
- await store.save(owner,p);
+ const original = await store.save(owner,p);
  await db.query("UPDATE ll_members SET active=false WHERE email=$1",[owner.subject]);
  expect(await control.currentSavedPlanAuthority(manager,p.planId)).toBeNull();
  await db.query("UPDATE ll_members SET active=true WHERE email=$1",[owner.subject]);
- expect(await control.currentSavedPlanAuthority(manager,p.planId)).toEqual(p.authority);
+ expect(await control.currentSavedPlanAuthority(manager,p.planId)).toBeNull();
+ await expect(store.save(owner,p)).rejects.toThrow("membership authority changed");
+ expect(await store.read(owner,p.planId)).toEqual(original);
  await db.query("UPDATE ll_members SET org_id='company-b' WHERE email=$1",[owner.subject]);
  expect(await control.currentSavedPlanAuthority(manager,p.planId)).toBeNull();
  await db.query("UPDATE ll_members SET org_id=$1 WHERE email=$2",[owner.orgId,owner.subject]);
@@ -434,4 +436,106 @@ it("saved-plan authority refuses member-row contention promptly then reads curre
   await expect(control.currentSavedPlanAuthority(manager,p.planId)).rejects.toMatchObject({code:"55P03"});
   await writer.query("ROLLBACK");expect(await control.currentSavedPlanAuthority(manager,p.planId)).toEqual(p.authority);
  }finally{await writer.query("ROLLBACK");writer.release();}
+}));
+it("requester generation permanently contains old saved authority while a fresh plan after reactivation works",async()=>v2Fixture(async(db,store,p,_context,control)=>{
+ const original=await store.save(owner,p);
+ const before=(await db.query("SELECT generation FROM ll_quote_member_generations WHERE email=$1",[owner.subject])).rows[0].generation;
+ await db.query("UPDATE ll_members SET active=false WHERE email=$1",[owner.subject]);
+ await db.query("UPDATE ll_members SET active=false WHERE email=$1",[owner.subject]);
+ await db.query("UPDATE ll_members SET active=true WHERE email=$1",[owner.subject]);
+ expect(BigInt((await db.query("SELECT generation FROM ll_quote_member_generations WHERE email=$1",[owner.subject])).rows[0].generation)).toBe(BigInt(before)+1n);
+ expect(await control.currentSavedPlanAuthority(manager,p.planId)).toBeNull();
+ await expect(store.save(owner,p)).rejects.toThrow("membership authority changed");
+ expect(await store.read(owner,p.planId)).toEqual(original);
+ const fresh=structuredClone(p);fresh.planId=randomUUID();fresh.update.actionId=randomUUID();fresh.message.actionId=randomUUID();fresh.message.dependsOn=fresh.update.actionId;
+ await store.save(owner,fresh);
+ expect(await control.currentSavedPlanAuthority(manager,fresh.planId)).toEqual(fresh.authority);
+ expect(await control.currentSavedPlanAuthority(manager,p.planId)).toBeNull();
+}));
+it("workspace move and restore increments requester history twice and cannot restore saved authority",async()=>v2Fixture(async(db,store,p,_context,control)=>{
+ await store.save(owner,p);
+ await db.query("UPDATE ll_members SET org_id='company-b' WHERE email=$1",[owner.subject]);
+ await db.query("UPDATE ll_members SET org_id=$1 WHERE email=$2",[owner.orgId,owner.subject]);
+ expect((await db.query("SELECT generation FROM ll_quote_member_generations WHERE email=$1",[owner.subject])).rows[0].generation).toBe("3");
+ expect(await control.currentSavedPlanAuthority(manager,p.planId)).toBeNull();
+ await expect(store.save(owner,p)).rejects.toThrow("membership authority changed");
+}));
+it("manager lifecycle requires fresh versioned grant and new plan; old saved authority never revives",async()=>v2Fixture(async(db,store,p,context,control)=>{
+ await store.save(owner,p);
+ await db.query("UPDATE ll_members SET active=false WHERE email=$1",[manager.subject]);
+ await db.query("UPDATE ll_members SET active=true WHERE email=$1",[manager.subject]);
+ await control.setManagerActive(owner,p.authority.scopeId,manager.subject,3,true,2);
+ expect(await control.currentSavedPlanAuthority(owner,p.planId)).toBeNull();
+ const snapshot=await transaction(db,owner.orgId,c=>control.currentAuthority(c,owner,p.authority.scopeId,manager.subject,3));expect(snapshot).not.toBeNull();
+ const fresh=structuredClone(p);fresh.planId=randomUUID();fresh.update.actionId=randomUUID();fresh.message.actionId=randomUUID();fresh.message.dependsOn=fresh.update.actionId;fresh.authority=snapshot!;context.authority=structuredClone(snapshot!);
+ await store.save(owner,fresh);expect(await control.currentSavedPlanAuthority(manager,fresh.planId)).toEqual(snapshot);
+ expect(await control.currentSavedPlanAuthority(manager,p.planId)).toBeNull();
+}));
+it("historical pre22 bound plans remain exact readable snapshots but never silently acquire membership authority",async()=>v2Fixture(async(db,store,p,_context,control)=>{
+ const original=await store.save(owner,p);await db.query(await readFile("lib/quotes/membership-schema.sql","utf8"));
+ expect(await store.read(owner,p.planId)).toEqual(original);
+ expect(await control.currentSavedPlanAuthority(manager,p.planId)).toBeNull();
+ await expect(store.save(owner,p)).rejects.toThrow("membership authority changed");
+ const fresh=structuredClone(p);fresh.planId=randomUUID();fresh.update.actionId=randomUUID();fresh.message.actionId=randomUUID();fresh.message.dependsOn=fresh.update.actionId;
+ await store.save(owner,fresh);expect(await control.currentSavedPlanAuthority(manager,fresh.planId)).toEqual(p.authority);
+},false));
+it("membership history refuses direct reset/delete/rename and saved generation spoofing at actual SQL boundary",async()=>v2Fixture(async(db,store,p)=>{
+ await store.save(owner,p);
+ for(const sql of ["UPDATE ll_quote_member_generations SET generation=1", "DELETE FROM ll_quote_member_generations", "TRUNCATE ll_quote_member_generations"])
+  await expect(db.query(sql)).rejects.toThrow();
+ await expect(db.query("UPDATE ll_members SET email='renamed@example.test' WHERE email=$1",[owner.subject])).rejects.toThrow("cannot be renamed");
+ await expect(db.query("DELETE FROM ll_members WHERE email=$1",[owner.subject])).rejects.toThrow();
+ await expect(db.query("INSERT INTO ll_quote_member_generations(email,org_id,generation) VALUES('invented@example.test',$1,1)",[owner.orgId])).rejects.toThrow("cannot be directly rewritten");
+ await expect(db.query("UPDATE ll_quote_plans SET requester_membership_generation=9 WHERE id=$1",[p.planId])).rejects.toThrow();
+ await expect(db.query("INSERT INTO ll_quote_plans(org_id,id,created_by,created_at,recovery_epoch,proposal,proposal_hash,plan,plan_hash,quote_action_id,message_action_id,requester_membership_generation,manager_membership_generation) SELECT org_id,id,created_by,created_at,recovery_epoch,proposal,proposal_hash,plan,plan_hash,quote_action_id,message_action_id,1,1 FROM ll_quote_plans WHERE id=$1",[p.planId])).rejects.toThrow("server-owned");
+ expect((await db.query("SELECT requester_membership_generation,manager_membership_generation FROM ll_quote_plans WHERE id=$1",[p.planId])).rows[0]).toEqual({requester_membership_generation:"1",manager_membership_generation:"1"});
+}));
+it("new member lifecycle cannot delete or reinsert identity to reset its quote generation",async()=>v2Fixture(async(db)=>{
+ const person='new-manager@company.example';await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,$2,'New manager','fixture-password-hash')",[person,owner.orgId]);
+ expect((await db.query("SELECT generation FROM ll_quote_member_generations WHERE email=$1",[person])).rows[0].generation).toBe("1");
+ await db.query("UPDATE ll_members SET active=false WHERE email=$1",[person]);
+ await expect(db.query("DELETE FROM ll_members WHERE email=$1",[person])).rejects.toThrow();
+ await expect(db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,$2,'Duplicate','fixture-password-hash')",[person,owner.orgId])).rejects.toThrow();
+ await db.query("UPDATE ll_members SET active=true WHERE email=$1",[person]);
+ expect((await db.query("SELECT generation FROM ll_quote_member_generations WHERE email=$1",[person])).rows[0].generation).toBe("2");
+}));
+it("refused direct revocation under a workspace reader is rolled back and does not advance generation",async()=>v2Fixture(async(db,store,p,_context,control)=>{
+ await store.save(owner,p);const reader=await db.connect(),writer=await db.connect();
+ try{
+  await reader.query("BEGIN");await reader.query("SELECT id FROM ll_orgs WHERE id=$1 FOR UPDATE",[owner.orgId]);
+  await writer.query("BEGIN");
+  await expect(writer.query("UPDATE ll_members SET active=false WHERE email=$1",[owner.subject])).rejects.toMatchObject({code:"55P03"});
+  await writer.query("ROLLBACK");await reader.query("ROLLBACK");
+  expect((await db.query("SELECT active FROM ll_members WHERE email=$1",[owner.subject])).rows[0].active).toBe(true);
+  expect((await db.query("SELECT generation FROM ll_quote_member_generations WHERE email=$1",[owner.subject])).rows[0].generation).toBe("1");
+  expect(await control.currentSavedPlanAuthority(manager,p.planId)).toEqual(p.authority);
+  await db.query("UPDATE ll_members SET active=false WHERE email=$1",[owner.subject]);await db.query("UPDATE ll_members SET active=true WHERE email=$1",[owner.subject]);
+  expect(await control.currentSavedPlanAuthority(manager,p.planId)).toBeNull();
+ }finally{await reader.query("ROLLBACK");await writer.query("ROLLBACK");reader.release();writer.release();}
+}));
+it("plan INSERT refuses current member-row contention and succeeds only after rollback with actual generation binding",async()=>v2Fixture(async(db,store,p,_context,control)=>{
+ const writer=await db.connect();
+ try{
+  await writer.query("BEGIN");await writer.query("UPDATE ll_members SET name='Held owner row' WHERE email=$1",[owner.subject]);
+  await expect(store.save(owner,p)).rejects.toMatchObject({code:"55P03"});
+  expect((await db.query("SELECT count(*)::int n FROM ll_quote_plans WHERE id=$1",[p.planId])).rows[0].n).toBe(0);
+  await writer.query("ROLLBACK");await store.save(owner,p);
+  expect(await control.currentSavedPlanAuthority(manager,p.planId)).toEqual(p.authority);
+ }finally{await writer.query("ROLLBACK");writer.release();}
+}));
+it("restricted runtime can read membership history but cannot forge generation or install a nested trigger bypass",async()=>v2Fixture(async(db,store,p,_context,_control,_legacyId,schema)=>{
+ await store.save(owner,p);const role=`quote_history_${randomBytes(8).toString("hex")}`;let runtime:Pool|undefined;
+ await db.query(`CREATE ROLE ${role} NOLOGIN`);
+ try{
+  await db.query(`GRANT USAGE ON SCHEMA ${schema} TO ${role}`);
+  await db.query(`GRANT SELECT ON ll_quote_member_generations,ll_quote_plans,ll_members TO ${role}`);
+  runtime=new Pool({connectionString:process.env.LOOPLABS_TEST_DATABASE_URL,options:`-c search_path=${schema} -c role=${role}`});
+  expect((await runtime.query("SELECT generation FROM ll_quote_member_generations WHERE email=$1",[owner.subject])).rows[0].generation).toBe("1");
+  for(const sql of ["UPDATE ll_quote_member_generations SET generation=1", "DELETE FROM ll_quote_member_generations", "TRUNCATE ll_quote_member_generations", "INSERT INTO ll_quote_member_generations(email,org_id,generation) VALUES('forged@example.test','company-a',1)", "UPDATE ll_quote_plans SET requester_membership_generation=5", "CREATE TABLE quote_history_bypass(n int)"])
+   await expect(runtime.query(sql)).rejects.toMatchObject({code:"42501"});
+  await expect(runtime.query("SELECT ll_quote_member_lifecycle_generation()" )).rejects.toThrow("trigger functions can only be called as triggers");
+  const functions=(await db.query("SELECT bool_or(prosecdef) AS definer FROM pg_proc WHERE pronamespace=$1::regnamespace AND proname IN('ll_quote_member_generation_boundary','ll_quote_member_lifecycle_generation','ll_quote_member_lifecycle_lock','ll_quote_plan_membership_insert')",[schema])).rows[0];
+  expect(functions.definer).toBe(false);
+  expect((await db.query("SELECT generation FROM ll_quote_member_generations WHERE email=$1",[owner.subject])).rows[0].generation).toBe("1");
+ }finally{await runtime?.end();await db.query(`DROP OWNED BY ${role}`);await db.query(`DROP ROLE ${role}`);}
 }));

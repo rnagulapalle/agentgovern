@@ -9,6 +9,30 @@ effect verification. The opt-in durable scheduler uses self-hosted OSS Temporal
 behind the orchestration interface. A model prepares a bounded proposal; neither
 chat, plan review nor orchestration scheduling grants execution authority.
 
+## Latest verified application checkpoint
+
+Commit `4555dd7c297116bb386444819a5c3961431a3c0b` is pushed on
+`codex/looplabs-worker-version-lifecycle` and under draft PR 82. The final-source
+Mac `pnpm quality` and the normal pre-push hook each passed all ten gates:
+1,119 tests across 153 files, 98.73% line coverage, 96.77% branch coverage,
+actual Docker artifact extraction, isolated database bootstrap, worker builds,
+production build and 52 rendered internal destinations. No timeout, threshold
+or security assertion was weakened. A test-only FIFO fixture now uses actual
+asynchronous creation with the unchanged deadline and an explicit file-type check.
+
+Before that final test-only change, independently frozen Linux run `38085781171`
+passed the unchanged full quality gate against all 804 reviewed files. These
+measurements supersede the failed intermediate gate attempts recorded below;
+they do not erase those failures or establish production acceptance. The current
+PR's standard CI run `38087503282` also completed successfully: quality gates,
+staging database/container and staging Temporal service. Later commits require
+their own review and CI before merge.
+
+The application remains undeployed. Persistent named-operator acceptance,
+current accepted-image release provenance, native cloud enforcement and actual
+quote-to-email execution remain open. The following chronology preserves earlier
+phase measurements and their original limits.
+
 ## Verified increments
 
 | Requirement | Observed evidence | Practical limit |
@@ -113,8 +137,8 @@ unchanged. Its full quality result is tracked separately from component success.
 receipt was independently validated against 44 source hashes and three compiled
 bundle hashes; all four existing gateway receipt tests pass. Its full quality
 result remains separate; the earlier gateway job was canceled before execution.
-Dependent drain, reset and accepted-image release proofs still
-need current-source completion. The earlier production build passed across 77 pages;
+At that intermediate checkpoint, dependent drain, reset and accepted-image
+release proofs still needed current-source completion. The earlier production build passed across 77 pages;
 that does not substitute for the complete quality gate. Later quote-v2 and
 activation-library changes are outside the frozen G snapshot and need their own
 final-source gate.
@@ -126,7 +150,8 @@ sixth is the local Docker image-extraction timeout. The correct focused current
 receipt batch passes all 15 tests across six files, including fresh container
 source evidence. Linux isolated Docker runtime/enrollment success is recorded
 separately; it does not excuse the full gate failure. No gate was weakened.
-Later CSS and help-copy changes require genuine refresh of the chat and discovery
+At that intermediate checkpoint, later CSS and help-copy changes required genuine
+refresh of the chat and discovery
 browser receipts as well as a final-source build and complete quality run. The
 isolated 390px layout measurement reduced the empty preview from 412px to 295px
 without hiding disclosure text; it does not replace authenticated browser proof.
@@ -145,8 +170,9 @@ and the Mac Docker image-extraction timeout. Reset run `38084608972` then passed
 the actual current-source trial, provenance validation and cleanup on isolated
 Linux. Its 131 source hashes and raw receipt were independently verified; the
 job failed only the old retained origin pin, now refreshed from actual evidence.
-Full release eligibility is still unestablished; the final complete quality gate
-must pass on final sources.
+At that intermediate checkpoint, the final complete quality gate still needed
+to pass on final sources. The latest checkpoint above subsequently passed it;
+full release eligibility remains unestablished.
 
 ## Still required before the requested evaluation is complete
 
@@ -188,10 +214,13 @@ Existing contact acknowledgement and the database discount test record do
 The local saved-plan authority read now authenticates the actual requester or
 designated manager separately from the persisted requesting identity. It refuses
 unrelated members, fabricated requester sessions, workers, stale grants/scopes,
-revoked membership and changed recovery epochs. Owner deactivation followed by
-reactivation is not a permanent revocation fence for this read; owner lifecycle
-generation and authentication inside mutation transactions must be established
-before using it for any future approval or dispatch. The quote test family passes 312
+revoked membership and changed recovery epochs. At checkpoint `4555dd7`, owner deactivation followed by reactivation was not a
+permanent revocation fence for this read. Additive migration 22 is the next
+review increment: server-bound member generations prevent old saved authority
+from reviving, while historical plan reads remain available. It requires its own
+final regression gate. Authentication and current authority inside future
+approval/dispatch mutation transactions remain required; this read cannot grant
+execution authority. The quote test family passes 312
 tests; root additionally ran an 82-test quote/store/connector/navigation subset.
 This read grants no approval or dispatch authority, and does not prove a provider
 write. The original requester-only API and exact plan digest remain compatible.
@@ -211,7 +240,8 @@ make that unsupported path appear enabled.
 
 ## Release discipline
 
-No application commit or deployment followed these increments. The main checkout
-and unrelated GTM changes remain preserved. Any application commit needs full
-`pnpm quality` on its final source; production still requires clean pushed `main`
-and `./deploy.sh`. A private proof-harness commit is not an application release.
+The application checkpoint above is committed and pushed to its review branch;
+no production deployment followed it. The main checkout and unrelated GTM changes
+remain preserved. Every later change needs full `pnpm quality` on its final source;
+production still requires clean pushed `main` and `./deploy.sh`. A private
+proof-harness commit is not an application release.

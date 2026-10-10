@@ -4,6 +4,7 @@ import { transaction } from "../durable/database";
 import { authorize } from "../durable/service";
 import { ControlError, type Actor } from "../durable/contracts";
 import { memberAuthority } from "../workspace/identity";
+import { currentSavedQuoteMembership } from "./membership";
 import { quotePlanDigest } from "./digest";
 import { assertBoundQuotePlanContract, type QuotePlanV2 } from "./plan-v2";
 
@@ -145,7 +146,7 @@ export class QuoteAuthorityControl {
    * Authenticates the acting session independently of persisted requesting identity.
    * No approval/lease/dispatch eligibility is established; workers default deny.
    * Owns its workspace transaction. Delayed use must perform a fresh check again.
-   * Current source/pricing/provider conformance and requester revocation history
+   * Current source/pricing/provider conformance
    * are separate integration invariants; this read cannot authorize execution. */
   async currentSavedPlanAuthority(actor: Actor, value: string): Promise<QuoteAuthoritySnapshot | null> {
     const planId = scopeId(value), acting = { ...actor };
@@ -169,6 +170,7 @@ export class QuoteAuthorityControl {
       // itself be waiting for our workspace lock. A failed read grants no authority.
       const members = (await c.query("SELECT email FROM ll_members WHERE org_id=$1 AND email=ANY($2::text[]) AND active=true FOR SHARE NOWAIT", [acting.orgId, [row.created_by, plan.approver]])).rows;
       if (members.length !== 2 || row.recovery_epoch !== recoveryEpoch || plan.authority.recoveryEpoch !== recoveryEpoch) return null;
+      if (!(await currentSavedQuoteMembership(c, row))) return null;
       const current = await this.managerSnapshot(c, acting, scopeId(plan.authority.scopeId), plan.approver, plan.policyVersion, recoveryEpoch);
       return sameQuoteAuthority(plan.authority, current) ? structuredClone(current) : null;
     });
