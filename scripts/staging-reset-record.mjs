@@ -31,7 +31,7 @@ export function validateResetReceipt(receipt,drain,semantic,browser,sources){
  assert.deepEqual(Object.keys(resetArchive).sort(),['passed','staleResetRefused','replacementIntentRefused','restoredAuthorityRevoked','actionIdentitiesPreserved','reservationsPreserved','buildsDraining','actions','actionIdentitySha256','backupSha256','isolatedCopy','externalEpochRotatedBeforeRestore'].sort());
  for(const f of ['passed','staleResetRefused','replacementIntentRefused','restoredAuthorityRevoked','actionIdentitiesPreserved','reservationsPreserved','isolatedCopy','externalEpochRotatedBeforeRestore'])assert.equal(resetArchive[f],true);
  assert.equal(resetArchive.buildsDraining,2);assert(Number.isSafeInteger(resetArchive.actions)&&resetArchive.actions>=4);assert(sha.test(resetArchive.actionIdentitySha256));assert.equal(resetArchive.backupSha256,resetEvidence.pendingArchiveSha256);
- const files=[...Object.keys(drain.sourceFingerprints),...resetSources].sort();assert.equal(files.length,129);assert.deepEqual(Object.keys(receipt.sourceFingerprints).sort(),files);
+ const files=[...Object.keys(drain.sourceFingerprints),...resetSources].sort();assert.equal(files.length,131);assert.deepEqual(Object.keys(receipt.sourceFingerprints).sort(),files);
  for(const file of files){assert.equal(typeof sources[file],'string');assert.equal(hash(sources[file]),receipt.sourceFingerprints[file],`Measured reset source changed: ${file}`);if(file in drain.sourceFingerprints)assert.equal(receipt.sourceFingerprints[file],drain.sourceFingerprints[file]);}
  return receipt;
 }

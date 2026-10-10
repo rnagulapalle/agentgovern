@@ -1,11 +1,25 @@
 import {test,expect} from "vitest";
 import {readFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
-import {retainedPackageTrial} from "./staging-package-trial-source.mjs";
+import {retainedPackageTrial,candidatePackageTrial} from "./staging-package-trial-source.mjs";
 import {withPendingPackageBrowser} from "./staging-package-browser.mjs";
 import {loadPackageReleases} from "./staging-package-releases.mjs";
 import {vi} from "vitest";
 const parent=readFileSync("scripts/staging-platform-proof.mjs","utf8");
+test("explicit candidate trial reuses the full retained-package drill and never falls back to release inputs",()=>{
+ const source=candidatePackageTrial(parent);
+ expect(source).toContain("loadCandidatePackagesFromFile(process.env.LOOPLABS_STAGING_CANDIDATE_PACKAGE_REQUESTS,docker,built)");
+ expect(source).toContain("assert.equal(packageReleases.releaseAccepted,false)");
+ expect(source).toContain("candidatePackageInputs:{purpose:packageReleases.purpose,releaseAccepted:packageReleases.releaseAccepted,packages:packageReleases.packages}");
+ expect(source).not.toContain("loadPackageReleases");expect(source).not.toContain("LOOPLABS_STAGING_PACKAGE_DIRECTORIES");
+ for(const required of ['await stagingBrowserProof(trial,{typedPlanning})','assert.equal(Object.keys(provider.effects).length,4)','assert.equal(schemaExecutions,6)','[[0,1],[1,0]]','await assertPending();','stage="archive-restore-containment"','Every loaded release image must be removed'])expect(source).toContain(required);
+ expect(source).not.toContain("imageBuilder.build(");
+ expect(spawnSync(process.execPath,["--check","--input-type=module"],{input:source,encoding:"utf8",timeout:10000}).status).toBe(0);
+});
+test("candidate drill refuses local invocation before metadata or runtime operations",()=>{
+ const child=spawnSync(process.execPath,["scripts/staging-candidate-package-proof.mjs"],{env:{PATH:process.env.PATH},encoding:"utf8",timeout:10000});
+ expect(child.status).toBe(1);expect(child.stdout).toBe("");expect(child.stderr.trim()).toBe("Candidate package drill refused; no release authority, raw runtime output or credentials printed.");
+});
 test("retained trial preserves existing runtime/typed/TLS/restore gates, adds two pending transitions, and removes building",()=>{
  const source=retainedPackageTrial(parent);
  for(const required of ['stage="host-admission"','stage="runtime-crash"','stage="approved-archive"','stage="archive-restore-containment"','stage="restored-packaged-role-refusal"','stage="restored-omitted-epoch-refusal"','quarantine();quarantine();','await stagingBrowserProof(trial,{typedPlanning})','assert.equal(Object.keys(provider.effects).length,4)','assert.equal(schemaExecutions,6)','await assertPending();','[[0,1],[1,0]]','Every loaded release image must be removed'])expect(source).toContain(required);

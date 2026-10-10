@@ -34,7 +34,7 @@ test('actual nonexecuted image extraction enrolls bytes idempotently; changed di
  if(!process.env.LOOPLABS_TEST_DATABASE_URL)throw Error('Dedicated PostgreSQL required; never skip enrollment proof.');
  const suffix=randomBytes(8).toString('hex'),schema=`artifact_${suffix}`,tag=`ll-artifact-fixture:${suffix}`,owner=randomBytes(24).toString('hex');
  const dir=await mkdtemp(resolve(tmpdir(),'ll-enroll-test-')),admin=new Pool({connectionString:process.env.LOOPLABS_TEST_DATABASE_URL});let db,image,otherImage,limited;const role=`artifact_role_${suffix}`;let roleCreated=false;
- const docker=(...args)=>execFileSync('docker',args,{encoding:'utf8',timeout:30000,stdio:['ignore','pipe','pipe']}).trim();
+ const docker=(...args)=>{const started=performance.now();try{return execFileSync('docker',args,{encoding:'utf8',timeout:30000,stdio:['ignore','pipe','pipe']}).trim();}finally{if(process.env.LOOPLABS_ENROLLMENT_TEST_TRACE==='1')console.log('Enrollment fixture command',JSON.stringify({operation:args.slice(0,2).filter(v=>!v.startsWith('sha256:')),elapsedMs:Math.round(performance.now()-started)}));}};
  try{
   mkdirSync(resolve(dir,'.worker'));
   for(const [name,value] of Object.entries(fixture))writeFileSync(resolve(dir,name==='pnpm-lock.yaml'?name:`.worker/${name}`),value);

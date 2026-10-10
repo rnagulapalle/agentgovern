@@ -33,7 +33,7 @@ export function validateSemanticReceipt(receipt,baseline,sources){
  assert.deepEqual(typedReceipt(runtime,{runId,privateWorkflowCommit,publicBaseCommit,exactCompressedOverlaySha256},{}),receipt.runtime);
  assert.equal(runtime.buildId,builds[0]);assert.equal(runtime.images.find(i=>i.role==="worker").id,images[0]);
  const files=[...Object.keys(baseline.sourceFingerprints),...semanticSources].sort();
- assert.equal(files.length,106);assert.deepEqual(Object.keys(receipt.sourceFingerprints).sort(),files);
+ assert.equal(files.length,108);assert.deepEqual(Object.keys(receipt.sourceFingerprints).sort(),files);
  for(const file of files){assert.equal(typeof sources[file],"string");assert.equal(hash(sources[file]),receipt.sourceFingerprints[file],`Measured source changed: ${file}`);if(file in baseline.sourceFingerprints)assert.equal(receipt.sourceFingerprints[file],baseline.sourceFingerprints[file]);}
  assert.equal(hash(semanticPlatformTrial(sources["scripts/staging-platform-proof.mjs"])),receipt.generatedTrialSha256);
  return receipt;

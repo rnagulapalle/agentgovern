@@ -1,5 +1,5 @@
-// Real Chromium over trusted TLS to the disposable stack. Prepared-plan UI proof,
-// not fresh model interpretation, remote persistent staging or live delivery.
+// Real Chromium over trusted TLS to the disposable stack. Typed mode invokes
+// the bounded planner; neither mode proves persistent staging or live delivery.
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
 import {readFile,writeFile,mkdir,access} from "node:fs/promises";
@@ -51,16 +51,34 @@ export async function stagingBrowserProof(directory,{typedPlanning=false}={}){
   let id=randomUUID();const path=`/api/workspace/enquiries?scope=${saved.scope}`;
   let planning;
   if(typedPlanning){
-   phase="typed-request";await ownerPage.goto(origin+"/control-plane/work");await ownerPage.getByLabel("Customer record for this conversation").selectOption(saved.scope);
-   async function turn(text){await ownerPage.getByLabel("Your request or clarification").fill(text);const response=ownerPage.waitForResponse(r=>r.url().includes("/api/workspace/enquiries")&&r.request().method()==="POST");await ownerPage.getByRole("button",{name:"Send request",exact:true}).click();const r=await response;assert.equal(r.status(),200);assert.equal(r.request().postDataJSON().operation,"chat");return r.json();}
-   const first=await turn("When a customer asks about our service, check their CRM record, prepare an acknowledgement, and ask me before sending. Rehearse it with FetchSandbox first.");assert(first.clarification&&!first.saved);
-   phase="typed-clarification";const second=await turn("Use customer@example.test for this rehearsal. Keep ask-first approval.");assert(second.saved?.id&&second.saved.run_id===null);id=second.saved.id;
+   phase="typed-request";await ownerPage.goto(origin+"/control-plane/work");await selectRecord(ownerPage);
+   async function turn(text,doubleSubmit=false){await ownerPage.getByLabel("Your request or clarification").fill(text);const response=ownerPage.waitForResponse(r=>r.url().includes("/api/workspace/enquiries")&&r.request().method()==="POST");const send=ownerPage.getByRole("button",{name:"Send request",exact:true});if(doubleSubmit)await send.evaluate(button=>{button.click();button.click();});else await send.click();const r=await response;assert.equal(r.status(),200);assert.equal(r.request().postDataJSON().operation,"chat");return r.json();}
+   let releaseRequest, intercepted=false, chatRequests=0;
+   const release=new Promise(resolve=>{releaseRequest=resolve;});
+   const chatRoute=async route=>{if(route.request().method()==="POST"&&route.request().postDataJSON().operation==="chat"){chatRequests++;intercepted=true;await release;}await route.continue();};
+   await ownerPage.route("**/api/workspace/enquiries*",chatRoute);
+   const text="When a customer asks about our service, check their CRM record, prepare an acknowledgement, and ask me before sending. Validate it with simulated systems first.";
+   const firstResponse=turn(text,true);
+   try {
+    await expect.poll(()=>intercepted,{timeout:15000}).toBe(true);
+    await expect(ownerPage.getByRole("log",{name:"Workflow conversation"}).getByText(text,{exact:true})).toBeVisible();
+    await expect(ownerPage.getByRole("status").filter({hasText:"Preparing your plan…"})).toBeVisible();
+    await expect(ownerPage.getByRole("button",{name:"Preparing…",exact:false})).toBeDisabled();
+    assert.equal(await ownerPage.getByRole("log",{name:"Workflow conversation"}).locator("article").count(),2);
+    assert.equal(chatRequests,1,"Synchronous double-submit must send exactly one planning request");
+    await expect(ownerPage.getByRole("button",{name:"Preparing…",exact:false})).toBeDisabled();
+   } finally { releaseRequest(); }
+   const first=await firstResponse;assert.equal(chatRequests,1,"Pending submission must not generate another planning request");await ownerPage.unroute("**/api/workspace/enquiries*",chatRoute);assert(first.clarification&&!first.saved);
+   await expect(ownerPage.getByRole("log",{name:"Workflow conversation"}).locator("article")).toHaveCount(2);
+   await expect(ownerPage.getByRole("status").filter({hasText:"Preparing your plan…"})).toHaveCount(0);
+   phase="typed-clarification";const second=await turn("Use customer@example.test for this workflow. Keep ask-first approval.");assert(second.saved?.id&&second.saved.run_id===null);id=second.saved.id;
    assert.equal(second.saved.plan.reply.recipient,"customer@example.test");assert.equal(second.saved.plan.recordEnrollment.id,saved.scope);
-   await expect(ownerPage.getByRole("heading",{name:"2. Review this exact plan",exact:true})).toBeVisible();
+   await expect(ownerPage.getByRole("heading",{name:"Review this exact plan",exact:true})).toBeVisible();
    const beforeSubmission=await json(ownerPage,`/api/durable/workflows?run=${id}`);assert.equal(beforeSubmission.status,404);
    planning={typedRequest:true,clarified:true,model:"us.amazon.nova-lite-v1:0",savedBeforeSubmission:true};
   }else{phase="prepared-plan";const prepared=await json(ownerPage,path,{operation:"prepare",id,fixtureId:"service"});assert.equal(prepared.status,200);}
-  async function open(page){await page.goto(origin+"/control-plane/work");await page.getByLabel("Customer record for this conversation").selectOption(saved.scope);await page.getByRole("button",{name:new RegExp(id.slice(0,8))}).click();}
+  async function selectRecord(page){await page.locator("details.cp-chat-setup > summary").click();await page.getByLabel("Customer record for this conversation").selectOption(saved.scope);}
+  async function open(page){await page.goto(origin+"/control-plane/work");await selectRecord(page);await page.getByRole("button",{name:new RegExp(id.slice(0,8))}).click();}
   phase="record-opening";await open(ownerPage);
   phase="agent-selection";
   await ownerPage.getByLabel(/^CRM agent/).selectOption("trial-crm");await ownerPage.getByLabel(/^Messaging agent/).selectOption("trial-email");

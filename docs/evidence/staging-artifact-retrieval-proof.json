@@ -1,29 +1,35 @@
 {
+  "executionEvidence": {
+    "runId": 38075662222,
+    "workflowCommit": "948f98b6f0c193af619e34df539df26a2f1549bc",
+    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/38075662222",
+    "productionChanged": false
+  },
   "passed": true,
   "scope": "fresh runner private artifact retrieval and exact image/worker verification",
-  "originRun": 37881876443,
-  "originCommit": "a6ed5b8ffe594c5d6a3e8cba0a2d19355f6ba486",
-  "artifactId": 11594324205,
-  "manifestSha256": "9548186357fcd8abdd22787081b4a3bf429c4c4409e7a30ba86f9c17bdd043a7",
-  "archiveSha256": "9705782faa44836c6c8dd03b39e557c54716779f822ca207b25a4ca1029509ab",
-  "archiveBytes": 2399602688,
-  "buildId": "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+  "originRun": 38073578341,
+  "originCommit": "6b6387e2ea3db59534c41389833ff5b673693519",
+  "artifactId": 11678448686,
+  "manifestSha256": "9a5cf7172bdedb12febf6374f1bb0babb4ab026bcd761a8022e6b0d6a217f9b1",
+  "archiveSha256": "b020d16745eb053169261bd2d14ec6de820630b41369828ad376d7306ffcad64",
+  "archiveBytes": 2400805376,
+  "buildId": "ack-2895fd612163d3c0cf9d66f87efc28200d2441c24d782dc795b4fe7a1c3a1906",
   "images": [
     {
       "role": "web",
-      "id": "sha256:c9de2bd70006f79a3829c9614e460edd79ee3bee37b326da738badf213510e22"
+      "id": "sha256:8f97bcc8ae0e0c787aebbf794a2539f3be4a84904a682f8b157980e7e30c4eb1"
     },
     {
       "role": "worker",
-      "id": "sha256:5153bb024c369d831308a64bbeda3b895938225c669bfed77760f9ad56260043"
+      "id": "sha256:0f67a07189f964afb52e81adad1ca27b153c954c271d940a56c4bfd47097b53b"
     },
     {
       "role": "twin",
-      "id": "sha256:39421830fc2e330f0080e0007338f5fc871988918ea5be0255b21eb18f1ece0b"
+      "id": "sha256:1780ddcdc33545132ff66dcf2db85e70db656c289232ae90ad0c0e994bac7cea"
     },
     {
       "role": "provisioner",
-      "id": "sha256:31ea2821dca373cf47be2a3d2a8b459ec1984fb53eeede4cf67cf29220af5748"
+      "id": "sha256:fe261c03db4c29a24e71bfe4b405f0a6d6524c9169ab4a32c06911c0859d4f60"
     }
   ],
   "imagesRemoved": true,
@@ -65,11 +71,5 @@
     "application rollout or rollback",
     "live provider guarantees",
     "production acceptance"
-  ],
-  "executionEvidence": {
-    "runId": 37883440083,
-    "workflowCommit": "9d280bee5d01ee1dbd0739f121549d5b050f7180",
-    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37883440083",
-    "productionChanged": false
-  }
+  ]
 }

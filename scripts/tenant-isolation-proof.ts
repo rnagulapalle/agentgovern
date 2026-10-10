@@ -1,3 +1,4 @@
+import {TemporalAdmission} from "../runtime/temporal/admission";
 // Real Next HTTP API + packaged Temporal roles + PostgreSQL + private HTTP twins.
 import type {WorkflowHandle} from "@temporalio/client";
 import {TestWorkflowEnvironment} from "@temporalio/testing";
@@ -66,9 +67,9 @@ async function main(){
    await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES($1,'crm'),($1,'email')",[org]);
    const provider=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,scope),control=new ConnectorControl(db,provider),flow=new WorkflowControl(db,control),scopes=new ScopeControl(db,provider),scopeId=randomUUID();
    await scopes.enroll(owner,scopeId);for(const id of ["crm","email"])await scopes.grant(owner,scopeId,id);
-   const enquiries=new EnquiryControl(db,flow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};});
+   const enquiries=new EnquiryControl(db,flow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};},provider.contactId,new TemporalAdmission(db,build.buildId));
    const plan=(await enquiries.prepareChat(owner,randomUUID())).saved;
-   await submitScoped(enquiries,owner,plan.id,plan.plan_hash,"crm","email",build.buildId);
+   await submitScoped(enquiries,owner,plan.id,plan.plan_hash,"crm","email");
    const run=await flow.read(owner,plan.id),input={runId:plan.id,planHash:plan.plan_hash,planVersion:"acknowledgement-1",connectorVersion:"private-record-twin-2"};
    companies.push({scope,scopeId,keys,owner,reviewer,worker,agent,provider,control,flow,plan,run,input});
   }
@@ -191,11 +192,11 @@ async function main(){
     const company=companies.find(c=>c.scope.workspaceId===record.workspaceId)!;
     const provider:FetchSandboxConnectors=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,record);const control:ConnectorControl=new ConnectorControl(runtime!,provider),flow:WorkflowControl=new WorkflowControl(runtime!,control),scopes:ScopeControl=new ScopeControl(runtime!,provider),scopeId=randomUUID();
     await scopes.enroll(company.owner,scopeId);for(const id of ["crm","email"])await scopes.grant(company.owner,scopeId,id);
-    const enquiries:EnquiryControl=new EnquiryControl(runtime!,flow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};});
+    const enquiries:EnquiryControl=new EnquiryControl(runtime!,flow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};},provider.contactId,new TemporalAdmission(runtime!,build.buildId));
     const plan:Awaited<ReturnType<EnquiryControl["prepareChat"]>>["saved"]=(await enquiries.prepareChat(company.owner,randomUUID())).saved;
-    await submitScoped(enquiries,company.owner,plan.id,plan.plan_hash,"crm","email",build.buildId);
+    await submitScoped(enquiries,company.owner,plan.id,plan.plan_hash,"crm","email");
     const run:Awaited<ReturnType<WorkflowControl["read"]>>=await flow.read(company.owner,plan.id);
-    await submitScoped(enquiries,company.owner,plan.id,plan.plan_hash,"crm","email",build.buildId);
+    await submitScoped(enquiries,company.owner,plan.id,plan.plan_hash,"crm","email");
     assert.deepEqual((await flow.read(company.owner,plan.id)).steps.map((s:{action_id:string})=>s.action_id),run.steps.map((s:{action_id:string})=>s.action_id));
     prepared.push({company,record,plan,run,flow});
    }
@@ -238,7 +239,7 @@ async function main(){
    loadMeasurement={additionalRuns:24,independentRecords:24,sharedAgents:4,waves,windowMs,samples,effects:52,heldBeforeApproval:48,replayedHistories:replayed,workerFaultIsolation:true,lostResponseRecords:2,reservationsPreserved:true,duplicateSubmissions:24,duplicateApprovals:48};
    pass("Six paced two-company waves complete 24 independently scoped workflows with shared agents, duplicate-safe submissions/approvals, isolated worker crash, lost-response readback and 52 exact effects; histories replay without changing reservations");
   }
-  const files=[...provisioningFiles,"scripts/tenant-isolation-proof.ts","scripts/temporal-service.ts","runtime/temporal/pinned-workflow.ts","runtime/temporal/version-contract.ts","scripts/build-temporal-worker.mjs","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/recovery.ts","lib/durable/recovery-schema.sql","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
+  const files=[...provisioningFiles,"scripts/tenant-isolation-proof.ts","scripts/temporal-service.ts","runtime/temporal/pinned-workflow.ts","runtime/temporal/version-contract.ts","scripts/build-temporal-worker.mjs","lib/workspace/auth.ts","lib/workspace/identity.ts","app/api/workspace/session/route.ts","lib/durable/http.ts","lib/durable/recovery.ts","lib/durable/recovery-schema.sql","lib/durable/service.ts","lib/durable/database.ts","lib/connectors/routing.ts","lib/connectors/catalog.ts","lib/connectors/scopes.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts","lib/enquiries/submission.ts","lib/workflows/service.ts","runtime/temporal/record-routing.ts","runtime/temporal/activities.ts","runtime/temporal/outbox.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","app/api/workspace/enquiries/route.ts","app/api/workspace/records/route.ts","scripts/connector-twin.py"];
   const sourceFingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
   await writeFile(load?"docs/evidence/tenant-paced-operation-proof.json":"docs/evidence/tenant-isolation-proof.json",JSON.stringify({loadMeasurement,at:new Date().toISOString(),checks,sourceFingerprints,measurements:{companies:2,deniedHttpRequests:denied,deniedBrowserRequests:deniedBrowser,deniedDatabaseRequests:deniedDatabase,runtimeGrantStatements:grantStatements,restrictedDatabaseLogin:true,databaseTenantRls:false,effects:load?52:4,taskQueues:2,workerProcesses:load?4:3,schedulerProcesses:2,crashedWorkers:load?2:1,replayedHistories:load?26:2},workflowIds,buildId:build.buildId,scope:"Local real browser, Next HTTP API, packaged Temporal roles, PostgreSQL and provider twins; separate per-company queues, not saturation, remote TLS or an independent security audit"},null,2)+"\n");
  }finally{

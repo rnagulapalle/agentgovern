@@ -7,6 +7,7 @@ import {ConnectorControl} from '../lib/connectors/service.ts';
 import {WorkflowControl} from '../lib/workflows/service.ts';
 import {EnquiryControl} from '../lib/enquiries/service.ts';
 import {TemporalOutbox} from '../runtime/temporal/outbox.ts';
+import {TemporalAdmission} from '../runtime/temporal/admission.ts';
 export async function exerciseDrain({db,owner,runs,artifacts,token,mark,checkpoint}){
  assert.equal(process.env.LOOPLABS_STAGING_DRAIN_PROOF,'isolated');assert.equal(runs.length,2);
  await checkpoint('registry-ready');
@@ -16,7 +17,7 @@ export async function exerciseDrain({db,owner,runs,artifacts,token,mark,checkpoi
   const provider=new FetchSandboxConnectors('http://connector-twin:8018',token,1500,scope),control=new ConnectorControl(db,provider),workflow=new WorkflowControl(db,control),scopes=new ScopeControl(db,provider);
   const agents=[`drain-${i}-crm`,`drain-${i}-email`];
   for(const [n,id] of agents.entries()){await registerAgent(db,owner,{id,name:id,owner:owner.subject,role:n===0?'crm_agent':'email_agent',connector:n===0?'crm_twin':'email_twin',actionLimit:1});await scopes.grant(owner,original.enrollment,id);}
-  const enquiry=new EnquiryControl(db,workflow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};});
+  const enquiry=new EnquiryControl(db,workflow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};},provider.contactId,new TemporalAdmission(db,artifacts[i].buildId));
   const plan=(await enquiry.prepareChat(owner,randomUUID())).saved;await enquiry.start(owner,plan.id,plan.plan_hash,...agents,true);
   const run=await workflow.read(owner,plan.id);for(const s of run.steps)await control.propose(owner,{actionId:s.action_id,agentId:s.agent_id,connector:s.connector,payload:s.payload});
   added.push({plan,workflow});

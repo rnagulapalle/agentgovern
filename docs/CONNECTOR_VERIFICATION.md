@@ -98,7 +98,9 @@ missing concurrent-write safety. Do not call this a completed CRM-to-email
 workflow proof or live HubSpot compatibility.
 
 The isolated proof serves the actual LoopLabs HTTP handlers, native FetchSandbox
-API-key identity, validation/fixture APIs, provider HTTP routes and archive. It
+API-key identity, validation APIs, provider HTTP routes and archive. Synthetic
+contact setup uses the native create/update/read APIs, verifies any seeded
+duplicate by exact ID and email, and reads back the initialized record. It
 uses a dedicated PostgreSQL schema and temporary SQLite/provider state, then
 cleans them up. It also injects a deliberately wrong-recipient acceptance and
 requires reconciliation to turn the apparent success into conflict.

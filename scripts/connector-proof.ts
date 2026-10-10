@@ -944,7 +944,7 @@ async function main() {
       "lib/enquiries/dispatch.ts",
       "lib/workflows/guard.ts",
       "lib/enquiries/contracts.ts",
-      "lib/enquiries/service.ts",
+      "lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts",
       "lib/enquiries/schema.sql",
       "lib/enquiries/managed-schema.sql",
       "app/api/workspace/enquiries/route.ts",

@@ -32,7 +32,7 @@ export function validateDrainReceipt(receipt,semanticBaseline,browserBaseline,so
  assert.deepEqual(sourceFingerprints,{});
  assert.deepEqual(typedReceipt(runtime,{runId,privateWorkflowCommit,publicBaseCommit,exactCompressedOverlaySha256},{}),receipt.runtime);
  assert.equal(runtime.buildId,flags.builds[0]);assert.equal(runtime.images.find(i=>i.role==='worker').id,images[0]);
- const files=[...Object.keys(semanticBaseline.sourceFingerprints),...drainSources].sort();assert.equal(files.length,113);assert.deepEqual(Object.keys(receipt.sourceFingerprints).sort(),files);
+ const files=[...Object.keys(semanticBaseline.sourceFingerprints),...drainSources].sort();assert.equal(files.length,115);assert.deepEqual(Object.keys(receipt.sourceFingerprints).sort(),files);
  for(const f of files){assert.equal(typeof sources[f],'string');assert.equal(hash(sources[f]),receipt.sourceFingerprints[f],`Measured source changed: ${f}`);if(f in semanticBaseline.sourceFingerprints)assert.equal(receipt.sourceFingerprints[f],semanticBaseline.sourceFingerprints[f]);}
  // Generated names are intentionally ephemeral; hashes are shape-checked here.
  // The runtime driver rehashed their actual bytes before emitting the receipt.

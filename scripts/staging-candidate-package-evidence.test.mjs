@@ -1,0 +1,30 @@
+// Current isolated candidate evidence; historical accepted-release checks remain intact.
+import {test,expect} from "vitest";
+import {readFile} from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {candidatePackageTrial} from "./staging-package-trial-source.mjs";
+import {typedReceipt} from "./staging-browser-record.mjs";
+const hash=bytes=>createHash("sha256").update(bytes).digest("hex");
+test("measured candidate rollback preserves exact pending authority, typed execution and current sources without release acceptance",async()=>{
+ const bytes=await readFile("docs/evidence/staging-candidate-package-proof.json");
+ expect(hash(bytes)).toBe("5896702109fd499a7378a6c383e83ad7ae462c65d5660db27a55034cd448bfc4");
+ const proof=JSON.parse(bytes);
+ expect(proof).toMatchObject({passed:true,purpose:"isolated-staging-proof-input",releaseAccepted:false,releaseImagesRemoved:true});
+ expect(proof.pendingPackageBrowser).toEqual({trustedHTTPS:true,namedFormSession:true,sameSession:true,savedPendingReloads:3,sameActionHashes:true,heldWithoutApproval:true,noSelfApproval:true,mobileWidth:390,noHorizontalOverflow:true});
+ expect(proof.packageOrigins.map(o=>o.runId)).toEqual([38078502068,38080191110]);
+ expect(proof.packageOrigins.every(o=>o.purpose==="isolated-staging-proof-input"&&o.releaseAccepted===false&&o.qualityPassed===false)).toBe(true);
+ expect(proof.packageTransitions).toHaveLength(2);
+ const [promotion,reversion]=proof.packageTransitions;
+ expect(promotion.from).toEqual(reversion.to);expect(promotion.to).toEqual(reversion.from);
+ expect(promotion.from.web).not.toBe(promotion.to.web);expect(promotion.from.worker).not.toBe(promotion.to.worker);
+ for(const transition of proof.packageTransitions)expect(transition).toMatchObject({buildId:proof.runtime.buildId,replacedRoles:3,retainedRoles:5,pendingAuthorityChecks:3});
+ const {executionEvidence,sourceFingerprints,...runtime}=proof.runtime;
+ expect(executionEvidence).toMatchObject({runId:38082437976,privateWorkflowCommit:"2fd8a878f2f617b4137ab13a68fda4d09beb2203",publicBaseCommit:"46cf28cef76b6643aedacc5c1c1dd52e05826019",exactCompressedOverlaySha256:"091b0c5c643028d7d6e85cb8252c413bca8f97b9b7f3b65f75c2efd77b9586e5",productionChanged:false});
+ const {runId,privateWorkflowCommit,publicBaseCommit,exactCompressedOverlaySha256}=executionEvidence;
+ expect(typedReceipt(runtime,{runId,privateWorkflowCommit,publicBaseCommit,exactCompressedOverlaySha256},{})).toEqual(proof.runtime);
+ expect(sourceFingerprints).toEqual({});
+ expect(Object.keys(proof.sourceFingerprints)).toHaveLength(109);
+ for(const [file,digest] of Object.entries(proof.sourceFingerprints))expect(hash(await readFile(file)),file).toBe(digest);
+ expect(hash(candidatePackageTrial(await readFile("scripts/staging-platform-proof.mjs","utf8")))).toBe(proof.generatedTrialSha256);
+ expect(proof.notVerified).toEqual(["full regression gate acceptance","persistent staging and operator rollback acceptance","live providers and enterprise production SLA"]);
+});

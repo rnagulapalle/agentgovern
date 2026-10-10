@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-09T02:05:07.686Z",
+  "at": "2026-10-10T19:14:58.114Z",
   "scope": "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.",
   "checks": [
     {
@@ -32,14 +32,16 @@
     }
   ],
   "acceptedResponseLossEvidence": {
-    "acceptedRequestId": "97b66b918d58",
+    "acceptedRequestId": "2131dc987503",
     "acceptedStatus": 200,
     "transport": {
       "state": "delay_completed",
       "delay_ms": 15000,
-      "delay_started_at": "2026-10-09T02:04:52.155417+00:00",
-      "client_disconnected_at": "2026-10-09T02:04:53.654924+00:00",
-      "delay_completed_at": "2026-10-09T02:05:07.160194+00:00"
+      "mode": "until_matching_retry",
+      "release_reason": "deadline",
+      "delay_started_at": "2026-10-10T19:14:42.643957+00:00",
+      "client_disconnected_at": "2026-10-10T19:14:44.141015+00:00",
+      "delay_completed_at": "2026-10-10T19:14:57.648136+00:00"
     },
     "providerWritesAfterReconciliation": 1
   },
@@ -47,7 +49,7 @@
     "lib/connectors/request.ts": "37584ef57721d52bc77995e97c68a6b69f06f69e63da73c7ea67408a92c0344c",
     "lib/connectors/content.ts": "b37017e9f6dc0fc44b6f3d80f9e1b74afd4bf1352719bd5bf62e8d5e80719291",
     "lib/connectors/record-scope.ts": "d84de98f4e00e4a0d50ae3b8ecf6f30d3286c62d3d64546145d8d1a2b8dd04f7",
-    "lib/connectors/scopes.ts": "bb5b7eb5b80011b1d487a8c59246e25a3f047eca1f6d65a590aeaa6ef404cfee",
+    "lib/connectors/scopes.ts": "4915dd59986762a5efdec7e94d6f29bd918e647f97e04c78c30c25428f1f1d2e",
     "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
     "lib/enquiries/record-routing-schema.sql": "05c2c214c09e14b9567402206a1efe6b4fb1f064d07203386f7a7e23947e8267",
     "runtime/temporal/record-routing.ts": "cfca7823cefedcfd561460332c56871afb9e34d9fa1697ba3525c02ae3396536",
@@ -57,19 +59,21 @@
     "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
     "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
     "lib/durable/recovery.ts": "836b90a85dc4f8e8b8bd6bafc4297f4af0937c894decb190d892956669f31343",
-    "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
+    "lib/durable/service.ts": "6081a5020cdc0ccf6be3cd979a8e97c364936fd274105f825444c452744b588c",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
-    "lib/enquiries/service.ts": "a87d145adfd3809e5119fcf51f96002b4db6febb20de01431b1eee9e5d11ddc6",
+    "lib/enquiries/service.ts": "14d3c0aeb6c2002f69ff31c33d7fc0ee6c77d6250d610799566941a0418a52b2",
+    "lib/orchestration/admission.ts": "83716b11fac148f92ed024edf9a1c492041ec3b8fb11fd3a6e3a1cff6a524e6a",
+    "runtime/temporal/admission.ts": "77348e8c27f69fd2d5e765401c62ca9492473db5f050580151c4f564d97ddeb8",
     "lib/enquiries/contracts.ts": "f5158c75f45ef6dfef14043b0bfa809210f205441d9028aa37ccaca80b119b80",
-    "app/api/workspace/enquiries/route.ts": "573c8410c704fa4745d4bebf6f75f951093aed7f2b22abee9fe49a50635a8995",
+    "app/api/workspace/enquiries/route.ts": "46e69b652610914d1a1c6d110c188028502e8168a51e397a4f3deee6325c316c",
     "lib/workflows/service.ts": "861a42c6f3547bc0efe69f6f55e24ea561fe72854b987d25fcf4c653c5362214",
-    "lib/enquiries/dispatch.ts": "4cc5701be853ae7c24e3092c8d9344eafb97f97844b7c29c8a8916ba27d09058",
+    "lib/enquiries/dispatch.ts": "f1e6123df8d7bcb630abaa987dbcbb23ef55b8b2f12d258d4fabccac88054d90",
     "lib/connectors/hosted.ts": "72e67b5ae33fec3201641928bd7389abd98dc97b03de3b4990588d8e9063f79a",
     "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
     "lib/connectors/service.ts": "adcce693094fe31f9ce75df459fba1d783b9620baf59c02c28d254b1a1b06aed",
     "app/api/durable/connectors/route.ts": "cba1fdad383a132abf98b8d869ca0c07cd016defa3b8ac0d8b108b752e406a56",
     "app/api/durable/workflows/route.ts": "d1462ef5bdfd9f445bdb7103d1c00c4dc2d36fc69f47b6695239f0008b818faf",
-    "scripts/hosted-connector-proof.ts": "3c20ba3430fac2de1d6b419bbc801c8f00fa7b1b64f1a23033833fee43286e95",
+    "scripts/hosted-connector-proof.ts": "f87c4accc287fc90866efacb0eede2e03f4592fc73a9ef68e2abde98bb84ca52",
     "scripts/workflow-http-proof-server.ts": "0802e102094dd95243727121cedbfaf2e17f660f916d5511777c4441b044012e"
   },
   "limitations": [

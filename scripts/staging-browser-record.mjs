@@ -6,6 +6,9 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {runtimeImageLock} from "./staging-runtime-images.mjs";
 const expectedDependencies=runtimeImageLock(JSON.parse(readFileSync(new URL("../config/staging-runtime-images.json",import.meta.url),"utf8")));
+export function typedSourceFiles(priorFingerprints){
+ return [...new Set([...Object.keys(priorFingerprints),"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs","scripts/workspace-recovery.ts","scripts/staging-restore-controller.mjs","scripts/staging-image-artifact.mjs","scripts/staging-runtime-images.mjs","config/staging-runtime-images.json","lib/orchestration/admission.ts","runtime/temporal/admission.ts"])].sort();
+}
 export function typedReceipt(result,metadata,fingerprints){
  assert(result?.passed===true&&result.browser?.passed===true);
  assert.equal(result.scope,"assembled isolated API/runtime and fresh typed HTTPS browser trial");
@@ -55,7 +58,7 @@ if(process.argv[1]===fileURLToPath(import.meta.url)){
  assert(input&&output&&process.argv.length===4&&process.env.GITHUB_ACTIONS==="true"&&process.env.LOOPLABS_STAGING_BROWSER_PROOF==="isolated","Actual isolated CI result and explicit receipt path required");
  try{
   const prior=JSON.parse(await readFile("docs/evidence/staging-platform-browser-prepared-proof.json","utf8"));
-  const files=[...new Set([...Object.keys(prior.sourceFingerprints),"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs","scripts/workspace-recovery.ts","scripts/staging-restore-controller.mjs","scripts/staging-image-artifact.mjs","scripts/staging-runtime-images.mjs","config/staging-runtime-images.json"])].sort();
+  const files=typedSourceFiles(prior.sourceFingerprints);
   const fingerprints=Object.fromEntries(await Promise.all(files.map(async file=>[file,createHash("sha256").update(await readFile(file)).digest("hex")])));
   const result=typedReceipt(JSON.parse(await readFile(input,"utf8")),{runId:Number(process.env.GITHUB_RUN_ID),privateWorkflowCommit:process.env.GITHUB_SHA,publicBaseCommit:process.env.LOOPLABS_SOURCE_BASE,exactCompressedOverlaySha256:process.env.LOOPLABS_SOURCE_OVERLAY_SHA256},fingerprints);
   await writeFile(output,JSON.stringify(result,null,2)+"\n");console.log(JSON.stringify({recorded:true,runId:result.executionEvidence.runId,sources:files.length,scope:result.scope}));

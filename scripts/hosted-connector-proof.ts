@@ -39,12 +39,36 @@ async function main() {
     const created = await call(base, "/api/mcp/validate_integration", keys.ownerKey, { providers: ["hubspot", "resend"], environment_scope: "owner" });
     assert.equal(created.status, 200);
     const session = created.data;
-    const prepared = await call(base, "/api/mcp/validate_integration", keys.ownerKey, { session_id: session.session_id, fixtures: { id: "looplabs-contact-v1", steps: [
-      { spec: "hubspot", name: "contact", method: "POST", path: "/crm/v3/objects/contacts", body: { properties: { email: "customer@example.test", lifecyclestage: "lead" } } },
-      { spec: "hubspot", name: "read contact", method: "GET", path: "/crm/v3/objects/contacts/{{step1.id}}", assertion: { select: "id", equals: "{{step1.id}}", required: true, count: 1 } },
-    ] } });
-    assert.equal(prepared.status, 200); assert(prepared.data.fixture.ready);
-    const binding: HostedBinding = { origin: base, ownerKey: keys.ownerKey, workspaceId: "local-proof", contactId: prepared.data.fixture.steps[0].resource_id, legs: {
+    // Prepare synthetic data through the native provider API, then independently
+    // read it back. validate_integration no longer accepts fixture provisioning.
+    const crmLeg = session.legs.hubspot;
+    assert.equal(crmLeg.base_url, `${base}/sandbox/${crmLeg.sandbox_id}`);
+    const prepared = await call(crmLeg.base_url, "/crm/v3/objects/contacts", crmLeg.api_key,
+      { properties: { email: "customer@example.test", lifecyclestage: "lead" } });
+    let contactId: string;
+    if (prepared.status === 201) contactId = prepared.data.id;
+    else {
+      // Fresh twins may already seed this synthetic email. Native HubSpot
+      // uniqueness reports the existing ID; verify its identity before setup.
+      assert.equal(prepared.status, 409); assert.equal(prepared.data.category, "CONFLICT");
+      const existing = /^Contact already exists\. Existing ID: ([0-9]{1,24})$/.exec(prepared.data.message);
+      assert(existing, "Unrecognized duplicate-contact response cannot select a record");
+      contactId = existing[1];
+      const before = await call(crmLeg.base_url, `/crm/v3/objects/contacts/${contactId}`, crmLeg.api_key);
+      assert.equal(before.status, 200); assert.equal(before.data.id, contactId);
+      assert.equal(before.data.properties.email, "customer@example.test");
+    }
+    assert(typeof contactId === "string" && /^[0-9]{1,24}$/.test(contactId));
+    const initialized = await fetch(crmLeg.base_url + `/crm/v3/objects/contacts/${contactId}`, {
+      method: "PATCH", redirect: "error", headers: {Authorization: `Bearer ${crmLeg.api_key}`, "Content-Type": "application/json"},
+      body: JSON.stringify({properties:{lifecyclestage:"lead"}}),
+    });
+    assert.equal(initialized.status, 200);
+    const observed = await call(crmLeg.base_url, `/crm/v3/objects/contacts/${contactId}`, crmLeg.api_key);
+    assert.equal(observed.status, 200); assert.equal(observed.data.id, contactId);
+    assert.equal(observed.data.properties.email, "customer@example.test");
+    assert.equal(observed.data.properties.lifecyclestage, "lead");
+    const binding: HostedBinding = { origin: base, ownerKey: keys.ownerKey, workspaceId: "local-proof", contactId, legs: {
       crm: { sandboxId: session.legs.hubspot.sandbox_id, apiKey: session.legs.hubspot.api_key },
       email: { sandboxId: session.legs.resend.sandbox_id, apiKey: session.legs.resend.api_key },
     } };
@@ -94,7 +118,7 @@ async function main() {
     let held;
     for (let i = 0; i < 40; i++) {
       [held] = await rows(lost);
-      if (held?.response_transport?.client_disconnected_at) break;
+      if (held?.response_transport?.client_disconnected_at && held.response_transport.delay_completed_at) break;
       await delay(500);
     }
     assert.equal(held.response_status, 200);
@@ -121,7 +145,7 @@ async function main() {
     assert.equal((await apiCall("/api/durable/connectors", "executor", { operation: "execute", actionId: email.action_id })).status, 409);
     assert.equal((await rows(email.action_id)).length, 0);
     check("Unsupported atomic CRM version guard keeps the complete workflow held; no downstream email or false green");
-    const files = ["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/durable/recovery.ts","lib/durable/service.ts","lib/workspace/identity.ts","lib/enquiries/service.ts", "lib/enquiries/contracts.ts", "app/api/workspace/enquiries/route.ts", "lib/durable/service.ts","lib/workspace/identity.ts", "lib/workflows/service.ts", "lib/enquiries/dispatch.ts", "lib/connectors/hosted.ts", "lib/connectors/twin.ts", "lib/connectors/service.ts", "app/api/durable/connectors/route.ts", "app/api/durable/workflows/route.ts", "scripts/hosted-connector-proof.ts", "scripts/workflow-http-proof-server.ts"];
+    const files = ["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/durable/recovery.ts","lib/durable/service.ts","lib/workspace/identity.ts","lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts", "lib/enquiries/contracts.ts", "app/api/workspace/enquiries/route.ts", "lib/durable/service.ts","lib/workspace/identity.ts", "lib/workflows/service.ts", "lib/enquiries/dispatch.ts", "lib/connectors/hosted.ts", "lib/connectors/twin.ts", "lib/connectors/service.ts", "app/api/durable/connectors/route.ts", "app/api/durable/workflows/route.ts", "scripts/hosted-connector-proof.ts", "scripts/workflow-http-proof-server.ts"];
     const fingerprints: Record<string, string> = {};
     for (const file of files) fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
     await writeFile("docs/evidence/hosted-connector-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.", checks, acceptedResponseLossEvidence: lossEvidence, sourceFingerprints: fingerprints, limitations: ["CRM update cannot satisfy existing atomic approval-version invariant with this provider binding; downstream work stays held.", "Not a completed CRM-to-email workflow acceptance.", "No hosted provider restart/durable-session proof or production readiness claim."] }, null, 2) + "\n");

@@ -6,10 +6,10 @@ const bytes=readFileSync('docs/evidence/staging-reset-proof.json'),receipt=JSON.
 const load=p=>JSON.parse(readFileSync(p,'utf8'));
 const drain=load('docs/evidence/staging-drain-proof.json'),semantic=load('docs/evidence/staging-semantic-proof.json'),browser=load('docs/evidence/staging-platform-browser-proof.json');
 const sources=Object.fromEntries([...Object.keys(drain.sourceFingerprints),...resetSources].map(f=>[f,readFileSync(f,'utf8')]));
-test('retained actual assembled reset receipt preserves complete parent acceptance and current129 sources',()=>{
- expect(createHash('sha256').update(bytes).digest('hex')).toBe('9ac40f8a6dff8c8edad8e635bfa3b1f31f830703a14bcb140e6fd01f9d839e60');
+test('retained actual assembled reset receipt preserves complete parent acceptance and current131 sources',()=>{
+ expect(createHash('sha256').update(bytes).digest('hex')).toBe('b2d79f9ab8172e2ade44a1ea30aa4ad6042c32297a6a9183372f6039a7bcd3f0');
  expect(validateResetReceipt(receipt,drain,semantic,browser,sources)).toBe(receipt);
- expect(receipt.runtime.executionEvidence).toMatchObject({runId:37932460184,privateWorkflowCommit:'77b7f304b44fc962f1c963822e035cfda9d81064',publicBaseCommit:'95f5a086c77b4537c0bfe1e4ddb547ae572b4886',productionChanged:false});
+ expect(receipt.runtime.executionEvidence).toMatchObject({runId:38084608972,privateWorkflowCommit:'897184a9164dd4b0d8e4399e31eb6be3f7d08318',publicBaseCommit:'46cf28cef76b6643aedacc5c1c1dd52e05826019',exactCompressedOverlaySha256:'091b0c5c643028d7d6e85cb8252c413bca8f97b9b7f3b65f75c2efd77b9586e5',productionChanged:false});
  expect(receipt.semanticLifecycle.resetArchive.actions).toBe(12);
 });
 test('missing reset, effect, restore, authority or parent proof refuses acceptance',()=>{

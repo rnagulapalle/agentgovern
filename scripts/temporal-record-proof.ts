@@ -1,3 +1,4 @@
+import {TemporalAdmission} from "../runtime/temporal/admission";
 import type {WorkflowHandle} from "@temporalio/client";
 // Actual packaged workers + Temporal + PostgreSQL + isolated HTTP provider twins.
 import {TestWorkflowEnvironment} from "@temporalio/testing";
@@ -57,7 +58,7 @@ async function main(){
     await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'agent')",[tokenHash(randomBytes(32).toString("base64url")),id]);
    }
    await scopes.enroll(owner,scopeId);await scopes.grant(owner,scopeId,crm);await scopes.grant(owner,scopeId,email);
-   const enquiries=new EnquiryControl(db,flow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};});
+   const enquiries=new EnquiryControl(db,flow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};},provider.contactId,new TemporalAdmission(db,build.buildId));
    const plan=(await enquiries.prepareChat(owner,randomUUID())).saved;await enquiries.start(owner,plan.id,plan.plan_hash,crm,email,true);
    return {record,scopeId,scopes,control,flow,plan,steps:(await flow.read(owner,plan.id)).steps};
   }
@@ -123,11 +124,17 @@ async function main(){
   pass(shared?"Revoked final admitted enrollment cannot execute after restart; rejected contenders and revoked work have no effects":load?"Revoked fortieth enrollment cannot execute after restart; approved customers continue without fallback":"Revoked tenth enrollment cannot execute after restart; other customers continue and denied authority never falls back to the sample record");
   pass(load?"All thirty-nine completed pinned histories replay without new effects or provider secrets in history":"All nine completed pinned histories replay without new effects or provider secrets in history");
   if(shared){const agents=(await db.query("SELECT reserved,action_limit FROM ll_agents ORDER BY id")).rows;assert.equal(agents.length,2);assert(agents.every(a=>a.reserved===10&&a.action_limit===10));assert.equal((await db.query("SELECT count(*)::int n FROM ll_connector_actions")).rows[0].n,20);pass("Shared-agent reservations remain capped after execution and replay; revoked work does not silently refund lifetime authority");}
-  const files=["lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/connectors/request.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/connectors/service.ts","lib/enquiries/service.ts","lib/enquiries/runner.ts","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/version-contract.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","scripts/connector-twin.py","scripts/temporal-record-proof.ts"];
+  const files=["runtime/temporal/operations.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/connectors/request.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/connectors/service.ts","lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts","lib/enquiries/runner.ts","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/version-contract.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","scripts/connector-twin.py","scripts/temporal-record-proof.ts"];
   const sourceFingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
   const sample=load?{observationWindowMs,approvalToObservedCompletionMs:latencies,sampleLimits:"Single local workspace and paced four-wave sample; not steady-state throughput, percentile SLO, multi-tenant capacity or remote availability"}:{};
   const contention=shared?{sharedAgents:2,perAgentAllowance:10,enrolledCustomers:12,concurrentFinalSlotCandidates:3,admittedFinalSlotCandidates:1,deniedFinalSlotCandidates:2}:{};
   await writeFile(shared?"docs/evidence/temporal-shared-agent-proof.json":load?"docs/evidence/temporal-approved-load-proof.json":"docs/evidence/temporal-record-proof.json",JSON.stringify({at:new Date().toISOString(),checks,sourceFingerprints,measurements:{records:count,transferCalls:count*2,completed:completedCount,contained:1,effects:effectCount},...sample,...contention,buildId:build.buildId,scope:"Local packaged processes and private HTTP twins; no production cutover, sustained load SLA or live provider guarantee"},null,2)+"\n");
+ }catch(error){
+  try{
+   const counts=async(table:string)=>(await db.query(`SELECT state,count(*)::int AS count FROM ${table} GROUP BY state ORDER BY state`)).rows;
+   console.error("Bounded record recovery diagnostic",JSON.stringify({runStates:await counts("ll_workflow_runs"),actionStates:await counts("ll_connector_actions"),dispatchStates:await counts("ll_temporal_dispatch"),children:children.map(child=>({exitCode:child.exitCode,signal:child.signalCode}))}));
+  }catch{/* Preserve the original proof failure when diagnostics are unavailable. */}
+  throw error;
  }finally{
   for(const child of children)if(child.exitCode===null&&!child.signalCode){child.kill("SIGTERM");await until(async()=>child.exitCode!==null||Boolean(child.signalCode),"packaged process shutdown",25000);}
   await env?.teardown();if(twin&&twin.exitCode===null){twin.kill("SIGTERM");await until(async()=>twin!.exitCode!==null||Boolean(twin!.signalCode),"private twin shutdown",10000);}

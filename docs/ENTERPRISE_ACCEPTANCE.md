@@ -391,3 +391,260 @@ This closes one disposable enforcement experiment. Customer installation, cloud
 workload federation, joined persistent staging, live providers, sustained service
 objectives and enterprise security/operational acceptance remain open. Production
 and its dispatcher are unchanged; no Temporal superiority follows.
+
+## October 10 current-source refresh (staged)
+
+After chat presentation and independent discount-approval changes, fresh local
+connector proof passed all 36 checks, and the isolated hosted-path proof passed
+its email acceptance/read-back and missing atomic-CRM refusal checks. Fresh
+Temporal fault/replay proof passed seven checks, including after-effect worker
+termination, compatible recovery and incompatible history refusal. Ten
+independently enrolled records were retested with actual packaged roles: nine
+approved histories completed exactly 18 intended effects across restart; the
+revoked tenth record remained contained, and replay added no effects.
+
+These newly measured receipts replace only their corresponding local proof
+records. They do not renew unrelated package/drain/reset, tenant, browser or
+remote-operation evidence. The redesigned typed HTTPS UI trial remains pending,
+and the complete quality/release gate is still not accepted. Production and
+its dispatcher remain unchanged. The quote-approval workflow is still planned
+in `QUOTE_APPROVAL_WORKFLOW_PLAN.md`; contact-lifecycle results are not quote
+workflow evidence.
+
+The subsequent 40-record paced trial completed 39 approved histories and
+78 correctly targeted effects after worker restart, with four real lost
+responses reconciled and the revoked fortieth record contained. The separate
+shared-agent trial admitted exactly one of three final-slot contenders and
+retained capped reservations after execution/replay. Fresh outbox/ownership
+proof passed six checks; pinned-version/restart proof passed seven checks;
+actual PostgreSQL archive/restore proof passed five containment checks.
+These remain local bounded workloads, not steady-state capacity or remote
+service objectives.
+
+Private current-source UI run `38063579096` passed all ten HTTPS browser
+checks and complete isolated runtime/restore checks with exactly four
+provider-twin effects. Its retained receipt matches 99 current source files.
+The following full gate failed 20 older evidence checks; owned cleanup
+passed. The temporary CI secret was deleted. Second independent package
+run `38065228354` is in progress and has no release acceptance. Latest local
+quality failed 13 remaining retained-evidence checks plus a local Docker
+fixture-build timeout; no timeout or safety assertions were relaxed.
+
+
+### October 10: current-source tenant boundary refresh
+
+After a fresh production build, the actual two-company Next HTTP/browser and
+packaged-worker trial completed all ten checks. It refused 64 cross-company HTTP
+requests, eight browser requests and thirteen restricted-database attacks. The
+real restricted runtime login used 30 current provisioner grants. Both intended
+workflows completed four provider-twin effects; replacement after one worker crash,
+actual lost-response readback and both history replays retained those effects and
+original action identities. The source-bound tenant verification test passed.
+The shared database role still reads both companies; this is not RLS isolation.
+
+The same verification invocation confirmed refreshed archive and pinned-version
+receipts, but correctly refused the two still-stale packaged backlog/secure-container
+receipts. A paced two-company actual operation refresh is running. No production
+cutover, sustained capacity SLA or independent security acceptance is established.
+
+
+The paced refresh then completed six two-company waves with 24 additional
+independently scoped workflows and 52 total intended provider-twin effects.
+Duplicate submissions and approvals, one-company worker-crash isolation,
+lost-response readback, lifetime reservations and all 26 history replays passed.
+Both current-source tenant evidence tests are required alongside this receipt;
+these finite localhost measurements do not establish saturation, HA or an SLA.
+
+
+### October 10: current-source packaged backlog and database-outage refresh
+
+The actual non-container packaged trial completed ten checks: 25 held plans and
+50 concurrent ownership transfers retained exactly 25 intents; scheduler SIGKILL
+and natural lease recovery started each history once. A real TCP database outage
+made both runtime roles unready. Replacement startup while the database remained
+unavailable terminated without effects; subsequent replacement resumed the same
+25 histories. Worker SIGKILL/replacement plus exact independent approval produced
+one CRM and one email effect. Other stale shared-contact runs were contained, and
+workload revocation made both roles unready. The measured receipt covers 30 current
+source files and retains the finite-localhost and no-real-provider limitations.
+
+The runtime evidence tests now report nine passes and one remaining stale
+secure-container receipt refusal. This refresh does not prove an authenticated
+remote TLS handshake, a database-server crash, database restore, host failover,
+capacity percentiles or production availability.
+
+
+### October 10: measured redesigned UI package rollback
+
+Isolated CI run `38066572459` successfully retrieved both independently measured
+current-source candidate image archives, verified exact worker/image bytes and
+ran pending-work A→B→A promotion/reversion. The same named secure HTTPS 390px
+session reopened held work three times with original action hashes and approval
+boundaries. Full typed request/clarification, exact review, independent approvals,
+four provider-twin effects, history replay and archive containment remained
+required and passed. The retained receipt matches 109 current sources; its new
+candidate-evidence guard and twenty contract tests passed. Both parents' full
+regression gates had failed, so this receipt explicitly grants no release authority.
+Persistent operator staging, production cutover and live connectors remain open.
+
+
+### October 10: fresh content-distinct worker and broad chat acceptance
+
+Private CI run `38067428229` completed the actual content-distinct two-worker
+lifecycle and source/provenance validation. Old held work stayed pinned when its
+worker was absent; a new worker continued its own work; recreating the old worker
+completed the original history. Each recorded history replayed under its own
+build and was refused under the incompatible build. The original complete typed
+HTTPS/runtime/restore trial also retained four intended effects. The receipt
+matches 108 current sources. CI then refused the unchanged historical origin pin;
+its successful measured receipt and owned-input cleanup were retained. The prior
+receipt is preserved in `staging-semantic-before-chat-redesign-proof.json`. After
+authenticated-origin and current-source verification, the current pin was updated;
+all three semantic regression tests passed. This partial CI run grants no release
+acceptance, retirement/reset policy, persistent remote SLA or Temporal superiority.
+
+The independent broad local chat trial subsequently passed 17 actual checks
+covering real bounded Bedrock interpretation, exact saved plans, legacy and scoped
+independent approvals, duplicates, lost-response readback, stale customer refusal,
+background execution while browsers are away, worker/application restart, record
+grants, expiry/revocation and exhausted-agent submission containment. The receipt
+matches 54 current sources and preserves the hosted atomic-version blocker. Local
+worker, scheduler and twin child environments strip the web model session and
+disable AWS profile/metadata fallback. Desktop/mobile evidence is explicitly
+captured at 1280px/390px; the mobile outcome text is at least 16px without overflow.
+Its current-source regression test passed. These isolated fixtures do not provide
+real customer delivery, durable raw-chat memory or arbitrary workflow generation.
+
+### October 10: current gateway containment and release-gate refresh
+
+Private run `38068119538` completed the actual isolated network/TLS gateway
+trial: 19 checks passed, including direct provider/database bypass refusal,
+independent named approval, held state across restart, no fail-open during an
+outage, lost-response readback without resend, dependent email verification and
+exactly two provider-twin effects. Its receipt matches 44 current source files
+and all three compiled bundle hashes. Owned resource cleanup passed. Historical
+bytes are preserved in `gateway-bypass-before-chat-redesign-proof.json`; the four
+current gateway receipt tests pass.
+
+That job then failed before its discovery browser trial because `.next/BUILD_ID`
+was absent. The isolated harness now builds the production UI first. Corrected
+run `38068845071` passed gateway and authenticated discovery browser execution.
+The discovery receipt matches 37 current sources and retains 30 checks, including
+three-provider owner review, cross-company/refreshed-access refusals, no implicit
+enrollment or execution authority, readable 390px inputs and no raw JSON. Its
+actual mobile screenshot was inspected. Six focused gateway/discovery evidence
+and invocation-refusal tests pass. The job's unchanged full gate subsequently
+reported 661 passed and 13 old receipt failures in the pinned B snapshot; owned
+database cleanup passed. Newer local receipts are not retroactively represented
+as part of that earlier source snapshot. This remains a disposable
+trial, not a customer network installation, same-pod sidecar proof, cloud workload
+federation, live-provider guarantee or enterprise production acceptance.
+
+The subsequent local full gate reported 669 passing tests and six failures:
+current accepted-artifact retrieval, retained accepted-package transition,
+worker-drain evidence, reset/archive evidence, secure-container source freshness,
+and a 30-second local Docker enrollment timeout. No gate was disabled or relaxed.
+The current secure-container trial is dispatched as `38069176491`. The prepared
+drain trial `38069086595` was canceled while pending by GitHub's single-pending-job
+concurrency policy; no model or runtime trial started. Its unused temporary model
+secret was deleted and absence verified. Drain dispatch must follow the container
+job with a fresh bounded model session. No application release or deployment is
+authorized by these partial results.
+
+### October 10: current secure container and explicit release boundary
+
+Private run `38069176491` completed the actual mTLS/JWT container trial, independent
+receipt checks and inert worker-image enrollment. Its receipt matches 32 current
+source files and retains 19 security/recovery checks. The workload refuses wrong
+namespaces, expired/tampered tokens and untrusted TLS identities; signing-key
+rotation, packaged worker/scheduler recovery, service/persistence interruption
+and quiesced Temporal backup restore are measured. The previous receipt is
+preserved in `temporal-container-before-chat-redesign-proof.json`. All ten retained
+Temporal proof tests pass locally. The CI full quality gate still failed on older
+evidence; owned database cleanup passed. Single-node isolated recovery does not
+prove replicated failover, a remote managed deployment, capacity or availability.
+
+The production release gate now additionally calls `staging-release-evidence.mjs`.
+It retains the strict accepted-artifact validator and requires successful observed
+quality/retention/cleanup jobs, exact current typed runtime and loader sources,
+matching archive/manifest/build/image identities, and independent successful cold
+retrieval. Two contract tests exercise a synthetic accepted association and 25
+refusal cases; these fixtures are not runtime evidence. An authenticated check of
+the actual current candidate correctly refused release. Historical/current evidence
+tests have not been loosened; their dependency cycle still needs an evidence-based
+separation before fresh accepted artifacts can be produced. No deployment followed.
+
+### October 10: current drain races and release evidence ordering
+
+Drain attempt 2 of private run `38069086595` completed the actual drain assembly,
+receipt-source validation, retention and owned-input cleanup. The receipt matches
+115 current sources. Admission committed before drain remains valid; drain committed
+first refuses new admission; failed transfers roll back; existing transfers remain
+idempotent; held work remains pinned without granting retirement. Both workers'
+own history replay passes and incompatible history is refused. The complete parent
+typed runtime and containment remain required. The job's only failure was the old
+exact-origin test pin. After authenticated observation and source validation, the
+historical receipt was preserved and the pin refreshed; all three drain tests pass.
+Reset/archive trial `38070833335` is running against this measured parent.
+
+The release-only boundary now additionally requires actual current accepted-image
+promotion/reversion, two successful accepted origins and a separate successful trial.
+All 106 current runtime/helper sources, pending authority, exact image/archive/build
+identities, full typed outcome and observed quality/retention/cleanup must pass.
+Four contract tests cover positive synthetic associations and 47 refusal cases.
+These fixtures do not establish successful CI or a production release.
+
+Historical retrieval and package tests now use their original pinned origin/receipt
+bytes. The historical package's 104 source files were reconstructed from the exact
+Git base and verified against every measured hash before retaining the snapshot.
+All original negative runtime/authority assertions remain. Current candidate evidence
+is checked separately, and current accepted-artifact/transition evidence is mandatory
+at deployment. Ten focused historical/current release/package checks pass. The full
+local gate now has 678 passes and two failures: stale reset evidence and the local
+Docker enrollment timeout. No application commit or deployment followed these results.
+
+### October 10: parallel quote contract and reset capacity refusal
+
+Reset run `38070833335`, attempt 1, refused before runtime at host admission:
+6,845,104,128 bytes were required; 6,826,672,128 were available. The owned builder
+had already been removed and no existing containers were reported. This is a
+capacity refusal, not a passed reset test or evidence of a leaked process. Owned
+model input cleanup passed. One identical-source fresh-host retry is running;
+service limits and host reserve remain unchanged.
+
+The standalone quote proposal contract now passes 84 focused tests with complete
+file coverage. Explicit quote/policy/workspace approval grants, scoped agents,
+exact pricing/source and conditional provider capabilities are required. No
+quote provider is enrolled; no quote action is persisted or executed by this
+contract. Existing engine integration and the actual distributor demo remain open.
+The full quality run has 762 passes and two failures: stale reset evidence and the
+local Docker enrollment timeout. No application commit or deployment followed.
+See `architecture/PARALLEL_DELIVERY_PLAN.md` for independent chunk ownership and
+integration/release boundaries.
+
+### October 10: reset/archive accepted as component evidence; saved quote proposals
+
+Reset attempt 2 of private run `38070833335` completed actual execution, source
+validation, retention and owned-input cleanup. The receipt covers 131 current
+sources. It records one reset RPC, four exact provider-twin effects, independent
+reset lineage, refusal to retry committed uncertainty, a pending archive with
+12 retained actions, external epoch rotation, revoked restored authority and
+preserved action identities/reservations. Independent local validation passed;
+all nine reset/drain/semantic evidence tests pass. The historical receipt is
+preserved. CI's only failure was the unchanged old receipt pin; this is component
+evidence, not successful full release acceptance.
+
+Quote migration 19 now provides an optional immutable proposal store. It reuses
+existing named-member authority, workspace transactions and recovery fences. It
+saves exact validated proposals without creating approvals, action dispatch or
+provider effects. Actual dedicated PostgreSQL tests cover concurrent same-ID
+retries, changed reuse, owner/workspace and revoked-session refusal, service
+restart, epoch containment, restricted-role mutation refusal and migration
+idempotency. The quote contract/store/setup suite passes 101 tests with 98.75%
+statements, 98.64% branches, 100% functions and 99.23% lines. No API/UI or provider
+integration is installed by this increment.
+
+Latest full local quality: 787 tests passed and only the existing local Docker
+inert-image enrollment timeout failed (788 total). That gate is retained. The
+next full quality invocation must run in the isolated Linux job; no application
+commit or deployment followed the failed local invocation.

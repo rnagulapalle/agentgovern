@@ -15,6 +15,7 @@ import {ConnectorControl} from "../lib/connectors/service.ts";
 import {WorkflowControl} from "../lib/workflows/service.ts";
 import {EnquiryControl} from "../lib/enquiries/service.ts";
 import {TemporalOutbox} from "../runtime/temporal/outbox.ts";
+import {TemporalAdmission} from "../runtime/temporal/admission.ts";
 import {semanticArtifact,semanticPair,replaySemanticPair} from "./temporal-semantic-replay.mjs";
 const dir="/run/trial",phaseDir=dir+"/semantic";
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -64,7 +65,7 @@ async function main(){
    await registerAgent(db,owner,{id,name:id,owner:owner.subject,role:n===0?"crm_agent":"email_agent",connector:n===0?"crm_twin":"email_twin",actionLimit:1});
    await scopes.grant(owner,enrollment,id);
   }
-  const enquiry=new EnquiryControl(db,workflow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};});
+  const enquiry=new EnquiryControl(db,workflow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};},provider.contactId,new TemporalAdmission(db,artifacts[i].buildId));
   const plan=(await enquiry.prepareChat(owner,randomUUID())).saved;
   await enquiry.start(owner,plan.id,plan.plan_hash,...agents,true);
   let run=await workflow.read(owner,plan.id);

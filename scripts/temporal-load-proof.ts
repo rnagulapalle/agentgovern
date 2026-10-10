@@ -8,6 +8,8 @@ import { readFile, writeFile, mkdtemp, rm } from "node:fs/promises";
 import { spawn, type ChildProcess } from "node:child_process";
 import { resolve } from "node:path";
 import { createServer, connect, type Socket } from "node:net";
+import { networkInterfaces } from "node:os";
+import { containerHostAddress, fixtureRelay } from "./container-host-transport";
 import assert from "node:assert/strict";
 import { authenticate, tokenHash } from "../lib/durable/service";
 import { ConnectorControl } from "../lib/connectors/service";
@@ -30,6 +32,7 @@ async function main() {
   const containerNames=new Map<ChildProcess,string>(), healthNames=new Map<number,string>();
   const children: ChildProcess[] = [];
   let workerKey="";
+  let stopFixtureRelay: Awaited<ReturnType<typeof fixtureRelay>> | undefined;
   const processLogs: string[] = [];
   const observe = (child: ChildProcess, label: string) => {
     for (const stream of [child.stdout, child.stderr]) stream?.on("data", data => {
@@ -98,7 +101,10 @@ async function main() {
     assert.equal(measured.trim(),built.artifactHash,"Packaged worker bytes must match their content-bound manifest");
     const buildId=built.buildId;
     const taskQueue=`load-${randomUUID()}`, outbox=new TemporalOutbox(db);
-    await new Promise<void>((ok, fail) => { proxy.once("error", fail); proxy.listen(0, "127.0.0.1", ok); });
+    const bridgeGateway=secure && process.platform==="linux" ? await secure.docker("network","inspect","bridge","--format","{{(index .IPAM.Config 0).Gateway}}") : "";
+    const hostAddress=containerHostAddress(secure ? process.platform : "darwin",bridgeGateway,Object.values(networkInterfaces()).flatMap(rows => (rows || []).map(row=>row.address)));
+    if (secure && process.platform==="linux") stopFixtureRelay=await fixtureRelay(hostAddress,8018);
+    await new Promise<void>((ok, fail) => { proxy.once("error", fail); proxy.listen(0, hostAddress, ok); });
     const address = proxy.address();
     assert(address && typeof address !== "string");
     const databaseUrl=new URL(url);
@@ -114,8 +120,9 @@ async function main() {
           LOOPLABS_TEMPORAL_BUILD_ID:buildId,LOOPLABS_TEMPORAL_API_KEY:secure.workloadKey,LOOPLABS_TEMPORAL_CA_PATH:"/proof-tls/ca.pem",
           LOOPLABS_TEMPORAL_CERT_PATH:"/proof-tls/client.pem",LOOPLABS_TEMPORAL_KEY_PATH:"/proof-tls/client.key",
           LOOPLABS_TEMPORAL_HEALTH_PORT:role === "worker" ? "9320":"9321",LOOPLABS_TEMPORAL_ACTIVITY_SLOTS:"3",LOOPLABS_TEMPORAL_WORKFLOW_SLOTS:"6",LOOPLABS_TEMPORAL_POLL_MS:"500",
-          LOOPLABS_CONNECTOR_TWIN_URL:"http://connector-twin:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token}).map(([k,v])=>`${k}=${v}`).join("\n")+"\n",{mode:0o600});
-        const child=spawn("docker",["run","--rm","--name",name,"--network",secure.network,"--add-host","host.docker.internal:host-gateway","--add-host","connector-twin:host-gateway",
+          LOOPLABS_TEMPORAL_PROVIDER_DIAGNOSTICS:"isolated",LOOPLABS_CONNECTOR_TWIN_URL:"http://connector-twin:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token}).map(([k,v])=>`${k}=${v}`).join("\n")+"\n",{mode:0o600});
+        const hostMapping=process.platform==="linux" ? hostAddress : "host-gateway";
+        const child=spawn("docker",["run","--rm","--name",name,"--network",secure.network,"--add-host",`host.docker.internal:${hostMapping}`,"--add-host",`connector-twin:${hostMapping}`,
           "--env-file",file,"--mount",`type=bind,src=${secure.tlsDir},dst=/proof-tls,readonly`,"--read-only","--tmpfs","/tmp","--cap-drop","ALL","--security-opt","no-new-privileges","--memory",role === "worker" ? "768m":"256m",image!,"node",".worker/temporal-service.cjs",role],{stdio:["ignore","pipe","pipe"]});
         observe(child,name);
         children.push(child);containerNames.set(child,name);healthNames.set(role === "worker" ? 19420:19421,name);secure.registerContainer(name);return child;
@@ -147,7 +154,15 @@ async function main() {
       }else child.kill(signal);
       let timer:ReturnType<typeof setTimeout> | undefined;
       try { await Promise.race([exit,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error("Service shutdown exceeded 30 seconds")),30000);})]); } finally {clearTimeout(timer);} };
+    const probeWorker=async(worker:ChildProcess)=>{if (secure) {
+      // Probe the actual worker's provider route, credentials and read contract.
+      // Host-side fixture reads do not prove container connector connectivity.
+      const probe=JSON.parse(await secure.docker("exec",containerNames.get(worker)!,"node","-e",`fetch(process.env.LOOPLABS_CONNECTOR_TWIN_URL+'/crm/crm/v3/objects/contacts/1001',{headers:{Authorization:'Bearer '+process.env.LOOPLABS_CONNECTOR_TWIN_TOKEN},signal:AbortSignal.timeout(5000)}).then(async r=>{const c=r.ok?await r.json():null;console.log(JSON.stringify({status:r.status,expectedRecord:c?.id==='1001'&&c?.properties?.email==='customer@example.test'&&typeof c?.updatedAt==='string'}));}).catch(()=>console.log(JSON.stringify({status:0,expectedRecord:false})));`));
+      console.log("Worker provider read probe",JSON.stringify(probe));
+      assert.deepEqual(probe,{status:200,expectedRecord:true},"Actual worker provider route/read contract unavailable; no approval attempted.");
+    }};
     let worker=await spawnService("worker");await until(()=>ready(19420),"worker ready");
+    if(secure){await probeWorker(worker);pass("Actual worker container reads the authenticated private fixture through its configured provider route");}
     for (let i=0;;i++) { try { await env.client.workflowService.setWorkerDeploymentCurrentVersion({namespace:secure?.namespace||"default",deploymentName:"looplabs-acknowledgement",buildId,identity:"load-proof"});break; } catch(e) {if(i>100)throw e; await wait(100);} }
     const plans:RunContract[]=[];
     for(let i=0;i<25;i++) plans.push(await make());
@@ -232,6 +247,7 @@ async function main() {
     await kill(worker,"SIGKILL");assert.equal(await ready(19420),false);
     const restartStart=performance.now();worker=await spawnService("worker");await until(()=>ready(19420),"replacement worker ready");
     const workerRestartMs=Math.round(performance.now()-restartStart);
+    if(secure){await probeWorker(worker);pass("Replacement worker container retains authenticated provider connectivity after injected recovery faults");}
     const completionStart=performance.now();
     await approve(plans[0].runId);
     await env.client.workflow.getHandle(`looplabs:local-proof:ack:${plans[0].runId}`).signal("wake");
@@ -267,15 +283,42 @@ async function main() {
     pass("Workload revocation makes both packaged roles unready");
     const shutdownStart=performance.now();await kill(scheduler,"SIGTERM");await kill(worker,"SIGTERM");
     const shutdownMs=Math.round(performance.now()-shutdownStart);
-    const files=["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","lib/workspace/identity.ts",...(secure?["scripts/temporal-container-environment.ts","Dockerfile.temporal"]:[]),"scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","runtime/temporal/operations.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/version-contract.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-load-proof.ts"];
+    const files=["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","lib/workspace/identity.ts",...(secure?["scripts/temporal-container-environment.ts","Dockerfile.temporal"]:[]),"scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","runtime/temporal/operations.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/version-contract.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-load-proof.ts","scripts/container-host-transport.ts"];
     const fingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile(secure?"docs/evidence/temporal-container-proof.json":"docs/evidence/temporal-load-proof.json",JSON.stringify({at:new Date().toISOString(),scope:secure?"Isolated self-hosted PostgreSQL-backed Temporal with mTLS/JWT namespace authorization and actual worker containers; no production cutover":"Local packaged pinned worker/scheduler, actual Temporal, isolated PostgreSQL and one private HTTP twin; no production cutover",checks,
       ...(secure?{imageIds:secure.imageIds,workerImage:{image,id:await secure.docker("image","inspect",image!,"--format","{{.Id}}")}}:{}),
       measurements:{plans:25,concurrentTransferCalls:50,activitySlots:3,workflowSlots:6,enqueueMs,totalSchedulingMs,schedulerCrashToBacklogDrainMs:recoveryMs,workerRestartReadyMs:workerRestartMs,approvalToCompletionMs,shutdownMs,databaseReplacementAttempts,finalEffects:2,...(snapshotRestoreToCompletedMs!==undefined?{snapshotRestoreToCompletedMs}:{})},
       sourceFingerprints:fingerprints,limitations:["One laptop sample, not capacity, percentile latency or availability SLO","25 concurrent held runs; one approved completion; remaining shared-contact plans contained",secure?"Single-node service/persistence SIGKILL and quiesced Temporal backup restore; no LoopLabs database restore, replicated failover or availability SLA":"Scheduler and worker SIGKILL plus TCP database outage; no database-server crash, restore, host failover or data-loss proof",secure?"Local Docker mTLS/JWT cluster only; no remote managed-cluster acceptance, SSO or independent security audit":"Authenticated TLS configuration validated; remote TLS handshake not exercised","No hosted atomic CRM guarantee or real provider delivery"]},null,2)+"\n");
+  } catch (error) {
+    // Only bounded state counts and fixed error categories leave the disposable
+    // trial. No payloads, identities, references, tokens or raw logs are printed.
+    try {
+      const counts = async (table: string) => (await db.query(`SELECT state,count(*)::int AS count FROM ${table} GROUP BY state ORDER BY state`)).rows;
+      const log = processLogs.join("");
+      const reasons = Object.fromEntries(Object.entries({
+        bindingRefused:/saved_request_binding_refused/g, descriptionRefused:/saved_request_description_refused/g,
+        providerTypeErrors:/"kind":"type_error"/g, providerReferenceErrors:/"kind":"reference_error"/g,
+        connectionRefused:/ECONNREFUSED/g, dnsUnavailable:/ENOTFOUND/g,
+        connectTimeout:/UND_ERR_CONNECT_TIMEOUT/g, socketFailure:/UND_ERR_SOCKET/g, connectionReset:/ECONNRESET/g,
+        invalidArgument:/ERR_INVALID_ARG_TYPE|ERR_INVALID_URL/g,
+        activityFailed:/Activity failed/g, connectorUnavailable:/Connector evidence unavailable/g,
+        savedRequestChanged:/Saved connector request or destination changed/g,
+        authorityRefused:/not authorized|Unauthorized|Permission denied/gi,
+        workflowNondeterminism:/nondeterminism|non-determinism/gi,
+      }).map(([name,pattern]) => [name,[...log.matchAll(pattern)].length]));
+      console.error("Bounded recovery diagnostic",JSON.stringify({
+        runStates:await counts("ll_workflow_runs"), actionStates:await counts("ll_connector_actions"),
+        dispatchStates:await counts("ll_temporal_dispatch"), reasons,
+        fixtureTransport:stopFixtureRelay?.snapshot() ?? null,
+        recordedProviderEffects:Object.keys(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects).length,
+        children:children.map(child=>({exitCode:child.exitCode,signal:child.signalCode})),
+      }));
+    } catch { console.error("Bounded recovery diagnostics unavailable; original failure retained."); }
+    throw error;
   } finally {
     for(const child of children) if(child.exitCode===null&&!child.signalCode) { const done=new Promise<void>(r=>child.once("exit",()=>r()));child.kill("SIGKILL");await done; }
     for (const socket of sockets) socket.destroy();
+    await stopFixtureRelay?.();
     await new Promise<void>(r => { if (!proxy.listening) r(); else proxy.close(() => r()); });
     const privateLog = processLogs.join("").split(workerKey || "__absent__").join("[redacted]").split(token).join("[redacted]").split(secure?.workloadKey || "__absent__").join("[redacted]");
     await writeFile(".local/temporal-process-proof.log", privateLog, { mode: 0o600 });

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "completedUtc": "2026-10-09T16:45:15.615Z",
+  "completedUtc": "2026-10-10T19:32:28.126Z",
   "scope": "disposable Docker network/TLS/actual Next handlers/PostgreSQL/FetchSandbox twin",
   "fixtureSource": {
     "version": 1,
@@ -34,7 +34,7 @@
     "lib/connectors/request.ts": "37584ef57721d52bc77995e97c68a6b69f06f69e63da73c7ea67408a92c0344c",
     "lib/connectors/routing.ts": "0cf3e90dabf348fbb4443bb5ec841237d33cdb53b1394c88939d9198457c9e02",
     "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
-    "lib/connectors/scopes.ts": "bb5b7eb5b80011b1d487a8c59246e25a3f047eca1f6d65a590aeaa6ef404cfee",
+    "lib/connectors/scopes.ts": "4915dd59986762a5efdec7e94d6f29bd918e647f97e04c78c30c25428f1f1d2e",
     "lib/connectors/service.ts": "adcce693094fe31f9ce75df459fba1d783b9620baf59c02c28d254b1a1b06aed",
     "lib/connectors/tool-client.ts": "16e224c8197a104fb0666fab73b64eefbb29e0187e6e482920f54ea225b6c9a6",
     "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
@@ -44,9 +44,9 @@
     "lib/durable/recovery-schema.sql": "75af0b8e95425de3d0b88f927e8612ed50ade36db85969da322c98c17eefe395",
     "lib/durable/recovery.ts": "836b90a85dc4f8e8b8bd6bafc4297f4af0937c894decb190d892956669f31343",
     "lib/durable/schema.sql": "1443e0d0ed90ab054d30d8c6ae1359a18e7fd104408ba305f2d6abe96f304d05",
-    "lib/durable/service.ts": "64161b90f1d2c7a30e856e051830435dd474bf65988c7faea5cf40dbbdbda8ec",
+    "lib/durable/service.ts": "6081a5020cdc0ccf6be3cd979a8e97c364936fd274105f825444c452744b588c",
     "lib/enquiries/contracts.ts": "f5158c75f45ef6dfef14043b0bfa809210f205441d9028aa37ccaca80b119b80",
-    "lib/enquiries/dispatch.ts": "4cc5701be853ae7c24e3092c8d9344eafb97f97844b7c29c8a8916ba27d09058",
+    "lib/enquiries/dispatch.ts": "f1e6123df8d7bcb630abaa987dbcbb23ef55b8b2f12d258d4fabccac88054d90",
     "lib/enquiries/schema.sql": "8e9c620147658f3bd59cd2948d0a46f872eb74066d67eba9f844bc5410fdd743",
     "lib/workflows/guard.ts": "3af43bf26bc065066a140e4e9e2fd2d601ef4089e4a22f6499b64072081a8d11",
     "lib/workflows/schema.sql": "fad98c6bed6e4cdc0168b5248ca5cbf7411c35ec49cd3bcbd24b27eb11bf3e4d",
@@ -68,13 +68,13 @@
     "scripts/staging-owned-builder.mjs": "4db747484d100c3cdd45a668589096cd753f16a87347f4b973a72c34148132f6"
   },
   "bundles": {
-    "server": "1387a3438a6be8398fc00e4d9db44adf6b365658d10ef13adaea6f2869102e44",
+    "server": "6d45267244b357812c3a73aeb0278518da0e50f7df6ee667ebcd2c2668dfc722",
     "agent": "c8328ec16b02e44559d3920330f4939a57ce3624f3ae28d9110e6b881786483f",
     "controller": "a48adccb1a0ce4415d4c54860479ecf3280d4a39d2e819ba8e41884f8d4d78a5"
   },
   "imageIds": {
     "db": "sha256:275447c94b11b151decd1f29877965301d5a77032037c46de93d990f739f00a9",
-    "twin": "sha256:394b66ccb8d0dc5a4516f1b0c72a254d27901a9946e8ded1324a2ad32708371b",
+    "twin": "sha256:2ed95e8cf64c5e30af96390fc47e74ca668cba656546bba3e08d26c98f63c4d9",
     "gateway": "sha256:d0a16be756b6ec6658aecb8b7bcf87fa6c7d0d7fcc6ca53ad14bb49a4c90bdd7",
     "agent": "sha256:d0a16be756b6ec6658aecb8b7bcf87fa6c7d0d7fcc6ca53ad14bb49a4c90bdd7"
   },
