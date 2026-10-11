@@ -12,6 +12,9 @@ export const scopedMigrations=[
  [8,"lib/enquiries/managed-schema.sql"],[9,"lib/enquiries/temporal-schema.sql"],[10,"lib/durable/recovery-schema.sql"],
  [11,"lib/durable/proposal-schema.sql"],[12,"lib/connectors/scope-schema.sql"],
  [13,"lib/enquiries/record-routing-schema.sql"],
+ [19,"lib/quotes/schema.sql"],[20,"lib/quotes/authority-schema.sql"],
+ [21,"lib/quotes/plan-v2-schema.sql"],[22,"lib/quotes/membership-schema.sql"],
+ [23,"lib/workspace/membership-authority-schema.sql"],
 ] as const;
 export async function migrationDigests(){
  return Promise.all(scopedMigrations.map(async([version,file])=>({version,digest:createHash("sha256").update(await readFile(file)).digest("hex")})));

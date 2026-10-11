@@ -1,3 +1,4 @@
+import {typedSourceFiles} from "./staging-browser-record.mjs";
 // Synthetic association fixtures, never retained as runtime acceptance.
 import { test, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -10,10 +11,11 @@ const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 const read = file => JSON.parse(readFileSync(file, "utf8"));
 function fixture() {
   const base = read("docs/evidence/staging-platform-browser-proof.json");
-  const expectedRuntimeFiles = Object.keys(base.sourceFingerprints);
+  const expectedRuntimeFiles = typedSourceFiles(read("docs/evidence/staging-platform-browser-prepared-proof.json").sourceFingerprints);
   const sources = Object.fromEntries([...expectedRuntimeFiles, ...packageSources].map(file => [file, readFileSync(file, "utf8")]));
   const origins = [0, 1].map(index => {
     const origin = structuredClone(base), runId = 8001 + index;
+    origin.sourceFingerprints=Object.fromEntries(expectedRuntimeFiles.map(file=>[file,hash(sources[file])]));
     origin.images = origin.images.map((image, role) => ({ ...image, id: `sha256:${"abcdef12"[index * 4 + role].repeat(64)}` }));
     origin.artifact.images = origin.images;
     origin.artifact.manifestSha256 = String(index + 3).repeat(64);
@@ -57,6 +59,7 @@ test("requires current source-bound transitions between two distinct fully accep
 });
 test("refuses candidate origins, stale transitions, missing authority checks, altered bytes, failed jobs and missing cleanup", () => {
   const changes = [
+    x => x.expectedRuntimeFiles[x.expectedRuntimeFiles.indexOf("lib/workspace/membership-authority-schema.sql")]="unreviewed-substitute.sql",
     x => x.observations[0].run.conclusion = "failure", x => x.observations[1].run.status = "in_progress",
     x => x.observations[0].artifact.name = "candidate", x => x.observations[1].artifact.expired = true,
     x => x.envelope.requests[0].workflowCommit = "0".repeat(40), x => x.envelope.requests[1].manifestSha256 = "0".repeat(64),

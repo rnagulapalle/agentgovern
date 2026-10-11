@@ -30,8 +30,11 @@ beforeAll(async () => {
   runtime = new Pool({ connectionString: url.toString(), options: `-c search_path=${schema}` });
 }, 20000);
 beforeEach(async () => {
-  await owner.query("TRUNCATE ll_orgs CASCADE"); await owner.query("TRUNCATE ll_temporal_worker_builds CASCADE");
-  await owner.query("TRUNCATE ll_migrations");
+  // Reset only this test-owned schema; proposal/history protections stay enabled.
+  await admin.query(`DROP SCHEMA ${schema} CASCADE`);await admin.query(`CREATE SCHEMA ${schema}`);
+  await owner.query("CREATE TABLE ll_migrations(version integer PRIMARY KEY,digest text NOT NULL)");
+  for(const [,file] of persistentMigrations)await owner.query(await readFile(file,"utf8"));
+  await admin.query(`GRANT USAGE ON SCHEMA ${schema} TO ${role}`);await admin.query(`GRANT SELECT ON ALL TABLES IN SCHEMA ${schema} TO ${role}`);
   for (const migration of expected) await owner.query("INSERT INTO ll_migrations VALUES($1,$2)", [migration.version, migration.digest]);
   await owner.query("INSERT INTO ll_orgs(id) VALUES('one'),('two')");
   await owner.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('one',$1)", [epoch]);
@@ -44,30 +47,23 @@ afterAll(async () => {
   if (admin) { await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.query(`DROP ROLE IF EXISTS ${role}`); await admin.end(); }
 });
 it("reads exact released migrations14–18 and active worker enrollment without changing authority", async () => {
-  expect(expected.map(m => m.version)).toEqual([1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,17,18]);
+  expect(expected.map(m => m.version)).toEqual([1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]);
   const before = (await owner.query("SELECT row_to_json(t) FROM ll_temporal_worker_builds t")).rows;
   expect(await persistentPrerequisites(runtime, env, artifact)).toEqual([]);
   expect((await owner.query("SELECT row_to_json(t) FROM ll_temporal_worker_builds t")).rows).toEqual(before);
   await expect(runtime.query("UPDATE ll_workspace_recovery SET epoch=$1", [epoch])).rejects.toMatchObject({ code: "42501" });
 });
-it("refuses each missing/tampered released digest and requires explicit optional quote-plan opt-in", async () => {
-  for (const version of [14,15,16,17,18]) {
+it("refuses each missing/tampered released digest and requires shared membership history even with quote access disabled", async () => {
+  for (const version of [14,15,16,17,18,19,20,21,22,23]) {
     await owner.query("DELETE FROM ll_migrations WHERE version=$1", [version]);
     expect(await persistentPrerequisites(runtime, env, artifact)).toEqual([`migration_${version}_missing`]);
     await owner.query("INSERT INTO ll_migrations VALUES($1,'tampered')", [version]);
     expect(await persistentPrerequisites(runtime, env, artifact)).toEqual([`migration_${version}_digest_mismatch`]);
     await owner.query("UPDATE ll_migrations SET digest=$2 WHERE version=$1", [version, expected.find(m => m.version === version)!.digest]);
   }
-  expect(await persistentPrerequisites(runtime, env, artifact, { quotePlans: true })).toEqual(["migration_19_missing"]);
-  const quote = (await persistentMigrationDigests({ quotePlans: true })).find(m => m.version === 19)!;
-  await owner.query(await readFile("lib/quotes/schema.sql", "utf8"));
-  await owner.query("INSERT INTO ll_migrations VALUES(19,'tampered')");
-  expect(await persistentPrerequisites(runtime, env, artifact, { quotePlans: true })).toEqual(["migration_19_digest_mismatch"]);
-  await owner.query("UPDATE ll_migrations SET digest=$1 WHERE version=19", [quote.digest]);
-  expect(await persistentPrerequisites(runtime, env, artifact, { quotePlans: true })).toEqual([]);
-  // Optional proposal schema deliberately forbids TRUNCATE; retire only this
-  // empty test-owned table before the next fixture's existing cleanup routine.
-  await owner.query("DROP TABLE ll_quote_plans CASCADE");
+  expect(await persistentMigrationDigests({quotePlans:true})).toEqual(expected);
+  expect(await persistentPrerequisites(runtime,env,artifact,{quotePlans:true})).toEqual([]);
+
 });
 it("rejects malformed configuration and artifact pins before database inspection", async () => {
   for (const override of [{ LOOPLABS_WORKSPACE_ID: "bad space" }, { LOOPLABS_TEMPORAL_WORKER_TOKEN: "bad" },

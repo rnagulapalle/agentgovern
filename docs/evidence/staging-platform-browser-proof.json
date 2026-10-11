@@ -87,24 +87,24 @@
       "sustained tenant load, restore and operator acceptance"
     ]
   },
-  "buildId": "ack-2895fd612163d3c0cf9d66f87efc28200d2441c24d782dc795b4fe7a1c3a1906",
+  "buildId": "ack-836b973d593529fa149be8916362dd8f81d278969b6922d7496c8ef001b94f77",
   "sourceCommit": "08372aadbaa6fb8f37368c6900323b8619c10f2c",
   "images": [
     {
       "role": "web",
-      "id": "sha256:c352ada5a76caa0bbd2bb5553cd13d5ca03e19206c5a13e8abdc6f0e7c4bfa6d"
+      "id": "sha256:905e5af207a3ae5029c4e0ab9abc6db3be83492032c16b6cde797383bee5720d"
     },
     {
       "role": "worker",
-      "id": "sha256:e0d55183f0a0fc46113dd000fc5476e84606d632d19c4ef94b2994b36eae7c57"
+      "id": "sha256:87fbb31798bf935d909e0fbbf21d225f5bd49ae00a768d7d90c4a60bd60a3a34"
     },
     {
       "role": "twin",
-      "id": "sha256:c197c8e1f993eded937ae5855848aeadec7dbaf93c6344c3e1d737c595fa999d"
+      "id": "sha256:3cbc8c00effdec2899f10d36397aca2983c3d5edf5887aac5d92156ddfe54587"
     },
     {
       "role": "provisioner",
-      "id": "sha256:bdeefef9acc4f604e5bdde8acecef086e679f8bbc2961c5f33c0e7a12f31ea46"
+      "id": "sha256:fc300b0125f76c80599fedd2d25c30fceee7d891f3cd9616f0011a21b8e66332"
     }
   ],
   "services": [
@@ -163,29 +163,29 @@
     "existingBytes": 0,
     "plannedBytes": 4697620480,
     "hostReserveBytes": 2147483648,
-    "totalBytes": 8322928640,
-    "availableBytes": 7012773888
+    "totalBytes": 8323969024,
+    "availableBytes": 6950268928
   },
   "artifact": {
-    "manifestSha256": "1d1373273eee9c7a19ebc1609dd87cd0544153db18566e28ab6a2fdfb81ddb86",
-    "archiveSha256": "51e181df7be9768e04983942cb9496507f6a9308cc6e9f42340fc108fd17f3f5",
-    "archiveBytes": 2400974848,
+    "manifestSha256": "19e486b429630a08f76dc57eb58f08875ac6cde7508adbfef20d697a47014e80",
+    "archiveSha256": "464d14acd727e496b631f9a1d10e68a1c50ae5efa9411d75264a1d172e8cf0aa",
+    "archiveBytes": 2401266688,
     "images": [
       {
         "role": "web",
-        "id": "sha256:c352ada5a76caa0bbd2bb5553cd13d5ca03e19206c5a13e8abdc6f0e7c4bfa6d"
+        "id": "sha256:905e5af207a3ae5029c4e0ab9abc6db3be83492032c16b6cde797383bee5720d"
       },
       {
         "role": "worker",
-        "id": "sha256:e0d55183f0a0fc46113dd000fc5476e84606d632d19c4ef94b2994b36eae7c57"
+        "id": "sha256:87fbb31798bf935d909e0fbbf21d225f5bd49ae00a768d7d90c4a60bd60a3a34"
       },
       {
         "role": "twin",
-        "id": "sha256:c197c8e1f993eded937ae5855848aeadec7dbaf93c6344c3e1d737c595fa999d"
+        "id": "sha256:3cbc8c00effdec2899f10d36397aca2983c3d5edf5887aac5d92156ddfe54587"
       },
       {
         "role": "provisioner",
-        "id": "sha256:bdeefef9acc4f604e5bdde8acecef086e679f8bbc2961c5f33c0e7a12f31ea46"
+        "id": "sha256:fc300b0125f76c80599fedd2d25c30fceee7d891f3cd9616f0011a21b8e66332"
       }
     ],
     "reloadedAfterRemoval": true,
@@ -223,7 +223,7 @@
     "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
     "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
     "lib/connectors/scopes.ts": "4915dd59986762a5efdec7e94d6f29bd918e647f97e04c78c30c25428f1f1d2e",
-    "lib/connectors/service.ts": "adcce693094fe31f9ce75df459fba1d783b9620baf59c02c28d254b1a1b06aed",
+    "lib/connectors/service.ts": "fa92397b199bb7497bdc6a391eb036cea3072cc2ca7cd83c272d0257d7240913",
     "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
     "lib/durable/client.ts": "978fc254d1b98af1b7a4e303e8b11d361640e2972167a9b08d69ec0959125bb9",
     "lib/durable/contracts.ts": "6ea08e75c6304e68d951b93e98e1fedc1af53988428394dfa2a00eee7678f7b6",
@@ -237,23 +237,29 @@
     "lib/enquiries/chat-contract.ts": "adcfd4308e6a9325930203b6a23f6e6179dfe25acaccf897ba1a456d652b56c2",
     "lib/enquiries/chat.ts": "09c4c04d575c946fe4085f6a52b656250b9ed19bc6f9a59cc9399a3d4e1d5641",
     "lib/enquiries/contracts.ts": "f5158c75f45ef6dfef14043b0bfa809210f205441d9028aa37ccaca80b119b80",
-    "lib/enquiries/dispatch.ts": "f1e6123df8d7bcb630abaa987dbcbb23ef55b8b2f12d258d4fabccac88054d90",
+    "lib/enquiries/dispatch.ts": "f92e87203abefcefb6453192194429958c32cad61f43687a337fbd4df9d3c223",
     "lib/enquiries/managed-schema.sql": "88818301d4bff0dbfc6d61740f12abe0b0c080045dde7785766b870ac74c92be",
     "lib/enquiries/presentation.ts": "edb014691065618456bf5db2a92720c3ba04663b8585cc8a0671a705eb5b229c",
     "lib/enquiries/record-routing-schema.sql": "05c2c214c09e14b9567402206a1efe6b4fb1f064d07203386f7a7e23947e8267",
     "lib/enquiries/runner.ts": "931eba28f2a011ba5290ac8af01ac38701a9fe6dea25caf51b53b3578226c864",
     "lib/enquiries/schema.sql": "8e9c620147658f3bd59cd2948d0a46f872eb74066d67eba9f844bc5410fdd743",
-    "lib/enquiries/service.ts": "14d3c0aeb6c2002f69ff31c33d7fc0ee6c77d6250d610799566941a0418a52b2",
+    "lib/enquiries/service.ts": "23b73acb6110e9be039dd87607d292642e212b38f88e387331e16e1a07a53f2c",
     "lib/enquiries/submission.ts": "8714792ff4fbbd5a4920588c054564f1313956e1d4ba37fcc543c62e5a908b6d",
     "lib/enquiries/temporal-schema.sql": "72705c41e2674baadeda22b7e324e9e232947e1a40a7d5717d0cf1280b3736da",
     "lib/orchestration/admission.ts": "83716b11fac148f92ed024edf9a1c492041ec3b8fb11fd3a6e3a1cff6a524e6a",
-    "lib/workflows/guard.ts": "3af43bf26bc065066a140e4e9e2fd2d601ef4089e4a22f6499b64072081a8d11",
+    "lib/quotes/authority-schema.sql": "9bca0a7882861f068c12c982038d41c392b327993e466d1ea76dcaf06fe8dfd0",
+    "lib/quotes/membership-schema.sql": "d2d9c813566d661020223b03a317eefb1fde439f7f164de61e503c309211a1ba",
+    "lib/quotes/plan-v2-schema.sql": "2d9bb08328a8a05c97f0eae0aeeb8232e4d5087d599f92a45a7ece75040318c3",
+    "lib/quotes/schema.sql": "e5fe056acb1cfae170ab1b4da9c90a94b316b99fc27402a0e9f66a8b348ff7ac",
+    "lib/workflows/guard.ts": "990b9c94ae2e2531e190c7b720e6f8a0bffcfab391ee873fd1d1f6fdf55c176f",
     "lib/workflows/request.ts": "3dc1cfcfc429977ffbf7d627ef07dc80081c089fb7e2b2adbc396b0c9180b1ff",
     "lib/workflows/schema.sql": "fad98c6bed6e4cdc0168b5248ca5cbf7411c35ec49cd3bcbd24b27eb11bf3e4d",
     "lib/workflows/service.ts": "861a42c6f3547bc0efe69f6f55e24ea561fe72854b987d25fcf4c653c5362214",
     "lib/workspace/agents.ts": "a7dc16a213f2699679593dc11a2e8aead7533d4832df6180372a9133ea810fe2",
     "lib/workspace/auth.ts": "d58f5bdeac77ef3bd5b86f8590b9c17e99508f74df690998439f6137f3541972",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
+    "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
+    "lib/workspace/membership-authority.ts": "c5ec0b85a7d0341cb68d3072f6c490d0c8d539335eec5f57578123b126fc5d25",
     "lib/workspace/navigation.ts": "1cf72ddc34e3b4d530fc41d521adb409be1eabafbf70689e6222c89c92fbab26",
     "lib/workspace/presentation.ts": "d9006b165518bc432df25ca924101f0e621d8849242f158181cb7f0e181a1904",
     "lib/workspace/response.ts": "5854dd6e0d588cd62ad1e643746d2f2a96993ce131146ee90f929b34bad35a18",
@@ -264,19 +270,20 @@
     "runtime/temporal/admission.ts": "77348e8c27f69fd2d5e765401c62ca9492473db5f050580151c4f564d97ddeb8",
     "runtime/temporal/alert-monitor.ts": "aab9a74fc19fe55be720039bf3087530c28564668951231575b3486805ad828f",
     "runtime/temporal/operations.ts": "5ddc9fac1f844602ce8979a8d890c70767ccdf61bd33fa03a42981be77e60a7a",
-    "runtime/temporal/outbox.ts": "0ff85aa200865cd858e25c4f795f52be619cab1f748a592c33514ee19e9d608c",
+    "runtime/temporal/outbox.ts": "b57338da79c98108113b7969fb911ad3bee10688f8596d0ba9459948a2c21e20",
     "runtime/temporal/pinned-workflow.ts": "224867f8fc7c7c799fef161587901199799b2e432dbb2dda4933f7e2712a79d0",
     "runtime/temporal/record-routing.ts": "cfca7823cefedcfd561460332c56871afb9e34d9fa1697ba3525c02ae3396536",
     "runtime/temporal/staging-host.ts": "7b1b0ef2d6a79df9546622b8b2177c1ae49722e40d19f5b1fdb5b49041b956c8",
-    "runtime/temporal/staging-preflight.ts": "53b210606319eae30fbfc9ff6ec87f46a6bb8c1c748720c77eaa690bd8cfabf1",
+    "runtime/temporal/staging-preflight.ts": "2fb5509e4c8905fc2cd91a2699db9385d3835110663121d91181c28904813a37",
     "runtime/temporal/version-contract.ts": "80fd2948beed1f9f9c0318ed2ac24e59fb3c0820538b718891e179f047c3b921",
     "runtime/temporal/workflow-v2.ts": "9fe1f067454651ae30cf692ba9357cf0afd5123b18014ef72994bbc9b8004ed5",
     "runtime/temporal/workflow.ts": "5ed74bf103edbae5d6345f258f77da6b6e6baf340ccec866d340065ffd607c14",
     "scripts/build-temporal-worker.mjs": "c7c96a323aedd51e0544e50e050301ff1efab1cdb00bfaac690b01d25d109510",
+    "scripts/membership-authority-setup.ts": "dd9e15ae7ae43c3a6792ebb3bf0d154b305fa6f41b5b589158a86188a8f5fe26",
     "scripts/staging-browser-proof.mjs": "aa6960bafeeaaddf528b729e5586accf997cd1904cf9249f6af162dd273cdb76",
-    "scripts/staging-browser-record.mjs": "1bb3c0eaaa0ce8f2750d0bcba9fc4cd8e20b61d89b2216a9ab4ef31054a81097",
+    "scripts/staging-browser-record.mjs": "ce018adb8513dbd8995a94791d833814a506910857df9df6692a9bab1af80ce5",
     "scripts/staging-browser-tls.mjs": "9b6e13b2dad7999e598989b3a5a53c2a30a6421b917c2abb68e9eb495cc35bb8",
-    "scripts/staging-database-bootstrap.mjs": "76cfc8cc58c724efc46b8d37915fb7515976dc5f28af5065e3c0c956e924cb57",
+    "scripts/staging-database-bootstrap.mjs": "0f8b34e2de541503590fdd6dea943eeccfe55c72cae50eb162c485e48d8dd2b8",
     "scripts/staging-fixture-source.mjs": "76e404f688009c9b08322ab4d5a57dc057b5bf2221837c61945a4a5f19e76296",
     "scripts/staging-host-inventory.py": "c67130cbd6353ceb6c716ca20284f9fcd52beedd05e25e0dd33437c2cc7955c8",
     "scripts/staging-image-artifact.mjs": "cf78d67c833418417f2bb64bce784b96cf6fe682f92abd8f43fa6da0165cebd1",
@@ -293,11 +300,11 @@
     "scripts/workspace-recovery.ts": "46ca583a30482edbb3345a2f2643e50b745d3f81be1a99c74076f52ac140d605"
   },
   "executionEvidence": {
-    "runId": 38078502068,
-    "privateWorkflowCommit": "f1da31b0b7089cd5a5288b3fe8e2a7fd9343ddf0",
+    "runId": 38096138102,
+    "privateWorkflowCommit": "c233de87c31fac358be7b9adc4604babcd61457e",
     "publicBaseCommit": "46cf28cef76b6643aedacc5c1c1dd52e05826019",
-    "exactCompressedOverlaySha256": "c6d7519915adcc90a10d84a32af43e6b1b63e972b03dd9b65deee0922eac23ae",
-    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/38078502068",
+    "exactCompressedOverlaySha256": "8693b25024bc0e88e1fac83ea5f149079f634a9146ca020770774f5f63c3e259",
+    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/38096138102",
     "actualProviderEffects": 4,
     "productionChanged": false,
     "scope": "disposable assembled runtime and real-model trusted HTTPS typed journey"

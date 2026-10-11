@@ -1,3 +1,4 @@
+import {typedSourceFiles} from "./staging-browser-record.mjs";
 // Synthetic API association fixtures only. These never create acceptance receipts.
 import { test, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -13,7 +14,8 @@ function fixture() {
     images: runtime.images, buildId: runtime.buildId, ...Object.fromEntries(["manifestSha256", "archiveSha256", "archiveBytes"].map(key => [key, runtime.artifact[key]])) });
   const loaderSources = Object.fromEntries(releaseLoaderFiles.map(file => [file, readFileSync(file)]));
   retrieval.sourceFingerprints = Object.fromEntries(Object.entries(loaderSources).map(([file, bytes]) => [file, hash(bytes)]));
-  const runtimeSources = Object.fromEntries(Object.keys(runtime.sourceFingerprints).map(file => [file, readFileSync(file)]));
+  const runtimeSources = Object.fromEntries(typedSourceFiles(read("docs/evidence/staging-platform-browser-prepared-proof.json").sourceFingerprints).map(file => [file, readFileSync(file)]));
+  runtime.sourceFingerprints=Object.fromEntries(Object.entries(runtimeSources).map(([file,bytes])=>[file,hash(bytes)]));
   const run = { id: metadata.runId, head_sha: metadata.privateWorkflowCommit, status: "completed", conclusion: "success",
     event: "push", head_branch: "codex/looplabs-platform-integration", head_repository: { full_name: "rnagulapalle/sandbox" }, path: ".github/workflows/looplabs-platform-proof.yml" };
   const artifact = { id: retrieval.artifactId, name: `looplabs-tested-images-${run.id}`, expired: false,
@@ -36,6 +38,12 @@ test("requires both successful observed CI inventories, exact retained artifact 
 });
 test("refuses partial or candidate origins, expired artifacts, stale sources and weaker retrieval evidence", () => {
   const changes = [
+    x => x.expectedRuntimeFiles[x.expectedRuntimeFiles.indexOf("lib/workspace/membership-authority-schema.sql")]="unreviewed-substitute.sql",
+    x => x.expectedRuntimeFiles[x.expectedRuntimeFiles.indexOf("scripts/membership-authority-setup.ts")]="unreviewed-provisioner.ts",
+    x => delete x.runtimeSources["scripts/membership-authority-setup.ts"],
+    x => x.runtimeSources["scripts/membership-authority-setup.ts"] = Buffer.from("changed grant"),
+    x => delete x.runtime.sourceFingerprints["scripts/membership-authority-setup.ts"],
+    x => x.runtime.sourceFingerprints["scripts/membership-authority-setup.ts"] = "0".repeat(64),
     x => x.run.conclusion = "failure", x => x.run.status = "in_progress",
     x => x.artifact.name = `looplabs-candidate-platform-images-${x.run.id}`,
     x => x.artifact.expired = true, x => x.artifact.workflow_run.head_sha = "0".repeat(40),

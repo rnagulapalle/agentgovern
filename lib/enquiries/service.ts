@@ -1,3 +1,4 @@
+import { enquiryMembershipCurrent } from "../workspace/membership-authority";
 import { requireAdmission, type OrchestrationAdmission } from "../orchestration/admission";
 import { scopeEnrollment, currentScopeGrant } from "../connectors/scopes";
 import { preparedRequest, sameRequestSnapshot } from "../connectors/request";
@@ -81,6 +82,7 @@ export class EnquiryControl {
       if (binding !== this.workflows.connectors.provider.bindingId) throw new ControlError(409, "Connector destination changed. Prepare fresh work.");
       const plan = (await c.query("SELECT * FROM ll_enquiry_plans WHERE org_id=$1 AND id=$2", [actor.orgId, id])).rows[0];
       if (!plan) throw new ControlError(404, "Enquiry plan not found.");
+      if (!(await enquiryMembershipCurrent(c, actor.orgId, id))) throw new ControlError(409, "Saved plan membership changed. Prepare a new plan.");
       if (plan.plan_hash !== hash) throw new ControlError(409, "The plan changed. Review it again before starting work.");
       if(this.workflows.connectors.provider.recordScope){
         if(managed)await requireAdmission(this.orchestration).assertReady(c);

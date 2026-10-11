@@ -45,6 +45,10 @@ async function main(){
  }
  const owner=await member(reference.owner),reviewer=await member(reference.reviewer);
  assert(owner&&reviewer,"Current named member sessions required");
+ assert.equal((await db.query("SELECT ll_membership_authority23() installed")).rows[0].installed,true);
+ const membership=async actor=>(await db.query("SELECT ll_member_snapshot23($1,$2,NULL) snapshot",[actor.orgId,actor.subject])).rows[0].snapshot;
+ const ownerMembership=await membership(owner),reviewerMembership=await membership(reviewer);
+ assert.equal(ownerMembership.kind,"member");assert.equal(reviewerMembership.kind,"member");assert.notEqual(ownerMembership.subject,reviewerMembership.subject);
  assert.notEqual(owner.subject,reviewer.subject);assert.equal(owner.orgId,"local-proof");assert.equal(reviewer.orgId,owner.orgId);
  const workload=await authenticate(db,env.LOOPLABS_TEMPORAL_WORKER_TOKEN);
  assert.equal(workload.subject,"enquiry-temporal");assert.equal(workload.role,"worker");
@@ -67,10 +71,12 @@ async function main(){
   }
   const enquiry=new EnquiryControl(db,workflow,async()=>{const c=await provider.contact();return {id:c.id,email:c.properties.email,version:c.updatedAt,lifecycle:c.properties.lifecyclestage};},provider.contactId,new TemporalAdmission(db,artifacts[i].buildId));
   const plan=(await enquiry.prepareChat(owner,randomUUID())).saved;
+  assert.deepEqual((await db.query("SELECT membership_owner FROM ll_enquiry_plans WHERE id=$1",[plan.id])).rows[0].membership_owner,ownerMembership);
   await enquiry.start(owner,plan.id,plan.plan_hash,...agents,true);
   let run=await workflow.read(owner,plan.id);
   for(const step of run.steps)await control.propose(owner,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});
   run=await workflow.read(owner,plan.id);assert.equal(run.steps.length,2);assert(run.steps.every(s=>s.state==="held"));
+  for(const step of run.steps){const proposal=(await db.query("SELECT membership_proposal FROM ll_connector_actions WHERE id=$1",[step.action_id])).rows[0].membership_proposal;assert.deepEqual(proposal.requester,ownerMembership);assert.deepEqual(proposal.owner,ownerMembership);assert.deepEqual(proposal.planOwner,ownerMembership);}
   await assert.rejects(()=>control.review(owner,run.steps[0].action_id,run.steps[0].payload_hash,true),e=>e.status===403);
   await promote(artifacts[i].buildId);
   const outbox=new TemporalOutbox(db,artifacts[i].buildId),workflowId=await outbox.transfer(owner,plan.id);
@@ -109,6 +115,7 @@ async function main(){
  await until(async()=> (await snapshot(old)).state==="completed","Retained old artifact did not recover its original route");
  assert.equal(await old.handle.result(),"completed");
  for(const r of runs)assert((await snapshot(r)).steps.every(s=>s.state==="succeeded"&&s.approved_by===reviewer.subject));
+ for(const r of runs)for(const step of r.steps){const authority=(await db.query("SELECT membership_proposal,membership_approval FROM ll_connector_actions WHERE id=$1",[step.actionId])).rows[0];assert.deepEqual(authority.membership_proposal.requester,ownerMembership);assert.deepEqual(authority.membership_approval.approver,reviewerMembership);assert.equal(authority.membership_approval.payloadHash,step.payloadHash);}
  phase="lost-response";
  assert((await db.query("SELECT 1 FROM ll_connector_events WHERE org_id=$1 AND action_id=$2 AND kind='uncertain'",[owner.orgId,old.steps[0].actionId])).rows.length>0);
  await mark("effects-ready",{actionIds:runs.flatMap(r=>r.steps.map(s=>s.actionId))});
@@ -128,6 +135,6 @@ async function main(){
  }
  await mark("post-replay-effects-ready",{});await checkpoint("post-replay-provider-readback");
  assert.deepEqual(JSON.parse(await readFile(`${phaseDir}/post-replay-provider-readback.json`,"utf8")).effects,effects,"Replay must not change provider effects");
- await mark("replay-completed",{passed:true,replay,actualEffects:4,scope:"Authenticated isolated scoped version lifecycle; host checkpoints and retirement still require independent verification",notVerified:["retirement admission fence","long-term retention","production cutover","enterprise acceptance"]});
+ await mark("replay-completed",{passed:true,replay,actualEffects:4,installedMembershipHistory:true,scope:"Authenticated isolated scoped version lifecycle; host checkpoints and retirement still require independent verification",notVerified:["retirement admission fence","long-term retention","production cutover","enterprise acceptance"]});
 }
 main().catch(async()=>{if(optedIn)await writeFile(`${phaseDir}/failure.json`,JSON.stringify({phase}),{mode:0o600}).catch(()=>{});console.error("Staged semantic lifecycle controller failed; no raw authority, payload or SDK error printed.");process.exitCode=1;}).finally(async()=>{await connection?.close();await db?.end();});

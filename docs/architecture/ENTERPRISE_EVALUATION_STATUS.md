@@ -1,6 +1,7 @@
 # Enterprise design-partner evaluation: measured status
 
-October 10, 2026. The objective remains incomplete. Isolated proof is not a
+October 10, 2026. The objective remains incomplete. The ordered milestones and
+acceptance criteria are in [the delivery plan](ENTERPRISE_DELIVERY_PLAN.md). Isolated proof is not a
 persistent deployment, a live-provider guarantee, an availability SLA or evidence
 that LoopLabs exceeds Temporal.
 
@@ -9,7 +10,104 @@ effect verification. The opt-in durable scheduler uses self-hosted OSS Temporal
 behind the orchestration interface. A model prepares a bounded proposal; neither
 chat, plan review nor orchestration scheduling grants execution authority.
 
-## Latest verified application checkpoint
+## Current candidate: membership history and release revalidation
+
+The current pushed application checkpoint is
+`b2a897ca91e14493a4fb71bc29da1a44a36cd748`; all three standard PR checks in
+run `38089313567` passed. Migration 23 and the following newer evidence remain
+local and uncommitted. They are not covered by that earlier green checkpoint.
+
+Migration 23 reuses the existing membership-generation ledger to bind the saved
+plan, action requester, agent owner and independent approver to their authority
+history. Deactivation/reactivation cannot revive a prior approval. Possible
+provider effects remain uncertain until correlated readback; observation does
+not grant new execution authority. See
+[the membership boundary](../CONNECTOR_MEMBERSHIP_HISTORY.md).
+
+Actual isolated tests against the installed migration passed:
+
+| Evaluation | Observed result | Limit |
+| --- | --- | --- |
+| Named chat and saved plans | 20 real typed-browser checks, including independent approvals, revoked membership history, lost response and restart | Bounded Bedrock acknowledgement planning and provider twins |
+| Restricted runtime and two workspaces | 12 checks, 64 HTTP refusals, eight browser refusals, 15 SQL attacks and four intended effects | The shared SQL role can still read both workspaces; no RLS claim |
+| Paced workspace operation | 13 checks, six waves, 24 additional workflows and 52 targeted effects | Finite isolated observation, not a sustained SLO |
+| Approved-record load | 40 records, 80 transfer calls, 39 completed, one contained and 78 effects | 111,736ms observation; not steady-state throughput |
+| Shared-agent contention | Three final-slot contenders: one admitted and two denied; no rejected effects or allowance refund | Two scoped agents and sample records |
+| Connector and hosted email | 36 controlled-connector checks and eight hosted-email checks; accepted-response loss reconciled without resend | Hosted CRM-to-email remains blocked by missing atomic source-version enforcement |
+| Crash, replay and restore | Fault/replay eight checks, version/restart nine, dispatch/revocation eight, actual database archive restore seven | Single-host fixtures and retained provider effects; no replicated failover |
+| Authenticated containers | 20 checks and 38 independently matched sources; mutual TLS, namespace JWT denial, key rotation and persistence crash/restore retained two effects | Component passed in run 38095494999; full job failed the evidence freshness gate |
+| Mandatory gateway fixture | 20 actual network/restart checks; 54 source fingerprints and three compiled bundles independently matched | Separate Docker networks and private twins; no customer-cloud or same-pod isolation claim |
+
+The latest local full-quality attempt passed 1,158 tests and failed four:
+candidate promotion/reversion, semantic, drain and reset evidence remains stale.
+The earlier isolated container CI full gate passed 1,154 and failed six against
+its frozen evidence snapshot; that historical result is not the current local
+result. Approved-load, shared-agent, authenticated-container, gateway and assembled
+browser proofs now match their covered sources. No current full gate has passed.
+Fresh assembled source coverage requires 106 runtime, 115 semantic, 122 drain and
+138 reset files, including the membership provisioner. Historical receipts remain
+historical.
+
+The first Linux gateway attempt stopped at enrollment with 401 because its test
+driver supplied the wrong cookie name. No acceptance receipt was produced. The
+driver now imports the application's cookie constant; runtime authentication
+was not relaxed. The second run reached approval and exposed reused session/token
+credentials in the driver. The impersonation test now uses distinct credentials
+for the same named subject; its denial assertion remains unchanged. Replacement
+run 38095679062 passed all 20 actual network/restart checks and its discovery
+browser step; its full regression stage then failed eight evidence tests against
+that run's earlier frozen receipt snapshot. The local current full-gate counts
+above are a separate observation. All four retained
+gateway evidence tests pass against the independently downloaded receipt.
+The fresh assembled run 38096138102
+passed its assembled runtime component with independently verified 106-source overlay
+8693b25024bc0e88e1fac83ea5f149079f634a9146ca020770774f5f63c3e259.
+Ten typed HTTPS browser checks, eight runtime checks, four observed twin effects
+and archive-restore containment passed. The raw receipt and all 106 hashes were
+independently verified; the retained browser-evidence test now passes locally.
+Its full regression job completed unsuccessfully: 1,153 tests passed and seven
+failed. Five failures concerned the frozen earlier evidence; two exposed a
+persistent-runtime preparation helper still requiring the historical 99-source
+registry. The helper now requires the current 106-source registry, and a new
+adversarial test refuses the historical registry before eligibility observation.
+All thirteen focused preparation tests pass locally, including equal-length
+substitution of each required membership source. Thirty-three related tests pass
+across four files. The latest local full gate, including the required-source
+assertion, passed 1,158 tests and failed four stale lifecycle-evidence tests.
+Release still requires fresh lifecycle evidence and a passed full quality gate.
+A focused check of the six retained
+evidence families now passes gateway and browser, while candidate, semantic,
+drain and reset remain stale; this is not a passed full quality run.
+The independent second assembled origin, run 38096536612, completed with the
+same reviewed sources and a separately issued web-only model session. Its
+runtime, receipt retention, candidate-image retention and cleanup passed; the
+frozen full gate failed the same seven tests (1,153 passed). Both terminal
+origins were authenticated; all 106 source hashes and eight distinct image IDs
+match, with the same reviewed worker build. They are candidate test inputs,
+not accepted releases. Semantic upgrade/replay run 38098248911 completed its
+actual runtime, provenance verification, receipt retention and cleanup using
+these exact inputs and the reviewed 115-source runtime graph. The job failed
+only its retained test's historical origin pin. Artifact 11686978543 was
+independently authenticated; its ZIP digest, exact raw receipt bytes and all
+115 source fingerprints matched. Updating that exact evidence pin locally
+preserved all assertions; four semantic evidence tests now pass. This component
+intake does not constitute full regression or release acceptance. The first
+job's session input was prepared and its GitHub secret independently removed
+before the second session was issued. The second job prepared its web-only input
+and its owned GitHub secret was independently removed as well. Semantic
+execution uses its own expiring web-only session; its watcher removed the
+owned secret after successful input preparation. Drain run 38098987093 completed
+its actual runtime, provenance verification, receipt retention and cleanup.
+Artifact 11687124592 and its exact raw receipt were independently authenticated
+against all 122 current sources. Both admission races, rollback and idempotency
+assertions remain intact. The only job failure was the retained test's historical
+receipt/origin pin; after refreshing that exact pin to the authenticated evidence,
+all three drain evidence tests pass locally. Reset and candidate-release proof
+remain pending; focused passes are not a new full-quality or release result.
+Running jobs are not completed proof or accepted images. No migration 23 deployment, persistent independent
+operator acceptance, native-provider guarantee or enterprise SLA is established.
+
+## Earlier verified application checkpoint
 
 Commit `0a75fa5caf7c1ecdf509e6c3ca553d700fec217e` is pushed on
 `codex/looplabs-worker-version-lifecycle` and under draft PR 82. The final-source
@@ -249,3 +347,8 @@ no production deployment followed it. The main checkout and unrelated GTM change
 remain preserved. Every later change needs full `pnpm quality` on its final source;
 production still requires clean pushed `main` and `./deploy.sh`. A private
 proof-harness commit is not an application release.
+
+
+## October 10 final current-source local quality result
+
+After independently authenticating candidate promotion/reversion run 38101267754 against all 116 current source files, the retained candidate test was updated only to exact measured origin/receipt pins and complete source-set coverage. Actual `pnpm quality` finished with exit 0: 157 test files and 1,162 tests passed, coverage thresholds, lint, types and production build passed. This supersedes the earlier local 1,158-pass/four-failure result. It does not make historical failed candidate jobs successful release origins, establish production deployment, validate unapplied chat/tenant proposals or prove an enterprise SLA.

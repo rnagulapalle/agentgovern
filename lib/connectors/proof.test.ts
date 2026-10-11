@@ -10,6 +10,7 @@ it("publishes only recorded passing proof for the exact connector implementation
   expect(evidence.scope).toContain("No live CRM");
   expect(evidence.limits.some((s) => s.includes("failover"))).toBe(true);
   expect(new Date(evidence.at).getTime()).not.toBeNaN();
+  expect(Object.keys(evidence.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
   for (const [file, hash] of Object.entries(evidence.sourceFingerprints))
     expect(
       createHash("sha256")

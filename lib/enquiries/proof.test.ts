@@ -4,7 +4,8 @@ import { expect, it } from "vitest";
 import { validateAdvancedButtonMeasurements } from "./advanced-measurements";
 import proof from "../../docs/evidence/chat-ui-proof.json";
 it("requires fresh recorded UI/model/twin proof and keeps unsupported hosted execution explicit", async () => {
-  expect(proof.checks.length).toBeGreaterThanOrEqual(16);
+  expect(proof.checks.length).toBeGreaterThanOrEqual(20);
+  for (const phrase of ["Installed membership23", "approver deactivation/reactivation", "requester deactivation/reactivation"]) expect(proof.checks.some(c=>c.name.includes(phrase))).toBe(true);
   validateAdvancedButtonMeasurements((proof as unknown as { advancedButtonMeasurements?: unknown }).advancedButtonMeasurements);
   expect(proof.checks.some(c=>c.name.includes("guided Submission incomplete view"))).toBe(true);
   expect(proof.checks.every(c => c.passed)).toBe(true);
@@ -26,7 +27,7 @@ it("requires fresh recorded UI/model/twin proof and keeps unsupported hosted exe
   expect(proof.observedRuns).toHaveLength(3);
   expect(Object.keys(proof.providerEffects)).toHaveLength(5);
   expect(proof.unsupported.some(s => s.includes("atomic CRM contact-version"))).toBe(true);
-  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/identity.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql"]));
+  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/identity.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql"]));
   for (const [file, hash] of Object.entries(proof.sourceFingerprints)) {
     expect(createHash("sha256").update(await readFile(file)).digest("hex"), `Chat UI proof is stale for ${file}; rerun pnpm chat:proof`).toBe(hash);
   }

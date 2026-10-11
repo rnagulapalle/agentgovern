@@ -91,12 +91,12 @@ export async function stagingSemanticLifecycle(input){
   phase="independent-provider-readback";await checkpoint("effects-ready");await mark("provider-readback",{effects:state().effects});
   phase="replay";await checkpoint("post-replay-effects-ready");await mark("post-replay-provider-readback",{effects:state().effects});
   await checkpoint("replay-completed");await until(()=>exit!==null);assert.equal(exit,0);
-  const receipt=JSON.parse(await readFile(resolve(dir,"replay-completed.json"),"utf8"));assert.equal(receipt.passed,true);assert.equal(receipt.actualEffects,4);
+  const receipt=JSON.parse(await readFile(resolve(dir,"replay-completed.json"),"utf8"));assert.equal(receipt.passed,true);assert.equal(receipt.actualEffects,4);assert.equal(receipt.installedMembershipHistory,true);
   const effects=state().effects;assert.equal(Object.keys(effects).length,4);
   for(const [i,r] of held.runs.entries())for(const s of r.steps)assert.equal(effects[s.actionId].recordId,records[i].contactId);
   phase="writer-containment";
   for(const c of [restored,next]){docker("stop","--time","30",c.Id);assert.equal(inspect(c.Id).State.Running,false);}
-  return {passed:true,builds:artifacts.map(a=>a.buildId),images:[old.Image,next.Image],oldWorkerKilled:true,oldWorkerRecreated:true,newWorkerContinued:true,heldEffects:0,newWhileOldAbsentEffects:2,finalEffects:4,replay:receipt.replay,additionalWritersStopped:true,notVerified:["retirement admission fence","long-term retention","production cutover","enterprise acceptance"]};
+  return {passed:true,builds:artifacts.map(a=>a.buildId),images:[old.Image,next.Image],oldWorkerKilled:true,oldWorkerRecreated:true,newWorkerContinued:true,heldEffects:0,newWhileOldAbsentEffects:2,finalEffects:4,installedMembershipHistory:true,replay:receipt.replay,additionalWritersStopped:true,notVerified:["retirement admission fence","long-term retention","production cutover","enterprise acceptance"]};
  }catch{
   let controllerPhase="";try{const report=JSON.parse(await readFile(resolve(dir,"failure.json"),"utf8"));if(typeof report.phase==="string"&&/^[a-z-]+$/.test(report.phase))controllerPhase=`/${report.phase}`;}catch{}
   console.error(`Semantic host refused at ${phase}${controllerPhase}; no raw Docker output, payload or credentials printed.`);

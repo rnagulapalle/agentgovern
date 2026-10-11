@@ -3,6 +3,9 @@ import { createHash } from "node:crypto";
 import { it, expect } from "vitest";
 it("requires a real application-database archive restore and refusal of resurrected authority", () => {
   const proof = JSON.parse(readFileSync("docs/evidence/workspace-restore-proof.json", "utf8"));
+  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
+  expect(proof.checks.length).toBeGreaterThanOrEqual(7);
+  for (const marker of ["Installed migration23", "named sessions", "preserving original proposal/approval snapshots without rebinding", "invalidated membership stays uncertain"]) expect(proof.checks.join(" ")).toContain(marker);
   expect(proof.measurements).toMatchObject({ restoredRuns: 2, finalEffects: 2 });
   expect(proof.measurements.restoreAndReconcileMs).toBeGreaterThan(0);
   expect(proof.backupHash).toMatch(/^[0-9a-f]{64}$/);
@@ -14,7 +17,9 @@ it("requires a real application-database archive restore and refusal of resurrec
 });
 it("requires actual Temporal fault/replay evidence matching its implementation", () => {
   const proof = JSON.parse(readFileSync("docs/evidence/temporal-proof.json", "utf8"));
-  expect(proof.checks.length).toBeGreaterThanOrEqual(7);
+  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
+  expect(proof.checks.length).toBeGreaterThanOrEqual(8);
+  expect(proof.checks.some((s: string) => s.includes("Installed migration23") && s.includes("named-session") && s.includes("without effects"))).toBe(true);
   expect(proof.checks.some((s: string) => s.includes("SIGKILL"))).toBe(true);
   expect(proof.checks.some((s: string) => s.includes("Incompatible"))).toBe(true);
   for (const [file, hash] of Object.entries(proof.sourceFingerprints))
@@ -24,7 +29,10 @@ it("requires actual Temporal fault/replay evidence matching its implementation",
 
 it("requires persisted-service restart and pinned-routing evidence matching implementation", () => {
   const proof = JSON.parse(readFileSync("docs/evidence/temporal-version-proof.json", "utf8"));
-  expect(proof.checks.length).toBeGreaterThanOrEqual(7);
+  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
+  expect(proof.checks.length).toBeGreaterThanOrEqual(9);
+  expect(proof.checks.join(" ")).toContain("Installed migration23");
+  expect(proof.checks.join(" ").toLowerCase()).toContain("Re-enabled owner".toLowerCase());
   for (const marker of ["routes new runs", "service restart", "only v2", "revoked owner", "Unsupported", "replays"]) {
     expect(proof.checks.join(" ").toLowerCase()).toContain(marker.toLowerCase() === "unsupported" ? "unknown connector" : marker.toLowerCase());
   }
@@ -35,7 +43,10 @@ it("requires persisted-service restart and pinned-routing evidence matching impl
 
 it("requires actual ownership, scheduling fence and in-flight revocation evidence", () => {
   const proof = JSON.parse(readFileSync("docs/evidence/temporal-dispatch-proof.json", "utf8"));
-  expect(proof.checks.length).toBeGreaterThanOrEqual(6);
+  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
+  expect(proof.checks.length).toBeGreaterThanOrEqual(8);
+  expect(proof.checks.join(" ")).toContain("Installed migration23");
+  expect(proof.checks.join(" ").toLowerCase()).toContain("Re-enabled owner".toLowerCase());
   for (const marker of ["excludes legacy", "Expired scheduler lease", "Concurrent authorized", "Closed Temporal", "Owner revoked"])
     expect(proof.checks.join(" ")).toContain(marker);
   for (const [file, hash] of Object.entries(proof.sourceFingerprints))
@@ -45,6 +56,8 @@ it("requires actual ownership, scheduling fence and in-flight revocation evidenc
 
 it("requires packaged worker/scheduler crash and backlog evidence", () => {
   const proof=JSON.parse(readFileSync("docs/evidence/temporal-load-proof.json","utf8"));
+ expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
+  expect(proof.checks.join(" ")).toContain("Installed migration23");
   expect(proof.measurements.plans).toBe(25);
   expect(proof.measurements.concurrentTransferCalls).toBe(50);
   expect(proof.measurements.finalEffects).toBe(2);
@@ -59,6 +72,10 @@ it("requires packaged worker/scheduler crash and backlog evidence", () => {
 
 it("requires real authenticated container, namespace, rotation and persistence recovery evidence", () => {
   const proof=JSON.parse(readFileSync("docs/evidence/temporal-container-proof.json","utf8"));
+  expect(proof.checks.length).toBeGreaterThanOrEqual(20);
+  expect(proof.checks.join(" ")).toContain("Installed migration23");
+  expect(Object.keys(proof.sourceFingerprints)).toContain("lib/workspace/identity.ts");
+ expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
   expect(proof.measurements.plans).toBe(25);
   expect(proof.measurements.finalEffects).toBe(2);
   expect(proof.measurements.databaseReplacementAttempts).toEqual({ worker: 2, scheduler: 2 });
@@ -83,6 +100,10 @@ it("requires actual monitor-process alert delivery and restart evidence", () => 
 
 it("requires actual packaged independent-record routing and refusal evidence",()=>{
  const proof=JSON.parse(readFileSync("docs/evidence/temporal-record-proof.json","utf8"));
+ expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
+ expect(proof.checks.length).toBeGreaterThanOrEqual(7);
+ expect(proof.checks.join(" ")).toContain("Installed migration23");
+ expect(Object.keys(proof.sourceFingerprints)).toContain("lib/workspace/identity.ts");
  expect(proof.measurements).toEqual({records:10,transferCalls:20,completed:9,contained:1,effects:18});
  for(const marker of ["immutable routes","explicitly pinned", "SIGKILL", "lost CRM HTTP response", "Revoked tenth", "histories replay"])
   expect(proof.checks.join(" ")).toContain(marker);
@@ -93,6 +114,10 @@ it("requires actual packaged independent-record routing and refusal evidence",()
 
 it("requires actual paced approved-record load and measured completion observations",()=>{
  const proof=JSON.parse(readFileSync("docs/evidence/temporal-approved-load-proof.json","utf8"));
+ expect(proof.checks.length).toBeGreaterThanOrEqual(7);
+ expect(proof.checks.join(" ")).toContain("Installed migration23");
+ expect(Object.keys(proof.sourceFingerprints)).toContain("lib/workspace/identity.ts");
+ expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
  expect(proof.measurements).toEqual({records:40,transferCalls:80,completed:39,contained:1,effects:78});
  expect(proof.observationWindowMs).toBeGreaterThanOrEqual(60000);
  expect(proof.approvalToObservedCompletionMs).toHaveLength(39);
@@ -105,6 +130,10 @@ it("requires actual paced approved-record load and measured completion observati
 
 it("requires actual shared-agent last-slot contention without overspend or rejected execution",()=>{
  const proof=JSON.parse(readFileSync("docs/evidence/temporal-shared-agent-proof.json","utf8"));
+ expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
+ expect(proof.checks.length).toBeGreaterThanOrEqual(7);
+ expect(proof.checks.join(" ")).toContain("Installed migration23");
+ expect(Object.keys(proof.sourceFingerprints)).toContain("lib/workspace/identity.ts");
  expect(proof.measurements).toEqual({records:10,transferCalls:20,completed:9,contained:1,effects:18});
  expect(proof.sharedAgents).toBe(2);expect(proof.perAgentAllowance).toBe(10);expect(proof.enrolledCustomers).toBe(12);
  expect(proof.concurrentFinalSlotCandidates).toBe(3);expect(proof.admittedFinalSlotCandidates).toBe(1);expect(proof.deniedFinalSlotCandidates).toBe(2);

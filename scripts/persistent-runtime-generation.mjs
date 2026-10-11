@@ -12,6 +12,7 @@ import {runtimeInputs} from "./staging-runtime-inputs.mjs";
 import {renewalIdentity} from "./persistent-temporal-renewal.mjs";
 import {publicJwks} from "./staging-authorization.mjs";
 import {stagingRecoveryEpoch} from "./staging-database-bootstrap.mjs";
+import {membershipAuthoritySourceFiles} from "./staging-browser-record.mjs";
 const root=resolve(fileURLToPath(new URL("..",import.meta.url)));
 const sha=bytes=>createHash("sha256").update(bytes).digest("hex");
 const digest=/^[a-f0-9]{64}$/;
@@ -36,7 +37,9 @@ function credential(token,key,identity,now,fresh) {
  return body;
 }
 function artifactDescriptor(artifact,registry) {
- if(!Array.isArray(registry)||registry.length!==99||new Set(registry).size!==99||registry.some(f=>typeof f!=="string"||isAbsolute(f)||!f||f.split("/").some(p=>!p||p===".."||p==="."||p.startsWith("."))))throw Error("Exact approved runtime registry required");
+ // Membership-history enforcement adds seven runtime sources to the reviewed
+ // registry. Historical 99-source artifacts cannot authorize this generation.
+ if(!Array.isArray(registry)||registry.length!==106||new Set(registry).size!==106||!membershipAuthoritySourceFiles.every(file=>registry.includes(file))||registry.some(f=>typeof f!=="string"||isAbsolute(f)||!f||f.split("/").some(p=>!p||p===".."||p==="."||p.startsWith("."))))throw Error("Exact approved runtime registry required");
  if(!exact(artifact,["buildId","images","sourceFingerprints"])||typeof artifact.buildId!=="string"||!/^ack-[a-f0-9]{64}$/.test(artifact.buildId)||!exact(artifact.images,["web","worker"])||Object.values(artifact.images).some(id=>typeof id!=="string"||!/^sha256:[a-f0-9]{64}$/.test(id))||artifact.images.web===artifact.images.worker||!exact(artifact.sourceFingerprints,[...registry])||Object.values(artifact.sourceFingerprints).some(v=>typeof v!=="string"||!digest.test(v)))throw Error("Independent accepted artifact descriptor required");
  return structuredClone(artifact);
 }

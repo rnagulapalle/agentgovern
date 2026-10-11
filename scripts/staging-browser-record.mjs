@@ -6,8 +6,9 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {runtimeImageLock} from "./staging-runtime-images.mjs";
 const expectedDependencies=runtimeImageLock(JSON.parse(readFileSync(new URL("../config/staging-runtime-images.json",import.meta.url),"utf8")));
+export const membershipAuthoritySourceFiles=["scripts/membership-authority-setup.ts", "lib/workspace/membership-authority.ts", "lib/workspace/membership-authority-schema.sql", "lib/quotes/schema.sql", "lib/quotes/authority-schema.sql", "lib/quotes/plan-v2-schema.sql", "lib/quotes/membership-schema.sql"];
 export function typedSourceFiles(priorFingerprints){
- return [...new Set([...Object.keys(priorFingerprints),"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs","scripts/workspace-recovery.ts","scripts/staging-restore-controller.mjs","scripts/staging-image-artifact.mjs","scripts/staging-runtime-images.mjs","config/staging-runtime-images.json","lib/orchestration/admission.ts","runtime/temporal/admission.ts"])].sort();
+ return [...new Set([...Object.keys(priorFingerprints),...membershipAuthoritySourceFiles,"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs","scripts/workspace-recovery.ts","scripts/staging-restore-controller.mjs","scripts/staging-image-artifact.mjs","scripts/staging-runtime-images.mjs","config/staging-runtime-images.json","lib/orchestration/admission.ts","runtime/temporal/admission.ts"])].sort();
 }
 export function typedReceipt(result,metadata,fingerprints){
  assert(result?.passed===true&&result.browser?.passed===true);

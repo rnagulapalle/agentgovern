@@ -12,6 +12,7 @@ import { ConnectorControl } from "../lib/connectors/service";
 import { FetchSandboxConnectors } from "../lib/connectors/twin";
 import { WorkflowControl } from "../lib/workflows/service";
 import { EnquiryControl } from "../lib/enquiries/service";
+import { memberSession, digest } from "../lib/workspace/identity";
 import { activities } from "../runtime/temporal/activities";
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 async function main() {
@@ -28,7 +29,7 @@ async function main() {
   const token = randomBytes(32).toString("base64url");
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql"]) await db.query(await readFile(f, "utf8"));
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql","lib/durable/recovery-schema.sql","lib/connectors/scope-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/membership-authority-schema.sql"]) await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('requester','local-proof','Requester','unused'),('reviewer','local-proof','Reviewer','unused')");
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
@@ -39,7 +40,15 @@ async function main() {
       await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,$3)", [tokenHash(key), subject, role]);
       actors.push(await authenticate(db, key));
     }
-    const [requester, reviewer, workerActor] = actors;
+    const [legacyRequester, legacyReviewer, workerActor] = actors;
+    assert((await db.query("SELECT to_regprocedure('ll_membership_authority23()') AS installed")).rows[0].installed);
+    const memberActors = [];
+    for (const email of ["requester", "reviewer"]) {
+      const session = randomBytes(32).toString("base64url");
+      await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,$2,now()+interval '1 hour')", [digest(session), email]);
+      const actor = await memberSession(db, session); assert(actor); memberActors.push(actor);
+    }
+    const [requester, reviewer] = memberActors;
     await writeFile(`${dir}/connector-twin-credentials.json`, JSON.stringify({ token }), { mode: 0o600 });
     const backend = process.env.FETCHSANDBOX_BACKEND_PATH || `${process.env.HOME}/sandbox/backend`;
     twin = spawn(`${backend}/.venv/bin/python`, ["scripts/connector-twin.py"], { env: { ...process.env, LOOPLABS_CONNECTOR_STATE_DIR: dir }, stdio: "ignore" });
@@ -51,15 +60,32 @@ async function main() {
     const enquiries = new EnquiryControl(db, workflows, async () => { const c = await provider.contact(); return { id: c.id, email: c.properties.email, version: c.updatedAt, lifecycle: c.properties.lifecyclestage }; });
     const make = async () => {
       const p = (await enquiries.prepareChat(requester, randomUUID())).saved;
+      const saved = (await db.query("SELECT membership_owner FROM ll_enquiry_plans WHERE id=$1", [p.id])).rows[0];
+      assert.deepEqual(saved.membership_owner, {kind:"member",subject:"requester",generation:"1"});
       await enquiries.rehearse(requester, p.id, p.plan_hash);
+      const snapshots = (await db.query("SELECT membership_proposal FROM ll_connector_actions WHERE id IN (SELECT action_id FROM ll_workflow_steps WHERE run_id=$1)", [p.id])).rows;
+      assert.equal(snapshots.length, 2);
+      assert(snapshots.every(row => row.membership_proposal?.planOwner?.kind === "member" && row.membership_proposal.planOwner.subject === "requester"));
       return p.id as string;
     };
-    const approve = async (id: string) => { for (const s of (await workflows.read(requester, id)).steps) await control.review(reviewer, s.action_id, s.payload_hash, true); };
+    const approve = async (id: string) => {
+      for (const s of (await workflows.read(requester, id)).steps) {
+        await control.review(reviewer, s.action_id, s.payload_hash, true);
+        const approved = (await db.query("SELECT membership_approval FROM ll_connector_actions WHERE id=$1", [s.action_id])).rows[0];
+        assert.deepEqual(approved.membership_approval.approver, {kind:"member",subject:"reviewer",generation:"1"});
+        assert.equal(approved.membership_approval.payloadHash, s.payload_hash);
+      }
+    };
     const effects = async () => Object.keys(JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects).length;
     env = await TestWorkflowEnvironment.createLocal();
     const taskQueue = `proof-${randomUUID()}`, activity = activities(workflows, workerActor);
     const createWorker = (version = "workflow") => Worker.create({ connection: env!.nativeConnection, taskQueue, workflowsPath: resolve(`runtime/temporal/${version}.ts`), activities: activity, shutdownGraceTime: "1 second" });
+    await assert.rejects(() => enquiries.prepareChat(legacyRequester, randomUUID()));
     const id = await make();
+    const held = (await workflows.read(requester, id)).steps[0];
+    await assert.rejects(() => control.review(legacyReviewer, held.action_id, held.payload_hash, true));
+    assert.equal(await effects(), 0);
+    pass("Installed migration23 binds named-session plan/action snapshots and refuses same-subject legacy bearer proposal/approval without effects");
     const handle = await env.client.workflow.start("governedAcknowledgement", { workflowId: `ack-${id}`, taskQueue, args: [id] });
     await (await createWorker()).runUntil(async () => {
       await wait(1500);
@@ -115,7 +141,7 @@ async function main() {
     await (await createWorker()).runUntil(async () => { assert.equal(await stopped.result(), "contained"); });
     assert.equal(await effects(), before);
     pass("Paused run stays contained without effects");
-    const files = ["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","lib/workspace/identity.ts","runtime/temporal/activities.ts", "runtime/temporal/workflow.ts", "runtime/temporal/workflow-v2.ts", "scripts/temporal-proof.ts", "scripts/temporal-proof-worker.ts"];
+    const files = ["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/identity.ts","runtime/temporal/activities.ts", "runtime/temporal/workflow.ts", "runtime/temporal/workflow-v2.ts", "scripts/temporal-proof.ts", "scripts/temporal-proof-worker.ts"];
     const fingerprints = Object.fromEntries(await Promise.all(files.map(async f => [f, createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/temporal-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Local Temporal dev service; isolated PostgreSQL and private HTTP twins; no production cutover", checks, sourceFingerprints: fingerprints, limitations: ["Compatible patch rollout, not deployment pinning", "Lease expiry shortened in isolated test; Temporal activity uses normal timeout/retry", "No UI cutover, production failover, real providers or scale proof"] }, null, 2) + "\n");
   } finally {

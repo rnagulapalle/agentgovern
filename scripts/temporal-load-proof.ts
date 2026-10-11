@@ -12,6 +12,7 @@ import { networkInterfaces } from "node:os";
 import { containerHostAddress, fixtureRelay } from "./container-host-transport";
 import assert from "node:assert/strict";
 import { authenticate, tokenHash } from "../lib/durable/service";
+import {memberSession,digest} from "../lib/workspace/identity";
 import { ConnectorControl } from "../lib/connectors/service";
 import { FetchSandboxConnectors } from "../lib/connectors/twin";
 import { WorkflowControl } from "../lib/workflows/service";
@@ -61,7 +62,7 @@ async function main() {
   const token = randomBytes(32).toString("base64url");
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql"]) await db.query(await readFile(f, "utf8"));
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql","lib/durable/recovery-schema.sql","lib/connectors/scope-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/membership-authority-schema.sql"]) await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('requester','local-proof','Requester','unused'),('reviewer','local-proof','Reviewer','unused')");
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
@@ -72,7 +73,15 @@ async function main() {
       await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,$3)", [tokenHash(key), subject, role]);
       actors.push(await authenticate(db, key));
     }
-    const [requester, reviewer] = actors;
+    const [legacyRequester, legacyReviewer] = actors;
+    assert((await db.query("SELECT to_regprocedure('ll_membership_authority23()') AS installed")).rows[0].installed);
+    const members = [];
+    for (const email of ["requester", "reviewer"]) {
+      const session = randomBytes(32).toString("base64url");
+      await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,$2,now()+interval '1 hour')", [digest(session), email]);
+      const actor = await memberSession(db, session); assert(actor); members.push(actor);
+    }
+    const [requester, reviewer] = members;
     await writeFile(`${dir}/connector-twin-credentials.json`, JSON.stringify({ token }), { mode: 0o600 });
     const backend = process.env.FETCHSANDBOX_BACKEND_PATH || `${process.env.HOME}/sandbox/backend`;
     twin = spawn(`${backend}/.venv/bin/python`, ["scripts/connector-twin.py"], { env: { ...process.env, LOOPLABS_CONNECTOR_STATE_DIR: dir }, stdio: "ignore" });
@@ -84,10 +93,19 @@ async function main() {
     const enquiries = new EnquiryControl(db, workflows, async () => { const c = await provider.contact(); return { id: c.id, email: c.properties.email, version: c.updatedAt, lifecycle: c.properties.lifecyclestage }; });
     const make = async () => {
       const p = (await enquiries.prepareChat(requester, randomUUID())).saved;
+      assert.deepEqual((await db.query("SELECT membership_owner FROM ll_enquiry_plans WHERE id=$1", [p.id])).rows[0].membership_owner, {kind:"member",subject:"requester",generation:"1"});
       await enquiries.rehearse(requester, p.id, p.plan_hash);
+      const proposals = (await db.query("SELECT membership_proposal FROM ll_connector_actions WHERE id IN (SELECT action_id FROM ll_workflow_steps WHERE run_id=$1)", [p.id])).rows;
+      assert.equal(proposals.length, 2);
+      assert(proposals.every(row => row.membership_proposal?.planOwner?.subject === "requester" && row.membership_proposal.planOwner.generation === "1"));
       return { runId: p.id, planHash: p.plan_hash, planVersion: "acknowledgement-1", connectorVersion: "private-twin-1" } as RunContract;
     };
-    const approve = async (id: string) => { for (const s of (await workflows.read(requester, id)).steps) await control.review(reviewer, s.action_id, s.payload_hash, true); };
+    const approve = async (id: string) => { for (const s of (await workflows.read(requester, id)).steps) {
+      await control.review(reviewer, s.action_id, s.payload_hash, true);
+      const approval = (await db.query("SELECT membership_approval FROM ll_connector_actions WHERE id=$1", [s.action_id])).rows[0].membership_approval;
+      assert.deepEqual(approval.approver, {kind:"member",subject:"reviewer",generation:"1"});
+      assert.equal(approval.payloadHash, s.payload_hash);
+    } };
     const effects = async () => Object.keys(JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects).length;
     const image=process.env.LOOPLABS_TEMPORAL_PROOF_IMAGE;
     if(containerMode && !image) throw Error("Explicit built proof image required");
@@ -167,6 +185,12 @@ async function main() {
     const plans:RunContract[]=[];
     for(let i=0;i<25;i++) plans.push(await make());
     const setupStart=performance.now();
+    await assert.rejects(() => enquiries.prepareChat(legacyRequester, randomUUID()));
+    const held = (await workflows.read(requester, plans[0].runId)).steps[0];
+    await assert.rejects(() => control.review(legacyReviewer, held.action_id, held.payload_hash, true));
+    await assert.rejects(() => outbox.transfer(legacyRequester, plans[0].runId));
+    assert.equal(await effects(), 0);
+    pass("Installed migration23 records named-session generation1 authority; retained same-subject bearer proposal, approval and transfer are refused without effects");
     await Promise.all(plans.flatMap(p=>[outbox.transfer(requester,p.runId),outbox.transfer(requester,p.runId)]));
     const enqueueMs=Math.round(performance.now()-setupStart);
     assert.equal((await db.query("SELECT count(*) FROM ll_temporal_dispatch")).rows[0].count,"25");assert.equal(await effects(),0);
@@ -283,7 +307,7 @@ async function main() {
     pass("Workload revocation makes both packaged roles unready");
     const shutdownStart=performance.now();await kill(scheduler,"SIGTERM");await kill(worker,"SIGTERM");
     const shutdownMs=Math.round(performance.now()-shutdownStart);
-    const files=["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","lib/workspace/identity.ts",...(secure?["scripts/temporal-container-environment.ts","Dockerfile.temporal"]:[]),"scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","runtime/temporal/operations.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/version-contract.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-load-proof.ts","scripts/container-host-transport.ts"];
+    const files=["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts","lib/workflows/guard.ts","lib/durable/recovery.ts","lib/durable/service.ts","lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/identity.ts",...(secure?["scripts/temporal-container-environment.ts","Dockerfile.temporal"]:[]),"scripts/temporal-service.ts","scripts/build-temporal-worker.mjs","runtime/temporal/operations.ts","runtime/temporal/outbox.ts","runtime/temporal/activities.ts","runtime/temporal/version-contract.ts","runtime/temporal/pinned-workflow.ts","scripts/temporal-load-proof.ts","scripts/container-host-transport.ts"];
     const fingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile(secure?"docs/evidence/temporal-container-proof.json":"docs/evidence/temporal-load-proof.json",JSON.stringify({at:new Date().toISOString(),scope:secure?"Isolated self-hosted PostgreSQL-backed Temporal with mTLS/JWT namespace authorization and actual worker containers; no production cutover":"Local packaged pinned worker/scheduler, actual Temporal, isolated PostgreSQL and one private HTTP twin; no production cutover",checks,
       ...(secure?{imageIds:secure.imageIds,workerImage:{image,id:await secure.docker("image","inspect",image!,"--format","{{.Id}}")}}:{}),

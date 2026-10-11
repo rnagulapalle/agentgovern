@@ -3,7 +3,7 @@
 October 9, 2026. Raj added cloud discovery and sidecar-based enforcement to the
 platform scope. This document is the implementation contract, not a shipped
 integration claim. Current LoopLabs controls operate enrolled identities and
-bounded private provider twins. A staged AWS inventory candidate now stores scoped observations and exposes manual read-only scanning through a reviewed private binding; actual AWS account discovery remains unproved. Azure/Google collectors, project scope persistence/review and a private Google read binding now exist as staged candidates; manual Google scan integration is under validation. Native cloud reads, Azure broker/transport, workload federation and customer-side enforcement remain unproved. See `CLOUD_INVENTORY_PERSISTENCE.md`.
+bounded private provider twins. A staged AWS inventory candidate now stores scoped observations and exposes manual read-only scanning through a reviewed private binding; one native AWS empty-inventory traversal is now observed, while populated account discovery remains unproved. Azure/Google collectors, project scope persistence/review and a private Google read binding now exist as staged candidates; manual Google scan integration is under validation. Populated AWS detail reads, native Azure/Google reads, Azure broker/transport, workload federation and customer-side enforcement remain unproved. See `CLOUD_INVENTORY_PERSISTENCE.md`.
 
 ## Product journey
 
@@ -216,3 +216,26 @@ SIGKILL readback. The accepted receipt matches 44 sources and three rebuilt byte
 hashes. This closes the disposable transport-bypass experiment; it does not import
 or attest a cloud workload, establish a customer sidecar or combine the separate
 Temporal and cloud discovery proofs into one customer deployment.
+
+
+## Native AWS empty-inventory observation — October 10, 2026 local time
+
+A narrowly scoped, temporary read-only federation session exercised the existing
+AWS CLI adapter and collector against the actual AgentCore service in us-west-2.
+The original shared CLI 2.27.7 refused the unsupported command, and the collector
+correctly returned partial/list-unavailable. A separate private CLI 2.37.12 was
+installed through the official signed AWS current-user installer; the shared
+CLI was not changed. With the private executable, the same adapter completed
+native API traversal with zero runtime records and no failures at
+2026-10-11T01:22:10.620Z. Credentials and raw responses were not persisted.
+
+This establishes one native signed empty-list/account-scope observation, not a
+populated runtime/detail/role/permission inventory, persistent enrolled cloud
+connection, owner review, workload federation or mandatory enforcement. No agents
+were enrolled and no cloud runtime was created or invoked. The prior fixture and
+browser proofs remain separate evidence. Actual resources are still required to
+prove detail mapping and enforce a real workload. The private operational journal
+retains the exact source hashes and sanitized observation; no account identifiers
+or credentials belong in public Git.
+
+Installer reference: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html

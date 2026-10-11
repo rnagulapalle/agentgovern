@@ -8,6 +8,7 @@ import {generateTemporalConfiguration} from "./staging-temporal-config.mjs";
 import {prepareTemporalRenewal} from "./persistent-temporal-renewal.mjs";
 import {runtimeInputs} from "./staging-runtime-inputs.mjs";
 import {preparePersistentRuntimeGeneration} from "./persistent-runtime-generation.mjs";
+import {membershipAuthoritySourceFiles} from "./staging-browser-record.mjs";
 const fault=vi.hoisted(()=>({writeWorker:false}));
 vi.mock("node:fs/promises",async importOriginal=>{
  const original=await importOriginal();return {...original,writeFile:async(path,...args)=>{
@@ -63,6 +64,27 @@ describe("persistent runtime generation preparation (mock eligibility callback; 
  it("binds exact approved registry and independently observed images, build and source hashes",async()=>{
   for(const change of [{approvedRuntimeFiles:registry.slice(1)},{approvedRuntimeFiles:[...registry.slice(1),registry[1]]},{approvedRuntimeFiles:["../private",...registry.slice(1)]},{artifact:{...artifact,buildId:"legacy"}},{artifact:{...artifact,images:{...artifact.images,worker:artifact.images.web}}},{artifact:{...artifact,sourceFingerprints:{...artifact.sourceFingerprints,[registry[0]]:"0".repeat(64)}}},{validateEligibility:async()=>({eligible:true,...artifact,images:{...artifact.images,web:`sha256:${"d".repeat(64)}`}})},{validateEligibility:async()=>({eligible:true,...artifact,sourceFingerprints:{...artifact.sourceFingerprints,[registry[0]]:"0".repeat(64)}})}])await expect(preparePersistentRuntimeGeneration({...input(),...change})).rejects.toThrow();
   await unchanged();
+ });
+ it("refuses the historical registry without membership-history runtime sources before eligibility observation",async()=>{
+  expect(registry).toHaveLength(106);
+  const added=["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","scripts/membership-authority-setup.ts","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"];
+  for(const file of added)expect(registry).toContain(file);
+  const historical=registry.filter(file=>!added.includes(file));expect(historical).toHaveLength(99);
+  const request=input();request.approvedRuntimeFiles=historical;
+  request.artifact.sourceFingerprints=Object.fromEntries(historical.map(file=>[file,artifact.sourceFingerprints[file]]));
+  await expect(preparePersistentRuntimeGeneration(request)).rejects.toThrow(/^Persistent runtime preparation refused/);
+  expect(request.validateEligibility).not.toHaveBeenCalled();await unchanged();
+ });
+ it("refuses equal-length substitution of each required membership source before eligibility observation",async()=>{
+  for(const required of membershipAuthoritySourceFiles){
+   const replacement="scripts/persistent-runtime-generation.test.mjs";expect(registry).not.toContain(replacement);
+   const substituted=registry.map(file=>file===required?replacement:file),request=input();
+   expect(substituted).toHaveLength(106);expect(new Set(substituted).size).toBe(106);
+   request.approvedRuntimeFiles=substituted;
+   request.artifact.sourceFingerprints=Object.fromEntries(await Promise.all(substituted.map(async file=>[file,sha(await readFile(file))])));
+   await expect(preparePersistentRuntimeGeneration(request)).rejects.toThrow(/^Persistent runtime preparation refused/);
+   expect(request.validateEligibility).not.toHaveBeenCalled();await unchanged();
+  }
  });
  it("refuses changed generation bytes, recovery epoch, namespace and installation identity",async()=>{
   for(const change of [{workspace:"other"},{origin:"https://other.example.test"},{recoveryEpoch:"22222222-2222-4222-8222-222222222222"},{webSha256:"0".repeat(64)},{workerSha256:"0".repeat(64)},{transport:{...identity.transport,namespace:identity.transport.namespace+"-other"}},{transport:{...identity.transport,issuerSpkiSha256:"0".repeat(64)}}])await expect(preparePersistentRuntimeGeneration({...input(),identity:{...identity,...change}})).rejects.toThrow();

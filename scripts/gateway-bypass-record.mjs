@@ -13,9 +13,11 @@ export const gatewayProofFiles = [
   "scripts/connector-twin.py", "scripts/connector-twin-requirements.txt", "pnpm-lock.yaml",
   "lib/durable/recovery-schema.sql", "lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql",
   "lib/workflows/schema.sql", "lib/enquiries/schema.sql",
+  "lib/refunds/schema.sql", "lib/durable/proposal-schema.sql", "lib/connectors/scope-schema.sql", "lib/enquiries/managed-schema.sql",
+  "lib/quotes/schema.sql", "lib/quotes/authority-schema.sql", "lib/quotes/plan-v2-schema.sql", "lib/quotes/membership-schema.sql", "lib/workspace/membership-authority-schema.sql",
 ];
 export const gatewayProofChecks = [
-  "agentHasNoProviderOrDatabaseCredential", "agentOnlyFrontNetwork",
+  "installedMembershipHistoryAndGenuineNamedApproval", "agentHasNoProviderOrDatabaseCredential", "agentOnlyFrontNetwork",
   "directProviderDnsAndIpDenied", "directDatabaseIpDenied", "agentPrivilegeOperationsDenied",
   "zeroEffectsBeforeApproval", "sameIdReplayAndSingleReservation", "independentNamedApproval",
   "controlOutageNoFailOpen", "heldStateSurvivesRestart", "lostResponseReconciledWithoutResend",

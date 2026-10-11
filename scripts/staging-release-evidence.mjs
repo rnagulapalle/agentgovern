@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { verifyArtifactRequest } from "./staging-artifact-retrieval.mjs";
-import { typedReceipt, typedSourceFiles } from "./staging-browser-record.mjs";
+import { typedReceipt, typedSourceFiles, membershipAuthoritySourceFiles } from "./staging-browser-record.mjs";
 import { currentPackageSources as packageSources, validateCurrentAcceptedPackageReceipt } from "./staging-package-record.mjs";
 
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
@@ -32,7 +32,8 @@ function successfulJobs(value, required) {
 }
 export function verifyStagingReleaseEvidence({ runtime, retrieval, runtimeSources, expectedRuntimeFiles,
   loaderSources, dependencyLock, run, artifact, originJobs, retrievalRun, retrievalJobs }, now = Date.now()) {
-  assert.equal(expectedRuntimeFiles.length, 99, "Complete reviewed runtime source registry required");
+  assert.equal(expectedRuntimeFiles.length, 106, "Complete reviewed runtime source registry required");
+  assert(membershipAuthoritySourceFiles.every(file=>expectedRuntimeFiles.includes(file)), "Membership authority sources required");
   assert.deepEqual(Object.keys(runtimeSources).sort(), [...expectedRuntimeFiles].sort());
   assert.deepEqual(Object.keys(runtime.sourceFingerprints).sort(), [...expectedRuntimeFiles].sort());
   for (const file of expectedRuntimeFiles) assert.equal(hash(runtimeSources[file]), runtime.sourceFingerprints[file], `Current runtime source changed: ${file}`);

@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { randomUUID, createHash } from "node:crypto";
 import { Pool } from "pg";
+import { WORKSPACE_COOKIE } from "../lib/workspace/identity";
 const c = JSON.parse(readFileSync("/run/controller.json", "utf8"));
 const db = new Pool({ connectionString: process.env.LOOPLABS_DATABASE_URL });
 const digest = (v: string) => createHash("sha256").update(v).digest("hex");
 const api = async (path: string, body?: unknown, expectedStatus = 200) => {
-  const r = await fetch(c.origin + path, { method: body ? "POST" : "GET", headers: { Authorization: `Bearer ${c.operator}`, "Content-Type": "application/json" }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(10000), redirect: "error" });
+  const r = await fetch(c.origin + path, { method: body ? "POST" : "GET", headers: { Cookie: `${WORKSPACE_COOKIE}=${c.operator}`, Origin: c.origin, "Content-Type": "application/json" }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(10000), redirect: "error" });
   assert.equal(r.status, expectedStatus, "Trusted trial operation refused"); return r.json();
 };
 const provider = async (path: string) => {
@@ -15,7 +16,8 @@ const provider = async (path: string) => {
 async function main() {
   const mode = process.argv[2];
   if (mode === "seed") {
-    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/durable/recovery-schema.sql"]) await db.query(readFileSync(`/app/${f}`, "utf8"));
+    for (const f of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/enquiries/schema.sql", "lib/durable/recovery-schema.sql", "lib/refunds/schema.sql", "lib/durable/proposal-schema.sql", "lib/connectors/scope-schema.sql", "lib/enquiries/managed-schema.sql", "lib/quotes/schema.sql", "lib/quotes/authority-schema.sql", "lib/quotes/plan-v2-schema.sql", "lib/quotes/membership-schema.sql", "lib/workspace/membership-authority-schema.sql"]) await db.query(readFileSync(`/app/${f}`, "utf8"));
+    assert.equal((await db.query("SELECT ll_membership_authority23() installed")).rows[0].installed, true);
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     assert(typeof process.env.LOOPLABS_RECOVERY_EPOCH === "string");
     await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('local-proof',$1)", [process.env.LOOPLABS_RECOVERY_EPOCH]);
@@ -23,6 +25,7 @@ async function main() {
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
     await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','trial-agent','agent')", [digest(c.agent)]);
     await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('reviewer@example.test','local-proof','Trial reviewer','unused')");
+    await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','reviewer@example.test','operator')", [digest(c.legacyOperator)]);
     await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,'reviewer@example.test',now()+interval '1 hour')", [digest(c.operator)]);
     const r = await api("/api/durable/workflows", { operation: "create", runId: randomUUID(), crmAgent: "trial-agent", emailAgent: "trial-agent" });
     const run = await api(`/api/durable/workflows?run=${r.id}`); const record = await provider("/crm/crm/v3/objects/contacts/1001"); assert.equal(record.properties.lifecyclestage, "lead");
@@ -38,7 +41,14 @@ async function main() {
   } else if (mode === "execute-crm" || mode === "execute-email") {
     const id = mode === "execute-crm" ? c.crm : c.email;
     const a = await api(`/api/durable/connectors?action=${id}`); assert.equal(a.state, "held");
-    await api("/api/durable/connectors", { operation: "approve", actionId: id, payloadHash: a.payload_hash });
+    const approval = { operation: "approve", actionId: id, payloadHash: a.payload_hash };
+    const legacy = await fetch(c.origin + "/api/durable/connectors", {method:"POST", headers:{Authorization:`Bearer ${c.legacyOperator}`,"Content-Type":"application/json"},body:JSON.stringify(approval),signal:AbortSignal.timeout(10000)});
+    assert.equal(legacy.status, 403, "Same-subject legacy token cannot impersonate current named approval authority");
+    await api("/api/durable/connectors", approval);
+    const snapshot=(await db.query("SELECT membership_proposal,membership_approval FROM ll_connector_actions WHERE id=$1",[id])).rows[0];
+    assert.deepEqual(snapshot.membership_proposal.requester,{kind:"legacy",subject:"trial-agent",role:"agent"});
+    assert.deepEqual(snapshot.membership_approval.approver,{kind:"member",subject:"reviewer@example.test",generation:"1"});
+    assert.equal(snapshot.membership_approval.payloadHash,a.payload_hash);
     const dispatched = await api("/api/durable/connectors", { operation: "execute", actionId: id, ...(mode === "execute-crm" ? { lostResponse: true } : {}) });
     assert.equal(dispatched.state, mode === "execute-crm" ? "uncertain" : "succeeded");
     console.log(JSON.stringify({ passed: true, mode }));

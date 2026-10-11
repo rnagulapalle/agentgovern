@@ -1,7 +1,7 @@
 // Validate a measured receipt; this cannot establish that its CI origin succeeded.
 import assert from "node:assert/strict";
 import {createHash} from "node:crypto";
-import {typedReceipt} from "./staging-browser-record.mjs";
+import {typedReceipt,membershipAuthoritySourceFiles} from "./staging-browser-record.mjs";
 import {retainedPackageTrial} from "./staging-package-trial-source.mjs";
 import {acceptedPackageTrial} from "./staging-accepted-package-inputs.mjs";
 export const packageSources=["transition","pending","pending-controller","releases","trial-source","proof","browser"].map(name=>`scripts/staging-package-${name}.mjs`);
@@ -48,7 +48,8 @@ export function validatePackageReceipt(receipt,origins,sources){
 // both origins and the package trial. This function verifies measured consistency.
 export function validateCurrentAcceptedPackageReceipt(receipt,origins,sources,expectedRuntimeFiles){
  assert(Array.isArray(origins)&&origins.length===2);
- assert.equal(expectedRuntimeFiles.length,99);
+ assert.equal(expectedRuntimeFiles.length,106);
+ assert(membershipAuthoritySourceFiles.every(file=>expectedRuntimeFiles.includes(file)),"Membership authority sources required");
  for(const origin of origins){
   assert.deepEqual(Object.keys(origin.sourceFingerprints).sort(),[...expectedRuntimeFiles].sort());
   for(const file of expectedRuntimeFiles)assert.equal(createHash('sha256').update(sources[file]).digest('hex'),origin.sourceFingerprints[file],`Current origin source changed: ${file}`);
@@ -57,5 +58,5 @@ export function validateCurrentAcceptedPackageReceipt(receipt,origins,sources,ex
   assert.deepEqual(typedReceipt(runtime,{runId,privateWorkflowCommit,publicBaseCommit,exactCompressedOverlaySha256},sourceFingerprints),origin);
   assert(origin.artifact,"Exact retained origin archive required");
  }
- return checkedPackageReceipt(receipt,origins,sources,origins.map(r=>r.executionEvidence.runId),108,currentPackageSources,acceptedPackageTrial);
+ return checkedPackageReceipt(receipt,origins,sources,origins.map(r=>r.executionEvidence.runId),115,currentPackageSources,acceptedPackageTrial);
 }

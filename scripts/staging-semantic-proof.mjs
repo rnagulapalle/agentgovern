@@ -5,7 +5,7 @@ import {spawnSync} from "node:child_process";
 import {randomUUID,createHash} from "node:crypto";
 import {resolve} from "node:path";
 import {semanticPlatformTrial} from "./staging-semantic-trial-source.mjs";
-import {typedReceipt} from "./staging-browser-record.mjs";
+import {typedReceipt,membershipAuthoritySourceFiles} from "./staging-browser-record.mjs";
 const hash=bytes=>createHash("sha256").update(bytes).digest("hex");
 let generated,owned=false;
 try{
@@ -13,7 +13,11 @@ try{
  assert(process.env.LOOPLABS_STAGING_TYPED_PLANNER==="isolated"&&process.env.LOOPLABS_STAGING_BROWSER_PROOF==="isolated"&&!process.env.LOOPLABS_STAGING_IMAGE_ARTIFACT);
  const baseline=JSON.parse(await readFile("docs/evidence/staging-platform-browser-proof.json","utf8"));
  const additional=["Dockerfile.temporal-version-proof","Dockerfile.temporal-version-proof.dockerignore","scripts/temporal-semantic-variant.mjs","scripts/build-temporal-semantic-variant.mjs","scripts/temporal-semantic-replay.mjs","scripts/staging-semantic-controller.mjs","scripts/staging-semantic-host.mjs","scripts/staging-semantic-trial-source.mjs","scripts/staging-semantic-proof.mjs"];
- const files=[...Object.keys(baseline.sourceFingerprints),...additional].sort();
+ const runtimeFiles=Object.keys(baseline.sourceFingerprints);
+ assert.equal(runtimeFiles.length,106);
+ assert(membershipAuthoritySourceFiles.every(file=>runtimeFiles.includes(file)),"Membership authority sources required");
+ const files=[...runtimeFiles,...additional].sort();
+ assert.equal(files.length,115);
  assert.equal(new Set(files).size,files.length);
  const fingerprints=Object.fromEntries(await Promise.all(files.map(async f=>[f,hash(await readFile(f))])));
  for(const [f,digest] of Object.entries(baseline.sourceFingerprints))assert.equal(fingerprints[f],digest,"Measured baseline source changed");

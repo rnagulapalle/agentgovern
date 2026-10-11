@@ -191,6 +191,12 @@ async function main() {
     await open(page, id);
   }
   async function effects() { return JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects; }
+  async function committedMembershipChange(email:string,active:boolean) {
+    const client=await db.connect();
+    try{await client.query("BEGIN");await client.query("SET LOCAL lock_timeout='2s'");await client.query("SELECT id FROM ll_orgs WHERE id='local-proof' FOR UPDATE");await client.query("UPDATE ll_members SET active=$2 WHERE email=$1",[email,active]);await client.query("COMMIT");}
+    catch(error){await client.query("ROLLBACK");throw error;}finally{client.release();}
+  }
+
   async function run(page: Page, id: string) { return (await page.request.get(origin + "/api/durable/workflows?run=" + id)).json(); }
   async function complete(page: Page) {
     await page.getByRole("button", { name: "Verify and complete", exact: true }).click();
@@ -198,7 +204,8 @@ async function main() {
   }
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/durable/recovery-schema.sql", "lib/connectors/scope-schema.sql", "lib/enquiries/record-routing-schema.sql"]) await db.query(await readFile(file, "utf8"));
+    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/durable/recovery-schema.sql", "lib/connectors/scope-schema.sql", "lib/enquiries/record-routing-schema.sql", "lib/quotes/schema.sql", "lib/quotes/authority-schema.sql", "lib/quotes/plan-v2-schema.sql", "lib/quotes/membership-schema.sql", "lib/workspace/membership-authority-schema.sql"]) await db.query(await readFile(file, "utf8"));
+    assert.equal((await db.query("SELECT ll_membership_authority23() installed")).rows[0].installed, true);
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
     await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('local-proof',$1)",[recoveryEpoch]);
     for (const [email, name] of [["requester@example.test", "Requester"], ["reviewer@example.test", "Reviewer"]]) await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,'local-proof',$2,$3)", [email, name, passwordHash(password)]);
@@ -242,6 +249,8 @@ async function main() {
     check("Invited browser enrolls configured record, explicitly grants/revokes/restores agent access, denies stale restoration and reloads saved owner; no actions or workflow created; 390px layout has no overflow");
     const normal = await prepare(page);
     await page.screenshot({ path: "docs/evidence/chat-ui-plan.png", fullPage: true });
+    const savedMembership = (await db.query("SELECT membership_owner FROM ll_enquiry_plans WHERE id=$1", [normal.id])).rows[0].membership_owner;
+    assert.deepEqual(savedMembership, {kind:"member", subject:"requester@example.test", generation:"1"});
     check("Typed natural-language request calls the real model, asks for the missing customer and saves an exact plan without effects");
     const duplicate = await page.request.post(origin + "/api/workspace/enquiries", { headers: { Origin: origin }, data: { operation: "chat", id: normal.id, turns: [{ role: "user", text: enquiryRequest }, { role: "user", text: "Use customer@example.test. Keep ask-first." }] } });
     assert.equal(duplicate.status(), 200); assert.equal((await duplicate.json()).saved.id, normal.id);
@@ -249,6 +258,10 @@ async function main() {
     assert.equal((await db.query("SELECT count(*) FROM ll_workflow_runs")).rows[0].count, "1"); assert.equal(Object.keys(await effects()).length, 0);
     check("Repeated typed intent and reviewed-plan creation reuse the same saved plan and run without authorizing execution");
     await proposeAndApprove(page, reviewer, normal.id);
+    const actionMemberships = (await db.query("SELECT membership_proposal,membership_approval FROM ll_connector_actions a JOIN ll_workflow_steps s ON s.action_id=a.id AND s.org_id=a.org_id WHERE s.run_id=$1", [normal.id])).rows;
+    assert.equal(actionMemberships.length, 2);
+    assert(actionMemberships.every(a => a.membership_proposal.requester.subject === "requester@example.test" && a.membership_proposal.owner.subject === "requester@example.test" && a.membership_proposal.planOwner.subject === "requester@example.test" && a.membership_approval.approver.subject === "reviewer@example.test" && a.membership_approval.approver.generation === "1"));
+    check("Installed membership23 captures actual saved-plan, requester, agent-owner and independent named approval history before connector dispatch");
     for (const ordinal of [1, 2]) assert.equal((await clickAction(page, ordinal, "Execute")).status(), 200);
     await complete(page); await page.screenshot({ path: "docs/evidence/chat-ui-completed.png", fullPage: true });
     assert.equal(Object.keys(await effects()).length, 2); observed.push(await run(page, normal.id));
@@ -392,13 +405,45 @@ async function main() {
     check("Actual scoped desktop screenshot uses 1280px and mobile screenshot uses 390px with readable outcome text and no horizontal overflow");
     assert.deepEqual(await effects(),afterScoped);
     check("Confirmed packaged worker SIGKILL and real app restart preserve both scoped UI runs; independent approvals yield exactly four intended effects, actual lost CRM response reconciles without resend, histories replay and reload/mobile preserve exact recipients");
+    // All scoped runs are complete. Stop only this proof's worker/scheduler
+    // processes before direct administrator lifecycle mutation; NOWAIT refusal
+    // remains required when a real concurrent writer owns the workspace lock.
+    for(const child of packaged)if(child.exitCode===null&&!child.signalCode){child.kill("SIGTERM");for(let i=0;i<250 && child.exitCode===null&&!child.signalCode;i++)await delay(100);if(child.exitCode===null&&!child.signalCode)throw Error("Owned packaged process did not quiesce before membership lifecycle test");}
+    // An invisible deactivate/reactivate cycle must not revive approved work.
+    const historyPlan = await prepare(page); await proposeAndApprove(page, reviewer, historyPlan.id);
+    const historyAction = (await run(page, historyPlan.id)).steps[0];
+    const historyBefore = await effects();
+    await committedMembershipChange("reviewer@example.test",false);
+    await committedMembershipChange("reviewer@example.test",true);
+    assert.equal((await db.query("SELECT generation::text FROM ll_quote_member_generations WHERE email='reviewer@example.test'")).rows[0].generation, "2");
+    assert.equal((await clickAction(page, 1, "Execute")).status(), 200);
+    const historyAfter = (await db.query("SELECT state,membership_approval FROM ll_connector_actions WHERE id=$1", [historyAction.action_id])).rows[0];
+    assert.equal(historyAfter.state, "cancelled"); assert.equal(historyAfter.membership_approval.approver.generation, "1");
+    assert.deepEqual(await effects(), historyBefore);
+    check("Actual browser execution after named approver deactivation/reactivation cancels the old approval without provider effects or rebinding its original history");
+    // A saved typed plan predating owner revocation also cannot start fresh work.
+    await page.goto(origin + "/control-plane/work");
+    const staleOwner = await chat(page, enquiryRequest + " Use customer@example.test."); assert(staleOwner.saved?.id);
+    const ownerCounts = (await db.query("SELECT (SELECT count(*) FROM ll_workflow_runs)::int runs,(SELECT count(*) FROM ll_connector_actions)::int actions")).rows[0];
+    await committedMembershipChange("requester@example.test",false);
+    await committedMembershipChange("requester@example.test",true);
+    const staleOwnerStart = await page.request.post(origin + "/api/workspace/enquiries", {headers:{Origin:origin},data:{operation:"start",id:staleOwner.saved.id,planHash:staleOwner.saved.plan_hash,crmAgent:"crm-agent",emailAgent:"email-agent"}});
+    assert.equal(staleOwnerStart.status(),409);
+    assert.deepEqual((await db.query("SELECT (SELECT count(*) FROM ll_workflow_runs)::int runs,(SELECT count(*) FROM ll_connector_actions)::int actions")).rows[0],ownerCounts);
+    assert.equal((await db.query("SELECT run_id FROM ll_enquiry_plans WHERE id=$1",[staleOwner.saved.id])).rows[0].run_id,null);
+    assert.deepEqual(await effects(), historyBefore);
+    check("Real typed saved plan after requester deactivation/reactivation refuses workflow creation and leaves action/run counts, original plan and provider effects unchanged");
     // Actual exhausted allowance refusal must remain a human-readable saved draft.
-    assert((await db.query("SELECT reserved FROM ll_agents WHERE id=ANY($1::text[])",[["crm-agent","email-agent"]])).rows.every(r=>r.reserved>0));
+    assert((await db.query("SELECT reserved FROM ll_agents WHERE id=ANY($1::text[])",[["crm-agent","email-agent"]])).rows.every(r=>r.reserved>0), "Exhaustion case requires both registered agents to have prior reservations");
     await db.query("UPDATE ll_agents SET action_limit=reserved WHERE id=ANY($1::text[])",[["crm-agent","email-agent"]]);
     await page.setViewportSize({width:1280,height:900});await page.getByRole("button",{name:"Start a new conversation",exact:true}).click();
+    const exhaustedSetup=page.locator("details.cp-chat-setup");
+    if(!await exhaustedSetup.evaluate(el=>(el as HTMLDetailsElement).open))await exhaustedSetup.locator("summary").click();
+    await page.getByLabel("Customer record for this conversation").selectOption(scopedPlans[1].plan.recordEnrollment.id);
     await page.getByLabel("Your request or clarification").fill(enquiryRequest+" Use bob@example.test.");
     const [blockedChatResponse] = await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname==="/api/workspace/enquiries"&&r.request().method()==="POST"), page.getByRole("button",{name:"Send request",exact:true}).click()]);
-    const blockedPlan=(await (await blockedChatResponse).json()).saved;assert(blockedPlan?.id);
+    assert.equal((await blockedChatResponse).status(),200,"Exhaustion case typed request must be accepted before submission");
+    const blockedPlan=(await (await blockedChatResponse).json()).saved;assert(blockedPlan?.id,"Exhaustion case must save a typed plan before attempting held submission");
     await page.getByLabel(/^CRM agent/).selectOption("crm-agent");await page.getByLabel(/^Messaging agent/).selectOption("email-agent");await page.getByRole("checkbox").check();
     const [blockedSubmit] = await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname==="/api/workspace/enquiries"&&r.request().method()==="POST"), page.getByRole("button",{name:"Submit for independent approval",exact:true}).click()]);assert.equal((await blockedSubmit).status(),403);
     await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Confirm saved submission",exact:true})).toBeVisible();await expect(page.getByRole("region",{name:"Verification evidence"})).toHaveCount(0);
@@ -410,7 +455,7 @@ async function main() {
       for (const viewport of [1280, 390]) assert(advancedButtonMeasurements.some(m => m.label === label && m.viewport === viewport), `Missing actual advanced ${label} measurement at ${viewport}px`);
     }
     const fingerprints: Record<string, string> = {};
-    for (const file of ["docker-compose.yml","deploy.sh","lib/connectors/routing.ts","lib/enquiries/submission.ts","lib/enquiries/presentation.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","lib/connectors/catalog.ts","app/api/workspace/records/route.ts","components/control-plane/records-workspace.tsx","app/control-plane/records/page.tsx","components/control-plane/shell.tsx","lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts","lib/workspace/identity.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
+    for (const file of ["docker-compose.yml","deploy.sh","lib/connectors/routing.ts","lib/enquiries/submission.ts","lib/enquiries/presentation.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","lib/connectors/catalog.ts","app/api/workspace/records/route.ts","components/control-plane/records-workspace.tsx","app/control-plane/records/page.tsx","components/control-plane/shell.tsx","lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts","lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/identity.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
       fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
     await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, advancedButtonMeasurements, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: legacyEffects, scopedRuns,blockedRun,scopedEffects:Object.fromEntries(Object.entries(afterScoped).filter(([id])=>!beforeScoped[id])),managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
   } finally {

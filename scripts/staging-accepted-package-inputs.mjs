@@ -5,7 +5,7 @@ import { readFile, lstat } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { isAbsolute, resolve } from "node:path";
 import { verifyArtifactRequest } from "./staging-artifact-retrieval.mjs";
-import { typedReceipt, typedSourceFiles } from "./staging-browser-record.mjs";
+import { typedReceipt, typedSourceFiles, membershipAuthoritySourceFiles } from "./staging-browser-record.mjs";
 import { loadAndRetireMeasuredArchive } from "./staging-package-releases.mjs";
 import { retainedPackageTrial } from "./staging-package-trial-source.mjs";
 
@@ -48,8 +48,9 @@ function successfulJobs(value, runId) {
 }
 export function validateAcceptedPackageInputs({ entries, sources, expectedRuntimeFiles }, now = Date.now()) {
   assert(Array.isArray(entries) && entries.length === 2, "Exactly two accepted origins required");
-  assert(Array.isArray(expectedRuntimeFiles) && expectedRuntimeFiles.length === 99 && new Set(expectedRuntimeFiles).size === 99,
-    "Complete reviewed 99-file runtime registry required");
+  assert(Array.isArray(expectedRuntimeFiles) && expectedRuntimeFiles.length === 106 && new Set(expectedRuntimeFiles).size === 106,
+    "Complete reviewed 106-file runtime registry required");
+  assert(membershipAuthoritySourceFiles.every(file=>expectedRuntimeFiles.includes(file)), "Membership authority sources required");
   assert(expectedRuntimeFiles.every(file => typeof file === "string" && !isAbsolute(file) && !file.split("/").includes("..")));
   assert.deepEqual(Object.keys(sources).sort(), [...expectedRuntimeFiles].sort());
   const origins = [], receipts = [];

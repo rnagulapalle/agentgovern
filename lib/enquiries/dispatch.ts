@@ -1,3 +1,4 @@
+import { enquiryMembershipCurrent, membershipAuthorityInstalled } from "../workspace/membership-authority";
 import type { PoolClient } from "pg";
 import type { Actor } from "../durable/contracts";
 import { ControlError } from "../durable/contracts";
@@ -21,6 +22,10 @@ export async function dispatchOwnership(c: PoolClient, actor: Actor, actionId: s
   if (owned !== temporal) throw new ControlError(403, "This executor does not own the run.");
 }
 export async function managedOwnerActive(c: PoolClient, org: string, actionId: string) {
+  if (await membershipAuthorityInstalled(c)) {
+    const plan = (await c.query("SELECT p.id FROM ll_enquiry_plans p JOIN ll_workflow_steps s ON s.org_id=p.org_id AND s.run_id=p.run_id WHERE s.org_id=$1 AND s.action_id=$2", [org,actionId])).rows[0];
+    return !plan || await enquiryMembershipCurrent(c,org,plan.id);
+  }
   if (!(await c.query("SELECT to_regclass('ll_enquiry_dispatch') AS present")).rows[0].present) return true;
   const row = (await c.query("SELECT EXISTS(SELECT 1 FROM ll_members m WHERE m.org_id=p.org_id AND m.email=p.created_by AND m.active=true) AS active FROM ll_enquiry_dispatch d JOIN ll_enquiry_plans p ON p.org_id=d.org_id AND p.id=d.plan_id JOIN ll_workflow_steps s ON s.org_id=p.org_id AND s.run_id=p.run_id WHERE d.org_id=$1 AND s.action_id=$2", [org, actionId])).rows[0];
   return !row || row.active === true;

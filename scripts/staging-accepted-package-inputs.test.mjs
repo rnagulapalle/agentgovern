@@ -1,3 +1,5 @@
+import {createHash} from "node:crypto";
+import {typedSourceFiles} from "./staging-browser-record.mjs";
 // Synthetic provenance and mocked image RPCs only; these are not measured acceptance receipts.
 import { test, expect } from "vitest";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -9,9 +11,10 @@ import { exportTestedImages } from "./staging-image-artifact.mjs";
 
 function fixture() {
   const base = JSON.parse(readFileSync("docs/evidence/staging-platform-browser-proof.json", "utf8"));
-  const sources = Object.fromEntries(Object.keys(base.sourceFingerprints).map(file => [file, readFileSync(file)]));
+  const sources = Object.fromEntries(typedSourceFiles(JSON.parse(readFileSync("docs/evidence/staging-platform-browser-prepared-proof.json","utf8")).sourceFingerprints).map(file => [file, readFileSync(file)]));
   const entries = [0, 1].map(index => {
     const receipt = structuredClone(base), runId = 9000 + index, workflowCommit = String(index + 1).repeat(40);
+    receipt.sourceFingerprints=Object.fromEntries(Object.entries(sources).map(([file,bytes])=>[file,createHash("sha256").update(bytes).digest("hex")]));
     receipt.images = ["web", "worker", "twin", "provisioner"].map((role, i) => ({ role, id: `sha256:${String(index * 4 + i + 1).repeat(64)}` }));
     receipt.artifact.images = structuredClone(receipt.images);
     Object.assign(receipt.executionEvidence, { runId, privateWorkflowCommit: workflowCommit, runUrl: `https://github.com/rnagulapalle/sandbox/actions/runs/${runId}` });
@@ -37,6 +40,12 @@ test("file input accepts reviewed pins only and cannot supply purported observed
 });
 test("refuses malformed associations, historical sources, failed gates, expired artifacts and image collisions", () => {
   const changes = [
+    x => x.expectedRuntimeFiles[x.expectedRuntimeFiles.indexOf("lib/workspace/membership-authority-schema.sql")]="unreviewed-substitute.sql",
+    x => x.expectedRuntimeFiles[x.expectedRuntimeFiles.indexOf("scripts/membership-authority-setup.ts")]="unreviewed-provisioner.ts",
+    x => delete x.sources["scripts/membership-authority-setup.ts"],
+    x => x.sources["scripts/membership-authority-setup.ts"] = Buffer.from("changed grant"),
+    x => delete x.entries[0].receipt.sourceFingerprints["scripts/membership-authority-setup.ts"],
+    x => x.entries[0].receipt.sourceFingerprints["scripts/membership-authority-setup.ts"] = "0".repeat(64),
     x => x.entries.pop(), x => x.entries[0].extra = true,
     x => x.entries[0].directory = "/tmp/../accepted", x => x.entries[1].directory = x.entries[0].directory,
     x => x.expectedRuntimeFiles.pop(), x => x.expectedRuntimeFiles[1] = x.expectedRuntimeFiles[0],

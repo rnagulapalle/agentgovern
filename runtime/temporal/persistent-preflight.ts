@@ -22,7 +22,11 @@ function quoteOptIn(value: unknown): boolean {
   return (value as { quotePlans: boolean }).quotePlans;
 }
 export async function persistentMigrationDigests(options: unknown = { quotePlans: false }) {
-  const files = quoteOptIn(options) ? [...persistentMigrations, [19, "lib/quotes/schema.sql"] as const] : persistentMigrations;
+  // Quote schema is now a prerequisite of shared membership history, even
+  // when quote product access is disabled. Validating the bounded option grants
+  // no execution authority and must not duplicate migration 19.
+  quoteOptIn(options);
+  const files = [...persistentMigrations].sort((a,b)=>a[0]-b[0]);
   return Promise.all(files.map(async ([version, file]) => ({ version, digest: createHash("sha256").update(await readFile(file)).digest("hex") })));
 }
 function artifactMatches(value: unknown, buildId: string | undefined): value is PersistentWorkerArtifact {
