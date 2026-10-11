@@ -1,3 +1,4 @@
+import { connectorMembershipCurrent, namedActorCurrent, independentConnectorReviewer } from "../workspace/membership-authority";
 import { currentScopeGrant, scopedGrantMatches } from "./scopes";
 import { preparedRequest, requestMatches } from "./request";
 import { managedWorker, dispatchOwnership, managedOwnerActive } from "../enquiries/dispatch";
@@ -29,6 +30,7 @@ export class ConnectorControl {
         403,
         "Connector is not assigned to this workspace.",
       );
+    if (!(await namedActorCurrent(c, actor))) throw new ControlError(403, "Current named workspace session is required.");
     await authorize(c, actor, roles, actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject) ? "enquiries" : undefined);
   }
   async get(c: PoolClient, actor: Actor, id: string): Promise<ConnectorAction> {
@@ -78,7 +80,7 @@ export class ConnectorControl {
     approval = true,
   ) {
     if (!bindingMatches(this.provider, a) || !requestMatches(this.provider, a) || !(await scopedGrantMatches(c,actor.orgId,a,this.provider))) return false;
-    if (!(await managedOwnerActive(c, actor.orgId, a.id))) return false;
+    if (!(await managedOwnerActive(c, actor.orgId, a.id)) || !(await connectorMembershipCurrent(c, actor.orgId, a, approval))) return false;
     const row = (
       await c.query(
         "SELECT a.active,a.tools,p.version,p.active AS policy_active,EXISTS(SELECT 1 FROM ll_tokens t WHERE t.org_id=a.org_id AND t.subject=a.id AND t.role='agent' AND t.active=true) AS identity_active FROM ll_agents a JOIN ll_connector_policies p ON p.org_id=a.org_id AND p.connector=$3 WHERE a.org_id=$1 AND a.id=$2",
@@ -247,7 +249,7 @@ export class ConnectorControl {
       if (a.proposed_by === actor.subject)
         throw new ControlError(
           403,
-          "A different operator must approve your request.",
+          "Independent approval by a different operator is required.",
         );
       if (!(await this.valid(c, actor, a, false)))
         return this.state(
@@ -257,6 +259,7 @@ export class ConnectorControl {
           "cancelled",
           "Agent, record grant or policy changed.",
         );
+      if (!(await independentConnectorReviewer(c,actor.orgId,id,actor.subject))) throw new ControlError(403,"Independent approval by a different operator is required.");
       await c.query(
         "UPDATE ll_connector_actions SET approved_by=$3,approval_until=clock_timestamp()+interval '15 minutes' WHERE org_id=$1 AND id=$2",
         [actor.orgId, id, actor.subject],
@@ -337,6 +340,7 @@ export class ConnectorControl {
           a,
           "uncertain",
           "Authority or lease changed after dispatch. Verify the external effect.",
+          observed,
         );
       return this.observed(c, actor, a, observed);
     });
@@ -392,7 +396,7 @@ export class ConnectorControl {
       const a = await this.get(c, actor, id);
       if (!["executing", "uncertain", "succeeded"].includes(a.state))
         return { ...a, lease_token: null };
-      if (!bindingMatches(this.provider, a) || !requestMatches(this.provider,a) || !(await scopedGrantMatches(c,actor.orgId,a,this.provider))) return this.state(c, actor, a, "uncertain", "Request, record grant or destination changed during effect verification. Do not resend.",o);
+      if (!bindingMatches(this.provider, a) || !requestMatches(this.provider,a) || !(await scopedGrantMatches(c,actor.orgId,a,this.provider)) || !(await connectorMembershipCurrent(c,actor.orgId,a,true))) return this.state(c, actor, a, "uncertain", "Request, record grant or destination changed during effect verification. Do not resend.",o);
       return this.observed(c, actor, a, o);
     });
   }

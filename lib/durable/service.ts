@@ -109,8 +109,19 @@ async function current(c: PoolClient, actor: Actor, agentId: string) {
   );
   return { org, agent, record, identityActive };
 }
+async function heldProposalAuthor(c: PoolClient, orgId: string, id: string): Promise<string | null> {
+  // The first append-only event is saved in the same transaction as proposal admission.
+  // Do not infer the requester from the agent owner, latest reviewer, or client state.
+  const first = (await c.query(
+    "SELECT kind,subject FROM ll_events WHERE org_id=$1 AND action_id=$2 ORDER BY id LIMIT 1",
+    [orgId, id],
+  )).rows[0];
+  return first?.kind === "held" && typeof first.subject === "string" && first.subject.length > 0 ? first.subject : null;
+}
 async function approvalValid(c: PoolClient, actor: Actor, a: DurableAction) {
-  return !a.approved_by || activeApprover(c, actor.orgId, a.approved_by);
+  if (!a.approved_by) return true;
+  const requester = await heldProposalAuthor(c, actor.orgId, a.id);
+  return requester !== null && requester !== a.approved_by && await activeApprover(c, actor.orgId, a.approved_by);
 }
 
 function invalid(
@@ -284,6 +295,9 @@ export class DurableControl {
       if (a.state !== "held") return a;
       if (!approve)
         return transition(c, actor, a, "rejected", "Rejected by the operator.");
+      const requester = await heldProposalAuthor(c, actor.orgId, a.id);
+      if (!requester) throw new ControlError(409, "The original requester cannot be verified. Prepare fresh work.");
+      if (requester === actor.subject) throw new ControlError(403, "A different named operator must approve this action.");
       const context = await current(c, actor, a.agent_id);
       // Approval must be checked without treating the not-yet-issued approval as missing.
       const now = (await c.query("SELECT clock_timestamp() AS now")).rows[0]
@@ -333,7 +347,7 @@ export class DurableControl {
           actor,
           a,
           "cancelled",
-          "Approver authority was revoked.",
+          "Independent approver authority is unavailable or was revoked.",
         );
       await c.query(
         "UPDATE ll_actions SET state='executing',reason='Worker lease acquired.',lease_token=$3,lease_until=clock_timestamp()+interval '30 seconds' WHERE org_id=$1 AND id=$2",
@@ -376,7 +390,7 @@ export class DurableControl {
           actor,
           a,
           "cancelled",
-          "Approver authority was revoked.",
+          "Independent approver authority is unavailable or was revoked.",
         );
         return null;
       }

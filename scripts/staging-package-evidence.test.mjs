@@ -1,11 +1,24 @@
 // Consistency/freshness of observed evidence, never a substitute for live execution.
 import {test,expect} from "vitest";
 import {readFileSync} from "node:fs";
+import {gunzipSync} from "node:zlib";
+import {createHash} from "node:crypto";
 import {validatePackageReceipt,packageSources} from "./staging-package-record.mjs";
 const receipt=JSON.parse(readFileSync("docs/evidence/staging-package-proof.json","utf8"));
-const origins=["staging-platform-browser-before-dependency-proof.json","staging-platform-browser-proof.json"].map(name=>JSON.parse(readFileSync(`docs/evidence/${name}`,"utf8")));
-const sources=Object.fromEntries([...Object.keys(origins[1].sourceFingerprints),...packageSources].map(file=>[file,readFileSync(file,"utf8")]));
-test("measured pending package promotion/reversion keeps exact origins, sources and full runtime/UI coverage",()=>{
+const origins=["staging-platform-browser-before-dependency-proof.json","staging-platform-browser-before-chat-redesign-proof.json"].map(name=>JSON.parse(readFileSync(`docs/evidence/${name}`,"utf8")));
+const snapshotBytes=readFileSync("docs/evidence/staging-package-historical-sources.json.gz");
+const snapshot=JSON.parse(gunzipSync(snapshotBytes));
+const sources=snapshot.sources;
+// Historical accepted-image proof and current candidate proof are distinct.
+// The release-only guard additionally requires an actual current accepted-image
+// transition receipt; this historical record never grants that eligibility.
+test("historical pending package promotion/reversion keeps exact original sources and full runtime/UI coverage",()=>{
+ expect(createHash("sha256").update(snapshotBytes).digest("hex")).toBe("ed12ebe84470f2545f43f8e4917012edd554909a9043210c49869652eed9a5dd");
+ expect(snapshot.version).toBe(1);
+ expect(snapshot.sourceCommit).toBe("80f0d7cf91f462cc7f17ca5a5d07fffb1771d9b7");
+ expect(snapshot.overlaySha256).toBe("9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64");
+ expect(Object.keys(sources)).toHaveLength(104);
+ expect(createHash("sha256").update(readFileSync("docs/evidence/staging-package-proof.json")).digest("hex")).toBe("52a661efed6c97a463883ba75cc3f9c27c265c533ce874c4496e4f2d4c619cd1");
  expect(validatePackageReceipt(receipt,origins,sources)).toBe(receipt);
  expect(receipt.runtime.executionEvidence).toMatchObject({runId:37893973887,privateWorkflowCommit:"2c3c550058cc574959f76a763f3d702cbd5beb01",publicBaseCommit:"80f0d7cf91f462cc7f17ca5a5d07fffb1771d9b7",exactCompressedOverlaySha256:"9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",productionChanged:false});
 });

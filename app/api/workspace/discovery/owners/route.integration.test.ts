@@ -1,0 +1,47 @@
+import { expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { Pool } from "pg";
+import { readFile } from "node:fs/promises";
+import { randomBytes, randomUUID } from "node:crypto";
+import { digest, WORKSPACE_COOKIE } from "@/lib/workspace/identity";
+const binding = vi.hoisted(() => ({ db:null as Pool | null }));
+vi.mock("@/lib/durable/database", async original => ({...await original<object>(),database:()=>binding.db}));
+import { GET, POST } from "./route";
+it("invited owner review HTTP path persists exact responsibility, refuses stale/foreign/replayed authority and creates no agent", async()=>{
+  if(!process.env.LOOPLABS_TEST_DATABASE_URL) throw Error("Dedicated test PostgreSQL required; never skip.");
+  const admin=new Pool({connectionString:process.env.LOOPLABS_TEST_DATABASE_URL}),schema=`owner_http_${randomBytes(8).toString("hex")}`,epoch=randomUUID(),token=randomBytes(32).toString("base64url"),other=randomBytes(32).toString("base64url");let db:Pool|undefined;
+  const origin="https://looplabs.run",path=origin+"/api/workspace/discovery/owners";
+  const request=(credential=token,payload?:object,query="",site=origin)=>new NextRequest(path+query,{method:payload?"POST":"GET",headers:{origin:site,cookie:`${WORKSPACE_COOKIE}=${credential}`,"Content-Type":"application/json"},...(payload?{body:JSON.stringify(payload)}:{})});
+  try {
+    await admin.query(`CREATE SCHEMA ${schema}`);db=new Pool({connectionString:process.env.LOOPLABS_TEST_DATABASE_URL,options:`-c search_path=${schema}`});binding.db=db;
+    for(const f of ["lib/durable/schema.sql","lib/workspace/schema.sql","lib/durable/recovery-schema.sql","lib/workspace/cloud-inventory-schema.sql","lib/workspace/cloud-project-schema.sql","lib/workspace/cloud-owner-review-schema.sql"])await db.query(await readFile(f,"utf8"));
+    await db.query("INSERT INTO ll_orgs(id) VALUES('company-a'),('company-b')");await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('company-a',$1),('company-b',$1)",[epoch]);vi.stubEnv("LOOPLABS_RECOVERY_EPOCH",epoch);
+    await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('reviewer@example.test','company-a','Reviewer','fixture'),('owner@example.test','company-a','Owner','fixture'),('other@example.test','company-b','Other','fixture')");
+    await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,'reviewer@example.test',now()+interval '1 hour'),($2,'other@example.test',now()+interval '1 hour')",[digest(token),digest(other)]);
+    await db.query("INSERT INTO ll_cloud_connections(org_id,id,account_id,region,created_by) VALUES('company-a','_aws','123456789012','us-west-2','reviewer@example.test')");
+    const scanId=randomUUID(),resource="arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/ops-1234567890";
+    await db.query("INSERT INTO ll_cloud_scans(org_id,connection_id,id,observed_at,completeness,failures,canonical_sha256) VALUES('company-a','_aws',$1,now(),'complete-api-traversal','{}',$2)",[scanId,"a".repeat(64)]);
+    await db.query("INSERT INTO ll_cloud_runtime_observations(org_id,connection_id,scan_id,resource_id,resource_arn,version) VALUES('company-a','_aws',$1,'ops-1234567890',$2,'1')",[scanId,resource]);
+    const reference={provider:"aws-agentcore-runtime",connectionId:"_aws",scanId,resource,version:"1"},decision={...reference,id:randomUUID(),owner:"owner@example.test"},query="?"+new URLSearchParams(reference).toString();
+    expect((await GET(request("missing"))).status).toBe(401);
+    const list=await GET(request());expect(list.headers.get("Cache-Control")).toBe("no-store");expect(await list.json()).toEqual({owners:[{email:"owner@example.test",name:"Owner"},{email:"reviewer@example.test",name:"Reviewer"}],truncated:false});
+    expect(await(await GET(request(token,undefined,query))).json()).toMatchObject({ownership:"unmapped",authorityGranted:false});
+    expect((await POST(request(token,decision,"","https://foreign.test"))).status).toBe(403);
+    expect((await POST(request(token,{...decision,authorityGranted:true}))).status).toBe(400);
+    expect((await POST(request(other,decision))).status).toBe(409);
+    expect((await POST(request(token,{...decision,owner:"other@example.test"}))).status).toBe(400);
+    expect(await(await POST(request(token,decision))).json()).toMatchObject({repeated:false,authorityGranted:false});
+    expect(await(await POST(request(token,decision))).json()).toMatchObject({repeated:true});
+    expect((await POST(request(token,{...decision,owner:"reviewer@example.test"}))).status).toBe(409);
+    expect(await(await GET(request(token,undefined,query))).json()).toMatchObject({ownership:"reviewed",owner:decision.owner,enforcement:"unverified"});
+    for(const suffix of [query+"&scanId="+scanId,query+"&authority=true","?provider=aws-agentcore-runtime"])expect((await GET(request(token,undefined,suffix))).status).toBe(400);
+    await db.query("UPDATE ll_members SET active=false WHERE email='owner@example.test'");expect(await(await GET(request(token,undefined,query))).json()).toMatchObject({ownership:"needs-review"});expect((await POST(request(token,decision))).status).toBe(400);
+    expect((await db.query("SELECT count(*)::int n FROM ll_cloud_owner_reviews")).rows[0].n).toBe(1);
+    for(const table of ["ll_agents","ll_actions","ll_tokens"])expect((await db.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n).toBe(0);
+    const googleQuery="?"+new URLSearchParams({...reference,provider:"google-agent-engine",connectionId:"google-unused",version:""}).toString();expect(await(await GET(request(token,undefined,googleQuery))).json()).toMatchObject({ownership:"unmapped"});
+    await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) SELECT 'extra-'||n||'@example.test','company-a','Z extra '||n,'fixture' FROM generate_series(1,101) n");
+    const bounded=await(await GET(request())).json();expect(bounded.owners).toHaveLength(100);expect(bounded.truncated).toBe(true);expect(JSON.stringify(bounded)).not.toContain('other@example.test');
+    await db.query("UPDATE ll_members SET active=false WHERE email='reviewer@example.test'");expect((await GET(request())).status).toBe(401);expect((await POST(request(token,decision))).status).toBe(401);
+    await db.query("UPDATE ll_members SET active=true WHERE email='reviewer@example.test'");await db.query("DROP TABLE ll_cloud_owner_reviews");expect((await GET(request())).status).toBe(503);expect((await POST(request(token,decision))).status).toBe(503);
+  }finally{binding.db=null;vi.unstubAllEnvs();await db?.end();await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);await admin.end();}
+});

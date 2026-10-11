@@ -193,6 +193,40 @@ describe("PostgreSQL control boundary", () => {
     ).toBe("rejected");
     expect((await control.execute(worker, a.id)).state).toBe("rejected");
   });
+  it("refuses human self-approval even after the same request is replayed by its agent", async () => {
+    const input = proposal(25);
+    const a = await control.propose(operator, input);
+    await control.propose(agent, input);
+    await expect(control.review(operator, a.id, true, a.payload_hash)).rejects.toMatchObject({ status: 403 });
+    expect((await control.execute(worker, a.id)).state).toBe("held");
+    const otherToken = randomBytes(32).toString("base64url");
+    await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one','independent-manager','operator')", [tokenHash(otherToken)]);
+    const reviewer = await authenticate(db, otherToken);
+    const approved = await control.review(reviewer, a.id, true, a.payload_hash);
+    expect(approved.approved_by).toBe("independent-manager");
+    expect((await control.execute(worker, a.id)).state).toBe("succeeded");
+  });
+  it("refuses approval without original proposal evidence", async () => {
+    const a = await control.propose(agent, proposal(25));
+    const id = randomUUID();
+    await db.query("INSERT INTO ll_actions(org_id,id,agent_id,discount,expected_version,policy_version,payload_hash,state,reason) SELECT org_id,$2,agent_id,discount,expected_version,policy_version,payload_hash,state,reason FROM ll_actions WHERE org_id='one' AND id=$1", [a.id,id]);
+    await expect(control.review(operator, id, true, a.payload_hash)).rejects.toMatchObject({ status: 409 });
+    expect((await control.execute(worker, id)).state).toBe("held");
+  });
+  it("contains an old self-approved action before dispatch and again before applying a leased effect", async () => {
+    const a = await control.propose(operator, proposal(25));
+    await db.query("UPDATE ll_actions SET state='ready',approved_by=$2,approval_until=now()+interval '15 minutes' WHERE id=$1", [a.id,operator.subject]);
+    expect((await control.claim(worker, a.id)).state).toBe("cancelled");
+    const b = await control.propose(agent, proposal(30));
+    await control.review(operator,b.id,true,b.payload_hash);
+    const leased = await control.claim(worker,b.id);
+    await db.query("UPDATE ll_actions SET approved_by=$2 WHERE id=$1", [b.id,agent.subject]);
+    expect(await control.applyEffect(worker,b.id,leased.lease_token!)).toBeNull();
+    expect((await control.readAction(operator,b.id)).state).toBe("cancelled");
+    const snap = await control.snapshot(operator);
+    expect(snap.effects).toHaveLength(0);
+    expect(snap.record.discount).toBe(0);
+  });
   it("executes a held action only after a named unexpired approval", async () => {
     const a = await control.propose(agent, proposal(25));
     const approved = await control.review(operator, a.id, true, a.payload_hash);

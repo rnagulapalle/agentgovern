@@ -4,7 +4,8 @@ import { it, expect } from "vitest";
 import evidence from "../../docs/evidence/hosted-connector-proof.json";
 
 it("keeps hosted proof tied to its implementation and independently observed response loss", async () => {
-  expect(evidence.checks).toHaveLength(7);
+  expect(evidence.checks).toHaveLength(8);
+  expect(evidence.checks.some(check=>check.name.includes("Installed migration23"))).toBe(true);
   expect(evidence.checks.some(check => check.name.includes("before submitting any action"))).toBe(true);
   expect(evidence.checks.every(check => check.passed)).toBe(true);
   expect(evidence.scope).toContain("No live provider or inbox delivery");
@@ -19,6 +20,7 @@ it("keeps hosted proof tied to its implementation and independently observed res
   expect(disconnect).toBeGreaterThan(start);
   expect(disconnect).toBeLessThan(release);
   expect(release - start).toBeGreaterThanOrEqual(15000);
+  expect(Object.keys(evidence.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
   for (const [file, hash] of Object.entries(evidence.sourceFingerprints)) {
     expect(createHash("sha256").update(await readFile(file)).digest("hex"),
       `Hosted proof is stale for ${file}; rerun scripts/hosted-connector-proof.ts`,

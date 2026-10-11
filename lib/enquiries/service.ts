@@ -1,3 +1,5 @@
+import { enquiryMembershipCurrent } from "../workspace/membership-authority";
+import { requireAdmission, type OrchestrationAdmission } from "../orchestration/admission";
 import { scopeEnrollment, currentScopeGrant } from "../connectors/scopes";
 import { preparedRequest, sameRequestSnapshot } from "../connectors/request";
 import type { Pool, PoolClient } from "pg";
@@ -9,7 +11,7 @@ import { WorkflowControl } from "../workflows/service";
 import { approvedReply, checkContact, enquiryFixture, validId, type Contact } from "./contracts";
 
 export class EnquiryControl {
-  constructor(readonly db: Pool, readonly workflows: WorkflowControl, readonly contact: () => Promise<Contact>, readonly contactId = workflows.connectors.provider.contactId ?? "1001") {}
+  constructor(readonly db: Pool, readonly workflows: WorkflowControl, readonly contact: () => Promise<Contact>, readonly contactId = workflows.connectors.provider.contactId ?? "1001", readonly orchestration?: OrchestrationAdmission) {}
   async policies(c: PoolClient, actor: Actor) {
     await this.workflows.connectors.authority(c, actor, ["operator"]);
     const rows = (await c.query("SELECT connector,version FROM ll_connector_policies WHERE org_id=$1 AND active=true ORDER BY connector", [actor.orgId])).rows;
@@ -33,7 +35,7 @@ export class EnquiryControl {
   }
   async prepareChat(actor: Actor, id: string) {
     validId(id);
-    return this.save(actor, id, "chat_ack_v1", { id: "chat_ack_v1", title: "Customer service acknowledgement", email: approvedReply.recipient, message: "Check the sample customer record, retain its lifecycle, and prepare an acknowledgement. Rehearsal only; independent approval before each effect." });
+    return this.save(actor, id, "chat_ack_v1", { id: "chat_ack_v1", title: "Customer service acknowledgement", email: approvedReply.recipient, message: "Check the sample customer record, retain its lifecycle, and prepare an acknowledgement. Simulated systems only; independent approval before each effect." });
   }
   private async save(actor: Actor, id: string, fixtureId: string, fixture: { id: string; title: string; email: string; message: string }) {
     await transaction(this.db, actor.orgId, c => this.policies(c, actor));
@@ -80,9 +82,10 @@ export class EnquiryControl {
       if (binding !== this.workflows.connectors.provider.bindingId) throw new ControlError(409, "Connector destination changed. Prepare fresh work.");
       const plan = (await c.query("SELECT * FROM ll_enquiry_plans WHERE org_id=$1 AND id=$2", [actor.orgId, id])).rows[0];
       if (!plan) throw new ControlError(404, "Enquiry plan not found.");
+      if (!(await enquiryMembershipCurrent(c, actor.orgId, id))) throw new ControlError(409, "Saved plan membership changed. Prepare a new plan.");
       if (plan.plan_hash !== hash) throw new ControlError(409, "The plan changed. Review it again before starting work.");
       if(this.workflows.connectors.provider.recordScope){
-        if(managed && !(await c.query("SELECT to_regclass('ll_temporal_record_routes') AS present")).rows[0].present)throw new ControlError(409,"Record-scoped background execution needs a compatible worker contract. No run was started.");
+        if(managed)await requireAdmission(this.orchestration).assertReady(c);
         const enrollment=await scopeEnrollment(c,actor.orgId,this.workflows.connectors.provider);
         if(!enrollment || plan.plan.recordEnrollment?.id!==enrollment.id || plan.plan.recordEnrollment?.version!==enrollment.version)throw new ControlError(409,"Record enrollment changed. Prepare fresh reviewed work.");
         for(const agent of [crm,email])if(!(await currentScopeGrant(c,actor.orgId,agent,this.workflows.connectors.provider)))throw new ControlError(403,"Each agent needs an active record grant before starting work.");
@@ -94,7 +97,7 @@ export class EnquiryControl {
       if (!plan.run_id && (await c.query("SELECT 1 FROM ll_workflow_runs WHERE org_id=$1 AND id=$2", [actor.orgId, id])).rows[0])
         throw new ControlError(409, "This ID already belongs to unrelated work. Start a new enquiry plan.");
       if (managed) {
-        if (plan.created_by !== actor.subject) throw new ControlError(403, "Only the plan owner can assign agents and submit this rehearsal.");
+        if (plan.created_by !== actor.subject) throw new ControlError(403, "Only the plan owner can assign agents and submit this workflow.");
         for (const [agentId, name, role, connector] of [[crm, "Customer record assistant", "crm_agent", "crm_twin"], [email, "Acknowledgement assistant", "email_agent", "email_twin"]] as const) {
           if(this.workflows.connectors.provider.recordScope) continue; // Explicit existing grants; never auto-enroll scoped authority.
           const existing = (await c.query("SELECT a.active,a.tools,a.action_limit,p.owner,p.role,p.connector FROM ll_agents a LEFT JOIN ll_agent_profiles p ON p.org_id=a.org_id AND p.agent_id=a.id WHERE a.org_id=$1 AND a.id=$2", [actor.orgId, agentId])).rows[0];

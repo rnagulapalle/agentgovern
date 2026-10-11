@@ -15,6 +15,7 @@ import { ConnectorControl } from "../lib/connectors/service";
 import { FetchSandboxConnectors } from "../lib/connectors/twin";
 import { WorkflowControl } from "../lib/workflows/service";
 import { EnquiryControl } from "../lib/enquiries/service";
+import { memberSession, digest } from "../lib/workspace/identity";
 import { TemporalOutbox } from "../runtime/temporal/outbox";
 import { activities } from "../runtime/temporal/activities";
 import { versionedActivities, type RunContract } from "../runtime/temporal/version-contract";
@@ -40,6 +41,8 @@ async function main() {
     await command(process.execPath, ["--import", "tsx", "scripts/workspace-recovery.ts", "enroll"], { env: recoveryEnv });
     await command(process.execPath, ["--import", "tsx", "scripts/workspace-recovery.ts", "enroll"], { env: recoveryEnv });
     process.env.LOOPLABS_RECOVERY_EPOCH = initial;
+    for(const file of ["lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/membership-authority-schema.sql"]) await db.query(await readFile(file,"utf8"));
+    assert.equal((await db.query("SELECT ll_membership_authority23() installed")).rows[0].installed,true);
     await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('requester','local-proof','Requester','unused'),('reviewer','local-proof','Reviewer','unused')");
     await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
     const keys: string[] = [], actors = [];
@@ -48,7 +51,10 @@ async function main() {
       await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,$3)", [tokenHash(key), subject, role]);
       actors.push(await authenticate(db, key));
     }
-    const [requester, reviewer, worker] = actors;
+    const [legacyRequester, legacyReviewer, worker] = actors;
+    const sessions:string[]=[], named=[];
+    for(const email of ["requester","reviewer"]){const session=randomBytes(32).toString("base64url");sessions.push(session);await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,$2,now()+interval '1 hour')",[digest(session),email]);const actor=await memberSession(db,session);assert(actor);named.push(actor);}
+    const [requester,reviewer]=named;
     const token = randomBytes(32).toString("base64url");
     await writeFile(`${dir}/connector-twin-credentials.json`, JSON.stringify({ token }), { mode: 0o600 });
     const scope={version:"record-scope-1" as const,workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"};
@@ -63,10 +69,18 @@ async function main() {
       const p = (await enquiries.prepareChat(requester, randomUUID())).saved; await enquiries.rehearse(requester, p.id, p.plan_hash);
       return { runId: p.id, planHash: p.plan_hash, planVersion: "acknowledgement-1", connectorVersion: "private-twin-1" } as RunContract;
     };
+    await assert.rejects(()=>enquiries.prepareChat(legacyRequester,randomUUID()));
     const approved = await make(), held = await make(), outbox = new TemporalOutbox(db);
     const workflowId = await outbox.transfer(requester, approved.runId); await outbox.transfer(requester, held.runId);
+    const firstStep=(await workflows.read(requester,approved.runId)).steps[0];
+    await assert.rejects(()=>connector.review(legacyReviewer,firstStep.action_id,firstStep.payload_hash,true));
     for (const step of (await workflows.read(requester, approved.runId)).steps) await connector.review(reviewer, step.action_id, step.payload_hash, true);
+    const savedMemberships=(await db.query("SELECT id,membership_proposal,membership_approval FROM ll_connector_actions ORDER BY id")).rows;
+    assert(savedMemberships.every(a=>a.membership_proposal.planOwner.kind==="member"&&a.membership_proposal.planOwner.subject==="requester"&&a.membership_proposal.planOwner.generation==="1"));
+    assert(savedMemberships.filter(a=>a.membership_approval).every(a=>a.membership_approval.approver.subject==="reviewer"&&a.membership_approval.approver.generation==="1"));
+    pass("Installed migration23 uses named sessions and immutable member history; same-subject legacy bearer proposal/approval cannot supply authority");
     const savedIds = (await db.query("SELECT run_id,ordinal,action_id FROM ll_workflow_steps ORDER BY run_id,ordinal")).rows;
+    const savedReservations=(await db.query("SELECT id,reserved,action_limit FROM ll_agents ORDER BY id")).rows;
     const scopeId=randomUUID(),scopeControl=new ScopeControl(db,new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,scope));
     await scopeControl.enroll(requester,scopeId);const scopedAgent=(await workflows.read(requester,approved.runId)).steps[0].agent_id;await scopeControl.grant(requester,scopeId,scopedAgent);
     const pg = new URL(url), pgEnv = { ...process.env, PGHOST: pg.hostname, PGPORT: pg.port || "5432", PGUSER: decodeURIComponent(pg.username), PGPASSWORD: decodeURIComponent(pg.password), PGDATABASE: pg.pathname.slice(1) };
@@ -94,6 +108,8 @@ async function main() {
     assert.deepEqual((await db.query("SELECT active,version FROM ll_connector_scopes WHERE id=$1",[scopeId])).rows[0],{active:true,version:1});
     assert.deepEqual((await db.query("SELECT active,version FROM ll_connector_scope_grants WHERE scope_id=$1",[scopeId])).rows[0],{active:true,version:1});
     await assert.rejects(() => authenticate(db, keys[0]), /contained/);
+    await assert.rejects(()=>memberSession(db,sessions[0]),/contained/);
+    assert.deepEqual((await db.query("SELECT id,membership_proposal,membership_approval FROM ll_connector_actions ORDER BY id")).rows,savedMemberships);
     await assert.rejects(() => connector.execute(worker, savedIds.find(s => s.run_id === approved.runId)!.action_id), /contained/);
     assert.deepEqual(await effects(), before);
     pass("Real pg_restore rolls back completion and revocation; external recovery epoch refuses resurrected credentials and delayed execution before quarantine");
@@ -105,6 +121,13 @@ async function main() {
     assert.equal((await db.query("SELECT count(*)::int AS n FROM ll_connector_actions WHERE approved_by IS NOT NULL OR lease_token IS NOT NULL")).rows[0].n, 0);
     assert.equal((await db.query("SELECT count(*)::int AS n FROM ll_workflow_runs WHERE state='paused'")).rows[0].n, 2);
     await assert.rejects(() => authenticate(db, keys[0]), /credentials/);
+    assert.equal(await memberSession(db,sessions[0]),null);
+    assert.equal((await db.query("SELECT count(*)::int n FROM ll_sessions")).rows[0].n,0);
+    assert.deepEqual((await db.query("SELECT id,reserved,action_limit FROM ll_agents ORDER BY id")).rows,savedReservations);
+    const quarantinedMemberships=(await db.query("SELECT id,membership_proposal,membership_approval FROM ll_connector_actions ORDER BY id")).rows;
+    assert.deepEqual(quarantinedMemberships,savedMemberships);
+    assert((await db.query("SELECT generation::text FROM ll_quote_member_generations")).rows.every(r=>r.generation==="2"));
+    pass("Restore quarantine removes resurrected named sessions and advances membership history while preserving original proposal/approval snapshots without rebinding");
     pass("Atomic idempotent restore quarantine revokes all old identities, clears approvals and leases, and pauses both restored runs without rewriting IDs or budgets");
     assert.deepEqual((await db.query("SELECT active,version FROM ll_connector_scopes WHERE id=$1",[scopeId])).rows[0],{active:false,version:2});
     assert.deepEqual((await db.query("SELECT active,version FROM ll_connector_scope_grants WHERE scope_id=$1",[scopeId])).rows[0],{active:false,version:2});
@@ -113,14 +136,17 @@ async function main() {
     const fresh = randomBytes(32).toString("base64url");
     await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','recovery-reviewer','operator')", [tokenHash(fresh)]);
     const recovery = await authenticate(db, fresh);
-    for (const step of (await workflows.read(recovery, approved.runId)).steps) assert.equal((await connector.reconcile(recovery, step.action_id)).state, "succeeded");
+    for (const step of (await workflows.read(recovery, approved.runId)).steps) {
+      const observed=await connector.reconcile(recovery,step.action_id);
+      assert.equal(observed.state,"uncertain"); assert(observed.evidence && typeof observed.evidence === "object" && "outcome" in observed.evidence); assert.equal(observed.evidence.outcome,"verified");
+    }
     for (const step of (await workflows.read(recovery, held.runId)).steps) assert.equal((await connector.reconcile(recovery, step.action_id)).state, "uncertain");
     assert.deepEqual(await effects(), before);
     assert.equal((await workflows.read(recovery, approved.runId)).state, "paused");
-    pass("Fresh recovery identity reads back the two existing HTTP twin effects; unknown held actions stay uncertain and no email or CRM write is resent");
+    pass("Fresh recovery identity reads back the two existing HTTP twin effects but invalidated membership stays uncertain; unknown held actions stay uncertain and no email or CRM write is resent");
     assert.equal((await temporal.client.workflow.getHandle(workflowId).describe()).status.name, "COMPLETED");
     assert.deepEqual((await db.query("SELECT run_id,ordinal,action_id FROM ll_workflow_steps ORDER BY run_id,ordinal")).rows, savedIds);
-    const files = ["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/workflows/guard.ts","lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts","lib/workspace/identity.ts", "lib/connectors/service.ts", "lib/workflows/service.ts", "runtime/temporal/outbox.ts", "runtime/temporal/version-contract.ts", "runtime/temporal/activities.ts", "scripts/workspace-recovery.ts", "scripts/workspace-restore-proof.ts"];
+    const files = ["lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","lib/connectors/contracts.ts","lib/connectors/service.ts","lib/connectors/twin.ts","lib/connectors/hosted.ts","lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts","lib/workflows/guard.ts","lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts","lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/identity.ts", "lib/connectors/service.ts", "lib/workflows/service.ts", "runtime/temporal/outbox.ts", "runtime/temporal/version-contract.ts", "runtime/temporal/activities.ts", "scripts/workspace-recovery.ts", "scripts/workspace-restore-proof.ts"];
     const sourceFingerprints = Object.fromEntries(await Promise.all(files.map(async f => [f, createHash("sha256").update(await readFile(f)).digest("hex")])));
     await writeFile("docs/evidence/workspace-restore-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Actual PostgreSQL pg_dump/pg_restore, local Temporal and private HTTP twin effects outside the archive; no production cutover", checks, measurements: { restoredRuns: 2, finalEffects: 2, restoreAndReconcileMs: Math.round(performance.now() - start) }, backupHash, counts, sourceFingerprints, limitations: ["One isolated schema on dedicated test PostgreSQL, not entire-cluster/WAL/PITR or replicated failover", "Deployment epoch rotation and stopped writers are mandatory external operational steps; undeclared restore cannot be automatically detected", "No automatic resume or reconstruction of approvals lost after backup; paused work requires new reviewed plan", "Single-workspace recovery epoch configuration; multi-workspace configuration is not established", "Readback proves provider-twin effects, not real delivery or customer-provider retention", "Backup confidentiality, remote storage, independent security review and measured RPO/RTO remain open"] }, null, 2) + "\n");
   } finally {

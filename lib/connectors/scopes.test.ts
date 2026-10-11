@@ -1,3 +1,4 @@
+import { TemporalAdmission } from "../../runtime/temporal/admission";
 import {TemporalOutbox} from "../../runtime/temporal/outbox";
 import {recordActivities} from "../../runtime/temporal/record-routing";
 import {versionedActivities,type RunContract} from "../../runtime/temporal/version-contract";
@@ -77,7 +78,7 @@ it("revocation after a possible effect preserves uncertainty through reconciliat
  await scopes.setActive(operator,id,true,"agent");expect((await control.reconcile(operator,a.id)).state).toBe("uncertain");await control.execute(worker,a.id);expect(writes).toBe(1);
 });
 it("freezes enrollment into plans and requires grants for both agents before starting",async()=>{
- const flow=new WorkflowControl(db,control),enquiry=new EnquiryControl(db,flow,async()=>({id:"2001",email:scope.recipient,version:"v1",lifecycle:"lead"}));
+ const flow=new WorkflowControl(db,control),enquiry=new EnquiryControl(db,flow,async()=>({id:"2001",email:scope.recipient,version:"v1",lifecycle:"lead"}),scope.contactId,new TemporalAdmission(db,"ack-"+"c".repeat(64)));
  await expect(enquiry.prepare(operator,randomUUID(),"service")).rejects.toThrow("enrolled record");const id=await enrolled(),plan=(await enquiry.prepare(operator,randomUUID(),"service") as {saved:{id:string;plan_hash:string;plan:object}}).saved;
  expect(plan.plan).toHaveProperty("recordEnrollment",{id,version:1});await expect(enquiry.start(operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("record grant");
  await scopes.grant(operator,id,"email");await enquiry.start(operator,plan.id,plan.plan_hash,"agent","email");const run=await flow.read(operator,plan.id);
@@ -121,7 +122,7 @@ it("holds downstream execution when an independently approved predecessor's reco
 
 async function routed(){
  const scopeId=await enrolled();await scopes.grant(operator,scopeId,"email");
- const flow=new WorkflowControl(db,control),enquiry=new EnquiryControl(db,flow,async()=>({id:"2001",email:scope.recipient,version:"v1",lifecycle:"lead"}));
+ const flow=new WorkflowControl(db,control),enquiry=new EnquiryControl(db,flow,async()=>({id:"2001",email:scope.recipient,version:"v1",lifecycle:"lead"}),scope.contactId,new TemporalAdmission(db,"ack-"+"c".repeat(64)));
  const plan=(await enquiry.prepare(operator,randomUUID(),"service") as {saved:{id:string;plan_hash:string}}).saved;
  await enquiry.start(operator,plan.id,plan.plan_hash,"agent","email",true);
  for(const step of (await flow.read(operator,plan.id)).steps)await control.propose(operator,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});
@@ -218,18 +219,25 @@ it("resolves saved plan/run/action destinations without caller retargeting or le
 });
 it("submits scoped chat with existing grants, saves held actions idempotently and pins durable ownership",async()=>{
  const {submitScoped}=await import("../enquiries/submission"),{EnquiryChat}=await import("../enquiries/chat");
- const id=await enrolled();await scopes.grant(operator,id,"email");const flow=new WorkflowControl(db,control),enquiries=new EnquiryControl(db,flow,async()=>({id:scope.contactId,email:scope.recipient,version:"v1",lifecycle:"lead"}));
+ const id=await enrolled();await scopes.grant(operator,id,"email");const flow=new WorkflowControl(db,control),enquiries=new EnquiryControl(db,flow,async()=>({id:scope.contactId,email:scope.recipient,version:"v1",lifecycle:"lead"}),scope.contactId,new TemporalAdmission(db,"ack-"+"c".repeat(64)));
  const intent={job:"acknowledgement",customerEmail:scope.recipient,askFirst:true,rehearsal:true,extraActions:false};const chat=new EnquiryChat(enquiries,{interpret:async()=>intent});
  const mismatch=await chat.respond(operator,randomUUID(),[{role:"user",text:"Rehearse customer@example.test and ask first"}]);expect(mismatch).toHaveProperty("clarification");expect((await enquiries.list(operator)).length).toBe(0);
  const missing=new EnquiryChat(enquiries,{interpret:async()=>({...intent,customerEmail:null})});expect(await missing.respond(operator,randomUUID(),[{role:"user",text:"Rehearse and ask first"}])).toHaveProperty("clarification",expect.stringContaining(scope.recipient));
  const result=await chat.respond(operator,randomUUID(),[{role:"user",text:`Check CRM for ${scope.recipient}, prepare an acknowledgement, ask first and rehearse.`}]);const plan=(result as {saved:{id:string;plan_hash:string}}).saved;
  expect(plan).toBeDefined();expect(writes).toBe(0);
- await expect(submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","")).rejects.toThrow("compatible durable");expect((await flow.list(operator)).length).toBe(0);
- const requests=await Promise.all([submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64)),submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64))]);expect(requests[0]).toEqual(requests[1]);expect(writes).toBe(0);
- const run=await flow.read(operator,plan.id);expect(run.steps.map((s:{state:string|null})=>s.state)).toEqual(["held","held"]);expect(run.steps[1].proposedRequest?.body).toHaveProperty("to",[scope.recipient]);
+ await expect(submitScoped(new EnquiryControl(db,flow,enquiries.contact,scope.contactId,new TemporalAdmission(db,"")),operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("compatible worker");expect((await flow.list(operator)).length).toBe(0);
+ const unavailable=new EnquiryControl(db,flow,enquiries.contact,scope.contactId);
+ await expect(submitScoped(unavailable,operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("compatible worker");expect((await flow.list(operator)).length).toBe(0);
+ const adapter=new TemporalAdmission(db,"ack-"+"c".repeat(64));
+ const outage=new EnquiryControl(db,flow,enquiries.contact,scope.contactId,{assertReady:c=>adapter.assertReady(c),transfer:async()=>{throw Error("scheduler unavailable");}});
+ await expect(submitScoped(outage,operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("scheduler unavailable");
+ expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(0);
+ const pending=await flow.read(operator,plan.id);expect(pending.steps.map((s:{state:string|null})=>s.state)).toEqual(["held","held"]);expect(writes).toBe(0);
+ const requests=await Promise.all([submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email"),submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email")]);expect(requests[0]).toEqual(requests[1]);expect(writes).toBe(0);
+ const run=await flow.read(operator,plan.id);expect(run.steps.map((s:{action_id:string})=>s.action_id)).toEqual(pending.steps.map((s:{action_id:string})=>s.action_id));expect(run.steps.map((s:{state:string|null})=>s.state)).toEqual(["held","held"]);expect(run.steps[1].proposedRequest?.body).toHaveProperty("to",[scope.recipient]);
  expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(1);expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions")).rows[0].n).toBe(2);
- await expect(submitScoped(enquiries,reviewer,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64))).rejects.toThrow("Only the plan owner");
- await scopes.setActive(operator,id,false,"email");await expect(submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64))).rejects.toThrow("record grant");expect(writes).toBe(0);
+ await expect(submitScoped(enquiries,reviewer,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("Only the plan owner");
+ await scopes.setActive(operator,id,false,"email");await expect(submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("record grant");expect(writes).toBe(0);
 });
 
 it("refuses malformed scoped saved metadata and preserves legacy destination semantics",async()=>{

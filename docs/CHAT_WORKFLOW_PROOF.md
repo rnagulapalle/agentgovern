@@ -64,3 +64,25 @@ lost-response and restart cases are retained. HTTP tests additionally cover disa
 and malformed configuration, origin, roles, tenant isolation, extra fields, duplicate
 transfers, hosted refusal and paused-run refusal. Remote deployment, durable runner
 health in the workspace and customer-provider acceptance remain open.
+
+## Pending conversation feedback (working increment, October 10)
+
+The working chat now shows the submitted request immediately and an accessible
+“Preparing your plan…” status while its real planning request is outstanding.
+The response replaces that status instead of duplicating the user message.
+A synchronous presentation lock refuses a second concurrent submission. A lost
+response is explicitly unconfirmed: there is no automatic retry, and only the
+unchanged captured request can be manually retried under the existing request ID.
+A different request requires checking saved work and explicitly starting a new
+conversation. This is presentation coordination, not execution authority or chat
+persistence. User text remains rendered through React text nodes.
+
+Four focused SSR/coordinator tests, scoped lint and TypeScript passed. The actual
+browser driver has now executed against the real bounded planner: it pauses then
+continues the planning request and asserts the immediate bubble, pending status,
+disabled Send control and removal of the pending status after completion. The
+October 10 retained browser receipt passes all 20 checks and covers 60 current
+source fingerprints, including installed membership history and mobile outcomes.
+The receipt is independently source-validated component evidence. It does not
+establish saved conversational history, arbitrary plan editing, quote-workflow
+execution, Tasklet parity, release or production deployment.

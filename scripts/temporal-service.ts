@@ -12,7 +12,7 @@ import { WorkflowControl } from "../lib/workflows/service";
 import { activities } from "../runtime/temporal/activities";
 import { versionedActivities } from "../runtime/temporal/version-contract";
 import { TemporalOutbox } from "../runtime/temporal/outbox";
-import { operationsConfig, OperationsHealth, verifyArtifacts } from "../runtime/temporal/operations";
+import { operationsConfig, OperationsHealth, verifyArtifacts, diagnosticProviderWrite } from "../runtime/temporal/operations";
 async function main() {
   const config = operationsConfig(process.env, process.argv[2]);
   if (!process.env.LOOPLABS_DATABASE_URL || !process.env.LOOPLABS_TEMPORAL_WORKER_TOKEN) throw Error("Missing workload configuration");
@@ -43,12 +43,19 @@ async function main() {
     const client = new Client({ connection, namespace:config.namespace });
     const outbox = new TemporalOutbox(db);
     if (config.role === "worker") {
+      const provider=connectorProvider();
+      if (process.env.LOOPLABS_TEMPORAL_PROVIDER_DIAGNOSTICS === "isolated") {
+        // Disposable proof opt-in only; no raw exception, request or credential.
+        // Rethrow the original failure so containment/retry behavior is unchanged.
+        provider.write=diagnosticProviderWrite(provider.write.bind(provider), value =>
+          console.error("Provider boundary diagnostic",JSON.stringify(value)));
+      }
       native=await NativeConnection.connect(connectionOptions);
       worker=await Worker.create({ connection:native, namespace:config.namespace, taskQueue:config.taskQueue,
         workflowBundle:{ codePath:resolve(".worker/temporal-workflow.cjs") },
         workerDeploymentOptions:{ version:{ deploymentName:"looplabs-acknowledgement", buildId:config.buildId }, useWorkerVersioning:true, defaultVersioningBehavior:"PINNED" },
         maxConcurrentActivityTaskExecutions:config.activitySlots, maxConcurrentWorkflowTaskExecutions:config.workflowSlots,
-        activities:versionedActivities(db, actor, activities(new WorkflowControl(db, new ConnectorControl(db, connectorProvider())), actor),recordActivities(db,actor)),
+        activities:versionedActivities(db, actor, activities(new WorkflowControl(db, new ConnectorControl(db, provider)), actor),recordActivities(db,actor)),
         shutdownGraceTime:"20 seconds" });
     }
     await new Promise<void>((ok, fail) => { server.once("error", fail); server.listen(config.healthPort, "127.0.0.1", ok); });

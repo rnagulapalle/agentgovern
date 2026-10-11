@@ -28,7 +28,14 @@ beforeAll(async()=>{
  runtime=new Pool({connectionString:url.toString(),options:`-c search_path=${schema}`});
 });
 beforeEach(async()=>{
- await owner.query("TRUNCATE ll_orgs CASCADE");await owner.query("INSERT INTO ll_orgs(id) VALUES('one'),('two')");
+ // Protected proposal/history tables cannot be truncated. Recreate only this
+ // test-owned schema; keep the actual production boundary enabled in every case.
+ await admin.query(`DROP SCHEMA ${schema} CASCADE`);await admin.query(`CREATE SCHEMA ${schema}`);
+ await owner.query("CREATE TABLE ll_migrations(version integer PRIMARY KEY,digest text NOT NULL)");
+ for(const [,file] of scopedMigrations)await owner.query(await readFile(file,"utf8"));
+ for(const m of expected)await owner.query("INSERT INTO ll_migrations VALUES($1,$2)",[m.version,m.digest]);
+ await admin.query(`GRANT USAGE ON SCHEMA ${schema} TO ${role}`);await admin.query(`GRANT SELECT ON ALL TABLES IN SCHEMA ${schema} TO ${role}`);
+ await owner.query("INSERT INTO ll_orgs(id) VALUES('one'),('two')");
  await owner.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('one',$1),('two',$1)",[epoch]);
  await owner.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('requester','one','Requester','fixture'),('reviewer','one','Reviewer','fixture')");
  await owner.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one','enquiry-temporal','worker')",[createHash("sha256").update(token).digest("hex")]);
@@ -43,6 +50,13 @@ it("reads exact migration hashes, independent members and workload scope using a
  await owner.query("UPDATE ll_members SET active=false WHERE email='reviewer'");expect(await stagingDatabase(runtime,expected,"one",token,epoch)).toContain("independent_named_members_missing");
 });
 it("refuses an old or corrupted migration ledger without inferring authority",async()=>{
+ for(const version of [19,20,21,22,23]){
+  await owner.query('DELETE FROM ll_migrations WHERE version=$1',[version]);
+  expect(await stagingDatabase(runtime,expected,"one",token,epoch)).toEqual([`migration_${version}_missing`]);
+  await owner.query("INSERT INTO ll_migrations VALUES($1,'corrupt')",[version]);
+  expect(await stagingDatabase(runtime,expected,"one",token,epoch)).toEqual([`migration_${version}_digest_mismatch`]);
+  await owner.query('UPDATE ll_migrations SET digest=$1 WHERE version=$2',[expected.find(m=>m.version===version)!.digest,version]);
+ }
  await owner.query("DELETE FROM ll_migrations WHERE version=13");expect(await stagingDatabase(runtime,expected,"one",token,epoch)).toEqual(["migration_13_missing"]);
  await owner.query("INSERT INTO ll_migrations VALUES(13,'corrupt')");expect(await stagingDatabase(runtime,expected,"one",token,epoch)).toEqual(["migration_13_digest_mismatch"]);
  await owner.query("UPDATE ll_migrations SET digest=$1 WHERE version=13",[expected.find(m=>m.version===13)!.digest]);

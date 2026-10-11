@@ -18,6 +18,8 @@ The invited `/control-plane/work` additionally uses a bounded Amazon Bedrock pla
 
 The managed customer acknowledgement in `/control-plane/work` automatically assigns single-action assistants and submits held actions after exact plan review. Migration 8 adds opt-in background dispatch and a worker heartbeat/cursor. A dedicated worker executes and verifies only independently approved, opted-in enquiry runs; raw chat is not persisted. Hosted managed execution stays blocked until atomic CRM source-version enforcement exists. Read `docs/ENQUIRY_MANAGED_EXPERIENCE.md` and `docs/FETCHSANDBOX_ENQUIRY_HANDOFF.md`. This is one private provider-twin rehearsal, not live inbox automation or arbitrary workflow building.
 
+The opt-in migration14 worker-build registry adds immutable artifact enrollment and active-to-draining admission fencing. Actual isolated run `37911844347` proves both outbox/drain lock orders while retaining a pending old route and the original recovery/replay/UI checks. Read `docs/WORKER_ADMISSION_FENCE.md` before changing it. It is not installed by normal bootstrap or deployed. Reset/archive policy, long-term retention and complete retirement are not proved; no deletion or reactivation action exists.
+
 ## Required workflow
 
 1. Inspect the affected route, its tests, and the relevant docs before editing.

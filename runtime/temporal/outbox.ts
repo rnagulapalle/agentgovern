@@ -1,3 +1,4 @@
+import { enquiryMembershipCurrent, namedActorCurrent } from "../../lib/workspace/membership-authority";
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import { WorkflowExecutionAlreadyStartedError, type Client } from "@temporalio/client";
@@ -10,8 +11,10 @@ export class TemporalOutbox {
   async transfer(actor: Actor, runId: string) {
     return transaction(this.db, actor.orgId, async c => {
       await authorize(c, actor, ["operator"]);
+      if (!(await namedActorCurrent(c, actor))) throw new ControlError(403, "Current named membership required for workflow transfer.");
       const p = (await c.query("SELECT p.* FROM ll_enquiry_plans p JOIN ll_enquiry_dispatch d ON d.org_id=p.org_id AND d.plan_id=p.id JOIN ll_members m ON m.org_id=p.org_id AND m.email=p.created_by AND m.active=true JOIN ll_workflow_runs r ON r.org_id=p.org_id AND r.id=p.run_id WHERE p.org_id=$1 AND p.run_id=$2 AND p.created_by=$3 AND r.state='active'", [actor.orgId, runId, actor.subject])).rows[0];
       if (!p) throw new ControlError(403, "Only the active owner may transfer a reviewed run.");
+      if (!(await enquiryMembershipCurrent(c, actor.orgId, p.id))) throw new ControlError(409, "Saved plan membership changed before transfer. Prepare a new plan.");
       const scoped=p.plan?.requests?.crm?.version === "prepared-request-2" || p.plan?.requests?.email?.version === "prepared-request-2";
       let route: {id:string;version:number;binding_id:string}|undefined;
       if(scoped){

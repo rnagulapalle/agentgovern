@@ -21,9 +21,16 @@ test("historical fresh-runner retrieval matches its preserved successful origin 
  for(const [file,digest] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(await readFile(file)).digest("hex"),file).toBe(digest);
 });
 
-test("current fresh-runner retrieval binds new custom artifact and all reviewed dependency identities",async()=>{
- const runtime=JSON.parse(await readFile("docs/evidence/staging-platform-browser-proof.json","utf8"));
- const proof=JSON.parse(await readFile("docs/evidence/staging-artifact-retrieval-proof.json","utf8"));
+// Current accepted-image eligibility is enforced independently by release-gate.sh.
+// Quality preserves this actual historical retrieval rather than rebinding it to
+// a candidate whose accepted artifact cannot exist until quality succeeds.
+test("historical dependency-aware retrieval keeps its exact successful origin and current reviewed loader identities",async()=>{
+ const runtimeBytes=await readFile("docs/evidence/staging-platform-browser-before-chat-redesign-proof.json");
+ expect(createHash("sha256").update(runtimeBytes).digest("hex")).toBe("a43562a4c2bc1172cc3a0e23403ac24e1cddc075036b991ab92d9eb03eba230d");
+ const runtime=JSON.parse(runtimeBytes);
+ const retrievalBytes=await readFile("docs/evidence/staging-artifact-retrieval-before-chat-redesign-proof.json");
+ expect(createHash("sha256").update(retrievalBytes).digest("hex")).toBe("5266a30b1c9f666f0b3b97ff880cb8f364854359eb53e22b199a6afbdef442b5");
+ const proof=JSON.parse(retrievalBytes);
  const lock=JSON.parse(await readFile("config/staging-runtime-images.json","utf8"));
  expect(proof.passed).toBe(true);expect(proof.originRun).toBe(runtime.executionEvidence.runId);expect(proof.originCommit).toBe(runtime.executionEvidence.privateWorkflowCommit);
  expect(proof.scope).toBe("fresh runner private artifact retrieval and exact image/worker verification");

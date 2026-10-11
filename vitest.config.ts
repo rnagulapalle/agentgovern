@@ -17,6 +17,8 @@ export default defineConfig({
       reporter: ["text", "json-summary"],
       include: [
         "lib/engine/**/*.ts",
+        "lib/orchestration/**/*.ts",
+        "runtime/temporal/admission.ts",
         "runtime/temporal/activities.ts",
         "runtime/temporal/version-contract.ts",
         "runtime/temporal/record-routing.ts",
@@ -37,6 +39,7 @@ export default defineConfig({
         "lib/connectors/**/*.ts",
         "lib/workflows/**/*.ts",
         "lib/enquiries/**/*.ts",
+        "lib/quotes/**/*.ts",
         "lib/workspace/**/*.ts",
         "app/api/workspace/**/*.ts",
         "app/api/sales/route.ts",
@@ -47,6 +50,12 @@ export default defineConfig({
         branches: 85,
         functions: 90,
         lines: 90,
+        "lib/quotes/**": {
+          statements: 90,
+          branches: 85,
+          functions: 90,
+          lines: 90,
+        },
         "lib/workspace/**": {
           statements: 90,
           branches: 85,

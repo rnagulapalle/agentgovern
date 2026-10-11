@@ -99,8 +99,8 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
   return (
     <div className="cp-durable">
       {!embeddedRunId && <PageTitle
-        eyebrow={guided ? "WORK WITH AGENTS" : "SAVED WORKFLOW RUNS"}
-        title={guided ? "Describe the work. Review the plan." : "Keep the next step on hold"}
+        eyebrow={guided ? "WORKFLOW PLANS" : "WORKFLOW RUNS"}
+        title={guided ? "Describe the work. Review the plan." : "Workflow runs"}
         description={guided ? "Prepare a supported job, choose scoped agents, and follow decisions through approval and verified outcomes." : "Verify a record update before a customer message can execute. Decisions and dependencies survive a refresh."}
       />}
       <section className="cp-durable-scope">
@@ -202,26 +202,28 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
               {s.approved_by && <p>Approved by: {s.approved_by}</p>}
               {s.evidence && <p>Observed effect: {s.evidence.detail} {s.evidence.reference && `Reference: ${s.evidence.reference}`}</p>}
               {s.proposedRequest && <details><summary>Exact proposed connector request</summary><p>{s.proposedRequest.method} · {s.proposedRequest.resource}</p><pre>{JSON.stringify(s.proposedRequest.body, null, 2)}</pre><p>This is the approved request description. The observed effect above confirms what the provider twin reported; a proposed request alone is not execution evidence.</p></details>}
-              <div className="cp-durable-grid">
+              <div className="cp-durable-buttons">
                 {!s.state && (
-                  <button disabled={busy} onClick={() => action(s, "propose")}>
+                  <button className="cp-button" disabled={busy} onClick={() => action(s, "propose")}>
                     Submit prepared action
                   </button>
                 )}
                 {s.state === "held" && (
-                  <button disabled={busy} onClick={() => action(s, "approve")}>
+                  <button className="cp-button" disabled={busy} onClick={() => action(s, "approve")}>
                     Approve exact action
                   </button>
                 )}
                 {s.state === "ready" && (
                   <>
                     <button
+                      className="cp-button"
                       disabled={busy}
                       onClick={() => action(s, "execute")}
                     >
                       Execute
                     </button>
                     <button
+                      className="cp-button"
                       disabled={busy}
                       onClick={() => action(s, "execute", true)}
                     >
@@ -233,6 +235,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
                   s.state || "",
                 ) && (
                   <button
+                    className="cp-button"
                     disabled={busy}
                     onClick={() => action(s, "reconcile")}
                   >
@@ -243,7 +246,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
             </article>
           ))}
           <h3>3. Verify the full run</h3>
-          {run.state === "completed" && <section aria-label="Verification receipt" className="cp-durable-scope"><h3>Rehearsal verification receipt</h3><p>Run {run.id}: both connector effects were read back and the run was saved as completed. This is stored provider-twin evidence, not real email delivery or an independently signed certificate.</p>{run.steps.map(s => <p key={s.ordinal}>{s.connector}: {s.evidence?.outcome || s.state} · {s.evidence?.reference || "No reference"}</p>)}</section>}
+          {run.state === "completed" && <section aria-label="Verification evidence" className="cp-durable-scope"><h3>Verification evidence</h3><p>Run {run.id}: both connector effects were read back and the run was saved as completed. This is stored provider-twin evidence, not real email delivery or an independently signed certificate.</p>{run.steps.map(s => <p key={s.ordinal}>{s.connector}: {s.evidence?.outcome || s.state} · {s.evidence?.reference || "No reference"}</p>)}</section>}
           <p>
             Both effects must be confirmed. Uncertainty and conflicting records
             keep the run open.

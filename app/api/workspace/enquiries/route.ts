@@ -1,3 +1,4 @@
+import { TemporalAdmission } from "@/runtime/temporal/admission";
 import { NextRequest } from "next/server";
 import { database } from "@/lib/durable/database";
 import { authenticate } from "@/lib/durable/service";
@@ -29,14 +30,14 @@ async function context(r: NextRequest,p?:Record<string,unknown>) {
   const enquiries = new EnquiryControl(db, workflows, async () => {
     const record = await twin.contact();
     return { id: record.id, email: record.properties?.email, version: record.updatedAt, lifecycle: record.properties?.lifecyclestage };
-  }, twin.contactId || "1001");
+  }, twin.contactId || "1001", new TemporalAdmission(db));
   return { actor, enquiries, twin, db };
 }
 export async function GET(r: NextRequest) {
   try {
     const { actor, enquiries, twin, db } = await context(r);
     const plans = await enquiries.list(actor);
-    const recordDurableAvailable=Boolean(twin.recordScope && process.env.LOOPLABS_TEMPORAL_WORKSPACE==="staging" && /^ack-[a-f0-9]{64}$/.test(process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID||"") && (await db.query("SELECT to_regclass('ll_temporal_record_routes') AS present")).rows[0].present);
+    const recordDurableAvailable=Boolean(twin.recordScope && process.env.LOOPLABS_TEMPORAL_WORKSPACE==="staging" && await new TemporalAdmission(db).available());
     const status = (await db.query("SELECT last_tick, last_tick>now()-interval '30 seconds' AS healthy FROM ll_enquiry_worker_status WHERE org_id=$1", [actor.orgId])).rows[0];
     return Response.json({ connections: { mode: twin instanceof HostedFetchSandboxConnectors ? "hosted" : "private", crmAtomicVersion: !(twin instanceof HostedFetchSandboxConnectors), realDelivery: false,recordDurableAvailable,selectedRecipient:twin.recordScope?.recipient||"customer@example.test", workerHealthy: Boolean(status?.healthy), lastTick: status?.last_tick || null }, fixtures, plans }, { headers: { "Cache-Control": "no-store" } });
   } catch (e) { return failure(e); }

@@ -37,7 +37,10 @@ export async function withPendingPackageBrowser(directory,operation){
   assert(catalog.records.length===1&&catalog.records[0].active===true);const scope=catalog.records[0].id;
   let reloads=0;
   const verify=async()=>{
-   await page.goto(origin+"/control-plane/work");await page.getByLabel("Customer record for this conversation").selectOption(scope);
+   await page.goto(origin+"/control-plane/work");
+   const setup=page.locator("details.cp-chat-setup");
+   if(!await setup.evaluate(el=>el.open))await setup.locator("summary").click();
+   await page.getByLabel("Customer record for this conversation").selectOption(scope);
    await page.getByRole("button",{name:new RegExp(reference.id.slice(0,8))}).click();
    await expect(page.getByText("A different workspace member must approve.",{exact:false}).first()).toBeVisible();
    assert.equal(await page.getByRole("button",{name:"Approve CRM update",exact:true}).count(),0);

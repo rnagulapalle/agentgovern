@@ -1,3 +1,18 @@
+## Staged product terminology (October 10)
+
+The candidate interface uses **Workflow plans** for preparing proposed work,
+**Submit for approval** for saving held actions, **Workflow runs** for their
+execution state, **Agents** for registered identities and boundaries,
+**Connections** for system access, and **Verification evidence** for observed
+outcomes. Browser-local content remains under **Prepared examples**. Preparing,
+reviewing or submitting a plan does not approve its actions. Independent named
+approval and current execution checks remain mandatory.
+
+**Validation environment** identifies isolated simulated systems; it does not
+imply live customer connections or real message delivery. The internal legacy
+`rehearse` operation and planner field remain unchanged for compatibility.
+These presentation changes are staged, not yet deployed or release-qualified.
+
 ## October 8 staged server workflow increment
 
 The earlier architecture below describes the original browser-local examples. The invited server workspace now adds PostgreSQL-backed scoped identity/policy/approval/lease/effect controls and isolated Temporal adoption. See `TEMPORAL_ADOPTION_PLAN.md`, `PERSISTED_PROPOSAL_BOUNDARIES.md`, `PERSISTED_RECORD_GRANTS.md`, `SCOPED_TEMPORAL_ROUTING.md` and `SCOPED_CHAT_EXPERIENCE.md` for current contracts and measured proof.

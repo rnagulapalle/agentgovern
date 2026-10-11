@@ -51,8 +51,8 @@ export function WorkspaceOverview() {
       )}
       <section className="cp-panel cp-durable-card">
         <h2>Ask for work, then review the plan.</h2>
-        <p>Handle a sample customer enquiry: check the contact, review an approved acknowledgement and follow independent approvals through verified outcomes. No live customer systems or AI model are connected.</p>
-        <Link prefetch={false} className="cp-button cp-button-dark" href="/control-plane/work">Work with agents →</Link>
+        <p>Handle a sample customer enquiry: check the contact, review a proposed acknowledgement and follow independent approvals through verified outcomes. When configured, AI helps prepare this bounded plan; it cannot approve or execute actions. Business connectors use simulated systems, with no live customer updates or real email delivery.</p>
+        <Link prefetch={false} className="cp-button cp-button-dark" href="/control-plane/work">Create a workflow plan →</Link>
       </section>
       <div className="cp-durable-grid">
         <section className="cp-panel cp-durable-card">
@@ -131,8 +131,9 @@ export function WorkspaceOverview() {
           The discount workflow changes a sample record. The refund workflow
           uses a simulated payment provider. CRM updates and customer messages
           use private FetchSandbox twins. No real money moves, no email is
-          delivered and no AI model is called. These workflows use saved server
-          state.
+          delivered. These workflows use saved server state. Separately configured
+          AI planning helps prepare the bounded customer acknowledgement; it does
+          not grant execution authority.
         </p>
         <p>
           Model access, output checks and multi-step traces are prepared

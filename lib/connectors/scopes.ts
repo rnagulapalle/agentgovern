@@ -67,7 +67,7 @@ export class ScopeControl {
   validId(id);if((expectedVersion!==undefined && (!Number.isInteger(expectedVersion) || expectedVersion<1)) || typeof active!=="boolean" || (agent!==undefined && (typeof agent!=="string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(agent))))throw new ControlError(400,"Choose a valid scope authority change.");
   return transaction(this.db,actor.orgId,async c=>{
    await this.authority(c,actor);
-   const enrolled=(await c.query("SELECT * FROM ll_connector_scopes WHERE org_id=$1 AND id=$2 AND binding_id=$3",[actor.orgId,id,this.provider.bindingId])).rows[0];
+   const enrolled=(await c.query("SELECT * FROM ll_connector_scopes WHERE org_id=$1 AND id=$2 AND binding_id=$3 AND contract_version='private-record-twin-2' AND contact_id=$4 AND recipient=$5",[actor.orgId,id,this.provider.bindingId,this.provider.recordScope!.contactId,this.provider.recordScope!.recipient])).rows[0];
    if(!enrolled)throw new ControlError(404,"Scope not found.");
    const table=agent===undefined?"ll_connector_scopes":"ll_connector_scope_grants",where=agent===undefined?"id=$2":"scope_id=$2 AND agent_id=$3",params=agent===undefined?[actor.orgId,id]:[actor.orgId,id,agent];
    const old=(await c.query(`SELECT * FROM ${table} WHERE org_id=$1 AND ${where}`,params)).rows[0];if(!old)throw new ControlError(404,"Grant not found.");

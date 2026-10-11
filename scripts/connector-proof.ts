@@ -8,6 +8,7 @@ import { resolve } from "node:path";
 import assert from "node:assert/strict";
 import { Pool } from "pg";
 import { authenticate, tokenHash } from "../lib/durable/service";
+import {memberSession,digest,WORKSPACE_COOKIE} from "../lib/workspace/identity";
 import { ConnectorControl } from "../lib/connectors/service";
 import { FetchSandboxConnectors } from "../lib/connectors/twin";
 import { WorkflowControl } from "../lib/workflows/service";
@@ -99,6 +100,7 @@ async function main() {
       "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/connectors/scope-schema.sql",
       "lib/enquiries/schema.sql",
       "lib/enquiries/managed-schema.sql",
+      "lib/durable/recovery-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/membership-authority-schema.sql",
     ])
       await db.query(await readFile(f, "utf8"));
     await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
@@ -127,6 +129,18 @@ async function main() {
       actors.push(await authenticate(db, key));
     }
     const [crm, email, operator, worker] = actors;
+    assert((await db.query("SELECT to_regprocedure('ll_membership_authority23()') AS installed")).rows[0].installed);
+    const namedKeys: string[] = [], legacyNamedKeys: string[] = [], namedActors = [];
+    for (const subject of ["enquiry-owner@example.test", "enquiry-reviewer@example.test"]) {
+      await db.query("INSERT INTO ll_members(org_id,email,name,password_hash) VALUES('local-proof',$1,$1,'unused')", [subject]);
+      const session=randomBytes(32).toString("base64url"), legacy=randomBytes(32).toString("base64url");
+      await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,$2,now()+interval '1 hour')", [digest(session),subject]);
+      await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'operator')", [tokenHash(legacy),subject]);
+      const actor=await memberSession(db,session);assert(actor);namedActors.push(actor);namedKeys.push(session);legacyNamedKeys.push(legacy);
+    }
+    const [namedRequester,namedReviewer]=namedActors;
+    const [requesterSession,reviewerSession]=namedKeys;
+    const [legacyRequesterKey,legacyReviewerKey]=legacyNamedKeys;
     const provider = new FetchSandboxConnectors("http://127.0.0.1:8018", token);
     const control = new ConnectorControl(db, provider);
     async function ready(connector: Connector) {
@@ -415,6 +429,7 @@ async function main() {
           env: {
             ...process.env,
             LOOPLABS_DATABASE_URL: isolatedUrl.toString(),
+            LOOPLABS_DURABLE_ORIGIN: "",
             LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018",
             LOOPLABS_CONNECTOR_TWIN_TOKEN: token,
           },
@@ -447,7 +462,7 @@ async function main() {
     async function http(path: string, key: string, value?: object) {
       const response = await fetch(origin + path, {
         headers: {
-          Authorization: `Bearer ${key}`,
+          ...(namedKeys.includes(key)?{Cookie:`${WORKSPACE_COOKIE}=${key}`,Origin:origin.replace("127.0.0.1","localhost")}:{Authorization:`Bearer ${key}`}),
           "Content-Type": "application/json",
         },
         ...(value ? { method: "POST", body: JSON.stringify(value) } : {}),
@@ -774,31 +789,41 @@ async function main() {
           const id = randomUUID();
           const endpoint = "/api/workspace/enquiries";
           for (const fixtureId of ["missing", "unmatched", "pricing"]) {
-            const r = await http(endpoint, actorKeys.reviewer, { operation: "prepare", id: randomUUID(), fixtureId });
+            const r = await http(endpoint, requesterSession, { operation: "prepare", id: randomUUID(), fixtureId });
             assert.equal(r.status, 200); assert.ok(r.data.clarification);
           }
           const request = { operation: "prepare", id, fixtureId: "service" };
-          const draft = await http(endpoint, actorKeys.reviewer, request);
+          assert.equal((await http(endpoint, legacyRequesterKey, request)).status,403);
+          const draft = await http(endpoint, requesterSession, request);
           assert.equal(draft.status, 200);
-          assert.equal((await http(endpoint, actorKeys.reviewer, request)).data.saved.plan_hash, draft.data.saved.plan_hash);
+          assert.deepEqual((await db!.query("SELECT membership_owner FROM ll_enquiry_plans WHERE id=$1",[id])).rows[0].membership_owner,{kind:"member",subject:namedRequester.subject,generation:"1"});
+          assert.equal((await http(endpoint, requesterSession, request)).data.saved.plan_hash, draft.data.saved.plan_hash);
           const start = { operation: "start", id, planHash: draft.data.saved.plan_hash, crmAgent: "enquiry-crm", emailAgent: "enquiry-email" };
-          assert.equal((await http(endpoint, actorKeys.reviewer, { ...start, planHash: "0".repeat(64) })).status, 409);
-          assert.equal((await http(endpoint, actorKeys.reviewer, start)).status, 200);
-          const run = (await http(`/api/durable/workflows?run=${id}`, actorKeys.reviewer)).data;
+          assert.equal((await http(endpoint, requesterSession, { ...start, planHash: "0".repeat(64) })).status, 409);
+          assert.equal((await http(endpoint, requesterSession, start)).status, 200);
+          const run = (await http(`/api/durable/workflows?run=${id}`, requesterSession)).data;
           for (const [index, step] of run.steps.entries()) {
             const a = await http("/api/durable/connectors", enquiryKeys[index], { operation: "propose", actionId: step.action_id, agentId: step.agent_id, connector: step.connector, payload: step.payload });
             assert.equal(a.status, 200);
-            assert.equal((await http("/api/durable/connectors", actorKeys.reviewer, { operation: "approve", actionId: step.action_id, payloadHash: a.data.payload_hash })).status, 200);
+            const beforeDenials=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+            const approval={operation:"approve",actionId:step.action_id,payloadHash:a.data.payload_hash};
+            assert.equal((await http("/api/durable/connectors",requesterSession,approval)).status,403);
+            assert.equal((await http("/api/durable/connectors",legacyReviewerKey,approval)).status,403);
+            assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,beforeDenials);
+            assert.equal((await http("/api/durable/connectors", reviewerSession, { operation: "approve", actionId: step.action_id, payloadHash: a.data.payload_hash })).status, 200);
+            const saved=(await db!.query("SELECT membership_proposal,membership_approval FROM ll_connector_actions WHERE id=$1",[step.action_id])).rows[0];
+            assert.deepEqual(saved.membership_proposal.planOwner,{kind:"member",subject:namedRequester.subject,generation:"1"});
+            assert.deepEqual(saved.membership_approval.approver,{kind:"member",subject:namedReviewer.subject,generation:"1"});assert.equal(saved.membership_approval.payloadHash,a.data.payload_hash);
           }
           const execute = (index: number, lostResponse = false) => http("/api/durable/connectors", workerToken, { operation: "execute", actionId: run.steps[index].action_id, lostResponse });
           assert.equal((await execute(1)).status, 409);
           assert.equal((await execute(0, true)).data.state, "uncertain");
           await stopApi(); await startApi();
-          assert.equal((await http(endpoint, actorKeys.reviewer, start)).data.runId, id);
+          assert.equal((await http(endpoint, requesterSession, start)).data.runId, id);
           assert.equal((await execute(1)).status, 409);
-          assert.equal((await http("/api/durable/connectors", actorKeys.reviewer, { operation: "reconcile", actionId: run.steps[0].action_id })).data.state, "succeeded");
+          assert.equal((await http("/api/durable/connectors", requesterSession, { operation: "reconcile", actionId: run.steps[0].action_id })).data.state, "succeeded");
           assert.equal((await execute(1)).data.state, "succeeded");
-          assert.equal((await http("/api/durable/workflows", actorKeys.reviewer, { operation: "verify", runId: id })).status, 200);
+          assert.equal((await http("/api/durable/workflows", requesterSession, { operation: "verify", runId: id })).status, 200);
           assert.equal((await db!.query("SELECT count(*)::int AS n FROM ll_workflow_runs WHERE id=$1", [id])).rows[0].n, 1);
         },
         "Real PostgreSQL and FetchSandbox HTTP. A reviewed sample enquiry survives API restart; response loss is reconciled without resending and the acknowledgement stays held until its predecessor is verified. No real delivery or model is used.",
@@ -817,19 +842,24 @@ async function main() {
       for(let index=0;index<2;index++){
         const p=scoped[index],c=controls[index],flow=new WorkflowControl(db!,c);
         const e=new EnquiryControl(db!,flow,async()=>{const r=await p.contact();return {id:r.id,email:r.properties.email,lifecycle:r.properties.lifecyclestage,version:r.updatedAt};});
-        const id=randomUUID();await e.prepare(operator,id,"service");const plan=(await e.list(operator)).find(r=>r.id===id);
+        const id=randomUUID();await e.prepare(namedRequester,id,"service");const plan=(await e.list(namedRequester)).find(r=>r.id===id);
+        assert.deepEqual((await db!.query("SELECT membership_owner FROM ll_enquiry_plans WHERE id=$1",[id])).rows[0].membership_owner,{kind:"member",subject:namedRequester.subject,generation:"1"});
         assert.equal(plan.plan.reply.recipient,p.recipient);assert.equal(plan.plan.requests.email.version,"prepared-request-2");
-        await e.start(operator,id,plan.plan_hash,"crm-agent","email-agent");const run=await flow.read(operator,id);
+        await e.start(namedRequester,id,plan.plan_hash,"crm-agent","email-agent");const run=await flow.read(namedRequester,id);
         for(const step of run.steps){
           const agent=step.connector==="crm"?crm:email;
           const a=await c.propose(agent,{actionId:step.action_id,agentId:agent.subject,connector:step.connector,payload:step.payload});
-          await c.review(operator,a.id,a.payload_hash,true);
+          await assert.rejects(()=>c.review(namedRequester,a.id,a.payload_hash,true));
+          await c.review(namedReviewer,a.id,a.payload_hash,true);
+          const saved=(await db!.query("SELECT membership_proposal,membership_approval FROM ll_connector_actions WHERE id=$1",[a.id])).rows[0];
+          assert.deepEqual(saved.membership_proposal.planOwner,{kind:"member",subject:namedRequester.subject,generation:"1"});
+          assert.deepEqual(saved.membership_approval.approver,{kind:"member",subject:namedReviewer.subject,generation:"1"});assert.equal(saved.membership_approval.payloadHash,a.payload_hash);
         }
         scopedRuns.push({runId:id,crm:run.steps[0].action_id,email:run.steps[1].action_id});
       }
       await Promise.all(scopedRuns.map(async(r,index)=>{
         const c=controls[index];assert.equal((await c.execute(worker,r.crm)).state,"succeeded");assert.equal((await c.execute(worker,r.email)).state,"succeeded");
-        const receipt=await new WorkflowControl(db!,c).verify(operator,r.runId);assert.equal(receipt.verified,true);
+        const receipt=await new WorkflowControl(db!,c).verify(namedRequester,r.runId);assert.equal(receipt.verified,true);
       }));
       const effects=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
       scopedRuns.forEach((r,index)=>{assert.equal(effects[r.crm].recordId,scoped[index].contactId);assert.deepEqual(effects[r.email].body.to,[scoped[index].recipient]);});
@@ -940,11 +970,11 @@ async function main() {
     const fingerprintFiles = [
       "lib/connectors/request.ts", "lib/connectors/content.ts", "lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts",
       "lib/durable/recovery.ts",
-      "lib/durable/service.ts","lib/workspace/identity.ts",
+      "lib/durable/service.ts","lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/identity.ts",
       "lib/enquiries/dispatch.ts",
       "lib/workflows/guard.ts",
       "lib/enquiries/contracts.ts",
-      "lib/enquiries/service.ts",
+      "lib/enquiries/service.ts","lib/orchestration/admission.ts","runtime/temporal/admission.ts",
       "lib/enquiries/schema.sql",
       "lib/enquiries/managed-schema.sql",
       "app/api/workspace/enquiries/route.ts",

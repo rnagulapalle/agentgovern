@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "passed": true,
+  "scope": "actual isolated lightweight Docker inspection fixture only",
+  "image": {
+    "selectionTag": "alpine:3.20",
+    "id": "sha256:bf8527eb54c3680e728d5b4b383a8ba730d72dae7236fbc8dff97ed6b224a731",
+    "repoDigest": "alpine@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc"
+  },
+  "roles": 8,
+  "checks": {
+    "actualHealthyRunning": true,
+    "completeSecurityConfiguration": true,
+    "measuredMalformedRefusal": true,
+    "actualExtraNetworkDetected": true,
+    "extraNetworkRemoved": true,
+    "stoppedContainerObserved": true
+  },
+  "workflowRunId": "38082845227",
+  "workflowCommit": "c9f8a821c3356d068be5618d597fb45fb81d06c1",
+  "productionChanged": false,
+  "activationEstablished": false,
+  "acceptedProvenanceEstablished": false,
+  "enterpriseSlaEstablished": false,
+  "ownedResourceCleanupVerified": true,
+  "sourceFingerprints": {
+    "scripts/persistent-docker-inspection.mjs": "44d941d0aea912b5190fd1c6d17c4b92c99c6ab70a55b2e7d1b974e9c2765b93",
+    "scripts/persistent-docker-inspection-proof.mjs": "e504a2d7ef81321f78477d119f06673260251d9e2d8c4917ada4cd424759bedc"
+  }
+}
