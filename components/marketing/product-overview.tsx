@@ -75,9 +75,11 @@ export function ProductOverview({ gated = false }: { gated?: boolean }) {
           named owners and supported boundaries. Saved controls govern a sample
           discount record, a simulated CRM contact and a prepared customer
           message. The refund workflow uses a simulated payment provider. No
-          real money moves and no customer email is delivered. Live customer
-          connectors, model execution and a general workflow builder are not
-          available yet.
+          real money moves and no customer email is delivered. Where enabled,
+          the separate invited enquiry workspace uses a bounded planner to
+          prepare one supported CRM-to-message plan for independent review.
+          Reviewing a plan does not authorize execution. Live customer
+          connectors and a general workflow builder are not available yet.
         </p>
       </div>
     </main>
