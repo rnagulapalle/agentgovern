@@ -246,3 +246,10 @@ Copy this block for each material experiment or weekly synthesis.
 - Worked/failed: authenticated Chrome extension usable despite native Mac lock. Streaming required observation of the existing response rather than duplicate submissions. One answer truncated; no cross-engine or traffic conclusion.
 - Lesson/confidence: high confidence in observed rendered absence, low in longitudinal visibility and commercial fit. Category/approval answers overlap incumbent control/runtime/SDK material; avoid generic approval claims or a broad new article.
 - Next experiment: finish cross-engine baseline; implement confirmed-booking measurement and collect independent operator comprehension. PH canceled; YouTube action-time consent remains pending without another upload attempt. No bookings or customer demand fabricated.
+
+
+## October12 — weekly recovery and conversion priority
+
+Reviewed October5–11 after the scheduled slots. Fresh filtered PostHog rolling7days56 visitors versus107,226 views versus465,85 sessions versus156; rolling28days148/626/220. Founder/QA exclusion unknown. GSC Oct4–10 one click/104 impressions/1% CTR/position37,35 indexed/21 excluded; sole click branding unknown. The dashboard definitions were inspected, but full funnel, qualification and calendar-week attribution remain incomplete. No verified demand, attended qualified call or pilot outcome collected. High confidence in observations; low in commercial inference.
+
+Continue bounded operations proof and only incomplete AEO observations; improve scope-to-call and verified reservation measurement; consolidate duplicate recovery and refund supporting proof; stop broad distribution/PR and canceled PH. Numeric weekly targets are two qualified bookings, one attended qualified call and three operator sessions, not actuals. The exact experiment, aging actions and stop conditions are in [the weekly review](2026-10-12-weekly-growth-review.md). Next action is the existing gated scope correction and operator acceptance checklist, not another generic article.
