@@ -9,4 +9,5 @@ git fetch --quiet origin "$branch"
 [[ "$(git rev-parse HEAD)" == "$(git rev-parse "origin/$branch")" ]] || { echo 'Quote install requires the exact pushed approved branch.' >&2; exit 1; }
 pnpm exec vitest run scripts/current-proof-source-registry.test.mjs scripts/persistent-installed-trial-recipe.test.mjs scripts/persistent-installed-owner.test.ts scripts/persistent-installed-runtime-readiness.test.mjs scripts/persistent-installed-typed-quote.test.mjs scripts/typed-quote-browser-proof.test.mjs components/control-plane/shell-profile.test.tsx lib/workspace/deployment-capabilities.test.ts middleware.test.ts
 pnpm exec tsc --noEmit
-pnpm exec eslint scripts/persistent-installed-trial-recipe.mjs scripts/persistent-installed-trial-core.mjs scripts/retained-quote-demo-install.mjs middleware.ts components/control-plane/shell.tsx --max-warnings 0
+pnpm lint
+pnpm build
