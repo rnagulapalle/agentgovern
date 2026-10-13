@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { quoteDemoProfile } from "@/lib/workspace/deployment-capabilities";
+export const dynamic = "force-dynamic";
 import {
   MarketingHeader,
   MarketingFooter,
@@ -15,7 +17,7 @@ export default function PlatformPage() {
   return (
     <div className="sales-page">
       <MarketingHeader />
-      <ProductOverview />
+      <ProductOverview quoteOnly={process.env.LOOPLABS_DEPLOYMENT_PROFILE === quoteDemoProfile} />
       <MarketingFooter />
     </div>
   );

@@ -1,5 +1,5 @@
 import Link from "next/link";
-export function ProductOverview({ gated = false }: { gated?: boolean }) {
+export function ProductOverview({ gated = false, quoteOnly = false }: { gated?: boolean; quoteOnly?: boolean }) {
   return (
     <main className="sales-main">
       <div className="sales-eyebrow">
@@ -25,8 +25,8 @@ export function ProductOverview({ gated = false }: { gated?: boolean }) {
             Already invited? Sign in
           </Link>
         ) : (
-          <Link className="sales-link" href="/control-plane">
-            Team workspace ↗
+          <Link className="sales-link" href={quoteOnly ? "/control-plane/quotes" : "/control-plane"}>
+            {quoteOnly ? "Quote workspace ↗" : "Team workspace ↗"}
           </Link>
         )}
       </div>
@@ -70,7 +70,14 @@ export function ProductOverview({ gated = false }: { gated?: boolean }) {
       </p>
       <div className="sales-scope">
         <h2>What you can evaluate today</h2>
-        <p>
+        {quoteOnly ? <p>
+          This deployment provides one invited quote workflow: prepare a proposed discount,
+          request independent manager approval, apply the approved change, and verify the
+          outcome before a simulated confirmation email. Quote and email effects use isolated
+          sample systems. No real money moves and no customer email is delivered.
+          Reviewing a plan does not authorize execution. Agent registration, the model gateway,
+          and the other platform workspaces are not available in this deployment.
+        </p> : <p>
           Invited users can register discount, CRM and messaging agents with
           named owners and supported boundaries. Saved controls govern a sample
           discount record, a simulated CRM contact and a prepared customer
@@ -80,7 +87,7 @@ export function ProductOverview({ gated = false }: { gated?: boolean }) {
           prepare one supported CRM-to-message plan for independent review.
           Reviewing a plan does not authorize execution. Live customer
           connectors and a general workflow builder are not available yet.
-        </p>
+        </p>}
       </div>
     </main>
   );

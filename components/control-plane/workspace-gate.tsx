@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { quoteDemoProfile } from "../../lib/workspace/deployment-capabilities";
 import { tenantContext } from "../../lib/workspace/tenant-context";
 import { WORKSPACE_COOKIE } from "../../lib/workspace/identity";
 import {
@@ -20,7 +21,7 @@ export function WorkspaceGate() {
   return (
     <div className="sales-page">
       <MarketingHeader />
-      <ProductOverview gated />
+      <ProductOverview gated quoteOnly={process.env.LOOPLABS_DEPLOYMENT_PROFILE === quoteDemoProfile} />
       <MarketingFooter />
     </div>
   );
