@@ -35,10 +35,12 @@ export async function authenticate(db: Pool, token: string): Promise<Actor> {
     tokenHash: hash,
   };
 }
-export async function authorize(c: PoolClient, actor: Actor, roles: Role[], purpose?: "enquiries") {
+export async function authorize(c: PoolClient, actor: Actor, roles: Role[], purpose?: "enquiries" | "quotes") {
   await recoveryFence(c, actor.orgId);
   if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject) && purpose !== "enquiries")
     throw new ControlError(403, "This worker is scoped to reviewed enquiry runs.");
+  if (actor.role === "worker" && actor.subject === "quote-temporal" && purpose !== "quotes")
+    throw new ControlError(403, "This worker is scoped to reviewed quote runs.");
   const { rows } = await c.query(
     "SELECT 1 FROM ll_tokens WHERE hash=$1 AND org_id=$2 AND subject=$3 AND role=$4 AND active=true",
     [actor.tokenHash, actor.orgId, actor.subject, actor.role],
@@ -109,8 +111,19 @@ async function current(c: PoolClient, actor: Actor, agentId: string) {
   );
   return { org, agent, record, identityActive };
 }
+async function heldProposalAuthor(c: PoolClient, orgId: string, id: string): Promise<string | null> {
+  // The first append-only event is saved in the same transaction as proposal admission.
+  // Do not infer the requester from the agent owner, latest reviewer, or client state.
+  const first = (await c.query(
+    "SELECT kind,subject FROM ll_events WHERE org_id=$1 AND action_id=$2 ORDER BY id LIMIT 1",
+    [orgId, id],
+  )).rows[0];
+  return first?.kind === "held" && typeof first.subject === "string" && first.subject.length > 0 ? first.subject : null;
+}
 async function approvalValid(c: PoolClient, actor: Actor, a: DurableAction) {
-  return !a.approved_by || activeApprover(c, actor.orgId, a.approved_by);
+  if (!a.approved_by) return true;
+  const requester = await heldProposalAuthor(c, actor.orgId, a.id);
+  return requester !== null && requester !== a.approved_by && await activeApprover(c, actor.orgId, a.approved_by);
 }
 
 function invalid(
@@ -284,6 +297,9 @@ export class DurableControl {
       if (a.state !== "held") return a;
       if (!approve)
         return transition(c, actor, a, "rejected", "Rejected by the operator.");
+      const requester = await heldProposalAuthor(c, actor.orgId, a.id);
+      if (!requester) throw new ControlError(409, "The original requester cannot be verified. Prepare fresh work.");
+      if (requester === actor.subject) throw new ControlError(403, "A different named operator must approve this action.");
       const context = await current(c, actor, a.agent_id);
       // Approval must be checked without treating the not-yet-issued approval as missing.
       const now = (await c.query("SELECT clock_timestamp() AS now")).rows[0]
@@ -333,7 +349,7 @@ export class DurableControl {
           actor,
           a,
           "cancelled",
-          "Approver authority was revoked.",
+          "Independent approver authority is unavailable or was revoked.",
         );
       await c.query(
         "UPDATE ll_actions SET state='executing',reason='Worker lease acquired.',lease_token=$3,lease_until=clock_timestamp()+interval '30 seconds' WHERE org_id=$1 AND id=$2",
@@ -376,7 +392,7 @@ export class DurableControl {
           actor,
           a,
           "cancelled",
-          "Approver authority was revoked.",
+          "Independent approver authority is unavailable or was revoked.",
         );
         return null;
       }
@@ -543,6 +559,25 @@ export class DurableControl {
         "recovered",
         "Previous discount restored as a new version. Agent remains contained.",
       );
+    });
+  }
+  /** Sample discount connector scope only. Existing workspace-wide administration
+   * remains separate; this operation never revokes unrelated connector agents. */
+  async configureDiscountConnector(actor: Actor, active: boolean) {
+    if (typeof active !== "boolean") throw new ControlError(400, "Choose a valid connector access state.");
+    return transaction(this.db, actor.orgId, async c => {
+      await authorize(c, actor, ["operator"]);
+      const scope = "('proof.discount'=ANY(a.tools) OR EXISTS(SELECT 1 FROM ll_agent_profiles p WHERE p.org_id=a.org_id AND p.agent_id=a.id AND p.connector='discount_record'))";
+      const ambiguous = await c.query(
+        `SELECT a.id FROM ll_agents a WHERE a.org_id=$1 AND ${scope} AND EXISTS(SELECT 1 FROM unnest(a.tools) tool WHERE tool<>'proof.discount')`, [actor.orgId],
+      );
+      if (ambiguous.rowCount) throw new ControlError(409, "Discount connector containment requires single-connector agent authority. No agent state changed.");
+      await c.query(`UPDATE ll_agents a SET active=$2 WHERE a.org_id=$1 AND ${scope}`, [actor.orgId, active]);
+      await event(c, actor, null, active ? "discount_connector_enabled" : "discount_connector_contained");
+      if (!active) {
+        const {rows} = await c.query("SELECT * FROM ll_actions WHERE org_id=$1 AND state IN ('held','ready','executing')", [actor.orgId]);
+        for (const action of rows) await transition(c, actor, action, action.state === "executing" ? "uncertain" : "cancelled", "Discount connector contained; previous authorization invalidated.");
+      }
     });
   }
   async configure(

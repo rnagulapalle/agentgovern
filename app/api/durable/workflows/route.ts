@@ -1,16 +1,15 @@
 import { NextRequest } from "next/server";
-import { database } from "@/lib/durable/database";
-import { authenticate } from "@/lib/durable/service";
-import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
-import { ControlError } from "@/lib/durable/contracts";
-import { ConnectorControl } from "@/lib/connectors/service";
-import { savedProvider } from "@/lib/connectors/routing";
-import { connectorProvider } from "@/lib/connectors/hosted";
-import { WorkflowControl } from "@/lib/workflows/service";
+import { tenantContext } from "../../../../lib/workspace/tenant-context";
+import { body, credential, failure, sameOrigin } from "../../../../lib/durable/http";
+import { ControlError } from "../../../../lib/durable/contracts";
+import { ConnectorControl } from "../../../../lib/connectors/service";
+import { savedProvider } from "../../../../lib/connectors/routing";
+import { connectorProvider } from "../../../../lib/connectors/hosted";
+import { WorkflowControl } from "../../../../lib/workflows/service";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 async function context(r: NextRequest,id?:string|null,p?:Record<string,unknown>) {
-  const db = database(),actor=await authenticate(db, credential(r));
+  const { db, actor } = await tenantContext().authenticated(credential(r));
   if(p){const keys=p.operation==="create"?["operation","runId","crmAgent","emailAgent"]:(p.operation==="pause"||p.operation==="verify")?["operation","runId"]:null;if(!keys || Object.keys(p).sort().join()!==keys.sort().join() || keys.some(k=>typeof p[k]!=="string"))throw new ControlError(400,"Choose a supported workflow operation.");}
   return {
     actor,

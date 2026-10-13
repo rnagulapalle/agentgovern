@@ -1,16 +1,14 @@
 import { NextRequest } from "next/server";
-import { database } from "@/lib/durable/database";
-import { authenticate } from "@/lib/durable/service";
-import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
-import { ControlError } from "@/lib/durable/contracts";
-import { RefundControl } from "@/lib/refunds/service";
-import { FetchSandboxStripe } from "@/lib/refunds/twin";
+import { tenantContext } from "../../../../lib/workspace/tenant-context";
+import { body, credential, failure, sameOrigin } from "../../../../lib/durable/http";
+import { ControlError } from "../../../../lib/durable/contracts";
+import { RefundControl } from "../../../../lib/refunds/service";
+import { FetchSandboxStripe } from "../../../../lib/refunds/twin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
-    const db = database();
-    const actor = await authenticate(db, credential(request));
+    const { db, actor } = await tenantContext().authenticated(credential(request));
     const service = new RefundControl(db, new FetchSandboxStripe());
     const id = request.nextUrl.searchParams.get("action");
     return Response.json(
@@ -24,8 +22,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     sameOrigin(request);
-    const db = database();
-    const actor = await authenticate(db, credential(request));
+    const { db, actor } = await tenantContext().authenticated(credential(request));
     const service = new RefundControl(db, new FetchSandboxStripe());
     const { operation, ...p } = await body(request);
     let result;

@@ -9,22 +9,22 @@ const metricDefinitions = [
   {
     label: "Actions evaluated",
     note: "Across prepared workflows",
-    href: "/control-plane/runs",
+    href: "/platform#approved-execution",
   },
   {
     label: "Held for approval",
     note: "Stopped before execution",
-    href: "/control-plane/approvals",
+    href: "/platform#approved-execution",
   },
   {
     label: "Blocked before effect",
     note: "Policy prevented the action",
-    href: "/control-plane/policies",
+    href: "/platform#workflow-boundaries",
   },
   {
     label: "Need reconciliation",
     note: "Verify state before retry",
-    href: "/control-plane/reconciliation",
+    href: "/platform#verified-outcomes",
   },
 ];
 
@@ -254,8 +254,8 @@ export function ExecutionIntegrityDashboard() {
             Follow one action from delegated authority through observed effect
             and recovery.
           </span>
-          <Link href="/control-plane/reconciliation">
-            Explore this run <ArrowUpRight size={13} />
+          <Link href="/platform#verified-outcomes">
+            Explore verification <ArrowUpRight size={13} />
           </Link>
         </figcaption>
         <details className="ll-integrity-transcript">
@@ -275,8 +275,8 @@ export function ExecutionIntegrityDashboard() {
             <strong>Where control intervened</strong>
             <span>Why an action did not continue automatically</span>
           </div>
-          <Link href="/control-plane/audit">
-            Inspect decisions <ArrowUpRight size={13} />
+          <Link href="/platform#verified-outcomes">
+            How decisions are reviewed <ArrowUpRight size={13} />
           </Link>
         </div>
         <div className="ll-intervention-list">

@@ -6,11 +6,13 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 const command = promisify(execFile);
 import { beforeAll, afterAll, it, expect } from "vitest";
-import { quarantineRestore } from "./recovery";
+import { quarantineRestore, recoveryFence } from "./recovery";
+import { createInstalledTenantFixture } from "../workspace/installed-tenant-fixture";
+import { digest } from "../workspace/identity";
 const schema = `proposals_${randomBytes(8).toString("hex")}`;
 const role = `ll_proposals_${randomBytes(6).toString("hex")}`;
 let admin: Pool, db: Pool, runtime: Pool;
-const id = randomUUID(), run = randomUUID(), epoch = randomUUID();
+const id = randomUUID(), run = randomUUID();
 async function setup(noOwner = false) {
   const url = new URL(process.env.LOOPLABS_TEST_DATABASE_URL!);
   url.searchParams.set("options",`-c search_path=${schema}`);
@@ -96,11 +98,52 @@ it("keeps new unknown columns immutable by default",async () => {
   await expect(runtime.query("UPDATE ll_connector_actions SET future_scope='changed' WHERE id=$1",[id])).rejects.toMatchObject({code:'23514'});
 });
 it("allows real restore quarantine to revoke old authority without changing saved proposals",async () => {
-  await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('one',$1)",[epoch]);
-  const result=await quarantineRestore(db,'one',randomUUID(),'a'.repeat(64));
-  expect(result).toMatchObject({ll_actions:1,ll_refund_actions:1,ll_connector_actions:1});
-  expect((await db.query("SELECT state,approved_by,payload_hash FROM ll_connector_actions WHERE id=$1",[id])).rows[0]).toEqual({state:'uncertain',approved_by:null,payload_hash:'hash'});
-  expect((await db.query("SELECT count(*)::int AS n FROM ll_workflow_steps WHERE run_id=$1",[run])).rows[0].n).toBe(1);
+  // Separate complete installation: the earlier tests intentionally exercise
+  // retroactive migration11 over legacy proposals, not enrolled tenant runtime.
+  const restoredId=randomUUID(),restoredRun=randomUUID(),session=randomBytes(32).toString("base64url");
+  const fixture=await createInstalledTenantFixture({tenants:["one","two"],salesOrg:"one",seed:async owner=>{
+    await owner.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('owner@example.test','one','Owner','fixture'),('peer@example.test','one','Peer','fixture'),('other@example.test','two','Other','fixture')");
+    await owner.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,'owner@example.test',now()+interval '1 hour')",[digest(session)]);
+    await owner.query("INSERT INTO ll_agents(org_id,id) VALUES('one','agent'),('two','agent')");
+    await owner.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one','agent','agent')",['a'.repeat(64)]);
+    await owner.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('one','crm'),('one','email')");
+    await owner.query("INSERT INTO ll_actions(org_id,id,agent_id,discount,expected_version,policy_version,payload_hash,state,reason) VALUES('one',$1,'agent',20,1,1,'hash','held','Awaiting approval')",[restoredId]);
+    await owner.query("INSERT INTO ll_refund_actions(org_id,id,agent_id,payment_id,amount,currency,policy_version,payload_hash,state,reason) VALUES('one',$1,'agent','payment',100,'usd',1,'hash','held','Awaiting approval')",[restoredId]);
+    await owner.query("INSERT INTO ll_connector_actions(org_id,id,agent_id,connector,payload,payload_hash,policy_version,state,reason,proposed_by) VALUES('one',$1,'agent','crm',$2,'hash',1,'held','Awaiting approval','owner@example.test')",[restoredId,{lifecycle:'lead',sourceVersion:'v1',binding:'a'.repeat(64)}]);
+    await owner.query("INSERT INTO ll_workflow_runs(org_id,id,created_by) VALUES('one',$1,'owner@example.test')",[restoredRun]);
+    await owner.query("INSERT INTO ll_workflow_steps(org_id,run_id,ordinal,action_id,agent_id,connector,payload) VALUES('one',$1,1,$2,'agent','crm',$3)",[restoredRun,restoredId,{lifecycle:'lead'}]);
+  }});
+  try {
+    const owner=fixture.owner,web=fixture.web("one"),worker=await fixture.workload("one","worker"),scheduler=await fixture.workload("one","scheduler");
+    expect((await owner.query("SELECT ll_runtime_classification() classification")).rows[0].classification).toBe('offline');
+    for(const [pool,purpose] of [[web,'web'],[worker,'worker'],[scheduler,'scheduler']] as const)expect((await pool.query("SELECT ll_runtime_classification() classification")).rows[0].classification).toBe(purpose);
+    expect((await fixture.context.authenticated(session)).actor.subject).toBe('owner@example.test');
+    // Owner-only restored-archive state injection; no provider execution claimed.
+    for(const table of ['ll_actions','ll_refund_actions','ll_connector_actions']) {
+      await owner.query(`UPDATE ${table} SET state='ready',approved_by='peer@example.test',approval_until=now()+interval '15 minutes' WHERE id=$1`,[restoredId]);
+      await owner.query(`UPDATE ${table} SET state='executing',lease_token=$2,lease_until=now()+interval '30 seconds' WHERE id=$1`,[restoredId,randomUUID()]);
+    }
+    const proposals:Record<string,unknown>={};
+    const operational=['state','reason','approved_by','approval_until','lease_token','lease_until'];
+    for(const table of ['ll_actions','ll_refund_actions','ll_connector_actions'])proposals[table]=(await owner.query(`SELECT to_jsonb(a)-$2::text[] proposal FROM ${table} a WHERE id=$1`,[restoredId,operational])).rows[0].proposal;
+    const step=(await owner.query("SELECT * FROM ll_workflow_steps WHERE run_id=$1",[restoredRun])).rows;
+    const next=randomUUID(),hash='a'.repeat(64);
+    for(const pool of [web,worker,scheduler])await expect(quarantineRestore(pool,'one',next,hash)).rejects.toMatchObject({status:403});
+    expect((await owner.query("SELECT state FROM ll_connector_actions WHERE id=$1",[restoredId])).rows[0].state).toBe('executing');
+    const result=await quarantineRestore(owner,'one',next,hash);
+    expect(result).toMatchObject({ll_actions:1,ll_refund_actions:1,ll_connector_actions:1,tokens:1,sessions:1,members:2,agents:1,runs:1});
+    for(const table of ['ll_actions','ll_refund_actions','ll_connector_actions']){
+      expect((await owner.query(`SELECT state,approved_by,approval_until,lease_token,lease_until,payload_hash FROM ${table} WHERE id=$1`,[restoredId])).rows[0]).toEqual({state:'uncertain',approved_by:null,approval_until:null,lease_token:null,lease_until:null,payload_hash:'hash'});
+      expect((await owner.query(`SELECT to_jsonb(a)-$2::text[] proposal FROM ${table} a WHERE id=$1`,[restoredId,operational])).rows[0].proposal).toEqual(proposals[table]);
+    }
+    expect((await owner.query("SELECT * FROM ll_workflow_steps WHERE run_id=$1",[restoredRun])).rows).toEqual(step);
+    expect((await owner.query("SELECT state FROM ll_workflow_runs WHERE id=$1",[restoredRun])).rows[0].state).toBe('paused');
+    expect((await owner.query("SELECT active FROM ll_members WHERE email='other@example.test'")).rows[0].active).toBe(true);
+    await expect(fixture.context.authenticated(session)).rejects.toMatchObject({status:401});
+    await expect(recoveryFence(web,'one')).rejects.toMatchObject({status:503});
+    expect(await quarantineRestore(owner,'one',next,hash)).toEqual(result);
+    await expect(quarantineRestore(owner,'one',next,'b'.repeat(64))).rejects.toMatchObject({status:409});
+  }finally{await fixture.close();}
 });
 
 it("requires provisioning prerequisites and refuses a changed applied migration without changing proposals",async () => {

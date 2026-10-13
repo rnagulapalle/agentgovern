@@ -8,7 +8,7 @@ import pg from "pg";
 import {migrationDigests,stagingDatabase} from "../runtime/temporal/staging-preflight.ts";
 const exec=promisify(execFile);
 const root=resolve(fileURLToPath(new URL("..",import.meta.url)));
-const steps=["durable-setup.ts","durable-runtime-role.ts","refund-setup.ts","workspace-setup.ts","connector-setup.ts","enquiry-setup.ts","enquiry-managed-setup.ts","temporal-setup.ts","workspace-recovery.ts","proposal-boundary-setup.ts","record-scope-setup.ts","record-routing-setup.ts"];
+const steps=["durable-setup.ts","durable-runtime-role.ts","refund-setup.ts","workspace-setup.ts","connector-setup.ts","enquiry-setup.ts","enquiry-managed-setup.ts","temporal-setup.ts","workspace-recovery.ts","proposal-boundary-setup.ts","record-scope-setup.ts","record-routing-setup.ts","quote-plan-setup.ts","quote-authority-setup.ts","quote-plan-v2-setup.ts","quote-membership-setup.ts","membership-authority-setup.ts","enquiry-revision-setup.ts"];
 
 export function stagingOwner(url,loopbackProof=false) {
   const u=new URL(url);

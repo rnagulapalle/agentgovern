@@ -1,0 +1,441 @@
+{
+  "passed": true,
+  "scope": "assembled isolated API/runtime and fresh typed HTTPS browser trial",
+  "checks": [
+    "separate secure named sessions",
+    "unauthenticated and self-approval refusal",
+    "API enrollment and per-agent record grants",
+    "saved plan and duplicate-safe submission",
+    "held work and sessions survive runtime SIGKILL",
+    "named approval and two verified private effects",
+    "lost-response reconciliation without a duplicated effect",
+    "real authenticated Temporal history replay without new actions"
+  ],
+  "notVerified": [
+    "remote persistent staging",
+    "sustained load, restore and operator alert acceptance",
+    "live provider guarantees"
+  ],
+  "candidateQuoteSwitch": {
+    "contract": "actual-held-quote-candidate-switch-1",
+    "scope": "held quote and preserved completed ACK workspace",
+    "candidateOnly": true,
+    "releaseAccepted": false,
+    "fullInstalledAcceptance": false,
+    "transitions": [
+      {
+        "contract": "installed-candidate-transition-2",
+        "candidateOnly": true,
+        "releaseEligible": false,
+        "authorityIssued": false,
+        "builds": {
+          "ack": "ack-50afed91cb2e7bfff40fade561007445ba47b4c73356548a864a48bc6c479902",
+          "quote": "quote-827436676df6ca674f7d7335dbde2f46d710e51a881dd4594dadf07cdd6e12c2"
+        },
+        "replacedRoles": 5,
+        "retainedRunningRoles": 7,
+        "retainedOfflineOwners": 1,
+        "pendingAuthorityChecks": 3,
+        "from": {
+          "web": "sha256:abb8a2ca9c54999d0dc4d83a818ac0b683fc926012f49b2cd4e3176714a89b93",
+          "worker": "sha256:6312fa67d3db3e8a74ec1dc92685666e7b56d289109eed65bcb3c2c9afaf33d6",
+          "quote": "sha256:892f689d9f831b99082a4413a6a4265ac3203230bb141ac8f4b355fe112424d5",
+          "twin": "sha256:442d5e499a0978e9c3fa22cad8dad4483d702787c811173996ecbdc4cb91c250",
+          "quoteEmail": "sha256:5823b4dae6380a05e5b28102c887ca50b11567c53ef0de7afa9910f7cf0e1ff9",
+          "provisioner": "sha256:f290d3d16ebb0fa085564aa6e6ea0f1dd802fe5e116ed905cfdd5c81d4fb3a13"
+        },
+        "to": {
+          "web": "sha256:3e86a526131984cc4fcf960f899eaaaacc3bf4d427bffdd763d0acd53b83531b",
+          "worker": "sha256:5c186b64fb1f6bcb46341a0ac6b9f7bd77fc5a84f407dcbfc71be5077a4ab338",
+          "quote": "sha256:dec0c6cf91849f20ec42f027915e97fdb84583e6c9204a3c6f4df518334d2f81",
+          "twin": "sha256:442d5e499a0978e9c3fa22cad8dad4483d702787c811173996ecbdc4cb91c250",
+          "quoteEmail": "sha256:5823b4dae6380a05e5b28102c887ca50b11567c53ef0de7afa9910f7cf0e1ff9",
+          "provisioner": "sha256:f290d3d16ebb0fa085564aa6e6ea0f1dd802fe5e116ed905cfdd5c81d4fb3a13"
+        },
+        "configurationSha256": "9ac7b26f29c8ff1d16310a153a720119c2d99435e9e5c039e2f5d9f1f99402a9"
+      },
+      {
+        "contract": "installed-candidate-transition-2",
+        "candidateOnly": true,
+        "releaseEligible": false,
+        "authorityIssued": false,
+        "builds": {
+          "ack": "ack-50afed91cb2e7bfff40fade561007445ba47b4c73356548a864a48bc6c479902",
+          "quote": "quote-827436676df6ca674f7d7335dbde2f46d710e51a881dd4594dadf07cdd6e12c2"
+        },
+        "replacedRoles": 5,
+        "retainedRunningRoles": 7,
+        "retainedOfflineOwners": 1,
+        "pendingAuthorityChecks": 3,
+        "from": {
+          "web": "sha256:3e86a526131984cc4fcf960f899eaaaacc3bf4d427bffdd763d0acd53b83531b",
+          "worker": "sha256:5c186b64fb1f6bcb46341a0ac6b9f7bd77fc5a84f407dcbfc71be5077a4ab338",
+          "quote": "sha256:dec0c6cf91849f20ec42f027915e97fdb84583e6c9204a3c6f4df518334d2f81",
+          "twin": "sha256:442d5e499a0978e9c3fa22cad8dad4483d702787c811173996ecbdc4cb91c250",
+          "quoteEmail": "sha256:5823b4dae6380a05e5b28102c887ca50b11567c53ef0de7afa9910f7cf0e1ff9",
+          "provisioner": "sha256:f290d3d16ebb0fa085564aa6e6ea0f1dd802fe5e116ed905cfdd5c81d4fb3a13"
+        },
+        "to": {
+          "web": "sha256:abb8a2ca9c54999d0dc4d83a818ac0b683fc926012f49b2cd4e3176714a89b93",
+          "worker": "sha256:6312fa67d3db3e8a74ec1dc92685666e7b56d289109eed65bcb3c2c9afaf33d6",
+          "quote": "sha256:892f689d9f831b99082a4413a6a4265ac3203230bb141ac8f4b355fe112424d5",
+          "twin": "sha256:442d5e499a0978e9c3fa22cad8dad4483d702787c811173996ecbdc4cb91c250",
+          "quoteEmail": "sha256:5823b4dae6380a05e5b28102c887ca50b11567c53ef0de7afa9910f7cf0e1ff9",
+          "provisioner": "sha256:f290d3d16ebb0fa085564aa6e6ea0f1dd802fe5e116ed905cfdd5c81d4fb3a13"
+        },
+        "configurationSha256": "82e4b2f42b924da6e894d40d172213ca3e66caf868a28e96d7fa504a503d41d4"
+      }
+    ],
+    "pendingObservations": 7
+  },
+  "diagnosticRunner": {
+    "mode": "dedicated-isolated-linux",
+    "ci": false,
+    "providerAttested": false,
+    "releaseAccepted": false
+  },
+  "fullInstalledAcceptance": false,
+  "quoteApprovalRestoreProved": true,
+  "quoteRestoreContainment": {
+    "separateApprovedArchive": true,
+    "archiveSha256": "c8ea63298a207d389cc3c2dbf3554e99b31024f5ec7a568e79618c08acdad573",
+    "archiveBytes": 360966,
+    "firstRestoredOid": "17516",
+    "secondRestoredOid": "18578",
+    "archivedSourceVersion": "v3",
+    "currentProviderVersion": 4,
+    "providerQuoteEffects": 1,
+    "providerMailEffects": 1,
+    "providerStateUnchanged": true,
+    "oldNamedCookiesAndPasswordsRefused": true,
+    "restoredExactApprovalInvalidated": true,
+    "downstreamHeldAuthorityInvalidated": true,
+    "staleIndependentApprovalRejected": true,
+    "freshWorkflowWithFreshApprovalNotYetProved": true,
+    "authorityReactivated": false,
+    "fullInstalledAcceptance": false
+  },
+  "quoteSuccessor": {
+    "contract": "typed-quote-successor-browser-1",
+    "planId": "7b2dff8d-a9dd-49ba-9d52-751e420dadef",
+    "planHash": "b6628dbd5ecf9e716e1c5228809c5b2de5b10bfd7c0e93ea8020bb6a2240dfd8",
+    "updateActionId": "6ce61371-2fe2-44fb-a94a-6fd4d374abe6",
+    "messageActionId": "00ba7094-3be4-4cac-945d-30b32ded25d4",
+    "scopeId": "1e5c5197-6364-4ad9-8f77-b65ed7bdf41f",
+    "checks": [
+      "Fresh named sign-in and explicitly reviewed successor scope version; old saved v3 plan refused under both fresh members",
+      "Actual typed v4/current-policy4 plan saves new scoped agents and immutable identities",
+      "No execution before fresh independent exact named approval; requester self-approval refused",
+      "Actual SQL independently confirms new exact approval while downstream remains held and old external effects unchanged"
+    ],
+    "administrativeFixtureOnboarding": true,
+    "selfServiceOnboardingProved": false,
+    "oldMemberAndApprovalAuthorityReactivated": false,
+    "destinationScopeIdReused": true,
+    "freshIndependentApprovalProved": true,
+    "newProviderEffectIssued": false,
+    "fullInstalledAcceptance": false
+  },
+  "quoteBrowser": {
+    "contract": "typed-quote-browser-observations-1",
+    "completedUtc": "2026-10-13T00:09:51.705Z",
+    "planId": "c4b1f5ef-9812-4b97-a460-68138bcb2458",
+    "planHash": "113d6b776760d28c260624e9f98a4af3249f9fed7e915292b8cac52ee9da0ffc",
+    "updateActionId": "74823008-3198-4046-8a47-34af48ee5aeb",
+    "messageActionId": "e7ccc1c9-b7d3-4095-ba02-cfc39f1e3f87",
+    "scopeId": "1e5c5197-6364-4ad9-8f77-b65ed7bdf41f",
+    "checks": [
+      "Distinct named form sessions over verified trusted HTTPS; untrusted certificate refused",
+      "Actual typed request saves exact 14% proposal before authority or effects; mobile plan readable and technical references collapsed",
+      "Requester self-approval refused; both exact actions remain held with zero provider effects",
+      "Optional quote-held checkpoint resumed only after unchanged exact saved actions and zero provider effects were observed",
+      "Real quote background dispatch, conditional COMMIT/lost-response uncertainty history and owned web/worker restart preserve exactly one quote effect and held email",
+      "UI observed current uncertain quote outcome before automatic reconciliation",
+      "Separate independent confirmation approval follows verified quote; one exact simulated email acceptance and retained final receipt",
+      "Reload retains exact plan, immutable action identities and original verification history with a separate fresh provider check; no duplicate effects"
+    ],
+    "providerObservations": [
+      {
+        "phase": "proposed",
+        "quoteEffects": 0,
+        "mailEffects": 0,
+        "quoteVersion": 3
+      },
+      {
+        "phase": "submitted",
+        "quoteEffects": 0,
+        "mailEffects": 0,
+        "quoteVersion": 3
+      },
+      {
+        "phase": "submitted",
+        "quoteEffects": 0,
+        "mailEffects": 0,
+        "quoteVersion": 3
+      },
+      {
+        "phase": "approved",
+        "quoteEffects": 0,
+        "mailEffects": 0,
+        "quoteVersion": 3
+      },
+      {
+        "phase": "lost",
+        "quoteEffects": 1,
+        "mailEffects": 0,
+        "quoteVersion": 4
+      },
+      {
+        "phase": "reconciled",
+        "quoteEffects": 1,
+        "mailEffects": 0,
+        "quoteVersion": 4
+      },
+      {
+        "phase": "completed",
+        "quoteEffects": 1,
+        "mailEffects": 1,
+        "quoteVersion": 4
+      },
+      {
+        "phase": "reloaded",
+        "quoteEffects": 1,
+        "mailEffects": 1,
+        "quoteVersion": 4
+      }
+    ],
+    "verificationReceipt": {
+      "runId": "c4b1f5ef-9812-4b97-a460-68138bcb2458",
+      "steps": [
+        {
+          "binding": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "ordinal": 1,
+          "actionId": "74823008-3198-4046-8a47-34af48ee5aeb",
+          "payloadHash": "55566437718437910d22b1940833cdfbaba6f1efa3fb15e96fd5e824df4d4063",
+          "sourceAfter": "v4",
+          "effectDigest": "b80afc2ab06e7b7f03dbc03d74014dbe4070dc4bde8cf701829ed9eed72d1098",
+          "requestIdentity": "ad803716bd83be0f4417ec973fa117beb7bf07ecbdfc8db3b8b3712458c58cc9",
+          "providerReference": "1ee9f1b3-e56d-4e26-bab4-b30bf6050529"
+        },
+        {
+          "binding": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "ordinal": 2,
+          "actionId": "e7ccc1c9-b7d3-4095-ba02-cfc39f1e3f87",
+          "payloadHash": "0f5ba0ed628f752e4522fcd1ddd78d22fad930f7c996ce8dcd741f2c9daff650",
+          "sourceAfter": null,
+          "effectDigest": "1b357bc9d61ac023776833e553016ce56c47a2d4990a1850781d12c4017f27a4",
+          "requestIdentity": "854404652fc3f4ce611d5c3a7cd8c82e7b80cdcb923dbbf01ae17e73585aa16b",
+          "providerReference": "3819be75-ddd9-43ae-bcd3-6115ee7fdd8d"
+        }
+      ],
+      "quoteId": "quote-42",
+      "contract": "quote-verification-receipt-1",
+      "planHash": "113d6b776760d28c260624e9f98a4af3249f9fed7e915292b8cac52ee9da0ffc",
+      "verifiedAt": "2026-10-13T00:09:35.802Z",
+      "verifiedBy": "requester@example.test",
+      "receiptHash": "77ccc4bbcf68c590236c7b3cd635c31989ce4922e255fc73fe07383aaf9c0aeb",
+      "workspaceId": "local-proof",
+      "recoveryEpoch": "7e46e4d0-4a1d-401c-a352-387d9a2d07f8"
+    },
+    "fullInstalledAcceptance": false,
+    "production": false,
+    "notProved": [
+      "Complete installed lifecycle/quality/artifact acceptance must be independently assembled by host",
+      "Real CRM integration or real customer email delivery"
+    ]
+  },
+  "restoreContainment": {
+    "approvedArchive": true,
+    "archiveSha256": "6232c5496dc7f0df7c652b9615c4deca92f109098ec46b81eec75d441bd8e768",
+    "originalOid": "16385",
+    "restoredOid": "17516",
+    "externalEpochRotated": true,
+    "runtimeRoles": 5,
+    "revivedSessionsRefused": true,
+    "restoredApprovalRefused": true,
+    "quarantineReplay": true,
+    "quarantinedHttpObserved": true,
+    "packagedAckQuoteWorkerRefused": true,
+    "packagedAckQuoteSchedulerRefused": true,
+    "omittedEpochRefused": true,
+    "staleInstalledBootstrapRefused": true,
+    "quotePlanNotInEarlierArchive": true,
+    "quoteApprovalRestoreProved": false,
+    "retainedEffects": 4,
+    "fullInstalledAcceptance": false
+  },
+  "dependencyImages": {
+    "version": 1,
+    "platform": "linux/amd64",
+    "images": [
+      {
+        "role": "postgres",
+        "selectionTag": "postgres:16",
+        "reference": "postgres@sha256:75adc2a65806c96bc0e59030230bfe3f1c1b0d6d8f8181a8913e2b8b53bdc166",
+        "imageId": "sha256:275447c94b11b151decd1f29877965301d5a77032037c46de93d990f739f00a9"
+      },
+      {
+        "role": "temporal",
+        "selectionTag": "temporalio/server:1.31.0",
+        "reference": "temporalio/server@sha256:d7b3a2f56c599b317494b28e84099c02a096a94005fd20180b54d5ae5a8b3be1",
+        "imageId": "sha256:fce8c365ec85e41182bdafac2fc9d93ed72b9dda72db8cbd7d7192cb237f711f"
+      },
+      {
+        "role": "schema",
+        "selectionTag": "temporalio/admin-tools:1.31.0",
+        "reference": "temporalio/admin-tools@sha256:b396c1dff819b3653236f3acb65cfcde2bc032822c4202842236fd8a5d6d5898",
+        "imageId": "sha256:9a860057b10ec4a1e5b33a077c2b253205d4dbe6256d3627a40b83210991b501"
+      }
+    ],
+    "runtimeBindings": 3,
+    "schemaExecutions": 6
+  },
+  "plannerAuthority": {
+    "webOnly": true
+  },
+  "actualProviderEffects": 4,
+  "browser": {
+    "passed": true,
+    "scope": "trusted HTTPS Chromium fresh typed planning/review/approval over disposable assembled runtime",
+    "planning": {
+      "typedRequest": true,
+      "clarified": true,
+      "model": "us.amazon.nova-lite-v1:0",
+      "savedBeforeSubmission": true
+    },
+    "checks": [
+      "real typed request and missing-recipient clarification save an exact scoped plan without execution authority",
+      "untrusted CA refused before sign-in",
+      "trusted CA and secure browser context",
+      "separate named form sign-ins with Secure/HttpOnly/Strict cookies",
+      "anonymous and requester self-approval refusal",
+      "real hostile-origin browser POST with reviewer cookie refused before approval",
+      "UI exact-plan review, scoped agent selection and submission",
+      "independent UI approvals and actual verified completion",
+      "saved outcome and exact recipient survive 390px reload without overflow",
+      "Secure session cookie not sent over plain HTTP"
+    ],
+    "notVerified": [
+      "persistent remote staging",
+      "live-provider delivery",
+      "sustained tenant load, restore and operator acceptance"
+    ]
+  },
+  "buildId": "ack-50afed91cb2e7bfff40fade561007445ba47b4c73356548a864a48bc6c479902",
+  "sourceCommit": "08372aadbaa6fb8f37368c6900323b8619c10f2c",
+  "images": [
+    {
+      "role": "web",
+      "id": "sha256:abb8a2ca9c54999d0dc4d83a818ac0b683fc926012f49b2cd4e3176714a89b93"
+    },
+    {
+      "role": "worker",
+      "id": "sha256:6312fa67d3db3e8a74ec1dc92685666e7b56d289109eed65bcb3c2c9afaf33d6"
+    },
+    {
+      "role": "twin",
+      "id": "sha256:442d5e499a0978e9c3fa22cad8dad4483d702787c811173996ecbdc4cb91c250"
+    },
+    {
+      "role": "quoteEmail",
+      "id": "sha256:5823b4dae6380a05e5b28102c887ca50b11567c53ef0de7afa9910f7cf0e1ff9"
+    },
+    {
+      "role": "provisioner",
+      "id": "sha256:f290d3d16ebb0fa085564aa6e6ea0f1dd802fe5e116ed905cfdd5c81d4fb3a13"
+    },
+    {
+      "role": "quote",
+      "id": "sha256:892f689d9f831b99082a4413a6a4265ac3203230bb141ac8f4b355fe112424d5"
+    }
+  ],
+  "services": [
+    {
+      "memoryBytes": 536870912,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 536870912,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 536870912,
+      "readOnly": false,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 1610612736,
+      "readOnly": true,
+      "pids": 256,
+      "health": "not-configured"
+    },
+    {
+      "memoryBytes": 805306368,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 268435456,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 268435456,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 134217728,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 805306368,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 268435456,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 536870912,
+      "readOnly": true,
+      "pids": 256,
+      "health": "not-configured"
+    },
+    {
+      "memoryBytes": 536870912,
+      "readOnly": true,
+      "pids": 256,
+      "health": "healthy"
+    },
+    {
+      "memoryBytes": 536870912,
+      "readOnly": true,
+      "pids": 256,
+      "health": "not-configured"
+    }
+  ],
+  "admission": {
+    "admitted": true,
+    "blockers": [],
+    "existingBytes": 0,
+    "plannedBytes": 7381975040,
+    "hostReserveBytes": 2147483648,
+    "totalBytes": 16550277120,
+    "availableBytes": 15470153728
+  }
+}

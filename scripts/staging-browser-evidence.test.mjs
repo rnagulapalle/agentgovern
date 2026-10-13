@@ -1,9 +1,12 @@
-// Receipt freshness/consistency only; this test never substitutes for the actual trial.
+import {readHistoricalProof} from './historical-proof-sources.mjs';
+// Historical retained original-byte consistency; never current acceptance.
 import {test,expect} from "vitest";
 import {readFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
-test("the retained browser trial remains bound to its measured runtime sources and explicit limits",async()=>{
+import {membershipAuthoritySourceFiles} from "./staging-browser-record.mjs";
+test("the historical retained browser trial remains bound to its measured runtime sources and explicit limits",async()=>{
  const proof=JSON.parse(await readFile("docs/evidence/staging-platform-browser-proof.json","utf8"));
+ const archiveProof=readHistoricalProof('staging-platform-browser-proof.json');expect(archiveProof.receipt).toEqual(proof);expect(archiveProof).toMatchObject({historical:true,eligible:false,releaseAccepted:false,currentSourceValidated:false});
  expect(proof.passed).toBe(true);expect(proof.browser.passed).toBe(true);
  expect(Number.isSafeInteger(proof.executionEvidence.runId)).toBe(true);
  expect(proof.executionEvidence.publicBaseCommit).toMatch(/^[a-f0-9]{40}$/);
@@ -30,8 +33,8 @@ test("the retained browser trial remains bound to its measured runtime sources a
  const prior=JSON.parse(await readFile("docs/evidence/staging-platform-browser-prepared-proof.json","utf8"));
  expect(createHash("sha256").update(await readFile("docs/evidence/staging-platform-browser-prepared-proof.json")).digest("hex")).toBe("880f370595bb97b0d6e8025ac5caafe71ebdcb106ea2d8d258cf34179c328f2f");
  expect(prior.executionEvidence.runId).toBe(37859172131);expect(prior.executionEvidence.qualityTests).toBe(400);
- expect(Object.keys(proof.sourceFingerprints).sort()).toEqual([...new Set([...Object.keys(prior.sourceFingerprints),"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs","scripts/workspace-recovery.ts","scripts/staging-restore-controller.mjs","scripts/staging-image-artifact.mjs","scripts/staging-runtime-images.mjs","config/staging-runtime-images.json"])].sort());
+ expect(Object.keys(proof.sourceFingerprints).sort()).toEqual([...new Set([...Object.keys(prior.sourceFingerprints),...membershipAuthoritySourceFiles,"scripts/staging-planner-inputs.mjs","scripts/staging-planner-attachment.mjs","scripts/staging-browser-record.mjs","scripts/workspace-recovery.ts","scripts/staging-restore-controller.mjs","scripts/staging-image-artifact.mjs","scripts/staging-runtime-images.mjs","config/staging-runtime-images.json","lib/orchestration/admission.ts","runtime/temporal/admission.ts"])].sort());
  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["scripts/staging-browser-proof.mjs","scripts/staging-browser-tls.mjs","scripts/staging-owned-builder.mjs","components/control-plane/enquiry-workspace.tsx","lib/connectors/service.ts","runtime/temporal/activities.ts"]));
- for(const [file,digest] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(await readFile(file)).digest("hex"),file).toBe(digest);
+ for(const [file,digest] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(archiveProof.sources[file]).digest("hex"),file).toBe(digest);
  expect(proof).not.toHaveProperty("actionIds");expect(proof.browser).not.toHaveProperty("actionIds");
 });

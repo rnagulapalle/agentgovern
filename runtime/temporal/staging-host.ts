@@ -1,5 +1,6 @@
 // Conservative admission only: this does not attest to throughput or isolation.
 export const stagingRoles = ["web", "application-database", "temporal-database", "temporal-service", "worker", "scheduler", "provider-twin", "authorization"] as const;
+export const installedStagingRoles = [...stagingRoles, "quote-worker", "quote-scheduler", "native-quote-provider", "quote-email-provider", "offline-installer"] as const;
 type RecordValue = Record<string, unknown>;
 const record = (value: unknown): value is RecordValue => !!value && typeof value === "object" && !Array.isArray(value);
 const positive = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value > 0;
@@ -25,15 +26,17 @@ export function stagingHostAdmission(inventory: unknown, plan: unknown, now = Da
   }
   if (!record(plan) || !positive(plan.hostReserveBytes) || plan.hostReserveBytes < 1024 ** 3 || !Array.isArray(plan.services))
     return { admitted: false, blockers: [...new Set([...blockers, "staging_resource_plan_invalid"])] };
+  const expectedRoles = plan.profile === undefined ? stagingRoles : plan.profile === "installed-ack-quote-1" ? installedStagingRoles : undefined;
+  if (!expectedRoles) return { admitted: false, blockers: [...new Set([...blockers, "staging_resource_profile_invalid"])] };
   const roles = new Set<string>();
   let plannedBytes = 0;
   for (const service of plan.services) {
-    if (!record(service) || typeof service.role !== "string" || !stagingRoles.some(role => role === service.role) || roles.has(service.role) || !positive(service.memoryBytes)) {
+    if (!record(service) || typeof service.role !== "string" || !expectedRoles.some(role => role === service.role) || roles.has(service.role) || !positive(service.memoryBytes)) {
       blockers.push("staging_resource_plan_invalid"); continue;
     }
     roles.add(service.role); plannedBytes += service.memoryBytes;
   }
-  if (roles.size !== stagingRoles.length) blockers.push("staging_resource_plan_incomplete");
+  if (roles.size !== expectedRoles.length) blockers.push("staging_resource_plan_incomplete");
   const requiredBytes = existingBytes + plannedBytes + plan.hostReserveBytes;
   if (!Number.isSafeInteger(requiredBytes)) blockers.push("resource_budget_overflow");
   if (requiredBytes > inventory.totalBytes) blockers.push("reserved_memory_exceeds_host");

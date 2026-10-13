@@ -1,0 +1,284 @@
+import {retainPrivateJournalDiagnostic} from './staging-private-journal-metadata.mjs';
+import {quarantineQuoteWebAttachment} from './staging-quarantine-quote-web.mjs';
+import {prepareRestoreOwnerAttachment} from './staging-restore-owner-attachment.mjs';
+import {retainAuthenticatedMedia} from './authenticated-ui-recording.mjs';
+import {actualInstalledDiagnosticRunner} from './installed-diagnostic-runner.mjs';
+// One owned installed ACK + quote assembly; never deploys a production project.
+import {execFileSync,spawn,spawnSync} from "node:child_process";
+import {randomUUID,randomBytes} from "node:crypto";
+import {mkdtemp,mkdir,writeFile,readFile,cp,access,rm} from "node:fs/promises";
+import {tmpdir} from "node:os";
+import {resolve} from "node:path";
+import {parseEnv} from "node:util";
+import assert from "node:assert/strict";
+import {generateTemporalConfiguration} from "./staging-temporal-config.mjs";
+import {attachPlannerInputs} from "./staging-planner-attachment.mjs";
+import {prepareInstalledOwnerInput,attachInstalledOwnerPublications,waitOwnedPublication,installedQuoteBrowserController,installedServiceContainerId,quoteRuntimeFailureSummary} from "./staging-installed-host-coordinator.mjs";
+import {installedAssemblyDatabaseService} from "./staging-installed-compose.ts";
+import {typedQuoteBrowserProof} from "./typed-quote-browser-proof.mjs";
+import {createHash} from "node:crypto";
+import {installedAssemblySourceSnapshot} from "./staging-installed-source-snapshot.mjs";
+import {quotePrivateCause} from "./typed-quote-browser-proof.mjs";
+import {stagingHostAdmission} from "../runtime/temporal/staging-host.ts";
+import {safeTrialFailure,safeProviderFailure,safeBrowserFailure,safeRestoreFailure} from "./staging-trial-failure.mjs";
+import {typedQuoteSuccessorBrowserProof} from './typed-quote-successor-browser-proof.mjs';
+import {assertQuoteProviderRetained} from './staging-quote-restore-assertions.mjs';
+import {stagingBrowserProof} from "./staging-browser-proof.mjs";
+import {browserOrigin} from "./staging-browser-tls.mjs";
+import {ownedBuilder} from "./staging-owned-builder.mjs";
+import {switchHeldQuoteCandidatePackages} from "./staging-quote-package-switch.mjs";
+import {inspectedWorkerArtifact} from "./worker-artifact-enrollment.mjs";
+import {exportTestedImages,reloadAfterTrialRemoval} from "./staging-image-artifact.mjs";
+import {runtimeImageLock,dependencyEnvironment,retrieveRuntimeImages,verifyRuntimeImage,assertRuntimeBindings} from "./staging-runtime-images.mjs";
+const docker=(...args)=>execFileSync("docker",args,{encoding:"utf8",timeout:600000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const backend=process.env.FETCHSANDBOX_BACKEND_PATH;
+assert(process.env.LOOPLABS_STAGING_PLATFORM_PROOF==="isolated"&&backend,"Explicit disposable trial and prepared private source required");
+const artifactDirectory=process.env.LOOPLABS_STAGING_IMAGE_ARTIFACT;assert.equal(artifactDirectory,undefined,"Installed diagnostic cannot issue the historical four-image accepted artifact before full assembly admission");
+assert(artifactDirectory===undefined||(process.env.GITHUB_ACTIONS==="true"&&artifactDirectory.startsWith("/")&&!artifactDirectory.includes("..")),"Private CI absolute image artifact destination required");
+const browserOptIn=process.env.LOOPLABS_STAGING_BROWSER_PROOF;
+assert(browserOptIn===undefined||browserOptIn==="isolated","Invalid browser proof opt-in");
+const browserEnabled=browserOptIn==="isolated";
+const typedOptIn=process.env.LOOPLABS_STAGING_TYPED_PLANNER;
+assert(typedOptIn===undefined||typedOptIn==="isolated","Invalid typed planner opt-in");
+const typedPlanning=typedOptIn==="isolated";
+assert(!typedPlanning||(browserEnabled&&process.env.LOOPLABS_STAGING_PLANNER_INPUT),"Typed planning requires HTTPS browser and explicit temporary model input");
+const quotePackageSwitchOptIn=process.env.LOOPLABS_STAGING_QUOTE_PACKAGE_SWITCH;
+assert(quotePackageSwitchOptIn===undefined||quotePackageSwitchOptIn==='isolated','Invalid quote package-switch opt-in');
+const quotePackageSwitchEnabled=quotePackageSwitchOptIn==='isolated';
+assert(!quotePackageSwitchEnabled||typedPlanning,'Quote package-switch requires the original typed browser trial');
+const diagnosticRunner=actualInstalledDiagnosticRunner();
+assert(process.platform==="linux"&&process.arch==="x64","Run on a fresh allocated Linux/AMD64 runner; do not resize shared workloads");
+const evidenceDirectory=process.env.LOOPLABS_INSTALLED_ASSEMBLY_EVIDENCE;assert(evidenceDirectory&&evidenceDirectory.startsWith("/")&&!evidenceDirectory.includes(".."),"Separate private diagnostic evidence destination required");await mkdir(evidenceDirectory,{mode:0o700});assert.equal(await (await import("node:fs/promises")).realpath(evidenceDirectory),evidenceDirectory);const evidenceStat=await(await import("node:fs/promises")).lstat(evidenceDirectory);assert.equal(evidenceStat.uid,process.getuid());assert.equal(evidenceStat.mode&0o7777,0o700);
+const sourceBefore=await installedAssemblySourceSnapshot();await writeFile(resolve(evidenceDirectory,"source-before.json"),JSON.stringify(sourceBefore),{mode:0o600,flag:"wx"});
+const dependencyLock=runtimeImageLock(JSON.parse(await readFile("config/staging-runtime-images.json","utf8")));
+const source=JSON.parse(await readFile(resolve(backend,"../fixture-source-manifest.json"),"utf8"));
+assert.equal(source.version,1);assert(/^[a-f0-9]{40}$/.test(source.commit));
+const parent=await mkdtemp(resolve(tmpdir(),"ll-platform-")),privateDir=resolve(parent,"runtime"),trial=resolve(parent,"trial"),seed=resolve(parent,"seed"),application=resolve(parent,"application");
+const project=`ll-platform-${randomBytes(6).toString("hex")}`,images={web:`${project}:web`,worker:`${project}:worker`,twin:`${project}:twin`,quoteEmail:`${project}:quote-email`,provisioner:`${project}:provisioner`,quote:`${project}:quote`};
+const candidateWriters={web:`${project}:candidate-web`,worker:`${project}:candidate-worker`,quote:`${project}:candidate-quote`};
+const env={...process.env,...dependencyEnvironment(dependencyLock),LOOPLABS_STAGING_PRIVATE_DIR:privateDir,LOOPLABS_STAGING_WEB_PORT:"3199",LOOPLABS_STAGING_WEB_IMAGE:images.web,LOOPLABS_STAGING_WORKER_IMAGE:images.worker,LOOPLABS_STAGING_TWIN_IMAGE:images.twin};
+let composeFile="docker-compose.temporal-platform.yml";
+const compose=(...args)=>execFileSync("docker",["compose","-p",project,"-f",composeFile,...args],{env,encoding:"utf8",timeout:180000,maxBuffer:4*1024*1024,stdio:["ignore","pipe","pipe"]}).trim();
+const imageBuilder=ownedBuilder(docker,`${project}-build`);
+const uid=`${process.getuid()}:${process.getgid()}`,owned=[],built=[];let stage="prepare",controller,controllerExit=null,outcome,retainedArtifact,dependencyImages;
+let candidateQuoteSwitch;
+let schemaExecutions=0,installedReady,ownerName,archive,archiveEvidence,quoteArchive,quoteArchiveEvidence,quoteBrowser,quoteRestoreContainment,quoteSuccessor,installedObserve,dbTls,dbCa,dbData,dbPasswd;
+async function until(fn,label,seconds=120){for(const end=Date.now()+seconds*1000;Date.now()<end;){if(await fn())return;await wait(500);}throw Error(label);}
+const container=service=>service==="offline-installer"?ownerName:installedServiceContainerId({project,owner:project,service,docker});
+const ready=async services=>until(()=>services.every(s=>{const id=container(s);return id&&docker("inspect","--format","{{.State.Health.Status}}",id)==="healthy";}),"Runtime health unavailable",180);
+function runController(name,network,image,args,mounts,files=[],timeoutMs=600000){assert(Number.isSafeInteger(timeoutMs)&&timeoutMs>=1000&&timeoutMs<=600000);owned.push(name);const boundedDocker=(...args)=>execFileSync('docker',args,{encoding:'utf8',timeout:timeoutMs,maxBuffer:4*1024*1024,stdio:['ignore','pipe','pipe']}).trim();return boundedDocker("run","--rm","--name",name,"--label",`looplabs.assembly.owner=${project}`,"--network",network,"--user",uid,"--memory","512m","--cpus","0.5","--pids-limit","256","--read-only","--tmpfs","/tmp","--cap-drop","ALL","--security-opt","no-new-privileges",...files.flatMap(path=>["--env-file",path]),...mounts.flatMap(m=>["--mount",m]),image,...args);}
+try{
+ stage="dependency-retrieval";dependencyImages=retrieveRuntimeImages(dependencyLock,docker);
+ stage="prepare";await generateTemporalConfiguration(privateDir,`looplabs-staging-${randomBytes(5).toString("hex")}`);
+ for(const path of [trial,seed,application])await mkdir(path,{mode:0o700});
+ let recoveryEpoch;const password=randomBytes(32).toString("base64url"),token=randomBytes(32).toString("base64url");
+ await writeFile(resolve(privateDir,"application-db.env"),`POSTGRES_USER=ll_stage_owner\nPOSTGRES_PASSWORD=${password}\nPOSTGRES_DB=looplabs_staging\n`,{mode:0o600});
+ await writeFile(resolve(parent,"namespace.env"),"LOOPLABS_STAGING_BOOTSTRAP=isolated\n",{mode:0o600});
+ for(const role of ["web","worker","scheduler"])await writeFile(resolve(privateDir,`${role}.env`),"",{mode:0o600});
+ const records=[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"customer@example.test"}];
+ for(const [file,value] of [["credentials",{token}],["records",{records}],["faults",{loseResponseRecords:["2001"]}]])await writeFile(resolve(seed,`connector-twin-${file}.json`),JSON.stringify(value),{mode:0o600});
+ stage="images";imageBuilder.start();
+ for(const [role,file] of [["web","Dockerfile"],["worker","Dockerfile.temporal"],["quote","Dockerfile.temporal"],["twin","Dockerfile.connector-twin"],["quoteEmail","Dockerfile.connector-twin"],["provisioner","Dockerfile.staging-provisioner"]]){imageBuilder.build("-f",file,...(["twin","quoteEmail"].includes(role)?["--build-context",`fetchsandbox=${backend}`]:[]),...(role==="quoteEmail"?["--build-arg",`FIXTURE_UID=${process.getuid()}`,"--build-arg",`FIXTURE_GID=${process.getgid()}`]:[]),...(role==="quote"?["--target","quote-runtime","--build-arg","LOOPLABS_WORKER_PROFILE=quote"]:[]),"--label",`looplabs.assembly.owner=${project}`,"-t",images[role],".");built.push(images[role]);}
+ if(quotePackageSwitchEnabled){for(const [role,file]of [['web','Dockerfile'],['worker','Dockerfile.temporal'],['quote','Dockerfile.temporal']]){imageBuilder.build('-f',file,...(role==='quote'?['--target','quote-runtime','--build-arg','LOOPLABS_WORKER_PROFILE=quote']:[]),'--label',`looplabs.assembly.owner=${project}`,'--label','looplabs.candidate.scope=held-quote-switch','-t',candidateWriters[role],'.');built.push(candidateWriters[role]);}}
+ imageBuilder.close();
+ const build=JSON.parse(docker("run","--rm","--network","none",images.worker,"node","-e","process.stdout.write(require('fs').readFileSync('.worker/temporal-manifest.json','utf8'))"));
+ stage="host-admission";
+ const topology=JSON.parse(compose("config","--format","json","--no-env-resolution"));
+ const roles={web:"web","application-db":"application-database","temporal-db":"temporal-database",temporal:"temporal-service","temporal-worker":"worker","temporal-scheduler":"scheduler","connector-twin":"provider-twin",authorization:"authorization","quote-worker":"quote-worker","quote-scheduler":"quote-scheduler","quote-twin":"native-quote-provider","quote-email":"quote-email-provider","offline-installer":"offline-installer"};
+ assert.equal(Object.keys(topology.services).length,8);
+ const inventory=JSON.parse(execFileSync("python3",["scripts/staging-host-inventory.py"],{encoding:"utf8",timeout:30000,stdio:["ignore","pipe","pipe"]}));
+ // Additional reserve allows Chromium/TLS/control processes, not a process memory limit or capacity claim.
+ const admission=stagingHostAdmission(inventory,{profile:"installed-ack-quote-1",hostReserveBytes:(browserEnabled?2:1)*1024**3,services:Object.entries(roles).map(([name,role])=>({role,memoryBytes:Number(topology.services[name]?.mem_limit??({"quote-worker":768*1024**2,"quote-scheduler":256*1024**2,"quote-twin":512*1024**2,"quote-email":512*1024**2,"offline-installer":512*1024**2}[name]))}))});
+ if(!admission.admitted)console.error(JSON.stringify({failedStage:"host-admission",...admission}));
+ assert.equal(admission.admitted,true,"Fresh host must admit all thirteen bounded roles without changing existing workloads");
+ stage="installed-database-tls";
+ dbTls=resolve(parent,"db-tls");dbCa=resolve(parent,"db-ca");dbData=resolve(parent,"db-data");for(const d of [dbTls,dbCa,dbData])await mkdir(d,{mode:0o700});
+ const ssl=(...args)=>execFileSync("openssl",args,{stdio:"ignore",timeout:30000});
+ ssl("req","-x509","-newkey","rsa:2048","-nodes","-days","1","-subj","/CN=Owned assembled DB CA","-addext","basicConstraints=critical,CA:TRUE","-keyout",resolve(dbTls,"ca.key"),"-out",resolve(dbCa,"ca.pem"));
+ ssl("req","-newkey","rsa:2048","-nodes","-subj","/CN=trial-db","-keyout",resolve(dbTls,"server.key"),"-out",resolve(dbTls,"server.csr"));await writeFile(resolve(dbTls,"ext"),"subjectAltName=DNS:trial-db\nextendedKeyUsage=serverAuth\n",{mode:0o600});
+ ssl("x509","-req","-in",resolve(dbTls,"server.csr"),"-CA",resolve(dbCa,"ca.pem"),"-CAkey",resolve(dbTls,"ca.key"),"-CAcreateserial","-days","1","-extfile",resolve(dbTls,"ext"),"-out",resolve(dbTls,"server.pem"));
+ await writeFile(resolve(dbTls,"password"),password,{mode:0o600});dbPasswd=resolve(dbTls,"passwd");await writeFile(dbPasswd,docker("run","--rm","--network","none","--entrypoint","cat",dependencyLock.images[0].reference,"/etc/passwd")+`\nlltrial:x:${process.getuid()}:${process.getgid()}:Owned:/tmp:/bin/sh\n`,{mode:0o600});
+ const {chmod}=await import("node:fs/promises");for(const f of ["server.key","server.pem"])await chmod(resolve(dbTls,f),0o600);await chmod(resolve(dbCa,"ca.pem"),0o600);
+ // CA signing keys stay in the database-only directory; trust-only CA mount.
+ const {rm:removeFile}=await import("node:fs/promises");await removeFile(resolve(dbCa,"ca.srl"),{force:true});
+ const initial=structuredClone(topology);for(const service of Object.values(initial.services))service.labels={...(service.labels??{}),"looplabs.assembly.owner":project};initial.services["application-db"]=installedAssemblyDatabaseService(initial.services["application-db"],{data:dbData,tls:dbTls,passwd:dbPasswd,uid:process.getuid(),gid:process.getgid()});
+ composeFile=resolve(parent,"installed-bootstrap-compose.json");await writeFile(composeFile,JSON.stringify(initial),{mode:0o600});
+ stage="databases";compose("up","-d","application-db","temporal-db");await ready(["application-db","temporal-db"]);docker("exec",container("application-db"),"createdb","-h","/tmp","-U","trial","trial");
+ const baselineInventory=()=>JSON.parse(docker("exec",container("application-db"),"psql","-h","/tmp","-U","trial","-d","trial","-At","-c","SELECT json_build_object('roles',(SELECT json_agg(x ORDER BY rolname) FROM (SELECT rolname,oid::text oid FROM pg_roles)x),'schemas',(SELECT json_agg(x ORDER BY nspname) FROM (SELECT nspname,oid::text oid FROM pg_namespace)x))"));
+ await writeFile(resolve(application,"baseline-inventory.json"),JSON.stringify(baselineInventory()),{mode:0o600});
+ stage="installed-application-bootstrap";
+ const transport={mode:"verified-tls",trust:"owned-ca",caFile:resolve(dbCa,"ca.pem"),caSha256:createHash("sha256").update(await readFile(resolve(dbCa,"ca.pem"))).digest("hex")};
+ const imageIds=Object.fromEntries(Object.entries(images).map(([k,v])=>[k,docker("image","inspect",v,"--format","{{.Id}}") ]));
+ assert.equal(docker("image","inspect",imageIds.quoteEmail,"--format","{{.Config.User}}"),uid,"Quote email image filesystem identity must match sealed mounts");
+ assert.equal(docker("image","inspect",imageIds.twin,"--format","{{.Config.User}}"),"1000:1000","ACK fixture identity remains fixed");
+ const temporal=parseEnv(await readFile(resolve(privateDir,"temporal-auth.env"),"utf8"));
+ await prepareInstalledOwnerInput({root:application,docker,images:{ack:imageIds.worker,quote:imageIds.quote},database:{url:`postgresql://trial:${password}@trial-db:5432/trial`,transport},settings:{origin:browserEnabled?browserOrigin:"https://looplabs-staging.example.test",buildId:build.buildId,taskQueue:`${project}-ack`,records:JSON.stringify({records}),connectorToken:token,temporal}});
+ ownerName=`${project}-installed-owner`;owned.push(ownerName);
+ docker("run","-d","--name",ownerName,"--label",`looplabs.assembly.owner=${project}`,"--network",`${project}_application`,"--user",uid,"--memory","512m","--pids-limit","256","--read-only","--tmpfs","/tmp","--cap-drop","ALL","--security-opt","no-new-privileges","--mount",`type=bind,src=${application},dst=${application}`,"--mount",`type=bind,src=${dbCa},dst=${dbCa},readonly`,"--env",`LOOPLABS_INSTALLED_ASSEMBLY_DIRECTORY=${application}`,"--env","LOOPLABS_STAGING_PLATFORM_PROOF=isolated",imageIds.provisioner,"node","--import","tsx","scripts/staging-installed-platform-lifecycle.mjs");
+ const ownerRunning=async()=>docker("inspect","--format","{{.State.Running}}",ownerName)==="true";
+ installedReady=await waitOwnedPublication(resolve(application,"installation-ready.json"),ownerRunning);recoveryEpoch=installedReady.epoch;
+ const attached=await attachInstalledOwnerPublications({root:application,base:initial,ready:installedReady,uid:process.getuid(),gid:process.getgid(),images:{quote:imageIds.quote,provisioner:imageIds.provisioner,quoteEmail:imageIds.quoteEmail},database:{tlsDirectory:dbTls,dataDirectory:dbData,passwdFile:dbPasswd,caFile:transport.caFile}});composeFile=attached.file;for(const service of Object.values(attached.topology.services))service.labels={...(service.labels??{}),"looplabs.assembly.owner":project};await writeFile(composeFile,JSON.stringify(attached.topology),{mode:0o600});
+ if(typedPlanning){const roleInputs=resolve(parent,"planner-attached");await attachPlannerInputs(resolve(application,"attached"),process.env.LOOPLABS_STAGING_PLANNER_INPUT,roleInputs);await cp(resolve(roleInputs,"web.env"),resolve(application,"attached/web.env"));}
+ stage="temporal-schemas";
+ for(const [name,kind] of [["temporal","temporal"],["temporal_visibility","visibility"]]){
+  const args=["run","--rm","--network",`${project}_orchestration`,"--memory","256m","--env-file",resolve(privateDir,"offline/schema.env"),"--entrypoint","temporal-sql-tool",dependencyLock.images[2].reference,"--plugin","postgres12","--ep","temporal-db","-u","temporal","-p","5432","--db",name];
+  for(const command of [["create"],["setup-schema","-v","0.0"],["update-schema","-d",`/etc/temporal/schema/postgresql/v12/${kind}/versioned`]]){verifyRuntimeImage(dependencyLock,dependencyLock.images[2],docker);docker(...args,...command);schemaExecutions++;}
+ }
+ stage="provider-seed";compose("create","connector-twin");
+ const seedCode="from pathlib import Path; import os,shutil; d=Path('/state'); os.chown(d,1000,1000); os.chmod(d,0o700); [(shutil.copyfile(f,d/f.name),os.chown(d/f.name,1000,1000),os.chmod(d/f.name,0o600)) for f in Path('/seed').glob('*.json')]";
+ docker("run","--rm","--network","none","--read-only","--user","0","--memory","128m","--cap-drop","ALL","--cap-add","CHOWN","--cap-add","DAC_OVERRIDE","--cap-add","FOWNER","--mount",`type=volume,src=${project}_provider-data,dst=/state`,"--mount",`type=bind,src=${seed},dst=/seed,readonly`,"--entrypoint","python",images.twin,"-c",seedCode);
+ stage="secure-service";compose("up","-d","authorization","temporal");await ready(["authorization"]);
+ const namespaceDir=resolve(parent,"namespace");await mkdir(namespaceDir,{mode:0o700});await mkdir(resolve(namespaceDir,"offline"),{mode:0o700});
+ for(const file of ["temporal-installation.json","offline/administrator.json"])await cp(resolve(privateDir,file),resolve(namespaceDir,file));
+ await cp(resolve(privateDir,"client-tls"),resolve(namespaceDir,"client-tls"),{recursive:true});
+ const mounts=[`type=bind,src=${resolve("scripts")},dst=/app/scripts,readonly`,`type=bind,src=${namespaceDir},dst=/run/installation`];
+ await until(()=>{try{runController(`${project}-namespace`,`${project}_orchestration`,images.worker,["node","scripts/staging-namespace-bootstrap.mjs","/run/installation"],mounts,[resolve(parent,"namespace.env")]);return true;}catch{return false;}},"Authenticated namespace unavailable");
+ stage="installed-services-start";compose("up","-d",...Object.keys(roles).filter(name=>name!=="offline-installer"));await ready(["web","temporal-worker","temporal-scheduler","connector-twin","quote-worker","quote-scheduler","quote-email"]);
+ const inspection=JSON.parse(docker("inspect",...Object.keys(roles).map(container)));
+ assert.equal(inspection.length,13);
+ assert.equal(schemaExecutions,6);
+ dependencyImages={...dependencyImages,...assertRuntimeBindings(dependencyLock,Object.fromEntries(["application-db","temporal-db","temporal"].map(role=>[role,inspection.find(c=>c.Id===container(role)).Image]))),schemaExecutions};
+ if(typedPlanning){for(const c of inspection){const cloud=(c.Config.Env||[]).filter(v=>v.startsWith("AWS_")||v.startsWith("LOOPLABS_CHAT_MODEL="));if(c.Name.endsWith("-web-1")){assert.equal(cloud.length,5);assert(cloud.some(v=>v==="LOOPLABS_CHAT_MODEL=us.amazon.nova-lite-v1:0"));}else assert.equal(cloud.length,0,"Non-web roles must not receive cloud credentials");}}
+ for(const role of ["web","temporal-worker","temporal-scheduler"]){const c=inspection.find(c=>c.Id===container(role));assert((c.Config.Env||[]).includes(`LOOPLABS_RECOVERY_EPOCH=${recoveryEpoch}`),"All three runtime roles require the enrolled external recovery epoch");}
+ for(const c of inspection){assert(c.HostConfig.Memory>0&&c.HostConfig.PidsLimit>0);if(!c.Name.endsWith("-web-1"))assert.equal(Object.keys(c.HostConfig.PortBindings||{}).length,0);}
+ stage="api-execution";
+ await cp(resolve(application,"accounts.json"),resolve(trial,"accounts.json"));await cp(resolve(application,"attached/worker.env"),resolve(trial,"worker.env"));await cp(resolve(privateDir,"client-tls"),resolve(trial,"tls"),{recursive:true});
+ const controlName=`${project}-trial`;owned.push(controlName);
+ controller=spawn("docker",["run","--rm","--name",controlName,"--label",`looplabs.assembly.owner=${project}`,"--network",`${project}_application`,"--user",uid,"--memory","512m","--read-only","--tmpfs","/tmp","--cap-drop","ALL",...(browserEnabled?["--env",`LOOPLABS_TRIAL_ORIGIN=${browserOrigin}`]:[]),"--mount",`type=bind,src=${trial},dst=/run/trial`,"--mount",`type=bind,src=${resolve("scripts")},dst=/app/scripts,readonly`,"--mount",`type=bind,src=${resolve("lib")},dst=/app/lib,readonly`,"--mount",`type=bind,src=${resolve("runtime")},dst=/app/runtime,readonly`,"--mount",`type=bind,src=${resolve(application,"sealed-web")},dst=${resolve(application,"sealed-web")},readonly`,"--mount",`type=bind,src=${dbCa},dst=${dbCa},readonly`,"--env",`LOOPLABS_TENANT_WEB_CONFIG=${installedReady.files.webFile}`,images.worker,"node","--import","tsx","scripts/staging-platform-controller.mjs"],{stdio:["ignore","pipe","pipe"]});
+ let output="";controller.stdout.on("data",b=>{output+=b.toString();});controller.stderr.resume();controller.on("exit",code=>{controllerExit=code??127;});controller.on("error",()=>{controllerExit=127;});
+ // Connect the one verification controller to both private runtime networks.
+ await until(()=>{try{docker("network","connect",`${project}_orchestration`,controlName);return true;}catch{return false;}},"Trial controller unavailable",15);
+ const checkpoint=async file=>until(async()=>{if(controllerExit!==null)throw Error("Trial controller exited");try{await access(resolve(trial,file));return true;}catch{return false;}},"Trial checkpoint unavailable",240);
+ await checkpoint("held.json");
+ stage="runtime-crash";compose("kill","-s","SIGKILL","web","temporal-worker","temporal-scheduler","connector-twin");compose("start","web","connector-twin");await ready(["web","connector-twin"]);
+ await writeFile(resolve(trial,"continue.json"),"",{mode:0o600});await checkpoint("approved.json");
+ stage="approved-archive";
+ const archivedProvider=JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"));assert.equal(Object.keys(archivedProvider.effects).length,0);
+ await writeFile(resolve(application,"capture.request"),"capture",{mode:0o600,flag:"wx"});await waitOwnedPublication(resolve(application,"capture-ready.json"),ownerRunning);
+ archive=execFileSync("docker",["exec",container("application-db"),"pg_dump","-h","/tmp","-U","trial","-d","trial","--schema="+installedReady.schema,"-Fc"],{timeout:30000,maxBuffer:8*1024*1024,stdio:["ignore","pipe","pipe"]});
+ await writeFile(resolve(application,"approved.archive"),archive,{mode:0o600,flag:"wx"});archiveEvidence={sha256:createHash("sha256").update(archive).digest("hex"),bytes:archive.length};
+ compose("start","temporal-worker","temporal-scheduler");await ready(["temporal-worker","temporal-scheduler"]);
+ await writeFile(resolve(trial,"execute.json"),"",{mode:0o600});await checkpoint("effects-ready.json");
+ await writeFile(resolve(trial,"provider-state.json"),docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"),{mode:0o600});
+ await until(()=>controllerExit!==null,"Trial did not finish");assert.equal(controllerExit,0);
+ const result=JSON.parse(output.trim());assert.equal(result.passed,true);
+ let browser;
+ if(browserEnabled){stage="browser-https";const observed=await stagingBrowserProof(trial,{typedPlanning});const provider=JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"));assert.equal(Object.keys(provider.effects).length,4);for(const id of observed.actionIds)assert(provider.effects[id]);const {actionIds,...sanitized}=observed;assert.equal(actionIds.length,2);browser=sanitized;}
+ if(browserEnabled){assert(typedPlanning,"Installed quote acceptance requires genuine typed planner authority");stage="typed-quote-browser";await writeFile(resolve(trial,"quote-publications.json"),JSON.stringify(installedReady.quotePublications),{mode:0o600});const observe=(timeoutMs=600000)=>runController(`${project}-quote-observe`,`${project}_application`,images.provisioner,["node","--import","tsx","scripts/staging-installed-observer.mjs"],[`type=bind,src=${application},dst=${application}`,`type=bind,src=${dbCa},dst=${dbCa},readonly`],[resolve(application,"observer.env")],timeoutMs);await writeFile(resolve(application,"observer.env"),`LOOPLABS_INSTALLED_ASSEMBLY_DIRECTORY=${application}\nLOOPLABS_STAGING_PLATFORM_PROOF=isolated\n`,{mode:0o600});installedObserve=observe;const nativePolicyReady=()=>runController(`${project}-native-policy-ready`,`${project}_application`,images.provisioner,['node','--import','tsx','scripts/staging-native-policy-ready.mjs',installedReady.quotePublications.webExecutionFile,resolve(application,'quote-approved-reference.json')],[`type=bind,src=${application},dst=${application},readonly`,`type=bind,src=${dbCa},dst=${dbCa},readonly`],[resolve(application,'observer.env')]);const baseControl=installedQuoteBrowserController({root:application,trial,ready:installedReady,compose,runObserver:observe,runNativePolicyReady:nativePolicyReady,docker,container});const control=async(operation,detail)=>{const observed=await baseControl(operation,detail);if(operation==='observe'&&detail.phase==='approved'){stage='quote-approved-second-archive';const writers=['web','temporal-worker','temporal-scheduler','quote-worker','quote-scheduler'];compose('stop',...writers);for(const role of writers)assert.equal(docker('inspect','--format','{{.State.Running}}',container(role)),'false');await writeFile(resolve(application,'quote-capture.request'),JSON.stringify({planId:detail.planId,planHash:detail.planHash,updateActionId:detail.updateActionId,messageActionId:detail.messageActionId}),{mode:0o600,flag:'wx'});await waitOwnedPublication(resolve(application,'quote-capture-ready.json'),ownerRunning);quoteArchive=execFileSync('docker',['exec',container('application-db'),'pg_dump','-h','/tmp','-U','trial','-d','trial','--schema='+installedReady.schema,'-Fc'],{timeout:30000,maxBuffer:8*1024*1024,stdio:['ignore','pipe','pipe']});assert.equal(quoteArchive.subarray(0,5).toString(),'PGDMP');await writeFile(resolve(application,'quote-approved.archive'),quoteArchive,{mode:0o600,flag:'wx'});quoteArchiveEvidence={sha256:createHash('sha256').update(quoteArchive).digest('hex'),bytes:quoteArchive.length};compose('start',...writers);await ready(writers);}return observed;};const onHeld=quotePackageSwitchEnabled?async descriptor=>{
+ stage='quote-held-candidate-switch';
+ const artifacts=await Promise.all([inspectedWorkerArtifact(imageIds.worker,docker,'ack'),inspectedWorkerArtifact(imageIds.quote,docker,'quote')]);
+ const current={contract:'installed-candidate-package-2',builds:{ack:artifacts[0].buildId,quote:artifacts[1].buildId},images:{web:imageIds.web,worker:imageIds.worker,quote:imageIds.quote,twin:imageIds.twin,quoteEmail:imageIds.quoteEmail,provisioner:imageIds.provisioner}};
+ const target={...current,images:{...current.images,...Object.fromEntries(Object.entries(candidateWriters).map(([role,tag])=>[role,docker('image','inspect',tag,'--format','{{.Id}}')]))}};
+ const offline=JSON.parse(docker('inspect',ownerName));assert.equal(offline.length,1);assert.equal(offline[0].Config.Labels['looplabs.assembly.owner'],project);
+ candidateQuoteSwitch=await switchHeldQuoteCandidatePackages({project,descriptor,current,target,originalComposeFile:composeFile,offlineOwner:{id:offline[0].Id,name:ownerName,image:offline[0].Image},docker,readPending:async()=>{await control('observe',{phase:'package-held'});return JSON.parse(await readFile(resolve(trial,'quote-provider-observation.json'),'utf8'));},ready:async(_selected,roles)=>ready(roles),selectCompose:file=>{composeFile=file;}});
+ }:undefined;
+ quoteBrowser=await typedQuoteBrowserProof(trial,{controller:control,onHeld,heldBarrierRequired:quotePackageSwitchEnabled});assert.equal(quoteBrowser.fullInstalledAcceptance,false);}
+ stage="archive-restore-containment";
+ const expectedEffects=browser?4:2;
+ const retainedProvider=JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json"));assert.equal(Object.keys(retainedProvider.effects).length,expectedEffects);
+ compose("stop","web","temporal-worker","temporal-scheduler","quote-worker","quote-scheduler");for(const role of ["web","temporal-worker","temporal-scheduler","quote-worker","quote-scheduler"])assert.equal(docker("inspect","--format","{{.State.Running}}",container(role)),"false");
+ const sql=statement=>docker("exec",container("application-db"),"psql","-h","/tmp","-U","trial","-d","trial","-v","ON_ERROR_STOP=1","-At","-c",statement);
+ const originalOid=sql("SELECT oid::text FROM pg_namespace WHERE nspname='"+installedReady.schema+"'");sql('DROP SCHEMA '+installedReady.schema+' CASCADE');execFileSync("docker",["exec","-i",container("application-db"),"pg_restore","-h","/tmp","-U","trial","-d","trial","--no-owner","--exit-on-error"],{input:archive,timeout:30000,stdio:["pipe","ignore","pipe"]});const restoredOid=sql("SELECT oid::text FROM pg_namespace WHERE nspname='"+installedReady.schema+"'");assert.notEqual(restoredOid,originalOid);
+ const ownerTarget={url:`postgresql://trial:${password}@trial-db:5432/trial`,schema:installedReady.schema,transport};const restoreOwner=await prepareRestoreOwnerAttachment(application,ownerTarget);
+ const restoreEnv=resolve(application,"restore-controller.env");await writeFile(restoreEnv,`LOOPLABS_STAGING_CONTROLLER_OWNER_FILE=${restoreOwner.file}\nLOOPLABS_TRIAL_ORIGIN=${browserEnabled?browserOrigin:"https://looplabs-staging.example.test"}\n`,{mode:0o600});
+ const restoreController=phase=>JSON.parse(runController(`${project}-restore-observe-${phase}`,`${project}_application`,images.worker,["node","--import","tsx","scripts/staging-restore-controller.mjs",phase],[`type=bind,src=${trial},dst=/run/trial`,`type=bind,src=${resolve("scripts")},dst=/app/scripts,readonly`,`type=bind,src=${resolve("lib")},dst=/app/lib,readonly`,restoreOwner.mount,`type=bind,src=${dbCa},dst=${dbCa},readonly`],[restoreEnv]));
+ stage="restored-approved-snapshot";assert.equal(restoreController("restored").passed,true);
+ const nextEpoch=randomUUID();await writeFile(resolve(application,"restore.request"),JSON.stringify({restoredSchemaOid:restoredOid,nextEpoch}),{mode:0o600,flag:"wx"});const repaired=await waitOwnedPublication(resolve(application,"recovery-ready.json"),ownerRunning);assert.equal(repaired.archiveSha256,archiveEvidence.sha256);assert.equal(repaired.revivedAuthority,false);
+ // Installed startup itself must refuse old password/epoch generations. No
+ // HTTP health timeout, OOM or unexplained nonzero result is accepted as proof.
+ const refusePackagedRoles=variant=>{for(const role of ["temporal-worker","temporal-scheduler","quote-worker","quote-scheduler"]){const name=`${project}-restore-${variant}-${role}`;owned.push(name);let refused=false;try{compose("run","--no-deps","--name",name,role);}catch{refused=true;}const state=JSON.parse(docker("inspect","--format","{{json .State}}",name));assert(refused&&state.Status==="exited"&&state.ExitCode===1&&!state.OOMKilled);const logs=spawnSync("docker",["logs",name],{encoding:"utf8",timeout:10000,maxBuffer:65536,stdio:["ignore","pipe","pipe"]});assert.equal(logs.status,0);assert.equal(`${logs.stdout||""}${logs.stderr||""}`.trim(),"Temporal service stopped; inspect sanitized health signals and saved run state.");}};
+ refusePackagedRoles("old-installed-generations");
+ stage="restored-omitted-epoch-refusal";
+ const beforeOmission=JSON.parse(await readFile(composeFile,'utf8')),savedEpochFiles=[];
+ try{for(const role of ['temporal-worker','temporal-scheduler','quote-worker','quote-scheduler']){const files=beforeOmission.services[role].env_file;assert(Array.isArray(files)&&files.length===1);const file=files[0],bytes=await readFile(file,'utf8'),values=parseEnv(bytes);assert(values.LOOPLABS_RECOVERY_EPOCH);savedEpochFiles.push({file,bytes});delete values.LOOPLABS_RECOVERY_EPOCH;await writeFile(file,Object.entries(values).map(([k,v])=>k+'='+v).join('\n')+'\n',{mode:0o600});}refusePackagedRoles('omitted-epoch');}
+ finally{for(const {file,bytes}of savedEpochFiles)await writeFile(file,bytes,{mode:0o600});}
+ assert.deepEqual(JSON.parse(docker('exec',container('connector-twin'),'cat','/state/connector-twin-state.json')).effects,retainedProvider.effects);
+
+ stage="stale-installed-bootstrap-refusal";
+ const staleProbe="import assert from 'node:assert/strict';import{bootstrapTenantContext}from'./lib/workspace/tenant-bootstrap.ts';import{ControlError}from'./lib/durable/contracts.ts';let refused=false;try{const current=await bootstrapTenantContext(process.env.LOOPLABS_TENANT_WEB_CONFIG,false);await current.close();}catch(error){assert(error instanceof ControlError);assert.equal(error.status,503);refused=true;}assert(refused);console.log(JSON.stringify({refused:true,authorityIssued:false}));";
+ const staleBootstrap=JSON.parse(runController(`${project}-stale-installed-bootstrap`,`${project}_application`,images.provisioner,['node','--import','tsx','--input-type=module','-e',staleProbe],[`type=bind,src=${resolve('lib')},dst=/app/lib,readonly`,`type=bind,src=${resolve(application,'sealed-web')},dst=${resolve(application,'sealed-web')},readonly`,`type=bind,src=${dbCa},dst=${dbCa},readonly`],[resolve(application,'attached/web.env')]));assert.deepEqual(staleBootstrap,{refused:true,authorityIssued:false});
+ // Fresh SQL generations do not revive workload/member authority; old native
+ // execution metadata must not be silently republished or approved.
+ for(const role of ["web","worker","scheduler"])await cp(resolve(application,"recovered-runtime/attached",role+'.env'),resolve(application,"attached",role+'.env'));
+ // Reattach the actual fresh web generation using its own canonical directory.
+ const recoveredTopology=JSON.parse(await readFile(composeFile,'utf8'));recoveredTopology.services.web=quarantineQuoteWebAttachment(recoveredTopology.services.web);
+ recoveredTopology.services.web.volumes=recoveredTopology.services.web.volumes.filter(v=>v.source!==resolve(application,'sealed-web'));
+ recoveredTopology.services.web.volumes.push({type:'bind',source:resolve(application,'recovered-runtime/web'),target:resolve(application,'recovered-runtime/web'),read_only:true});
+ await writeFile(composeFile,JSON.stringify(recoveredTopology),{mode:0o600});
+ await cp(resolve(application,'attached/worker.env'),resolve(trial,'worker.env'));
+ stage="quarantined-http-authority";compose('up','-d','--no-deps','--force-recreate','web');await ready(['web']);assert.equal(restoreController('after').passed,true);compose('stop','web');
+ // The quote plan was created after this exact ACK approved archive; recovery
+ // must remove its authority while retaining both provider effects. This trial
+ // does not claim restored quote-approval coverage from the earlier archive.
+ assert.equal(sql("SELECT count(*) FROM "+installedReady.schema+".ll_quote_plans"),'0');assert.equal(sql("SELECT count(*) FROM "+installedReady.schema+".ll_sessions"),'0');assert.equal(sql("SELECT count(*) FROM "+installedReady.schema+".ll_tokens WHERE active"),'0');
+ assert.deepEqual(JSON.parse(docker("exec",container("connector-twin"),"cat","/state/connector-twin-state.json")).effects,retainedProvider.effects);
+ const restoreContainment={approvedArchive:true,archiveSha256:archiveEvidence.sha256,originalOid,restoredOid,externalEpochRotated:true,runtimeRoles:5,revivedSessionsRefused:true,restoredApprovalRefused:true,quarantineReplay:true,quarantinedHttpObserved:true,packagedAckQuoteWorkerRefused:true,packagedAckQuoteSchedulerRefused:true,omittedEpochRefused:true,staleInstalledBootstrapRefused:true,quotePlanNotInEarlierArchive:true,quoteApprovalRestoreProved:false,retainedEffects:expectedEffects,fullInstalledAcceptance:false};
+ let finalRestoredOid=restoredOid;
+ if(quoteBrowser){
+  stage='quote-approved-second-restore';assert(quoteArchive&&quoteArchiveEvidence);assert.equal(createHash('sha256').update(quoteArchive).digest('hex'),quoteArchiveEvidence.sha256);
+  const quoteObserve=()=>runController(`${project}-quote-restore-provider-observe`,`${project}_application`,images.provisioner,['node','--import','tsx','scripts/staging-installed-observer.mjs'],[`type=bind,src=${application},dst=${application}`,`type=bind,src=${dbCa},dst=${dbCa},readonly`],[resolve(application,'observer.env')]);
+  quoteObserve();const beforeQuoteRestore=JSON.parse(await readFile(resolve(application,'quote-provider-observation.json'),'utf8'));assert.equal(beforeQuoteRestore.quote.version,4);assert.equal(beforeQuoteRestore.quoteEffects.length,1);assert.equal(Object.keys(beforeQuoteRestore.mailEffects).length,1);assert.equal(beforeQuoteRestore.quoteEffects[0].action_id,quoteBrowser.updateActionId??JSON.parse(await readFile(resolve(trial,'quote-browser-run.json'),'utf8')).updateActionId);
+  const retainedQuoteProvider={quote:beforeQuoteRestore.quote,quoteEffects:beforeQuoteRestore.quoteEffects,pendingMail:beforeQuoteRestore.pendingMail,mailEffects:beforeQuoteRestore.mailEffects};
+  sql('DROP SCHEMA '+installedReady.schema+' CASCADE');execFileSync('docker',['exec','-i',container('application-db'),'pg_restore','-h','/tmp','-U','trial','-d','trial','--no-owner','--exit-on-error'],{input:quoteArchive,timeout:30000,stdio:['pipe','ignore','pipe']});finalRestoredOid=sql("SELECT oid::text FROM pg_namespace WHERE nspname='"+installedReady.schema+"'");assert.notEqual(finalRestoredOid,restoredOid);assert.notEqual(finalRestoredOid,originalOid);
+  const quoteRestoreController=phase=>JSON.parse(runController(`${project}-quote-restore-${phase}`,`${project}_application`,images.provisioner,['node','--import','tsx','scripts/staging-quote-restore-controller.mjs',phase],[`type=bind,src=${trial},dst=/run/trial`,`type=bind,src=${application},dst=${application}`,`type=bind,src=${resolve('scripts')},dst=/app/scripts,readonly`,`type=bind,src=${resolve('lib')},dst=/app/lib,readonly`,`type=bind,src=${dbCa},dst=${dbCa},readonly`],[resolve(application,'observer.env'),restoreEnv]));
+  assert.equal(quoteRestoreController('restored').passed,true);
+  const secondEpoch=randomUUID();await writeFile(resolve(application,'quote-restore.request'),JSON.stringify({restoredSchemaOid:finalRestoredOid,nextEpoch:secondEpoch}),{mode:0o600,flag:'wx'});const repairedQuote=await waitOwnedPublication(resolve(application,'quote-recovery-ready.json'),ownerRunning);assert.equal(repairedQuote.archiveSha256,quoteArchiveEvidence.sha256);assert.equal(repairedQuote.revivedAuthority,false);assert.equal(repairedQuote.newEpoch,secondEpoch);assert.notEqual(secondEpoch,nextEpoch);
+  refusePackagedRoles('quote-approved-old-installed-generations');
+  for(const role of ['web','worker','scheduler'])await cp(resolve(application,'quote-recovered-runtime/attached',role+'.env'),resolve(application,'attached',role+'.env'));
+  const secondTopology=JSON.parse(await readFile(composeFile,'utf8'));secondTopology.services.web=quarantineQuoteWebAttachment(secondTopology.services.web);secondTopology.services.web.volumes=secondTopology.services.web.volumes.filter(v=>v.source!==resolve(application,'recovered-runtime/web'));secondTopology.services.web.volumes.push({type:'bind',source:resolve(application,'quote-recovered-runtime/web'),target:resolve(application,'quote-recovered-runtime/web'),read_only:true});await writeFile(composeFile,JSON.stringify(secondTopology),{mode:0o600});
+  compose('up','-d','--no-deps','--force-recreate','web');await ready(['web']);assert.equal(quoteRestoreController('after').passed,true);compose('stop','web');
+  quoteObserve();const afterQuoteRestore=JSON.parse(await readFile(resolve(application,'quote-provider-observation.json'),'utf8'));assertQuoteProviderRetained(retainedQuoteProvider,afterQuoteRestore);assert.deepEqual(JSON.parse(docker('exec',container('connector-twin'),'cat','/state/connector-twin-state.json')).effects,retainedProvider.effects);
+  quoteRestoreContainment={separateApprovedArchive:true,archiveSha256:quoteArchiveEvidence.sha256,archiveBytes:quoteArchiveEvidence.bytes,firstRestoredOid:restoredOid,secondRestoredOid:finalRestoredOid,archivedSourceVersion:'v3',currentProviderVersion:4,providerQuoteEffects:1,providerMailEffects:1,providerStateUnchanged:true,oldNamedCookiesAndPasswordsRefused:true,restoredExactApprovalInvalidated:true,downstreamHeldAuthorityInvalidated:true,staleIndependentApprovalRejected:true,freshWorkflowWithFreshApprovalNotYetProved:true,authorityReactivated:false,fullInstalledAcceptance:false};
+  stage='explicit-administrator-successor-onboarding';await writeFile(resolve(application,'quote-successor-onboard.request'),JSON.stringify({acknowledgement:'INVITE_NEW_MEMBERS_AND_REVIEW_NEW_SCOPE_AFTER_CONTAINMENT',recoveryEpoch:secondEpoch,archiveSha256:quoteArchiveEvidence.sha256}),{mode:0o600,flag:'wx'});const successor=await waitOwnedPublication(resolve(application,'quote-successor-ready.json'),ownerRunning);assert.equal(successor.oldAuthorityReactivated,false);assert.equal(successor.approvalIssued,false);assert.equal(successor.planCreated,false);assert.equal(successor.selfServiceOnboardingProved,false);
+  const successorReady={...installedReady,files:successor.recoveredFiles,quoteFiles:successor.recoveredQuoteFiles,quotePublications:successor.publication};const successorStack=await attachInstalledOwnerPublications({root:application,base:initial,ready:successorReady,uid:process.getuid(),gid:process.getgid(),images:{quote:imageIds.quote,provisioner:imageIds.provisioner,quoteEmail:imageIds.quoteEmail},database:{tlsDirectory:dbTls,dataDirectory:dbData,passwdFile:dbPasswd,caFile:transport.caFile},baseAttachmentFile:resolve(application,'quote-recovered-runtime/attached/compose-installed.json'),quoteAttachmentFile:resolve(application,'quote-successor/publications/attached/compose-quote-installed.json'),outputFile:resolve(application,'compose-installed-successor-stack.json')});for(const service of Object.values(successorStack.topology.services))service.labels={...(service.labels??{}),'looplabs.assembly.owner':project};composeFile=successorStack.file;await writeFile(composeFile,JSON.stringify(successorStack.topology),{mode:0o600});
+  const successorPlanner=resolve(parent,'planner-successor-attached');await attachPlannerInputs(resolve(application,'attached'),process.env.LOOPLABS_STAGING_PLANNER_INPUT,successorPlanner);await cp(resolve(successorPlanner,'web.env'),resolve(application,'attached/web.env'));
+  compose('up','-d','--no-deps','--force-recreate','web','quote-worker','quote-scheduler');await ready(['web','quote-worker','quote-scheduler']);
+  const successorTrial=resolve(trial,'successor');await mkdir(successorTrial,{mode:0o700});await cp(successor.accountsFile,resolve(successorTrial,'accounts.json'));await cp(resolve(application,'quote-approved-reference.json'),resolve(successorTrial,'old-quote-reference.json'));await writeFile(resolve(successorTrial,'quote-publications.json'),JSON.stringify(successor.publication),{mode:0o600,flag:'wx'});await writeFile(resolve(successorTrial,'quote-provider-baseline.json'),JSON.stringify(retainedQuoteProvider),{mode:0o600,flag:'wx'});const successorControl=installedQuoteBrowserController({root:application,trial:successorTrial,ready:successorReady,compose,runObserver:quoteObserve,docker,container});quoteSuccessor=await typedQuoteSuccessorBrowserProof(successorTrial,{controller:successorControl});assert.equal(quoteSuccessor.freshIndependentApprovalProved,true);assert.equal(quoteSuccessor.newProviderEffectIssued,false);compose('stop','web','quote-worker','quote-scheduler');
+
+ }
+ compose("stop","quote-twin","quote-email");await writeFile(resolve(application,"retire.request"),"retire",{mode:0o600,flag:"wx"});await waitOwnedPublication(resolve(application,"owner-stopped.json"),async()=>true);
+ for(const [role,oid]of Object.entries(installedReady.roles)){assert(/^[_a-z0-9]+$/.test(role)&&/^[1-9][0-9]*$/.test(oid));assert.equal(sql("SELECT oid::text FROM pg_roles WHERE rolname='"+role+"'"),oid);assert.equal(sql("SELECT count(*) FROM pg_stat_activity WHERE usename='"+role+"'"),'0');sql('DROP OWNED BY '+role);sql('DROP ROLE '+role);}assert.equal(sql("SELECT oid::text FROM pg_namespace WHERE nspname='"+installedReady.schema+"'"),finalRestoredOid);sql('DROP SCHEMA '+installedReady.schema+' CASCADE');assert.deepEqual(baselineInventory(),JSON.parse(await readFile(resolve(application,"baseline-inventory.json"),'utf8')));
+ if(artifactDirectory){stage="tested-image-export";retainedArtifact=await exportTestedImages({directory:artifactDirectory,images:{web:images.web,worker:images.worker,twin:images.twin,provisioner:images.provisioner},buildId:build.buildId,docker});}
+ outcome={...result,...(candidateQuoteSwitch?{candidateQuoteSwitch}:{}),diagnosticRunner,fullInstalledAcceptance:false,quoteApprovalRestoreProved:!!quoteRestoreContainment,...(quoteRestoreContainment?{quoteRestoreContainment}:{}),...(quoteSuccessor?{quoteSuccessor}:{}),...(quoteBrowser?{quoteBrowser}:{}),restoreContainment,dependencyImages,...(typedPlanning?{plannerAuthority:{webOnly:true},actualProviderEffects:4}:{}),...(browser?{browser,scope:typedPlanning?"assembled isolated API/runtime and fresh typed HTTPS browser trial":"assembled isolated API/runtime and prepared-plan HTTPS browser trial",notVerified:[...(typedPlanning?[]:["fresh typed chat/model interpretation"]),...result.notVerified.filter(x=>x!=="browser HTTPS and typed chat UX")]}:{}),buildId:build.buildId,sourceCommit:source.commit,images:Object.entries(images).map(([role,image])=>({role,id:docker("image","inspect",image,"--format","{{.Id}}" )})),services:inspection.map(c=>({memoryBytes:c.HostConfig.Memory,readOnly:c.HostConfig.ReadonlyRootfs,pids:c.HostConfig.PidsLimit,health:c.State.Health?.Status??"not-configured"})),admission};
+}catch(error){
+ if(installedObserve){try{await installedObserve(30000);const observation=JSON.parse(await readFile(resolve(application,'quote-provider-observation.json'),'utf8'));await writeFile(resolve(evidenceDirectory,'quote-runtime-failure-summary.json'),JSON.stringify(quoteRuntimeFailureSummary(observation)),{mode:0o600,flag:'wx'});}catch{await writeFile(resolve(evidenceDirectory,'quote-runtime-failure-summary.json'),JSON.stringify({available:false}),{mode:0o600,flag:'wx'}).catch(()=>{});}}
+ await writeFile(resolve(evidenceDirectory,"private-failure.json"),JSON.stringify({stage,cause:quotePrivateCause(error)}),{mode:0o600,flag:"wx"}).catch(()=>{});
+ for(const file of ["typed-quote-private-failure.json","typed-quote-private-cleanup-failure.json","failure.json","restore-failure.json","browser-failure.json","browser-private-failure.json"]){try{await cp(resolve(trial,file),resolve(evidenceDirectory,file));}catch{}}
+ for(const file of ['typed-quote-successor-private-failure.json','typed-quote-successor-private-cleanup-failure.json']){try{await cp(resolve(trial,'successor',file),resolve(evidenceDirectory,file));}catch{}}
+ for(const file of ["lifecycle-private-failure.json","lifecycle-private-cleanup-failure.json","quote-restore-private-failure.json"]){try{await cp(resolve(application,file),resolve(evidenceDirectory,file));}catch{}}
+ let detail="";
+ try {const report=JSON.parse(await readFile(resolve(trial,"failure.json"),"utf8"));detail=safeTrialFailure(report);}catch{}
+ try {detail+=safeBrowserFailure(JSON.parse(await readFile(resolve(trial,"browser-failure.json"),"utf8")));}catch{}
+ try {detail+=safeRestoreFailure(JSON.parse(await readFile(resolve(trial,"restore-failure.json"),"utf8")));}catch{}
+ let provider="";
+ try {const id=container("connector-twin");if(id)provider=safeProviderFailure(JSON.parse(docker("inspect","--format","{{json .State}}",id)),(()=>{const r=spawnSync("docker",["logs","--tail","80",id],{encoding:"utf8",timeout:10000,maxBuffer:65536,stdio:["ignore","pipe","pipe"]});return `${r.stdout||""}\n${r.stderr||""}`;})());}catch{}
+ console.error(`Complete isolated platform trial failed at ${stage}${detail}${provider}; no acceptance, raw logs or credentials printed.`);process.exitCode=1;
+}
+finally{
+ const cleanupFailures=[];
+ try{const diagnostic=JSON.parse(await readFile(resolve(application,'package-config-mismatch.json'),'utf8'));assert.equal(diagnostic.contract,'private-package-configuration-diagnostic-1');assert(['web','temporal-worker','temporal-scheduler','quote-worker','quote-scheduler'].includes(diagnostic.role));assert(diagnostic.fields.every(f=>['env','user','command','entrypoint','healthcheck','mounts','host'].includes(f)));assert(diagnostic.hostFields.every(f=>/^[A-Za-z-]{1,40}$/.test(f)));assert(/^[a-f0-9]{64}$/.test(diagnostic.beforeSha256)&&/^[a-f0-9]{64}$/.test(diagnostic.afterSha256));await writeFile(resolve(evidenceDirectory,'package-config-mismatch.json'),JSON.stringify(diagnostic),{mode:0o600,flag:'wx'});}catch(error){if(error.code!=='ENOENT')cleanupFailures.push({stage:'package-config-diagnostic-retention',cause:quotePrivateCause(error)});}
+
+ try{await retainPrivateJournalDiagnostic(application,evidenceDirectory);}catch(error){cleanupFailures.push({stage:'owned-journal-metadata-retention',cause:quotePrivateCause(error)});}
+ try{await retainAuthenticatedMedia(trial,resolve(evidenceDirectory,'ui-media'));try{await access(resolve(trial,'successor'));await retainAuthenticatedMedia(resolve(trial,'successor'),resolve(evidenceDirectory,'ui-media/successor'));}catch(error){if(error.code!=='ENOENT')throw error;}}catch(error){cleanupFailures.push({stage:'owned-demo-media-retention',cause:quotePrivateCause(error)});}
+ try{const sourceAfter=await installedAssemblySourceSnapshot();await writeFile(resolve(evidenceDirectory,"source-after.json"),JSON.stringify(sourceAfter),{mode:0o600,flag:"wx"});assert.deepEqual(sourceAfter,sourceBefore);}catch(error){cleanupFailures.push({stage:'source-completion',cause:quotePrivateCause(error)});}
+ try{imageBuilder.close();}catch(error){cleanupFailures.push({stage:'owned-builder',cause:quotePrivateCause(error)});}
+ controller?.kill('SIGTERM');
+ for(const name of owned.reverse())try{const id=docker('ps','-aq','--filter',`name=^/${name}$`);if(id){const facts=JSON.parse(docker('inspect',id))[0];assert.equal(facts.Config.Labels?.['looplabs.assembly.owner'],project);docker('rm','-f',id);assert.equal(docker('ps','-aq','--filter',`name=^/${name}$`),'');}}catch(error){cleanupFailures.push({stage:'owned-controller-removal',cause:quotePrivateCause(error)});}
+ try{compose('down','--volumes','--remove-orphans');assert.equal(docker('ps','-aq','--filter',`label=com.docker.compose.project=${project}`),'');assert.equal(docker('volume','ls','-q','--filter',`label=com.docker.compose.project=${project}`),'');assert.equal(docker('network','ls','-q','--filter',`label=com.docker.compose.project=${project}`),'');}catch(error){cleanupFailures.push({stage:'owned-compose-removal',cause:quotePrivateCause(error)});}
+ for(const image of built.reverse())try{const facts=JSON.parse(docker('image','inspect',image))[0];assert.equal(facts.Config.Labels?.['looplabs.assembly.owner'],project);docker('image','rm',image);}catch(error){cleanupFailures.push({stage:'owned-image-removal',cause:quotePrivateCause(error)});}
+ if(cleanupFailures.length){process.exitCode=1;await writeFile(resolve(evidenceDirectory,'private-cleanup-failure.json'),JSON.stringify({cleanupFailures,fullInstalledAcceptance:false}),{mode:0o600}).catch(()=>{});console.error('Owned assembly cleanup incomplete; retained private diagnostic evidence requires inspection.');}
+ else{await writeFile(resolve(evidenceDirectory,'cleanup.json'),JSON.stringify({ownedCleanupVerified:true,sourceUnchanged:true,baselineVerified:!!outcome,fullInstalledAcceptance:false}),{mode:0o600,flag:'wx'});await rm(parent,{recursive:true,force:true});}
+}
+
+if(outcome&&!process.exitCode){
+ try{
+  if(retainedArtifact){
+   // Cleanup has removed original trial tags and containers. Loading must not rebuild.
+   stage="tested-image-reload";
+   await reloadAfterTrialRemoval({directory:artifactDirectory,artifact:retainedArtifact,docker});
+   outcome.artifact={...retainedArtifact,reloadedAfterRemoval:true,workerBuildVerified:true};
+  }
+  await writeFile(resolve(evidenceDirectory,"diagnostic-result.json"),JSON.stringify(outcome,null,2)+"\n",{mode:0o600,flag:"wx"});console.log(JSON.stringify(outcome,null,2));
+ }catch{console.error("Tested image artifact reload failed; no artifact acceptance or credentials printed.");process.exitCode=1;}
+}

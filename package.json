@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "check:repo": "node scripts/check-repository.mjs",
-    "check:links": "node scripts/check-links.mjs",
+    "check:links": "node --import tsx scripts/staging-installed-link-proof.mjs",
     "quality": "bash scripts/quality-gate.sh",
     "release:check": "bash scripts/release-gate.sh",
     "durable:setup": "tsx --env-file=.env.local scripts/durable-setup.ts",
@@ -51,7 +51,8 @@
     "workspace:record-scopes": "node --env-file=.env.local --import tsx scripts/record-scope-setup.ts",
     "workspace:proposal-boundaries": "node --env-file=.env.local --import tsx scripts/proposal-boundary-setup.ts",
     "temporal:staging-preflight": "node --env-file=.env.local --import tsx scripts/staging-preflight.ts",
-    "temporal:host-preflight": "node --import tsx scripts/staging-host-preflight.ts"
+    "temporal:host-preflight": "node --import tsx scripts/staging-host-preflight.ts",
+    "workspace:membership-authority": "node --import tsx scripts/membership-authority-setup.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1147.0",

@@ -1,20 +1,18 @@
-import { readFile } from "node:fs/promises";
 import { randomBytes, randomUUID } from "node:crypto";
-import { Pool } from "pg";
 import { NextRequest } from "next/server";
 import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { PAYMENT } from "./contracts";
 import { tokenHash } from "../durable/service";
-let db: Pool, admin: Pool;
-const schema = `refund_http_${randomBytes(8).toString("hex")}`;
+import { createInstalledTenantFixture } from "../workspace/installed-tenant-fixture";
+let fixture: Awaited<ReturnType<typeof createInstalledTenantFixture>>;
 const tokens = {
   operator: randomBytes(32).toString("base64url"),
   agent: randomBytes(32).toString("base64url"),
   worker: randomBytes(32).toString("base64url"),
 };
-vi.mock("../durable/database", async (original) => ({
-  ...(await original<typeof import("../durable/database")>()),
-  database: () => db,
+vi.mock("../workspace/tenant-context", async (original) => ({
+  ...(await original<typeof import("../workspace/tenant-context")>()),
+  tenantContext: () => fixture.context,
 }));
 vi.mock("./twin", () => ({
   FetchSandboxStripe: class {
@@ -52,44 +50,39 @@ const req = (
   new NextRequest("https://looplabs.run/api/durable/refunds", {
     method: "POST",
     headers: {
-      authorization: `Bearer ${tokens[role]}`,
+      ...(role === "operator"
+        ? { cookie: `looplabs_workspace_session=${tokens.operator}` }
+        : { authorization: `Bearer ${tokens[role]}` }),
       origin,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
   });
 beforeAll(async () => {
-  if (!process.env.LOOPLABS_TEST_DATABASE_URL)
-    throw new Error("PostgreSQL is required for refund API tests.");
-  admin = new Pool({
-    connectionString: process.env.LOOPLABS_TEST_DATABASE_URL,
+  fixture = await createInstalledTenantFixture({
+    tenants: ["http"], salesOrg: "http", seed: async (owner) => {
+      await owner.query("INSERT INTO ll_refund_policies(org_id) VALUES('http')");
+      await owner.query(
+        "INSERT INTO ll_members(email,org_id,name,password_hash) VALUES('operator@test.example','http','Operator','fixture')",
+      );
+      await owner.query(
+        "INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,'operator@test.example',now()+interval '1 hour')",
+        [tokenHash(tokens.operator)],
+      );
+      await owner.query(
+        "INSERT INTO ll_agents(org_id,id,tools) VALUES('http','refund-agent',ARRAY['stripe.refund'])",
+      );
+      // Distinct scoped legacy agent/worker identities remain authenticated by
+      // the installed broker; named human requests use the actual session table.
+      for (const role of ["agent", "worker"] as const)
+        await owner.query(
+          "INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'http',$2,$3)",
+          [tokenHash(tokens[role]), role === "agent" ? "refund-agent" : role, role],
+        );
+    },
   });
-  await admin.query(`CREATE SCHEMA ${schema}`);
-  db = new Pool({
-    connectionString: process.env.LOOPLABS_TEST_DATABASE_URL,
-    options: `-c search_path=${schema}`,
-  });
-  await db.query(await readFile("lib/durable/schema.sql", "utf8"));
-  await db.query(await readFile("lib/workspace/schema.sql", "utf8"));
-  await db.query(await readFile("lib/refunds/schema.sql", "utf8"));
-  await db.query("INSERT INTO ll_orgs(id) VALUES('http')");
-  await db.query("INSERT INTO ll_refund_policies(org_id) VALUES('http')");
-  await db.query(
-    "INSERT INTO ll_agents(org_id,id,tools) VALUES('http','refund-agent',ARRAY['stripe.refund'])",
-  );
-  for (const [role, token] of Object.entries(tokens))
-    await db.query(
-      "INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'http',$2,$3)",
-      [tokenHash(token), role === "agent" ? "refund-agent" : role, role],
-    );
 }, 20000);
-afterAll(async () => {
-  await db?.end();
-  if (admin) {
-    await admin.query(`DROP SCHEMA ${schema} CASCADE`);
-    await admin.end();
-  }
-});
+afterAll(async () => { await fixture?.close(); });
 it("refund API denies anonymous, cross-origin, malformed and unknown operations", async () => {
   expect(
     (await GET(new NextRequest("https://looplabs.run/api/durable/refunds")))
@@ -168,7 +161,9 @@ it("refund API binds approvals and serves operator evidence and agent-scoped act
       new NextRequest(
         "https://looplabs.run/api/durable/refunds" +
           (id ? "?action=" + id : ""),
-        { headers: { authorization: `Bearer ${tokens[role]}` } },
+        { headers: role === "operator"
+          ? { cookie: `looplabs_workspace_session=${tokens.operator}` }
+          : { authorization: `Bearer ${tokens[role]}` } },
       ),
     );
   expect((await get("operator")).status).toBe(200);

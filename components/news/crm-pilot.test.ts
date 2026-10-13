@@ -35,9 +35,13 @@ describe("CRM pilot discovery and product truth", () => {
     for (const failure of ["Missing authority", "Changed approval", "Lost response", "Repeated attempt", "Concurrent edit", "Unresolved outcome"]) {
       expect(html).toContain(failure);
     }
-    for (const href of ["/control-plane", "/control-plane/reconciliation", "/control-plane/workflows", "/#demo"]) {
+    for (const href of ["/platform", "/control-plane/quotes", "/platform#verified-outcomes", "/#demo"]) {
       expect(html).toContain(`href="${href}"`);
     }
+    for (const disabled of ["/control-plane/reconciliation", "/control-plane/workflows"]) {
+      expect(html).not.toContain(`href="${disabled}"`);
+    }
+    expect(html).toContain("Broader control-plane workspaces are not available in this deployment");
     expect(html).toContain('rel="noopener noreferrer"');
   });
 

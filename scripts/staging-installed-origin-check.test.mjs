@@ -1,0 +1,7 @@
+import {test,expect} from 'vitest';
+import {installedOriginCheckArguments2,runInstalledOriginCheck2} from './staging-installed-origin-check.mjs';
+import {mkdtemp,realpath,writeFile,chmod,rm,readFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {tmpdir} from 'node:os';
+test('explicit canonical request/download/output/source paths; no eligibility or metadata arguments',()=>{expect(installedOriginCheckArguments2(['/private/request','/private/download','/private/receipt','/private/source'])).toEqual({input:'/private/request',downloadRoot:'/private/download',output:'/private/receipt',root:'/private/source'});for(const args of [[],['relative','/d','/o','/r'],['/x/../i','/d','/o','/r'],['/i','/d','/i','/r'],['/i','/r','/o','/r'],['/i','/d','/o','/r','accepted']])expect(()=>installedOriginCheckArguments2(args)).toThrow();});
+test('existing receipt refuses before invoking authenticated metadata or Docker; retains original bytes',async()=>{const root=await realpath(await mkdtemp(resolve(tmpdir(),'ll-origin-output-')));await chmod(root,0o700);try{const output=resolve(root,'receipt.json');await writeFile(output,'retained-original',{mode:0o600});await expect(runInstalledOriginCheck2([resolve(root,'request.json'),resolve(root,'download'),output,root])).rejects.toThrow();expect(await readFile(output,'utf8')).toBe('retained-original');}finally{await rm(root,{recursive:true,force:true});}});

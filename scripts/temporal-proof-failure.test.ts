@@ -1,0 +1,4 @@
+import{test,expect}from'vitest';
+import{sanitizedProofFailure}from'./temporal-proof-failure';
+test('original named phase and safeSQLSTATE/authority status survive latercleanup phase',()=>{const failure=sanitizedProofFailure({code:'42501',status:403,message:'private password'},'legacy-fixture-token-seed');const current='owned-quiescence-cleanup';expect({...failure,cleanupPhase:current}).toEqual({phase:'legacy-fixture-token-seed',category:'proof_failed',code:'42501',status:403,cleanupPhase:current});});
+test('assertion code retained but arbitrary exception payload/code/status absent',()=>{expect(sanitizedProofFailure({code:'ERR_ASSERTION',message:'private'},'named-session')).toMatchObject({code:'ERR_ASSERTION'});const clean=sanitizedProofFailure({code:'secret credential',message:'private token',status:9999},'inputs');expect(JSON.stringify(clean)).not.toContain('private');expect(clean.code).toBe(null);expect(clean.status).toBe(null);});

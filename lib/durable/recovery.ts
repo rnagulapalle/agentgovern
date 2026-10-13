@@ -1,8 +1,16 @@
+import { assertTenantPool,tenantPoolBinding } from './tenant-pool';
 import type { Pool, PoolClient } from "pg";
 import { ControlError } from "./contracts";
 import { transaction } from "./database";
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-export async function recoveryFence(db: Pool | PoolClient, org: string, epoch = process.env.LOOPLABS_RECOVERY_EPOCH) {
+export async function recoveryFence(db: Pool | PoolClient, org: string, epoch?: string) {
+  const bound=tenantPoolBinding(db);
+  if(bound){await assertTenantPool(db,org);if(epoch!==undefined&&epoch!==bound.epoch)throw new ControlError(503,'Scoped recovery authority changed.');epoch=bound.epoch;}
+  else {
+    const installed=(await db.query("SELECT to_regprocedure('ll_runtime_classification()') present")).rows[0]?.present;
+    if(installed && (await db.query('SELECT ll_runtime_classification() classification')).rows[0]?.classification!=='offline')throw new ControlError(503,'Registered scoped database context required.');
+    epoch=epoch===undefined?process.env.LOOPLABS_RECOVERY_EPOCH:epoch;
+  }
   // Existing deployments remain compatible until explicitly enrolled. An empty
   // or malformed configured value is never treated as disabled.
   if (epoch === undefined) {
@@ -21,7 +29,7 @@ export async function quarantineRestore(db: Pool, org: string, epoch: string, ba
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(org) || !uuid.test(epoch) || !/^[0-9a-f]{64}$/.test(backupHash)) throw new ControlError(400, "Valid workspace, new recovery epoch and verified archive hash required.");
   epoch = epoch.toLowerCase();
   return transaction(db, org, async c => {
-    if ((await c.query("SELECT current_user AS role")).rows[0].role === "ll_runtime") throw new ControlError(403, "Separate migration-owner connection required.");
+    if ((await c.query("SELECT CASE WHEN current_user='ll_runtime' THEN 'legacy-runtime' ELSE ll_runtime_classification() END AS classification")).rows[0].classification !== "offline") throw new ControlError(403, "Separate migration-owner connection required.");
     if (!(await c.query("SELECT 1 FROM ll_orgs WHERE id=$1", [org])).rows[0]) throw new ControlError(404, "Workspace not found.");
     const old = (await c.query("SELECT backup_hash,counts FROM ll_workspace_recovery_events WHERE org_id=$1 AND epoch=$2", [org, epoch])).rows[0];
     if (old) {

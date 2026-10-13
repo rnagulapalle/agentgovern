@@ -1,25 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { database } from "@/lib/durable/database";
+import { tenantContext } from "../../../../lib/workspace/tenant-context";
 import {
   body,
   browserOrigin,
   failure,
   sameOrigin,
   SESSION_COOKIE,
-} from "@/lib/durable/http";
-import { ControlError } from "@/lib/durable/contracts";
-import { signIn } from "@/lib/workspace/auth";
+} from "../../../../lib/durable/http";
+
+
 import {
-  digest,
-  memberSession,
   WORKSPACE_COOKIE,
-} from "@/lib/workspace/identity";
+} from "../../../../lib/workspace/identity";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     sameOrigin(request, true);
-    const token = await signIn(database(), await body(request));
+    const token = await tenantContext().login(await body(request));
     const response = NextResponse.json({ signedIn: true });
     response.headers.set("Cache-Control", "no-store");
     response.cookies.set(WORKSPACE_COOKIE, token, {
@@ -36,12 +34,7 @@ export async function POST(request: NextRequest) {
 }
 export async function GET(request: NextRequest) {
   try {
-    const db = database();
-    const actor = await memberSession(
-      db,
-      request.cookies.get(WORKSPACE_COOKIE)?.value || "",
-    );
-    if (!actor) throw new ControlError(401, "Sign in to your workspace.");
+    const {db,actor} = await tenantContext().member(request.cookies.get(WORKSPACE_COOKIE)?.value || "");
     const { rows } = await db.query(
       "SELECT name,email FROM ll_members WHERE email=$1 AND org_id=$2",
       [actor.subject, actor.orgId],
@@ -55,10 +48,7 @@ export async function DELETE(request: NextRequest) {
   try {
     sameOrigin(request, true);
     const token = request.cookies.get(WORKSPACE_COOKIE)?.value;
-    if (token)
-      await database().query("DELETE FROM ll_sessions WHERE hash=$1", [
-        digest(token),
-      ]);
+    if (token) await tenantContext().logout(token);
     const response = NextResponse.json({ signedOut: true });
     response.cookies.set(WORKSPACE_COOKIE, "", {
       httpOnly: true,

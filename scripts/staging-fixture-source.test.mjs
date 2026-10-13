@@ -6,6 +6,10 @@ import {tmpdir} from "node:os";
 import {resolve} from "node:path";
 import {createHash} from "node:crypto";
 import {prepareFixtureSource} from "./staging-fixture-source.mjs";
+// This integration case executes real Git, tar and filesystem cleanup. The full
+// V8 coverage run exhausted the default 5s budget at 5.8s; standalone assertions
+// passed in 0.2s. Keep every refusal and cleanup assertion with a bounded 15s
+// integration budget; this is not a runtime latency or release-eligibility claim.
 test("source assembly selects the pinned commit and refuses mutable or escaping inputs",async()=>{
  const root=await mkdtemp(resolve(tmpdir(),"ll-source-proof-")),repo=resolve(root,"repo"),spec=resolve(root,"hubspot.yaml");
  const git=(...args)=>execFileSync("git",["-C",repo,...args],{env:Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith("GIT_"))),encoding:"utf8",stdio:["ignore","pipe","pipe"]}).trim();
@@ -27,4 +31,4 @@ test("source assembly selects the pinned commit and refuses mutable or escaping 
   await symlink("../../.env.local",resolve(repo,"backend/app/escape"));git("add","backend/app/escape");git("commit","-m","Hostile link");
   await assert.rejects(prepareFixtureSource(repo,git("rev-parse","HEAD"),spec,digest,resolve(root,"linked")),/link or special file/);
  }finally{await rm(root,{recursive:true,force:true});}
-});
+},15000);

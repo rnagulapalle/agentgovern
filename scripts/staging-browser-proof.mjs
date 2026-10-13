@@ -1,5 +1,8 @@
-// Real Chromium over trusted TLS to the disposable stack. Prepared-plan UI proof,
-// not fresh model interpretation, remote persistent staging or live delivery.
+import {privateBrowserFailure} from './staging-browser-failure.mjs';
+import {authenticatedRecording} from './authenticated-ui-recording.mjs';
+import {actualInstalledDiagnosticRunner} from './installed-diagnostic-runner.mjs';
+// Real Chromium over trusted TLS to the disposable stack. Typed mode invokes
+// the bounded planner; neither mode proves persistent staging or live delivery.
 import assert from "node:assert/strict";
 import {execFileSync} from "node:child_process";
 import {readFile,writeFile,mkdir,access} from "node:fs/promises";
@@ -11,10 +14,10 @@ import {createServer} from "node:https";
 import {browserCertificates,browserTLSBridge,browserOrigin as origin} from "./staging-browser-tls.mjs";
 export async function stagingBrowserProof(directory,{typedPlanning=false}={}){
  assert(typeof typedPlanning==="boolean","Explicit typed planning mode required");
- assert(process.platform==="linux"&&process.env.GITHUB_ACTIONS==="true"&&process.env.LOOPLABS_STAGING_BROWSER_PROOF==="isolated","Fresh isolated Linux CI browser opt-in required");
+ actualInstalledDiagnosticRunner();assert(process.env.LOOPLABS_STAGING_BROWSER_PROOF==="isolated","Explicit isolated browser opt-in required");
  const tls=await browserCertificates(join(directory,"browser-tls"));
  const decisions=[];const relay=browserTLSBridge(tls,{observeDecision:record=>decisions.push(record)});await new Promise((resolve,reject)=>{relay.once("error",reject);relay.listen(3443,"127.0.0.1",resolve);});
- let browser,hostile,imported=false,phase="certificate-refusal";const nickname=`ll-browser-proof-${randomBytes(10).toString("hex")}`;let nss;
+ const recordings=[],privateSecrets=[];let browser,hostile,imported=false,phase="certificate-refusal";const nickname=`ll-browser-proof-${randomBytes(10).toString("hex")}`;let nss,lastHttpStatus=null;
  const certutil=(...args)=>execFileSync("certutil",["-d",`sql:${nss}`,...args],{stdio:"ignore",timeout:15000});
  const launch=()=>chromium.launch({headless:true,args:["--no-proxy-server","--host-resolver-rules=MAP looplabs-staging.example.test 127.0.0.1"]});
  try{
@@ -30,10 +33,11 @@ export async function stagingBrowserProof(directory,{typedPlanning=false}={}){
   await mkdir(nss,{recursive:true,mode:0o700});
   try{await access(join(nss,"cert9.db"));}catch{certutil("-N","--empty-password");}
   phase="certificate-trust";certutil("-A","-n",nickname,"-t","C,,","-i",join(directory,"browser-tls/ca.pem"));imported=true;
-  browser=await launch();const owner=await browser.newContext({ignoreHTTPSErrors:false}),reviewer=await browser.newContext({ignoreHTTPSErrors:false}),anonymous=await browser.newContext({ignoreHTTPSErrors:false});
+  browser=await launch();let owner=await browser.newContext({ignoreHTTPSErrors:false}),reviewer=await browser.newContext({ignoreHTTPSErrors:false});const anonymous=await browser.newContext({ignoreHTTPSErrors:false});
   const accounts=JSON.parse(await readFile(join(directory,"accounts.json"),"utf8")).accounts;
+  privateSecrets.push(...accounts.flatMap(account=>[account.email,account.password]));
   const saved=JSON.parse(await readFile(join(directory,"browser-run.json"),"utf8"));
-  const ownerPage=await owner.newPage(),reviewerPage=await reviewer.newPage(),anonPage=await anonymous.newPage();
+  let ownerPage=await owner.newPage(),reviewerPage=await reviewer.newPage();const anonPage=await anonymous.newPage();
   const json=async(page,path,data)=>page.evaluate(async({path,data})=>{const r=await fetch(path,{...(data?{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)}:{})});return {status:r.status,value:await r.json()};},{path,data});
   await anonPage.goto(origin+"/sign-in");assert.equal((await json(anonPage,"/api/workspace/records")).status,401);
   async function login(page,account){
@@ -45,22 +49,42 @@ export async function stagingBrowserProof(directory,{typedPlanning=false}={}){
    await page.getByRole("button",{name:"Sign in",exact:true}).click();assert.equal((await signed).status(),200);
    await expect(page.getByRole("heading",{name:"Records and access",exact:true})).toBeVisible();
    const cookie=(await page.context().cookies()).find(c=>c.name==="looplabs_workspace_session");assert(cookie?.secure&&cookie.httpOnly&&cookie.sameSite==="Strict");
-   assert(!(await page.evaluate(()=>document.cookie)).includes(cookie.value));return cookie.value;
+   assert(!(await page.evaluate(()=>document.cookie)).includes(cookie.value));privateSecrets.push(cookie.value);return cookie.value;
   }
   phase="named-sign-in";assert.notEqual(await login(ownerPage,accounts[0]),await login(reviewerPage,accounts[1]));
+  const requesterRecording=await authenticatedRecording(browser,owner,{directory,role:'ack-requester',viewport:{width:1280,height:900}});recordings.push(requesterRecording);owner=requesterRecording.context;ownerPage=requesterRecording.page;await ownerPage.goto(origin+'/control-plane/records');
+  const reviewerRecording=await authenticatedRecording(browser,reviewer,{directory,role:'ack-reviewer',viewport:{width:1280,height:900}});recordings.push(reviewerRecording);reviewer=reviewerRecording.context;reviewerPage=reviewerRecording.page;await reviewerPage.goto(origin+'/control-plane/records');
   let id=randomUUID();const path=`/api/workspace/enquiries?scope=${saved.scope}`;
   let planning;
   if(typedPlanning){
-   phase="typed-request";await ownerPage.goto(origin+"/control-plane/work");await ownerPage.getByLabel("Customer record for this conversation").selectOption(saved.scope);
-   async function turn(text){await ownerPage.getByLabel("Your request or clarification").fill(text);const response=ownerPage.waitForResponse(r=>r.url().includes("/api/workspace/enquiries")&&r.request().method()==="POST");await ownerPage.getByRole("button",{name:"Send request",exact:true}).click();const r=await response;assert.equal(r.status(),200);assert.equal(r.request().postDataJSON().operation,"chat");return r.json();}
-   const first=await turn("When a customer asks about our service, check their CRM record, prepare an acknowledgement, and ask me before sending. Rehearse it with FetchSandbox first.");assert(first.clarification&&!first.saved);
-   phase="typed-clarification";const second=await turn("Use customer@example.test for this rehearsal. Keep ask-first approval.");assert(second.saved?.id&&second.saved.run_id===null);id=second.saved.id;
+   phase="typed-request";await ownerPage.goto(origin+"/control-plane/work");await selectRecord(ownerPage);
+   async function turn(text,doubleSubmit=false){await ownerPage.getByLabel("Your request or clarification").fill(text);const response=ownerPage.waitForResponse(r=>r.url().includes("/api/workspace/enquiries")&&r.request().method()==="POST");const send=ownerPage.getByRole("button",{name:"Send request",exact:true});if(doubleSubmit)await send.evaluate(button=>{button.click();button.click();});else await send.click();const r=await response;lastHttpStatus=r.status();assert.equal(r.status(),200);assert.equal(r.request().postDataJSON().operation,"chat");return r.json();}
+   let releaseRequest, intercepted=false, chatRequests=0;
+   const release=new Promise(resolve=>{releaseRequest=resolve;});
+   const chatRoute=async route=>{if(route.request().method()==="POST"&&route.request().postDataJSON().operation==="chat"){chatRequests++;intercepted=true;await release;}await route.continue();};
+   await ownerPage.route("**/api/workspace/enquiries*",chatRoute);
+   const text="When a customer asks about our service, check their CRM record, prepare an acknowledgement, and ask me before sending. Validate it with simulated systems first.";
+   const firstResponse=turn(text,true);
+   try {
+    await expect.poll(()=>intercepted,{timeout:15000}).toBe(true);
+    await expect(ownerPage.getByRole("log",{name:"Workflow conversation"}).getByText(text,{exact:true})).toBeVisible();
+    await expect(ownerPage.getByRole("status").filter({hasText:"Preparing your plan…"})).toBeVisible();
+    await expect(ownerPage.getByRole("button",{name:"Preparing…",exact:false})).toBeDisabled();
+    assert.equal(await ownerPage.getByRole("log",{name:"Workflow conversation"}).locator("article").count(),2);
+    assert.equal(chatRequests,1,"Synchronous double-submit must send exactly one planning request");
+    await expect(ownerPage.getByRole("button",{name:"Preparing…",exact:false})).toBeDisabled();
+   } finally { releaseRequest(); }
+   const first=await firstResponse;assert.equal(chatRequests,1,"Pending submission must not generate another planning request");await ownerPage.unroute("**/api/workspace/enquiries*",chatRoute);assert(first.clarification&&!first.saved);
+   await expect(ownerPage.getByRole("log",{name:"Workflow conversation"}).locator("article")).toHaveCount(2);
+   await expect(ownerPage.getByRole("status").filter({hasText:"Preparing your plan…"})).toHaveCount(0);
+   phase="typed-clarification";const second=await turn("Use customer@example.test for this workflow. Keep ask-first approval.");assert(second.saved?.id&&second.saved.run_id===null);id=second.saved.id;
    assert.equal(second.saved.plan.reply.recipient,"customer@example.test");assert.equal(second.saved.plan.recordEnrollment.id,saved.scope);
-   await expect(ownerPage.getByRole("heading",{name:"2. Review this exact plan",exact:true})).toBeVisible();
+   await expect(ownerPage.getByRole("heading",{name:"Review this exact plan",exact:true})).toBeVisible();
    const beforeSubmission=await json(ownerPage,`/api/durable/workflows?run=${id}`);assert.equal(beforeSubmission.status,404);
    planning={typedRequest:true,clarified:true,model:"us.amazon.nova-lite-v1:0",savedBeforeSubmission:true};
   }else{phase="prepared-plan";const prepared=await json(ownerPage,path,{operation:"prepare",id,fixtureId:"service"});assert.equal(prepared.status,200);}
-  async function open(page){await page.goto(origin+"/control-plane/work");await page.getByLabel("Customer record for this conversation").selectOption(saved.scope);await page.getByRole("button",{name:new RegExp(id.slice(0,8))}).click();}
+  async function selectRecord(page){await page.locator("details.cp-chat-setup > summary").click();await page.getByLabel("Customer record for this conversation").selectOption(saved.scope);}
+  async function open(page){await page.goto(origin+"/control-plane/work");await selectRecord(page);const activity=page.getByRole("button",{name:"Activity",exact:true});if(await activity.isVisible())await activity.click();await page.getByRole("button",{name:new RegExp(id.slice(0,8))}).click();}
   phase="record-opening";await open(ownerPage);
   phase="agent-selection";
   await ownerPage.getByLabel(/^CRM agent/).selectOption("trial-crm");await ownerPage.getByLabel(/^Messaging agent/).selectOption("trial-email");
@@ -94,10 +118,15 @@ export async function stagingBrowserProof(directory,{typedPlanning=false}={}){
   await expect(ownerPage.getByRole("heading",{name:"Acknowledgement verified",exact:true})).toBeVisible();
   assert(await ownerPage.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
   await expect(ownerPage.getByText("To: customer@example.test",{exact:true})).toBeVisible();
+  await ownerPage.screenshot({path:join(directory,'ack-requester-mobile.png'),fullPage:true});await reviewerPage.screenshot({path:join(directory,'ack-reviewer-desktop.png'),fullPage:true});
   // Actual HTTPS/browser cookie policy, not manually injected Cookie headers.
   phase="http-refusal";const plain=await ownerPage.goto("http://looplabs-staging.example.test:3199/api/workspace/session");assert.equal(plain.status(),401);
   return {passed:true,scope:typedPlanning?"trusted HTTPS Chromium fresh typed planning/review/approval over disposable assembled runtime":"trusted HTTPS Chromium prepared-plan review/approval over disposable assembled runtime",...(planning?{planning}:{}),checks:[...(planning?["real typed request and missing-recipient clarification save an exact scoped plan without execution authority"]:[]),"untrusted CA refused before sign-in","trusted CA and secure browser context","separate named form sign-ins with Secure/HttpOnly/Strict cookies","anonymous and requester self-approval refusal","real hostile-origin browser POST with reviewer cookie refused before approval","UI exact-plan review, scoped agent selection and submission","independent UI approvals and actual verified completion","saved outcome and exact recipient survive 390px reload without overflow","Secure session cookie not sent over plain HTTP"],actionIds:completed.steps.map(s=>s.action_id),notVerified:[...(typedPlanning?[]:["fresh typed chat/model interpretation"]),"persistent remote staging","live-provider delivery","sustained tenant load, restore and operator acceptance"]};
- }catch{await writeFile(join(directory,"browser-failure.json"),JSON.stringify({phase}),{mode:0o600});throw Error("Prepared browser proof failed; no credential or page content printed");}finally{
-  try{await browser?.close();}finally{try{if(imported)certutil("-D","-n",nickname);}finally{hostile?.closeAllConnections();relay.closeAllConnections();await Promise.all([new Promise(resolve=>relay.close(resolve)),hostile&&new Promise(resolve=>hostile.close(resolve))]);}}
+ }catch(error){
+  await writeFile(join(directory,"browser-failure.json"),JSON.stringify({phase,...(Number.isInteger(lastHttpStatus)?{lastChatHttpStatus:lastHttpStatus}:{})}),{mode:0o600});
+  await writeFile(join(directory,"browser-private-failure.json"),JSON.stringify(privateBrowserFailure({phase,error,secrets:privateSecrets,httpStatus:lastHttpStatus}),null,2)+'\n',{mode:0o600,flag:'wx'}).catch(()=>{});
+  throw Error("Prepared browser proof failed; no credential or page content printed");
+ }finally{
+  try{try{const finalized=await Promise.allSettled(recordings.map(recording=>recording.finish()));assert(finalized.every(result=>result.status==='fulfilled'),'Authenticated demo media finalization failed');}finally{await browser?.close();}}finally{try{if(imported)certutil("-D","-n",nickname);}finally{hostile?.closeAllConnections();relay.closeAllConnections();await Promise.all([new Promise(resolve=>relay.close(resolve)),hostile&&new Promise(resolve=>hostile.close(resolve))]);}}
  }
 }

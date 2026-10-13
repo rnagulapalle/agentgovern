@@ -119,17 +119,17 @@ export function MarketingFooter() {
         <nav aria-label="Solutions">
           <strong>SOLUTIONS</strong>
           <Link prefetch={false} href="/#automation">Governed workflow launch</Link>
-          <Link prefetch={false} href="/control-plane/policies">Action controls</Link>
-          <Link prefetch={false} href="/control-plane/runs">Execution controls</Link>
-          <Link prefetch={false} href="/control-plane/outputs">Output controls</Link>
-          <Link prefetch={false} href="/control-plane/reconciliation">Recovery</Link>
+          <Link prefetch={false} href="/#controls">Action controls</Link>
+          <Link prefetch={false} href="/#how-it-works">Execution controls</Link>
+          <Link prefetch={false} href="/#controls">Output controls</Link>
+          <Link prefetch={false} href="/#recovery">Recovery</Link>
         </nav>
         <nav aria-label="Platform">
           <strong>PLATFORM</strong>
-          <Link prefetch={false} href="/control-plane/agents">Agent identities</Link>
-          <Link prefetch={false} href="/control-plane/gateway">Model gateway</Link>
-          <Link prefetch={false} href="/control-plane/approvals">Approvals</Link>
-          <Link prefetch={false} href="/control-plane/audit">Audit trail</Link>
+          <Link prefetch={false} href="/platform">Product overview</Link>
+          <Link prefetch={false} href="/control-plane/quotes">Quote workflow</Link>
+          <Link prefetch={false} href="/sign-in">Team sign-in</Link>
+          <Link prefetch={false} href="/contact-sales">Discuss your workflow</Link>
         </nav>
         <nav aria-label="Resources">
           <strong>RESOURCES</strong>

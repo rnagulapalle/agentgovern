@@ -1,14 +1,14 @@
 import { isDeepStrictEqual } from "node:util";
 import { ControlError } from "../durable/contracts";
 import type { Connector, ConnectorAction, ConnectorProvider, Payload } from "./contracts";
-import { acknowledgementV1 } from "./content";
+import { reviewedMessageV2, acknowledgementV1 } from "./content";
 import { recordScope, type RecordScope } from "./record-scope";
 export interface ConnectorBody {
   properties?: { lifecyclestage: "lead" | "customer" };
   from?: string; to?: string[]; subject?: string; text?: string;
 }
 export interface RequestSnapshot {
-  version: "prepared-request-1" | "prepared-request-2";
+  version: "prepared-request-1" | "prepared-request-2" | "prepared-request-3";
   scope?: Readonly<RecordScope>;
   method: "PATCH" | "POST";
   resource: string;
@@ -28,6 +28,11 @@ export function preparedRequest(connector: Connector, payload: Payload, contactI
       throw new ControlError(409, "A trusted contact request is required.");
     return { ...representation, method:"PATCH", resource:`/crm/v3/objects/contacts/${contactId}`, sourceVersion:p.sourceVersion ?? null, body:{properties:{lifecyclestage:p.lifecycle as "lead" | "customer"}} };
   }
+  if (connector === "email" && (payload as {template?:string}).template === "reviewed_acknowledgement_v2") {
+    const p = payload as {version:string;subject:string;text:string};
+    const content = reviewedMessageV2({version:p.version,subject:p.subject,text:p.text});
+    return {version:"prepared-request-3",...(scope?{scope}:{}),method:"POST",resource:"/emails",sourceVersion:null,body:{from:acknowledgementV1.from,to:[scope?.recipient ?? acknowledgementV1.recipient],subject:content.subject,text:content.text}};
+  }
   if (connector !== "email" || (payload as {template:string}).template !== "case_received")
     throw new ControlError(409, "A supported message request is required.");
   return { ...representation, method:"POST", resource:"/emails", sourceVersion:null, body:{from:acknowledgementV1.from,to:[scope?.recipient ?? acknowledgementV1.recipient],subject:acknowledgementV1.subject,text:acknowledgementV1.text} };
@@ -44,7 +49,7 @@ export function requestMatches(provider: Pick<ConnectorProvider,"contactId" | "r
 export function savedRequest(action: Pick<ConnectorAction,"connector" | "payload">): RequestSnapshot {
   const snapshot = action.payload?.request;
   const id = action.connector === "crm" && typeof snapshot?.resource === "string" ? /^\/crm\/v3\/objects\/contacts\/([0-9]{1,24})$/.exec(snapshot.resource)?.[1] : "1001";
-  const scope = snapshot?.version === "prepared-request-2" ? snapshot.scope : undefined;
+  const scope = snapshot?.version === "prepared-request-2" || snapshot?.version === "prepared-request-3" ? snapshot.scope : undefined;
   if ((snapshot?.version === "prepared-request-2" && !scope) || !id || !requestMatches({contactId:scope?.contactId ?? id,recordScope:scope},action))
     throw new ControlError(409,"The original connector request is unavailable or unsupported. Prepare fresh work; no request was sent.");
   return structuredClone(snapshot!);

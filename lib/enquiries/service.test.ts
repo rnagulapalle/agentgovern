@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { randomBytes, randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { NextRequest } from "next/server";
-import { beforeAll, afterAll, beforeEach, it, expect, vi } from "vitest";
+import { beforeAll, afterAll, beforeEach, it, expect, vi, describe } from "vitest";
 import { authenticate, tokenHash, DurableControl } from "../durable/service";
 import type { Actor } from "../durable/contracts";
 import type { ConnectorAction, ConnectorProvider } from "../connectors/contracts";
@@ -21,9 +21,8 @@ let operator: Actor, reviewer: Actor, agent: Actor, other: Actor;
 let contact: Contact;
 let writes = 0;
 const keys: Record<string, string> = {};
-vi.mock("../durable/database", async (original) => ({ ...(await original<typeof import("../durable/database")>()), database: () => db }));
 vi.mock("../connectors/twin", async original => ({ ...(await original<typeof import("../connectors/twin")>()), FetchSandboxConnectors: class {
-  workspaceId = "one";
+  workspaceId = operator.orgId;
   bindingId = "a".repeat(64);
   async request() { return { id: contact.id, properties: { email: contact.email, lifecyclestage: contact.lifecycle }, updatedAt: contact.version }; }
   async contact() { return this.request(); }
@@ -36,6 +35,8 @@ const provider: Omit<ConnectorProvider, "bindingId"> & { bindingId: string } = {
   write: async (_action: ConnectorAction, lose: boolean) => { if (_action.connector === "crm" && (_action.payload as { sourceVersion: string }).sourceVersion !== contact.version) return { outcome: "conflict", detail: "Atomic source-version check refused a stale write" }; writes++; if (lose) throw new Error("Lost after effect"); return { outcome: "verified", detail: "Fixture effect confirmed" }; },
   inspect: async () => ({ outcome: "verified", detail: "Fixture read-back confirmed" }),
 };
+async function prepared() { return (await service.prepare(operator, randomUUID(), "service") as { saved: { id: string; plan_hash: string; plan: { crm: { lifecycle: string } } } }).saved; }
+describe("unenrolled migration compatibility (not installed tenant proof)", () => {
 beforeAll(async () => {
   if (!process.env.LOOPLABS_TEST_DATABASE_URL) throw new Error("Dedicated PostgreSQL is required for enquiry tests.");
   admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
@@ -64,7 +65,6 @@ beforeEach(async () => {
   service = new EnquiryControl(db, workflow, async () => contact);
 });
 afterAll(async () => { await db?.end(); await admin?.query(`DROP SCHEMA ${schema} CASCADE`); await admin?.end(); });
-async function prepared() { return (await service.prepare(operator, randomUUID(), "service") as { saved: { id: string; plan_hash: string; plan: { crm: { lifecycle: string } } } }).saved; }
 
 it("saves and resumes one immutable enquiry without creating effects or duplicate runs", async () => {
   const id = randomUUID();
@@ -162,68 +162,11 @@ it("rejects malformed IDs, unavailable connectors, mismatched contacts and missi
   await db.query("UPDATE ll_connector_policies SET active=false WHERE connector='email'");
   await expect(service.prepare(operator, randomUUID(), "service")).rejects.toThrow("Both sample connectors");
 });
-it("enforces authentication, origin, strict fields and sample-only inputs at the HTTP boundary", async () => {
-  const { GET, POST } = await import("@/app/api/workspace/enquiries/route");
-  const get = new NextRequest("https://looplabs.run/api/workspace/enquiries");
-  expect((await GET(get)).status).toBe(401);
-  const req = (p: object, who = "operator", origin = "https://looplabs.run") => new NextRequest(get.url, { method: "POST", headers: { Authorization: `Bearer ${keys[who]}`, Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify(p) });
-  const id = randomUUID();
-  expect((await POST(req({ operation: "checkConnections" }))).status).toBe(200);
-  expect((await POST(req({ operation: "checkConnections" }, "crm"))).status).toBe(403);
-  expect((await POST(req({ operation: "checkConnections", origin: "https://evil.test" }))).status).toBe(400);
-  expect((await POST(req({ operation: "prepare", id, fixtureId: "service" }, "crm"))).status).toBe(403);
-  expect((await POST(req({ operation: "prepare", id, fixtureId: "service" }, "operator", "https://evil.test"))).status).toBe(403);
-  for (const p of [{ operation: "prepare", id, fixtureId: "service", message: "secret" }, { operation: "unknown" }, { operation: "prepare", id, fixtureId: "invalid" }, { operation: "start", id, planHash: "bad", crmAgent: "crm", emailAgent: "email" }]) expect((await POST(req(p))).status).toBe(400);
-  const response = await POST(req({ operation: "prepare", id, fixtureId: "service" })); expect(response.status).toBe(200);
-  const { saved } = await response.json();
-  expect((await POST(req({ operation: "start", id, planHash: saved.plan_hash, crmAgent: "crm", emailAgent: "email" }))).status).toBe(200);
-  const automatic = (await (await POST(req({ operation: "prepare", id: randomUUID(), fixtureId: "service" }))).json()).saved;
-  expect((await POST(req({ operation: "rehearse", id: automatic.id, planHash: automatic.plan_hash, approve: true }))).status).toBe(400);
-  expect((await POST(req({ operation: "rehearse", id: automatic.id, planHash: automatic.plan_hash }, "reviewer"))).status).toBe(403);
-  expect((await POST(req({ operation: "rehearse", id: automatic.id, planHash: automatic.plan_hash }))).status).toBe(200);
-  const list = await GET(new NextRequest(get.url, { headers: { Authorization: `Bearer ${keys.operator}` } }));
-  expect(list.status).toBe(200); expect(list.headers.get("cache-control")).toBe("no-store");
-});
 
-it("chat clarifies before saving, rejects hallucinated recipients and replays one reviewed plan", async () => {
-  const intent: Intent = { job: "acknowledgement", customerEmail: null, askFirst: true, rehearsal: true, extraActions: false };
-  const planner = { interpret: vi.fn(async () => ({ ...intent })) };
-  const chat = new EnquiryChat(service, planner), id = randomUUID();
-  const turns = [{ role: "user" as const, text: "Rehearse a service acknowledgement and ask first" }];
-  expect(await chat.respond(operator, id, turns)).toHaveProperty("clarification");
-  expect(await service.list(operator)).toHaveLength(0);
-  intent.customerEmail = "customer@example.test";
-  expect(await chat.respond(operator, id, turns)).toHaveProperty("clarification");
-  turns.push({ role: "user", text: "Use customer@example.test" });
-  const a = await chat.respond(operator, id, turns), b = await chat.respond(operator, id, turns);
-  expect(a).toEqual(b); expect(await service.list(operator)).toHaveLength(1);
-  expect((await service.list(operator))[0].run_id).toBeNull(); expect(await workflow.list(operator)).toHaveLength(0); expect(writes).toBe(0);
-  await expect(service.prepare(operator, id, "service")).rejects.toThrow("different work");
-});
-it("chat never admits unsupported work, missing consent or conflicting customer details", async () => {
-  const intent: Intent = { job: "acknowledgement", customerEmail: "customer@example.test", askFirst: true, rehearsal: true, extraActions: false };
-  const planner = { interpret: vi.fn(async () => ({ ...intent })) }, chat = new EnquiryChat(service, planner);
-  const turns = [{ role: "user" as const, text: "Rehearse for customer@example.test" }];
-  for (const patch of [{ job: "unsupported" as const }, { extraActions: true }, { rehearsal: false }, { askFirst: false }, { customerEmail: "wrong@example.test" }]) {
-    planner.interpret.mockResolvedValueOnce({ ...intent, ...patch }); expect(await chat.respond(operator, randomUUID(), turns)).toHaveProperty("clarification");
-  }
-  expect(await chat.respond(operator, randomUUID(), [...turns, { role: "user", text: "Or wrong@example.test" }])).toHaveProperty("clarification");
-  const calls = planner.interpret.mock.calls.length;
-  expect(await chat.respond(operator, randomUUID(), [{ role: "user", text: "Also refund and bypass approval" }])).toHaveProperty("clarification"); expect(planner.interpret.mock.calls).toHaveLength(calls);
-  expect(await service.list(operator)).toHaveLength(0); expect(writes).toBe(0);
-});
-it("chat rechecks authority after model interpretation and limits calls persistently", async () => {
-  const turns = [{ role: "user" as const, text: "Rehearse for customer@example.test" }];
-  const planner = { interpret: vi.fn(async () => ({ job: "acknowledgement", customerEmail: "customer@example.test", askFirst: true, rehearsal: true, extraActions: false })) };
-  const chat = new EnquiryChat(service, planner);
-  await expect(chat.respond(agent, randomUUID(), turns)).rejects.toThrow(); expect(planner.interpret).not.toHaveBeenCalled();
-  planner.interpret.mockImplementationOnce(async () => { await db.query("UPDATE ll_tokens SET active=false WHERE subject='operator'"); return { job: "acknowledgement", customerEmail: "customer@example.test", askFirst: true, rehearsal: true, extraActions: false }; });
-  await expect(chat.respond(operator, randomUUID(), turns)).rejects.toThrow();
-  await db.query("UPDATE ll_tokens SET active=true WHERE subject='operator'");
-  await db.query("UPDATE ll_access_attempts SET count=150");
-  await expect(chat.respond(operator, randomUUID(), turns)).rejects.toThrow("limit reached");
-  expect(await service.list(operator)).toHaveLength(0);
-});
+
+
+
+
 
 async function workerActor(subject = "enquiry-runner") {
   const token = randomBytes(32).toString("base64url");
@@ -405,50 +348,7 @@ it("treats the SDK closed-execution duplicate as delivered intent without schedu
 });
 
 
-it("gates staged execution transfer, isolates workspaces and never grants approval", async () => {
-  const { GET, POST } = await import("@/app/api/workspace/enquiries/execution/route");
-  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
-  const url = "https://looplabs.run/api/workspace/enquiries/execution";
-  const get = (id = p.id, who = "operator") => new NextRequest(`${url}?run=${id}`, { headers: { Authorization: `Bearer ${keys[who]}` } });
-  const post = (payload: object = { operation: "transfer", runId: p.id }, who = "operator", origin = "https://looplabs.run") => new NextRequest(url, { method: "POST", headers: { Authorization: `Bearer ${keys[who]}`, Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-  const original = process.env.LOOPLABS_TEMPORAL_WORKSPACE,oldEpoch=process.env.LOOPLABS_RECOVERY_EPOCH;
-  const recoveryEpoch=randomUUID();await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('one',$1),('two',$1)",[recoveryEpoch]);
-  try {
-    delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;
-    expect(await (await GET(get())).json()).toEqual({ available: false });
-    expect((await POST(post())).status).toBe(409);
-    process.env.LOOPLABS_TEMPORAL_WORKSPACE = "true";
-    expect((await POST(post())).status).toBe(409);
-    process.env.LOOPLABS_TEMPORAL_WORKSPACE = "staging";
-    delete process.env.LOOPLABS_RECOVERY_EPOCH;expect((await GET(get("bad"))).status).toBe(503);process.env.LOOPLABS_RECOVERY_EPOCH=recoveryEpoch;
-    expect((await GET(new NextRequest(url))).status).toBe(401);
-    expect((await GET(get("bad"))).status).toBe(400);
-    // Resource lookup never falls back to the sample provider or reveals another tenant's saved run.
-    expect((await GET(get(p.id, "other"))).status).toBe(404);
-    expect((await GET(get(randomUUID()))).status).toBe(404);
-    expect((await GET(get(p.id, "crm"))).status).toBe(403);
-    expect(await (await GET(get())).json()).toMatchObject({ available: true, owned: false, canTransfer: true });
-    expect(await (await GET(get(p.id, "reviewer"))).json()).toHaveProperty("canTransfer", false);
-    expect((await POST(post(undefined, "reviewer"))).status).toBe(403);
-    expect((await POST(post(undefined, "operator", "https://evil.test"))).status).toBe(403);
-    for (const payload of [{ operation: "execute", runId: p.id }, { operation: "transfer", runId: p.id, approve: true }, { operation: "transfer", runId: "bad" }]) expect((await POST(post(payload))).status).toBe(400);
-    const responses = await Promise.all([POST(post()), POST(post())]);
-    expect(responses.map(r => r.status)).toEqual([200, 200]);
-    expect(responses[0].headers.get("cache-control")).toBe("no-store");
-    expect(await (await GET(get())).json()).toEqual({ available: true, owned: true, dispatch: "pending", canTransfer: false });
-    expect((await db.query("SELECT count(*)::int AS n FROM ll_temporal_dispatch")).rows[0].n).toBe(1);
-    expect((await workflow.read(operator, p.id)).steps.map((s: { state: string }) => s.state)).toEqual(["held", "held"]);
-    expect(writes).toBe(0);
-    const hosted = await import("../connectors/hosted");
-    const binding = vi.spyOn(hosted, "connectorProvider").mockReturnValue(Object.assign(Object.create(hosted.HostedFetchSandboxConnectors.prototype), { workspaceId: "one", binding: { contactId: "1001" } }));
-    expect((await POST(post())).status).toBe(409);
-    binding.mockRestore();
-    await db.query("UPDATE ll_temporal_dispatch SET state='started',started_at=now()");
-    expect(await (await GET(get())).json()).toHaveProperty("dispatch", "started");
-    await workflow.pause(operator, p.id);
-    expect((await POST(post())).status).toBe(403);
-  } finally { if(oldEpoch===undefined)delete process.env.LOOPLABS_RECOVERY_EPOCH;else process.env.LOOPLABS_RECOVERY_EPOCH=oldEpoch; if (original === undefined) delete process.env.LOOPLABS_TEMPORAL_WORKSPACE; else process.env.LOOPLABS_TEMPORAL_WORKSPACE = original; }
-});
+
 
 it("does not assign a changed connector destination to a reviewed saved plan", async () => {
   provider.bindingId = "a".repeat(64);
@@ -510,4 +410,157 @@ it("saves a server-scoped record/recipient and refuses another record, managed d
  await expect(new TemporalOutbox(db,"ack-"+"c".repeat(64)).transfer(operator,id)).rejects.toThrow("compatible worker");
  expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(0);
  await expect(new EnquiryControl(db,flow,async()=>({...scopedContact,email:"wrong@example.test"})).prepare(operator,randomUUID(),"service")).rejects.toThrow("unique supported");
+});
+
+});
+
+import {createInstalledTenantFixture} from "../workspace/installed-tenant-fixture";
+import {configureTenantContext} from "../workspace/tenant-context";
+import {digest} from "../workspace/identity";
+
+describe("genuine installed tenant sessions and scoped services",()=>{
+ let installed:Awaited<ReturnType<typeof createInstalledTenantFixture>>;
+ const testWorkspaces=new Map([["enforces authentication, origin, strict fields and sample-only inputs at the HTTP boundary", "enquiry-http"], ["chat clarifies before saving, rejects hallucinated recipients and replays one reviewed plan", "enquiry-chat"], ["chat never admits unsupported work, missing consent or conflicting customer details", "enquiry-inputs"], ["chat rechecks authority after model interpretation and limits calls persistently", "enquiry-revocation"], ["gates staged execution transfer, isolates workspaces and never grants approval", "enquiry-transfer"]]);
+ const sessionKeys=new Map<string,Record<string,string>>();
+ beforeAll(async()=>{
+  installed=await createInstalledTenantFixture({tenants:[...testWorkspaces.values(),"installed-foreign"],salesOrg:"enquiry-http",seed:async owner=>{
+   for(const org of [...testWorkspaces.values(),"installed-foreign"]){
+    const sessions:Record<string,string>={};sessionKeys.set(org,sessions);
+    for(const subject of ["operator","reviewer","owner"]){
+     const email=`${org}-${subject}@example.test`,key=randomBytes(32).toString("base64url");sessions[subject]=key;
+     await owner.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,$2,$3,'unused')",[email,org,subject]);
+     await owner.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,$2,now()+interval '1 hour')",[digest(key),email]);
+    }
+    await owner.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES($1,'crm'),($1,'email')",[org]);
+    for(const [id,tool,role,connector] of [["crm", "twin.crm", "crm_agent", "crm_twin"], ["email", "twin.email", "email_agent", "email_twin"]]){
+     await owner.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES($1,$2,$3,100)",[org,id,[tool]]);
+     if(role)await owner.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES($1,$2,$2,$3,$4,$5)",[org,id,`${org}-owner@example.test`,role,connector]);
+     const key=randomBytes(32).toString("base64url");sessions[id]=key;
+     await owner.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,$2,$3,'agent')",[tokenHash(key),org,id]);
+    }
+   }
+  }});
+  configureTenantContext(installed.context);
+ });
+ beforeEach(async context=>{
+  const org=testWorkspaces.get(context.task.name);if(!org)throw Error("Missing installed test workspace");
+  db=installed.web(org);
+  const sessions=sessionKeys.get(org)!;
+  operator=(await installed.context.authenticated(sessions.operator)).actor;
+  reviewer=(await installed.context.authenticated(sessions.reviewer)).actor;
+  agent=await authenticate(db,sessions.crm);
+  other=(await installed.context.authenticated(sessionKeys.get("installed-foreign")!.operator)).actor;
+  writes=0;
+  Object.assign(keys,sessions,{other:sessionKeys.get("installed-foreign")!.operator});
+  contact={id:"1001",email:"customer@example.test",version:"v1",lifecycle:"lead"};
+  provider.bindingId="a".repeat(64);
+  connector=new ConnectorControl(db,{...provider,workspaceId:org});workflow=new WorkflowControl(db,connector);
+  service=new EnquiryControl(db,workflow,async()=>contact);
+ });
+ afterAll(async()=>{await installed?.close();});
+it("enforces authentication, origin, strict fields and sample-only inputs at the HTTP boundary", async () => {
+  const { GET, POST } = await import("@/app/api/workspace/enquiries/route");
+  const get = new NextRequest("https://looplabs.run/api/workspace/enquiries");
+  expect((await GET(get)).status).toBe(401);
+  const req = (p: object, who = "operator", origin = "https://looplabs.run") => new NextRequest(get.url, { method: "POST", headers: { Authorization: `Bearer ${keys[who]}`, Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify(p) });
+  const id = randomUUID();
+  expect((await POST(req({ operation: "checkConnections" }))).status).toBe(200);
+  expect((await POST(req({ operation: "checkConnections" }, "crm"))).status).toBe(403);
+  expect((await POST(req({ operation: "checkConnections", origin: "https://evil.test" }))).status).toBe(400);
+  expect((await POST(req({ operation: "prepare", id, fixtureId: "service" }, "crm"))).status).toBe(403);
+  expect((await POST(req({ operation: "prepare", id, fixtureId: "service" }, "operator", "https://evil.test"))).status).toBe(403);
+  for (const p of [{ operation: "prepare", id, fixtureId: "service", message: "secret" }, { operation: "unknown" }, { operation: "prepare", id, fixtureId: "invalid" }, { operation: "start", id, planHash: "bad", crmAgent: "crm", emailAgent: "email" }]) expect((await POST(req(p))).status).toBe(400);
+  const response = await POST(req({ operation: "prepare", id, fixtureId: "service" })); expect(response.status).toBe(200);
+  const { saved } = await response.json();
+  expect((await POST(req({ operation: "start", id, planHash: saved.plan_hash, crmAgent: "crm", emailAgent: "email" }))).status).toBe(200);
+  const automatic = (await (await POST(req({ operation: "prepare", id: randomUUID(), fixtureId: "service" }))).json()).saved;
+  expect((await POST(req({ operation: "rehearse", id: automatic.id, planHash: automatic.plan_hash, approve: true }))).status).toBe(400);
+  expect((await POST(req({ operation: "rehearse", id: automatic.id, planHash: automatic.plan_hash }, "reviewer"))).status).toBe(403);
+  expect((await POST(req({ operation: "rehearse", id: automatic.id, planHash: automatic.plan_hash }))).status).toBe(200);
+  const list = await GET(new NextRequest(get.url, { headers: { Authorization: `Bearer ${keys.operator}` } }));
+  expect(list.status).toBe(200); expect(list.headers.get("cache-control")).toBe("no-store");
+});
+it("chat clarifies before saving, rejects hallucinated recipients and replays one reviewed plan", async () => {
+  const intent: Intent = { job: "acknowledgement", customerEmail: null, askFirst: true, rehearsal: true, extraActions: false };
+  const planner = { interpret: vi.fn(async () => ({ ...intent })) };
+  const chat = new EnquiryChat(service, planner), id = randomUUID();
+  const turns = [{ role: "user" as const, text: "Rehearse a service acknowledgement and ask first" }];
+  expect(await chat.respond(operator, id, turns)).toHaveProperty("clarification");
+  expect(await service.list(operator)).toHaveLength(0);
+  intent.customerEmail = "customer@example.test";
+  expect(await chat.respond(operator, id, turns)).toHaveProperty("clarification");
+  turns.push({ role: "user", text: "Use customer@example.test" });
+  const a = await chat.respond(operator, id, turns), b = await chat.respond(operator, id, turns);
+  expect(a).toEqual(b); expect(await service.list(operator)).toHaveLength(1);
+  expect((await service.list(operator))[0].run_id).toBeNull(); expect(await workflow.list(operator)).toHaveLength(0); expect(writes).toBe(0);
+  await expect(service.prepare(operator, id, "service")).rejects.toThrow("different work");
+});
+it("chat never admits unsupported work, missing consent or conflicting customer details", async () => {
+  const intent: Intent = { job: "acknowledgement", customerEmail: "customer@example.test", askFirst: true, rehearsal: true, extraActions: false };
+  const planner = { interpret: vi.fn(async () => ({ ...intent })) }, chat = new EnquiryChat(service, planner);
+  const turns = [{ role: "user" as const, text: "Rehearse for customer@example.test" }];
+  for (const patch of [{ job: "unsupported" as const }, { extraActions: true }, { rehearsal: false }, { askFirst: false }, { customerEmail: "wrong@example.test" }]) {
+    planner.interpret.mockResolvedValueOnce({ ...intent, ...patch }); expect(await chat.respond(operator, randomUUID(), turns)).toHaveProperty("clarification");
+  }
+  expect(await chat.respond(operator, randomUUID(), [...turns, { role: "user", text: "Or wrong@example.test" }])).toHaveProperty("clarification");
+  const calls = planner.interpret.mock.calls.length;
+  expect(await chat.respond(operator, randomUUID(), [{ role: "user", text: "Also refund and bypass approval" }])).toHaveProperty("clarification"); expect(planner.interpret.mock.calls).toHaveLength(calls);
+  expect(await service.list(operator)).toHaveLength(0); expect(writes).toBe(0);
+});
+it("chat rechecks authority after model interpretation and limits calls persistently", async () => {
+  const turns = [{ role: "user" as const, text: "Rehearse for customer@example.test" }];
+  const planner = { interpret: vi.fn(async () => ({ job: "acknowledgement", customerEmail: "customer@example.test", askFirst: true, rehearsal: true, extraActions: false })) };
+  const chat = new EnquiryChat(service, planner);
+  await expect(chat.respond(agent, randomUUID(), turns)).rejects.toThrow(); expect(planner.interpret).not.toHaveBeenCalled();
+  planner.interpret.mockImplementationOnce(async () => { await installed.owner.query("UPDATE ll_members SET active=false WHERE email=$1",[operator.subject]); return { job: "acknowledgement", customerEmail: "customer@example.test", askFirst: true, rehearsal: true, extraActions: false }; });
+  await expect(chat.respond(operator, randomUUID(), turns)).rejects.toThrow();
+  await installed.owner.query("UPDATE ll_members SET active=true WHERE email=$1",[operator.subject]);
+  await installed.owner.query("UPDATE ll_tenant_access_attempts SET count=150 WHERE org_id=$1",[operator.orgId]);
+  await expect(chat.respond(operator, randomUUID(), turns)).rejects.toThrow("limit reached");
+  expect(await service.list(operator)).toHaveLength(0);
+});
+it("gates staged execution transfer, isolates workspaces and never grants approval", async () => {
+  const { GET, POST } = await import("@/app/api/workspace/enquiries/execution/route");
+  const p = await prepared(); await service.rehearse(operator, p.id, p.plan_hash);
+  const url = "https://looplabs.run/api/workspace/enquiries/execution";
+  const get = (id = p.id, who = "operator") => new NextRequest(`${url}?run=${id}`, { headers: { Authorization: `Bearer ${keys[who]}` } });
+  const post = (payload: object = { operation: "transfer", runId: p.id }, who = "operator", origin = "https://looplabs.run") => new NextRequest(url, { method: "POST", headers: { Authorization: `Bearer ${keys[who]}`, Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const original = process.env.LOOPLABS_TEMPORAL_WORKSPACE,oldEpoch=process.env.LOOPLABS_RECOVERY_EPOCH;
+  const recoveryEpoch=(await installed.owner.query("SELECT epoch::text FROM ll_workspace_recovery WHERE org_id=$1",[operator.orgId])).rows[0].epoch;
+  try {
+    delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;
+    expect(await (await GET(get())).json()).toEqual({ available: false });
+    expect((await POST(post())).status).toBe(409);
+    process.env.LOOPLABS_TEMPORAL_WORKSPACE = "true";
+    expect((await POST(post())).status).toBe(409);
+    process.env.LOOPLABS_TEMPORAL_WORKSPACE = "staging";
+    await installed.owner.query("UPDATE ll_workspace_recovery SET epoch=$1 WHERE org_id=$2",[randomUUID(),operator.orgId]);expect((await GET(get("bad"))).status).toBe(503);await installed.owner.query("UPDATE ll_workspace_recovery SET epoch=$1 WHERE org_id=$2",[recoveryEpoch,operator.orgId]);
+    expect((await GET(new NextRequest(url))).status).toBe(401);
+    expect((await GET(get("bad"))).status).toBe(400);
+    // Resource lookup never falls back to the sample provider or reveals another tenant's saved run.
+    expect((await GET(get(p.id, "other"))).status).toBe(404);
+    expect((await GET(get(randomUUID()))).status).toBe(404);
+    expect((await GET(get(p.id, "crm"))).status).toBe(403);
+    expect(await (await GET(get())).json()).toMatchObject({ available: true, owned: false, canTransfer: true });
+    expect(await (await GET(get(p.id, "reviewer"))).json()).toHaveProperty("canTransfer", false);
+    expect((await POST(post(undefined, "reviewer"))).status).toBe(403);
+    expect((await POST(post(undefined, "operator", "https://evil.test"))).status).toBe(403);
+    for (const payload of [{ operation: "execute", runId: p.id }, { operation: "transfer", runId: p.id, approve: true }, { operation: "transfer", runId: "bad" }]) expect((await POST(post(payload))).status).toBe(400);
+    const responses = await Promise.all([POST(post()), POST(post())]);
+    expect(responses.map(r => r.status)).toEqual([200, 200]);
+    expect(responses[0].headers.get("cache-control")).toBe("no-store");
+    expect(await (await GET(get())).json()).toEqual({ available: true, owned: true, dispatch: "pending", canTransfer: false });
+    expect((await db.query("SELECT count(*)::int AS n FROM ll_temporal_dispatch")).rows[0].n).toBe(1);
+    expect((await workflow.read(operator, p.id)).steps.map((s: { state: string }) => s.state)).toEqual(["held", "held"]);
+    expect(writes).toBe(0);
+    const hosted = await import("../connectors/hosted");
+    const binding = vi.spyOn(hosted, "connectorProvider").mockReturnValue(Object.assign(Object.create(hosted.HostedFetchSandboxConnectors.prototype), { workspaceId: operator.orgId, binding: { contactId: "1001" } }));
+    expect((await POST(post())).status).toBe(409);
+    binding.mockRestore();
+    await installed.owner.query("UPDATE ll_temporal_dispatch SET state='started',started_at=now() WHERE org_id=$1",[operator.orgId]);
+    expect(await (await GET(get())).json()).toHaveProperty("dispatch", "started");
+    await workflow.pause(operator, p.id);
+    expect((await POST(post())).status).toBe(403);
+  } finally { if(oldEpoch===undefined)delete process.env.LOOPLABS_RECOVERY_EPOCH;else process.env.LOOPLABS_RECOVERY_EPOCH=oldEpoch; if (original === undefined) delete process.env.LOOPLABS_TEMPORAL_WORKSPACE; else process.env.LOOPLABS_TEMPORAL_WORKSPACE = original; }
+});
 });

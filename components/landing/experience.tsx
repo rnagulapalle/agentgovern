@@ -41,7 +41,7 @@ const controls = [
     label: "Action controls",
     title: "Decide what agents can do.",
     body: "Set tool permissions and approval rules. Check each proposed action before it changes a company system.",
-    href: "/control-plane/policies",
+    href: "/platform#workflow-boundaries",
   },
   {
     id: "execution",
@@ -49,7 +49,7 @@ const controls = [
     label: "Execution controls",
     title: "Keep running work within its limits.",
     body: "Follow each step and handoff. Hold work for approval, stop a run, or suspend an agent and its delegated work.",
-    href: "/control-plane/runs",
+    href: "/platform#approved-execution",
   },
   {
     id: "outputs",
@@ -57,7 +57,7 @@ const controls = [
     label: "Output controls",
     title: "Check what leaves the agent.",
     body: "Inspect the result before it is released. Redact sensitive information or block an output that breaks policy.",
-    href: "/control-plane/outputs",
+    href: "/platform#verified-outcomes",
   },
 ];
 

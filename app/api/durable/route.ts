@@ -1,14 +1,13 @@
 import { NextRequest } from "next/server";
-import { database } from "@/lib/durable/database";
-import { authenticate, DurableControl } from "@/lib/durable/service";
-import { ControlError } from "@/lib/durable/contracts";
-import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
+import { tenantContext } from "../../../lib/workspace/tenant-context";
+import { DurableControl } from "../../../lib/durable/service";
+import { ControlError } from "../../../lib/durable/contracts";
+import { body, credential, failure, sameOrigin } from "../../../lib/durable/http";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
-    const db = database();
-    const actor = await authenticate(db, credential(request));
+    const { db, actor } = await tenantContext().authenticated(credential(request));
     const service = new DurableControl(db);
     const id = request.nextUrl.searchParams.get("action");
     return Response.json(
@@ -22,8 +21,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     sameOrigin(request);
-    const db = database();
-    const actor = await authenticate(db, credential(request));
+    const { db, actor } = await tenantContext().authenticated(credential(request));
     const service = new DurableControl(db);
     const input = await body(request);
     const { operation, ...p } = input;
@@ -31,7 +29,11 @@ export async function POST(request: NextRequest) {
     if (operation === "propose") result = await service.propose(actor, p);
     else if (operation === "configure")
       result = await service.configure(actor, p);
-    else {
+    else if (operation === "discountConnectorAccess") {
+      if (Object.keys(p).length !== 1 || typeof p.active !== "boolean")
+        throw new ControlError(400, "Choose one valid discount connector access state.");
+      result = await service.configureDiscountConnector(actor, p.active);
+    } else {
       if (typeof p.actionId !== "string")
         throw new ControlError(400, "Action ID is required.");
       const allowed =

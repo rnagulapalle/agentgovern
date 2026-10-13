@@ -17,13 +17,14 @@ describe("readable execution story", () => {
     expect(phone).not.toContain("<video");
   });
 
-  it("keeps manual reading controls, pause, transcript, and recovery destination available", () => {
+  it("keeps manual reading controls, pause, transcript, and public verification destination available", () => {
     const html = renderToStaticMarkup(createElement(ExecutionIntegrityDashboard));
     expect(html).toContain('type="button">Previous step</button>');
     expect(html).toContain('type="button">Next step</button>');
     expect(html).toContain('aria-label="Pause execution story"');
     expect(html).toContain("Read the execution story");
-    expect(html).toContain('href="/control-plane/reconciliation"');
+    expect(html).toContain('href="/platform#verified-outcomes"');
+    expect(html).not.toContain('href="/control-plane/reconciliation"');
     expect(html).toContain("does not report activity from connected production systems");
   });
 });

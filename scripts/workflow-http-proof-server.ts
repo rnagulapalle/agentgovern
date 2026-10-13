@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import * as workflows from "../app/api/durable/workflows/route";
 import * as connectors from "../app/api/durable/connectors/route";
 import * as enquiries from "../app/api/workspace/enquiries/route";
+import { proofWebInstallation } from "./connector-proof-installation";
 const server = createServer(async (req, res) => {
   try {
     const chunks: Buffer[] = [];
@@ -50,7 +51,30 @@ const server = createServer(async (req, res) => {
     res.end("Proof harness request failed");
   }
 });
-server.listen(0, "127.0.0.1", () => {
-  const a = server.address();
-  if (a && typeof a !== "string") console.log(JSON.stringify({ port: a.port }));
+async function main() {
+  const publication = process.env.LOOPLABS_PROOF_WEB_PUBLICATION;
+  if (!publication) throw Error("Installed web publication required.");
+  const installed = await proofWebInstallation(publication);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject);
+      server.listen(0, "127.0.0.1", resolve);
+    });
+    const address = server.address();
+    if (!address || typeof address === "string") throw Error("Loopback listener required.");
+    process.once("SIGTERM", () => {
+      server.close(() => {
+        installed.close().then(() => process.exit(0)).catch(() => process.exit(1));
+      });
+    });
+    console.log(JSON.stringify({ port: address.port }));
+  } catch (error) {
+    server.close();
+    await installed.close();
+    throw error;
+  }
+}
+main().catch(() => {
+  process.stderr.write("Installed workflow proof startup refused.\n");
+  process.exit(1);
 });

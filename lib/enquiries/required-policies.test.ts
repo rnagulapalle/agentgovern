@@ -1,0 +1,13 @@
+import {describe,it,expect,vi} from 'vitest';
+import type {Pool,PoolClient} from 'pg';
+import type {Actor} from '../durable/contracts';
+import {EnquiryControl} from './service';
+import type {WorkflowControl} from '../workflows/service';
+const actor={orgId:'one',subject:'operator',role:'operator'} as Actor;
+function fixture(rows:{connector:string;version:number;active:boolean}[],malformed=false){const authority=vi.fn().mockResolvedValue(undefined);const query=vi.fn(async(sql:string,values:unknown[])=>{expect(values).toEqual(['one']);const filter=sql.includes("connector IN ('crm','email')");return {rows:(malformed?rows:rows.filter(r=>r.active&&(!filter||['crm','email'].includes(r.connector))).sort((a,b)=>a.connector.localeCompare(b.connector))).map(({connector,version})=>({connector,version}))};});const service=new EnquiryControl({} as Pool,{connectors:{authority,provider:{contactId:'1'}}} as unknown as WorkflowControl,async()=>({id:'1',email:'customer@example.test',version:'v1',lifecycle:'lead'}));return {service,client:{query} as unknown as PoolClient,authority};}
+describe('Required CRM/email policy projection',()=>{
+ it('accepts both required active policies while excluding unrelated active quote policy',async()=>{const f=fixture([{connector:'crm',version:1,active:true},{connector:'email',version:3,active:true},{connector:'quote',version:3,active:true}]);expect(await f.service.policies(f.client,actor)).toEqual({crm:1,email:3});expect(f.authority).toHaveBeenCalledWith(f.client,actor,['operator']);});
+ it.each(['crm','email'])('refuses missing or inactive required %s even when unrelated quote remains active',async connector=>{for(const inactive of [false,true]){const rows=[{connector:'crm',version:1,active:true},{connector:'email',version:3,active:true},{connector:'quote',version:3,active:true}].flatMap(r=>r.connector===connector?inactive?[{...r,active:false}]:[]:[r]);const f=fixture(rows);await expect(f.service.policies(f.client,actor)).rejects.toThrow('Both sample connectors');}});
+ it('refuses duplicate or wrong required connector rows',async()=>{for(const rows of [[{connector:'crm',version:1,active:true},{connector:'crm',version:1,active:true}],[{connector:'email',version:3,active:true},{connector:'quote',version:3,active:true}]]){const f=fixture(rows,true);await expect(f.service.policies(f.client,actor)).rejects.toThrow('Both sample connectors');}});
+ it('keeps authorization ahead of policy access',async()=>{const f=fixture([]);f.authority.mockRejectedValue(Error('unauthorized'));await expect(f.service.policies(f.client,actor)).rejects.toThrow('unauthorized');expect(f.client.query).not.toHaveBeenCalled();});
+});

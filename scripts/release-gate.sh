@@ -22,4 +22,5 @@ remote_sha="$(git rev-parse origin/main)"
 }
 
 pnpm quality
+node scripts/staging-release-evidence.mjs
 printf '\n✓ Release gate passed for %s.\n' "$head_sha"

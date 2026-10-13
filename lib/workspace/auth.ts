@@ -29,7 +29,7 @@ export async function throttle(
   seconds: number,
 ) {
   const { rows } = await c.query(
-    "INSERT INTO ll_access_attempts(key,count) VALUES($1,1) ON CONFLICT(key) DO UPDATE SET count=CASE WHEN ll_access_attempts.window_start<now()-($2*interval '1 second') THEN 1 ELSE ll_access_attempts.count+1 END, window_start=CASE WHEN ll_access_attempts.window_start<now()-($2*interval '1 second') THEN now() ELSE ll_access_attempts.window_start END RETURNING count",
+    "INSERT INTO ll_tenant_access_attempts(key,count) VALUES($1,1) ON CONFLICT(org_id,key) DO UPDATE SET count=CASE WHEN ll_tenant_access_attempts.window_start<now()-($2*interval '1 second') THEN 1 ELSE ll_tenant_access_attempts.count+1 END, window_start=CASE WHEN ll_tenant_access_attempts.window_start<now()-($2*interval '1 second') THEN now() ELSE ll_tenant_access_attempts.window_start END RETURNING count",
     [key, seconds],
   );
   return rows[0].count <= limit;

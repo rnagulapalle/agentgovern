@@ -21,6 +21,11 @@ it("applies migration 12 through the actual owner CLI idempotently and refuses c
   await Promise.all([routing(),routing()]);await routing();
   expect((await db.query("SELECT count(*)::int n FROM ll_migrations WHERE version=13")).rows[0].n).toBe(1);
   expect((await db.query("SELECT count(*)::int n FROM ll_temporal_record_routes")).rows[0].n).toBe(0);
+  const admission=()=>command(process.execPath,["--import","tsx","scripts/worker-admission-setup.ts"],{env});
+  await Promise.all([admission(),admission()]);await admission();
+  expect((await db.query("SELECT count(*)::int n FROM ll_migrations WHERE version=14")).rows[0].n).toBe(1);
+  expect((await db.query("SELECT count(*)::int n FROM ll_temporal_worker_builds")).rows[0].n).toBe(0);
+  await db.query("UPDATE ll_migrations SET digest='changed' WHERE version=14");await expect(admission()).rejects.toThrow("migration 14 changed");
   await db.query("UPDATE ll_migrations SET digest='changed' WHERE version=13");await expect(routing()).rejects.toThrow("migration 13 changed");
   await db.query("UPDATE ll_migrations SET digest='changed' WHERE version=11");await expect(run()).rejects.toThrow("migration 11 changed");await db.query("UPDATE ll_migrations SET digest=$1 WHERE version=11",[createHash("sha256").update(await readFile("lib/durable/proposal-schema.sql")).digest("hex")]);
   await db.query("UPDATE ll_migrations SET digest='changed' WHERE version=12");await expect(run()).rejects.toThrow("migration 12 changed");

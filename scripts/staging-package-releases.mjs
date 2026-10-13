@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {readFile,lstat,unlink} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {resolve} from "node:path";
-import {loadTestedImages} from "./staging-image-artifact.mjs";
+import {loadTestedImages,loadTestedImages2,digestOwnedPrivateArchive} from "./staging-image-artifact.mjs";
 const roles=["web","worker","twin","provisioner"];
 export async function loadAndRetireMeasuredArchive(directory,expected,docker){
  const archive=resolve(directory,"images.tar"),before=await lstat(archive);
@@ -18,6 +18,14 @@ export async function loadAndRetireMeasuredArchive(directory,expected,docker){
  // manifest, other files or Docker layers. The next release needs this disk space.
  await unlink(archive);
  return loaded;
+}
+// Explicit v2 sibling; v1's archive/profile/eligibility contract is unchanged.
+export async function loadAndRetireMeasuredArchive2(directory,expected,docker){
+ const archive=resolve(directory,'images.tar'),before=await digestOwnedPrivateArchive(archive);
+ assert.equal(before.sha256,expected.archiveSha256);assert.equal(before.bytes,expected.archiveBytes);
+ const loaded=await loadTestedImages2({directory,expectedManifestSha256:expected.manifestSha256,docker});
+ assert.deepEqual(loaded.images,expected.images);assert.deepEqual(loaded.workers,expected.workers);assert.equal(loaded.archive.sha256,expected.archiveSha256);assert.equal(loaded.archive.bytes,expected.archiveBytes);
+ await before.assertStable();await unlink(archive);return loaded;
 }
 export async function loadPackageReleases(directories,docker,owned){
  let phase="directories";

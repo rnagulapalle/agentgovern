@@ -1,0 +1,8 @@
+{
+  "pgReady": true,
+  "wrongPasswordRefused": true,
+  "plaintextRefused": true,
+  "ownedCleanupTerminal": true,
+  "production": false,
+  "sourceObservationSha256": "f2963fb090df3a70a083cfe4508d0db39f74f8f30e3def1938d5cb6d0132d488"
+}

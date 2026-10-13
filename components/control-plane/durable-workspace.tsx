@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { DiscountHistory } from "./discount-history";
 import { PageTitle, PanelHead, Status } from "./ui";
 import type {
   DurableAction,
@@ -19,7 +20,7 @@ const labels: Record<string, string> = {
   recovered: "State restored",
   cancelled: "Permission changed",
 };
-export function DurableWorkspace() {
+export function DurableWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -28,15 +29,11 @@ export function DurableWorkspace() {
   const [agentId, setAgentId] = useState("");
   const [submitted, setSubmitted] = useState<Proposal | null>(null);
   const [autoLimit, setAutoLimit] = useState(10);
-  const [showAllEvents, setShowAllEvents] = useState(false);
   const refresh = useCallback(async () => {
     const response = await fetch("/api/durable", { cache: "no-store" });
     const data = await response.json();
     if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        setSnapshot(null);
-        return null;
-      }
+      if (response.status === 401 || response.status === 403) setSnapshot(null);
       throw new Error(data.error);
     }
     setSnapshot(data);
@@ -45,6 +42,8 @@ export function DurableWorkspace() {
   useEffect(() => {
     refresh().catch((e) => setError(e.message));
   }, [refresh]);
+  const policyAutoLimit = snapshot?.policy.auto_limit;
+  useEffect(() => { if (policyAutoLimit !== undefined) setAutoLimit(policyAutoLimit); }, [policyAutoLimit]);
   const discountAgents = snapshot?.agents.filter(a => a.tools.includes("proof.discount")) || [];
   const signedIn = Boolean(snapshot);
   useEffect(() => {
@@ -117,11 +116,11 @@ export function DurableWorkspace() {
       />
       <div className="cp-durable-scope">
         <strong>Connected sample data</strong>
-        <p>
+        {!scriptDemo && <p>
           <Link href="/control-plane/actions?workflow=refunds">
             View refund workflow →
           </Link>
-        </p>
+        </p>}
         <p>
           Manage changes to a sample discount record. Decisions are saved on the
           server; your customer systems are not connected.
@@ -155,15 +154,15 @@ export function DurableWorkspace() {
               <p>The latest saved value for the connected sample record.</p>
             </section>
             <section className="cp-panel cp-durable-card">
-              <h2>Workspace agent access</h2>
+              <h2>Discount connector access</h2>
               <p>
                 <strong>
-                  {snapshot.agents.every((a) => a.active)
+                  {!discountAgents.length ? "No discount agents enrolled" : discountAgents.every((a) => a.active)
                     ? "Active"
                     : "Paused"}
                 </strong>
               </p>
-              <p>Discount agents may update the sample discount. Pausing workspace agents also pauses the refund agent.</p>
+              <p>Containment stops new discount work and leaves uncertain effects for verification. Other connectors are unchanged.</p>
               <p>
                 {discountAgents.reduce((n,a)=>n+a.reserved,0)} of{" "}
                 {discountAgents.reduce((n,a)=>n+a.action_limit,0)} allocated discount actions
@@ -171,19 +170,19 @@ export function DurableWorkspace() {
               </p>
               <button
                 className="cp-button"
-                disabled={busy}
+                disabled={busy || !discountAgents.length}
                 onClick={() =>
                   task(() =>
                     request({
-                      operation: "configure",
-                      agentActive: !snapshot.agents.every((a) => a.active),
+                      operation: "discountConnectorAccess",
+                      active: !discountAgents.every((a) => a.active),
                     }),
                   )
                 }
               >
-                {snapshot.agents.every((a) => a.active)
-                  ? "Pause workspace agents"
-                  : "Resume workspace agents"}
+                {discountAgents.every((a) => a.active)
+                  ? "Contain this connector"
+                  : "Enable this connector"}
               </button>
             </section>
             <section className="cp-panel cp-durable-card">
@@ -226,6 +225,7 @@ export function DurableWorkspace() {
               onSubmit={(e) => {
                 e.preventDefault();
                 task(async () => {
+                  if (!discountAgents.length) throw new Error("Register a discount agent first.");
                   const p = submitted || {
                     actionId: crypto.randomUUID(),
                     agentId: agentId || discountAgents[0].id,
@@ -326,6 +326,14 @@ export function DurableWorkspace() {
                         <dt>Approval</dt>
                         <dd>{a.approved_by || "Not issued"}</dd>
                       </div>
+                      <div>
+                        <dt>Approval expires</dt>
+                        <dd>{a.approval_until ? new Date(a.approval_until).toLocaleString() : "Not applicable"}</dd>
+                      </div>
+                      <div>
+                        <dt>Recorded effects</dt>
+                        <dd>{snapshot.effects.filter(e => e.action_id === a.id).length}</dd>
+                      </div>
                     </dl>
                     <details>
                       <summary>Review action details</summary>
@@ -338,6 +346,7 @@ export function DurableWorkspace() {
                     <div className="cp-durable-buttons">
                       {a.state === "held" && (
                         <>
+                          <p>A different named member must approve a request you submitted.</p>
                           <button
                             className="cp-button cp-button-dark"
                             disabled={busy}
@@ -361,14 +370,14 @@ export function DurableWorkspace() {
                             disabled={busy}
                             onClick={() => operation(a, "execute")}
                           >
-                            Apply discount
+                            Execute discount
                           </button>
                           <button
                             className="cp-button"
                             disabled={busy}
                             onClick={() => operation(a, "execute", true)}
                           >
-                            Explore an interrupted response
+                            Execute · lose response
                           </button>
                         </>
                       )}
@@ -378,7 +387,7 @@ export function DurableWorkspace() {
                           disabled={busy}
                           onClick={() => operation(a, "reconcile")}
                         >
-                          Check outcome
+                          Verify outcome
                         </button>
                       )}
                       {a.state === "succeeded" && (
@@ -396,58 +405,7 @@ export function DurableWorkspace() {
               )}
             </div>
           </section>
-          <section className="cp-panel cp-durable-card">
-            <PanelHead
-              title="Decision history"
-              sub="See who acted, what changed, and when. Your history remains available when you return."
-              action={
-                <button
-                  className="cp-button"
-                  onClick={() => {
-                    const url = URL.createObjectURL(
-                      new Blob([JSON.stringify(snapshot, null, 2)], {
-                        type: "application/json",
-                      }),
-                    );
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = "looplabs-action-history.json";
-                    link.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                >
-                  Export history
-                </button>
-              }
-            />
-            <ol className="cp-durable-events">
-              {snapshot.events.slice(0, showAllEvents ? 200 : 10).map((e) => (
-                <li key={e.id}>
-                  <strong>{e.kind.replaceAll("_", " ")}</strong>
-                  <span>
-                    {e.subject} · {new Date(e.at).toLocaleString()}
-                  </span>
-                  <span className="cp-durable-id">
-                    {e.action_id || "Workspace control"}
-                  </span>
-                </li>
-              ))}
-            </ol>
-            {snapshot.events.length > 10 && (
-              <button
-                className="cp-button"
-                onClick={() => setShowAllEvents((v) => !v)}
-              >
-                {showAllEvents
-                  ? "Show latest 10 decisions"
-                  : `Show ${snapshot.events.length} recent decisions`}
-              </button>
-            )}
-            <p className="cp-durable-help">
-              This view and export include up to 100 recent actions and 200
-              recent events. Earlier history remains saved on the server.
-            </p>
-          </section>
+          <DiscountHistory snapshot={snapshot} />
 
         </>
       )}

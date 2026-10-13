@@ -1,3 +1,4 @@
+import { observeSimulatedEmail } from './email-observation';
 import { recordScope, type RecordScope } from "./record-scope";
 import { requestMatches, savedRequest } from "./request";
 import { createHash } from "node:crypto";
@@ -51,15 +52,38 @@ export class FetchSandboxConnectors implements ConnectorProvider {
   async contact() { return this.request(`/crm/crm/v3/objects/contacts/${this.contactId}`); }
   async source(connector: Connector) {
     if (connector === "email") return null;
-    const r = await this.request(`/crm/crm/v3/objects/contacts/${this.contactId}`);
-    if (r.id !== this.contactId || (this.recordScope && r.properties?.email !== this.recipient) || typeof r.updatedAt !== "string" || !r.updatedAt)
+    const r = await this.trustedContact();
+    if (this.recordScope && r.properties.email !== this.recipient)
       throw new ControlError(503, "Trusted contact version is unavailable.");
     return r.updatedAt as string;
+  }
+  private async trustedContact() {
+    const r = await this.contact();
+    if (!r || typeof r !== "object" || Array.isArray(r) || r.id !== this.contactId || typeof r.updatedAt !== "string" || !r.updatedAt)
+      throw new ControlError(503, "Trusted contact version is unavailable.");
+    if (this.recordScope) {
+      // A malformed response is unavailable evidence, never a definite refusal.
+      try { recordScope({ ...this.recordScope, recipient: r.properties?.email }); }
+      catch { throw new ControlError(503, "Trusted contact version is unavailable."); }
+    }
+    return r;
   }
   async write(a: ConnectorAction, loseResponse: boolean): Promise<Observation> {
     this.bound(a);
     const snapshot = savedRequest(a);
-    if (this.recordScope) await this.source("crm");
+    if (this.recordScope) {
+      const contact = await this.trustedContact();
+      if (a.connector === "crm" && contact.updatedAt !== snapshot.sourceVersion)
+        return {
+          outcome: "conflict",
+          detail: "The approved contact version changed before sending. No connector mutation was requested.",
+        };
+      if (contact.properties.email !== this.recipient)
+        return {
+          outcome: "conflict",
+          detail: "The enrolled recipient changed before sending. No connector mutation was requested.",
+        };
+    }
     await this.request(`/${a.connector}${snapshot.resource}`, {
         method: snapshot.method,
         headers: {
@@ -118,33 +142,7 @@ export class FetchSandboxConnectors implements ConnectorProvider {
           "Exact contact update verified by read-back from the simulated CRM.",
       };
     }
-    if (
-      r.id !== e.reference ||
-      r.subject !== this.body(a).subject ||
-      !Array.isArray(r.to) ||
-      r.to.length !== 1 ||
-      r.to[0] !== this.recipient ||
-      r.from !== this.body(a).from ||
-      r.text !== this.body(a).text
-    )
-      return {
-        outcome: "conflict",
-        detail:
-          "Message evidence differs from the approved template or recipient.",
-      };
-    if (!["sent", "delivered"].includes(r.last_event))
-      return {
-        outcome: "unknown",
-        reference: r.id,
-        detail:
-          "Message acceptance is not established; delivery or failure requires review.",
-      };
-    return {
-      outcome: "verified",
-      reference: r.id,
-      detail:
-        "Simulated provider accepted the approved message. This is not proof of real delivery.",
-    };
+    return observeSimulatedEmail(this.body(a), e.reference, r);
   }
 }
 

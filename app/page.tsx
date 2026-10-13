@@ -60,7 +60,7 @@ const FAQ = [
   },
   {
     q: "What can I try today?",
-    a: "Contact us for a guided walkthrough. Invited teams can configure agents and explore saved approvals and recovery with sample discount data and a simulated refund provider. Other prepared examples use browser-local data. Live customer connectors, model execution and a general workflow builder are not available yet.",
+    a: "Invited teams can try the quote workflow: prepare a discount request, obtain independent manager approval, and verify a sample quote change before a simulated confirmation email. Other platform workspaces are not available in this deployment. Contact us to discuss a bounded pilot; live customer connectors and a general workflow builder are not available yet.",
   },
 ];
 
@@ -342,7 +342,7 @@ export default function LandingPage() {
                   <Check size={16} /> Set budgets and scope delegated work
                 </li>
               </ul>
-              <Link className="ll-text-link" href="/control-plane/agents">
+              <Link className="ll-text-link" href="/platform#workflow-boundaries">
                 Explore agent identities <ArrowUpRight size={16} />
               </Link>
             </div>
@@ -440,9 +440,9 @@ export default function LandingPage() {
               </p>
               <Link
                 className="ll-text-link"
-                href="/control-plane/reconciliation"
+                href="/platform#verified-outcomes"
               >
-                Try the recovery workflow <ArrowUpRight size={16} />
+                Explore outcome verification <ArrowUpRight size={16} />
               </Link>
             </div>
           </section>
@@ -465,7 +465,7 @@ export default function LandingPage() {
               </Link>
             </div>
             <div className="ll-scenario-grid">
-              <Link href="/control-plane/actions?workflow=discounts">
+              <Link href="/control-plane/quotes">
                 <span className="ll-scenario-icon">
                   <CircleApproval />
                 </span>
@@ -480,7 +480,7 @@ export default function LandingPage() {
                   Review the request <ArrowUpRight size={17} />
                 </span>
               </Link>
-              <Link href="/control-plane/outputs">
+              <Link href="/platform#verified-outcomes">
                 <span className="ll-scenario-icon">
                   <FileCheck2 size={42} strokeWidth={1} />
                 </span>
@@ -493,10 +493,10 @@ export default function LandingPage() {
                   The output check removes an email address from the result.
                 </p>
                 <span className="ll-scenario-link">
-                  Inspect the output <ArrowUpRight size={17} />
+                  Explore output boundaries <ArrowUpRight size={17} />
                 </span>
               </Link>
-              <Link href="/control-plane/reconciliation">
+              <Link href="/platform#verified-outcomes">
                 <span className="ll-scenario-icon">
                   <Undo2 size={42} strokeWidth={1} />
                 </span>
@@ -510,14 +510,16 @@ export default function LandingPage() {
                   LoopLabs checks the external state before permitting a retry.
                 </p>
                 <span className="ll-scenario-link">
-                  Review the recovery <ArrowUpRight size={17} />
+                  Explore verification <ArrowUpRight size={17} />
                 </span>
               </Link>
             </div>
             <p className="ll-sandbox-note">
-              Saved discount and refund controls are available in the invited workspace.
-              The prepared tour uses sample browser data for output checks and multi-step traces.
-              No real money moves, no model runs, and customer systems are not connected.
+              The invited quote workspace demonstrates a discount request, independent approval,
+              a verified sample quote change, and a simulated confirmation email.
+              The illustrated tour uses sample browser data for output checks and multi-step traces.
+              The diagrams illustrate broader control patterns. Quote planning uses a bounded model;
+              no real money moves and customer systems are not connected.
             </p>
           </section>
 

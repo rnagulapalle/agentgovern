@@ -1,10 +1,10 @@
-import { Pool } from "pg";
+import { createWorkloadPool } from "../lib/durable/workload-pool";
 import { authenticate, DurableControl } from "../lib/durable/service";
 
 async function main() {
   if (!process.env.LOOPLABS_DATABASE_URL || !process.env.LOOPLABS_WORKER_TOKEN)
     throw new Error("Configure the database and a worker identity.");
-  const db = new Pool({ connectionString: process.env.LOOPLABS_DATABASE_URL });
+  const db = await createWorkloadPool(process.env, "worker");
   const service = new DurableControl(db);
   let stopping = false;
   db.on("error", () => {
