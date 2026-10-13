@@ -16,6 +16,6 @@ stage="/srv/looplabs-production/releases/$commit"
 # Stage only Git source. Private member/planner files are independently prepared
 # through the existing private ownership contract, never uploaded from shell env.
 ssh "${SSH_ARGS[@]}" "$SERVER" "test ! -e '$stage' && mkdir -m 700 '$stage' && mkdir -m 755 '$stage/app'"
-git -C "$REPO_DIR" archive HEAD | ssh "${SSH_ARGS[@]}" "$SERVER" "tar -xf - -C '$stage/app'"
+git -C "$REPO_DIR" archive HEAD | ssh "${SSH_ARGS[@]}" "$SERVER" "umask 022; tar --no-same-permissions --no-same-owner -xf - -C '$stage/app'"
 ssh "${SSH_ARGS[@]}" "$SERVER" "cd '$stage/app' && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/home/looplabs COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/home/looplabs node --import tsx scripts/retained-quote-demo-install.mjs"
 printf 'Retained sample runtime installed for %s. DNS/TLS/auth/quote/manual acceptance remains separate.\n' "$commit"
