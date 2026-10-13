@@ -2,6 +2,11 @@
 # Deploy the app to the existing Lightsail server. DNS, TLS and nginx host
 # configuration are managed separately; an app release must not replace them.
 set -euo pipefail
+if [[ "${1:-}" == --profile ]]; then
+  [[ $# == 2 && "$2" == quote-demo ]] || { echo 'Unsupported explicit deployment profile.' >&2; exit 1; }
+  exec bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/deploy-quote-demo.sh"
+fi
+[[ $# == 0 ]] || { echo 'Unexpected deployment arguments.' >&2; exit 1; }
 
 SERVER="ubuntu@184.32.118.87"
 APP_DIR="/home/ubuntu/agent-trust-demo"

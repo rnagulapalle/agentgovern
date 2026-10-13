@@ -22,7 +22,7 @@ export async function onboardInstalledQuoteSuccessor(input:{owner:Pool;providerO
  // operation retains a precise administrator-owned record for explicit repair;
  // no provider rollback/downgrade or old identity activation is attempted.
  await mkdir(input.output,{mode:0o700});const operationFile=join(input.output,'operation.json');let stage='preconditions';const operation={contract:'installed-successor-administration-1',request,status:'in-progress',administrativeFixtureOnboarding:true,selfServiceOnboardingProved:false};await writeFile(operationFile,JSON.stringify({...operation,stage}),{mode:0o600,flag:'wx'});
- try{ 
+ try{
  const recorded=(await input.owner.query("SELECT r.epoch,e.backup_hash FROM ll_workspace_recovery r JOIN ll_workspace_recovery_events e ON e.org_id=r.org_id AND e.epoch=r.epoch WHERE r.org_id='local-proof'")).rows;assert.deepEqual(recorded,[{epoch:request.recoveryEpoch,backup_hash:request.archiveSha256}]);
  for(const table of ['ll_members','ll_tokens','ll_agents','ll_connector_scopes','ll_connector_scope_grants'])assert.equal((await input.owner.query('SELECT count(*)::int n FROM '+table+' WHERE active')).rows[0].n,0,'Existing authority must remain contained before new onboarding');
  assert.equal((await input.owner.query('SELECT count(*)::int n FROM ll_sessions')).rows[0].n,0);

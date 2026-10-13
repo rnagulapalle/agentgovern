@@ -120,6 +120,7 @@
       "lib/workspace/cloud-project-discovery.ts",
       "lib/workspace/cloud-project-evidence.ts",
       "lib/workspace/cloud-project-http.ts",
+      "lib/workspace/deployment-capabilities.ts",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -128,6 +129,7 @@
       "lib/workspace/tenant-bootstrap.ts",
       "lib/workspace/tenant-context.ts",
       "lib/workspace/web-recovery-deployment.ts",
+      "middleware.ts",
       "next.config.mjs",
       "package.json",
       "pnpm-lock.yaml",
@@ -756,6 +758,7 @@
       "lib/workspace/cloud-project-evidence.ts",
       "lib/workspace/cloud-project-http.ts",
       "lib/workspace/cloud-project-schema.sql",
+      "lib/workspace/deployment-capabilities.ts",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -1153,6 +1156,10 @@
     ]
   },
   "edges": [
+    {
+      "from": "middleware.ts",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
     {
       "from": "instrumentation.ts",
       "to": "lib/workspace/tenant-bootstrap.ts"
@@ -2344,6 +2351,10 @@
     {
       "from": "lib/quotes/demo-registry.ts",
       "to": "lib/quotes/demo-control.ts"
+    },
+    {
+      "from": "app/control-plane/layout.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
     },
     {
       "from": "app/control-plane/layout.tsx",
@@ -10391,6 +10402,10 @@
     },
     {
       "from": "app/control-plane/layout.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
+      "from": "app/control-plane/layout.tsx",
       "to": "components/control-plane/provider.tsx"
     },
     {
@@ -12988,6 +13003,10 @@
     {
       "from": "scripts/persistent-installed-trial-core.mjs",
       "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "scripts/persistent-installed-trial-core.mjs",
+      "to": "scripts/staging-installed-database-bootstrap.ts"
     },
     {
       "from": "scripts/persistent-installed-trial-core.mjs",
@@ -16340,7 +16359,7 @@
     "app/api/workspace/session/route.ts": "5194c1a54bde45b893cb398075b4a625edca806d4b41efc53d824698842b55ce",
     "app/control-plane/control-plane.css": "2cd5918b34f9675f1ef729369384f8cf9a0bfa61f593c407788342eb60fcd51f",
     "app/control-plane/discovery/page.tsx": "fde4db786ba307da01443a0e904ca4e6bd10a3ca6993909a993862a863a9a208",
-    "app/control-plane/layout.tsx": "eb28ff8022a798ba2a396b3045eac9db8ab9daf356406dcc6ab5a139f01d9df5",
+    "app/control-plane/layout.tsx": "0edef236c03a15a194f9ea73f88006354ac89fca38c416a671dce6cf14fc14d3",
     "app/control-plane/quotes/page.tsx": "959e496795d77d13557b7f6d7f66933cff5701cfe79cf384a2ed2d03d2002cce",
     "app/control-plane/work/page.tsx": "d56f08ebfbfcb7deed94fb1a73de0fd1be9dc1f40f065871b7fcb31a02ceb617",
     "app/sales.css": "688fb553b999966168eea82cdba0564e052bada3b9240c74c696210b5109bec6",
@@ -16357,7 +16376,7 @@
     "components/control-plane/quote-workflow-view.tsx": "a44b90b9d119e617cbcb29749633a4172f0a54aa695f9706a33ffbaf411f5a1c",
     "components/control-plane/quote-workspace.tsx": "b1591aaa40e7af7362643d4c4b843673286650c7c51070a751d9a73c4bef2663",
     "components/control-plane/request-planner.tsx": "659a3778dc1e542c264f7814ef655b72eac3542f3a4d34dde8fe440f5e8e32e8",
-    "components/control-plane/shell.tsx": "64f3db417f87607743394ab4837e504464cf41d113a3923a60ea7bc6fb3f1454",
+    "components/control-plane/shell.tsx": "9abec7b5a0a22536e15287885784de48908d83a8225781c24748cd7c51e32413",
     "components/control-plane/ui.tsx": "cdf670619bf6e5d6dec5e828ebc3e2e4039a056089ecb8add523dea0e88065db",
     "components/control-plane/workflow-workspace.tsx": "4e73f03d6f2817f549faf21449fc1c458758bf8eaa903e26d8fe68f4626b17ea",
     "components/control-plane/workspace-gate.tsx": "983a29c284ff70c3c5d14f827b518eac607eb19acc79104d7a8c56ee107c7cd9",
@@ -16488,6 +16507,7 @@
     "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
     "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
     "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
+    "lib/workspace/deployment-capabilities.ts": "14ccec40fbc415c133bc7719544acaa57d286aea47aa204764911c97e41c3089",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
     "lib/workspace/installed-tenant-fixture.ts": "7e3d9869ccdc2d3ac1229a57d4af24d29c0d658ec9bb7861767f066d2f185ea3",
     "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
@@ -16508,6 +16528,7 @@
     "lib/workspace/tenant-installer.ts": "6a46811062d6e82a282263d414dbc590d9b9b3739040f3337c8744eb3594db43",
     "lib/workspace/tenant-read-inventory.ts": "64f5e0e4ec8981c0612a2fda85f51947fe0305f3e5d0d6180a1f408bd94a36f8",
     "lib/workspace/web-recovery-deployment.ts": "40a4f402e95fd524414ea10ecd77b916ecd61193cffeedc7f86f9a56dd6c183b",
+    "middleware.ts": "56dea1a2a6108f5506e3abb69f306bf168d43ec552e4c2398247faad845d52dd",
     "next.config.mjs": "5746e6fc704bcdf5d09ffacaeb00a0285b2456176516cb5af52faeabf6cd2cb4",
     "package.json": "ee468b27483d24aecb2df0aeb5a50e790a8fc0fac3e073e5158caee68a66645d",
     "pnpm-lock.yaml": "6b49ac11c789339af815e0c08193ec0cad25e85557b53240ffd7b8909fb936bc",
@@ -16544,7 +16565,7 @@
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "551bf9d1bacd36c13766dd368742d95fe69856e05b07be0766fad5fc13b87b90",
+    "scripts/current-proof-source-registry.mjs": "a92f365ed6c04ec1aa8298049f48a630e65112202d01511d5639adaba01d8892",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "6789ccfb6c9cc96f59ea2156e281df55931cd5e5b9eccd676ae2806b33b9112d",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
@@ -16566,8 +16587,8 @@
     "scripts/persistent-installed-runtime-proof.mjs": "0695d625801ba708d0879dff6a968805121b541ad552d88484cf28db8b1f080e",
     "scripts/persistent-installed-runtime-readiness.mjs": "0e3eca6034e83d6a36e922078ea3599a2e639d00a3aed3ce71b2f7f19ae2689d",
     "scripts/persistent-installed-source-binding.mjs": "52652285636c6d379d75e3cbb76514be875e1dc47e172183630644a8f7487045",
-    "scripts/persistent-installed-trial-core.mjs": "4ae6c99a065def3539d67a4908dc7e61ee004a47386da9748054b11141f51251",
-    "scripts/persistent-installed-trial-recipe.mjs": "0e5564244c966fe105ba6eab8e09b109e7407a1a41b669953d6f921efc88b0ba",
+    "scripts/persistent-installed-trial-core.mjs": "90436bcda8b59a548813fb8f3d6188b387186765c6e5e91e8698a4ea9c1e0f28",
+    "scripts/persistent-installed-trial-recipe.mjs": "b130908d232a028b0b6f53e23a4c38558d262a8de5e1d468b460af7e2685e875",
     "scripts/persistent-installed-typed-quote-proof.mjs": "9a4ed11844001cac780032b1c4e44835ebb016288a4cda7fd2984672aff377c2",
     "scripts/persistent-installed-typed-quote.mjs": "a4bba4024ffc1d3c0e46289af2a64f9bceaa16fc1e5d9289bf7b021e94c99446",
     "scripts/staging-browser-tls.mjs": "9b6e13b2dad7999e598989b3a5a53c2a30a6421b917c2abb68e9eb495cc35bb8",

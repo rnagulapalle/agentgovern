@@ -60,7 +60,8 @@ const groups = [
     ],
   },
 ];
-export function ControlScopeNote({ durable }: { durable: boolean }) {
+export function ControlScopeNote({ durable, quoteOnly = false }: { durable: boolean; quoteOnly?: boolean }) {
+  if (quoteOnly) return <p>Sample distributor quotes and simulated confirmations. Another named member must approve each exact action. No live customer records change and no customer email is delivered.</p>;
   return <p>{durable
     ? "Discounts change a sample record; refunds use a simulated payment provider. Decisions are saved on the server. No real money moves. When configured, AI helps prepare bounded customer acknowledgement plans; it cannot approve or execute actions. Business connectors remain simulated, with no live customer updates or real email delivery."
     : "These prepared examples use browser-local sample data. Model access, output checks and execution traces are simulated."}</p>;
@@ -68,9 +69,11 @@ export function ControlScopeNote({ durable }: { durable: boolean }) {
 export function ControlShell({
   children,
   member,
+  quoteOnly = false,
 }: {
   children: React.ReactNode;
   member: { name: string; email: string };
+  quoteOnly?: boolean;
 }) {
   const { state, toast } = useControl();
   const pathname = usePathname();
@@ -109,8 +112,9 @@ export function ControlShell({
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
   }, [durable]);
+  const navigation = quoteOnly ? [{ name: "QUOTE WORKSPACE", items: groups[0].items.filter(item => item.key === "quotes") }] : groups;
   const title =
-    groups.flatMap((g) => g.items).find((i) => i.key === section)?.label ||
+    navigation.flatMap((g) => g.items).find((i) => i.key === section)?.label ||
     "Example settings";
   const results = [
     ...state.agents.map((a) => ({
@@ -169,16 +173,16 @@ export function ControlShell({
           <span className="cp-workspace-icon">M</span>
           <span>
             <strong>
-              {durable ? "LoopLabs workspace" : "Prepared examples"}
+              {quoteOnly ? "Quote workspace" : durable ? "LoopLabs workspace" : "Prepared examples"}
             </strong>
             <small>
-              {durable ? "Saved controls" : "Browser-local sample data"}
+              {quoteOnly ? "Sample data only" : durable ? "Saved controls" : "Browser-local sample data"}
             </small>
           </span>
           <ChevronDown size={14} />
         </Link>
         <nav aria-label="Control plane navigation">
-          {groups.map((group) => (
+          {navigation.map((group) => (
             <div className="cp-nav-group" key={group.name}>
               <div className="cp-nav-label">{group.name}</div>
               {group.items.map((item) => (
@@ -211,27 +215,27 @@ export function ControlShell({
           <div className="cp-enforcement">
             <div>
               <span className="cp-live-dot" />
-              <strong>Governed by default</strong>
+              <strong>{quoteOnly ? "Quote action controls" : "Governed by default"}</strong>
             </div>
-            <p>Identity. Action. Execution. Output.</p>
+            <p>{quoteOnly ? "Independent approval. Verified result." : "Identity. Action. Execution. Output."}</p>
             <div className="cp-enforcement-bars">
               {Array.from({ length: 30 }, (_, i) => (
                 <i key={i} style={{ height: 8 + ((i * 7) % 13) }} />
               ))}
             </div>
             <span>
-              {durable ? "SAVED WORKSPACE" : "INTERACTIVE DEMO"}{" "}
+              {quoteOnly ? "SAMPLE QUOTE WORKSPACE" : durable ? "SAVED WORKSPACE" : "INTERACTIVE DEMO"}{" "}
               <span>v0.1</span>
             </span>
           </div>
-          <Link
+          {!quoteOnly && <Link
             prefetch={false}
             href="/control-plane/settings"
             className={`cp-nav-item ${section === "settings" ? "is-active" : ""}`}
           >
             <Settings2 size={17} strokeWidth={1.5} />
             Example settings
-          </Link>
+          </Link>}
           <button className="cp-nav-item" onClick={() => setHelp(true)}>
             <CircleHelp size={17} strokeWidth={1.5} />
             Quick guide
@@ -270,7 +274,7 @@ export function ControlShell({
           <div className="cp-topbar-right">
             <span className="cp-environment">
               <i />
-              {durable ? "Saved controls" : "Browser-local sample data"}
+              {quoteOnly ? "Sample data only" : durable ? "Saved controls" : "Browser-local sample data"}
             </span>
             {!durable && (
               <button
@@ -285,7 +289,7 @@ export function ControlShell({
                 </kbd>
               </button>
             )}
-            <Link
+            {!quoteOnly && <Link
               prefetch={false}
               className="cp-notifications"
               href={durable ? "/control-plane" : "/control-plane/approvals"}
@@ -295,7 +299,7 @@ export function ControlShell({
             >
               <Bell size={17} />
               {!durable && pending > 0 && <i />}
-            </Link>
+            </Link>}
             <button
               className="cp-button workspace-sign-out"
               onClick={async () => {
@@ -374,12 +378,17 @@ export function ControlShell({
       )}
       {help && (
         <Modal
-          title="Meet your control plane"
-          subtitle="One place to decide what agents can access, do, and release."
+          title={quoteOnly ? "Explore quote controls" : "Meet your control plane"}
+          subtitle={quoteOnly ? "Prepare a quote, get independent approval, and verify each result." : "One place to decide what agents can access, do, and release."}
           onClose={() => setHelp(false)}
         >
           <div className="cp-guide">
-            {(durable
+            {(quoteOnly ? [
+              ["01", "Prepare a quote", "Select the enrolled sample quote and describe the discount. Review the quote and exact customer confirmation before submitting."],
+              ["02", "Get independent approval", "The requester cannot approve their own actions. The designated manager reviews and approves the exact quote update."],
+              ["03", "Verify the quote first", "Check the observed quote result. The customer confirmation stays held until the quote is verified and separately approved."],
+              ["04", "Review the saved result", "Check the full result and reopen the saved request. Confirmation acceptance is simulated; it is not customer delivery."],
+            ] : durable
               ? [
                   [
                     "01",
@@ -436,7 +445,7 @@ export function ControlShell({
           </div>
           <div className="cp-note">
             <BookOpen size={17} />
-            <ControlScopeNote durable={durable} />
+            <ControlScopeNote durable={durable} quoteOnly={quoteOnly} />
           </div>
         </Modal>
       )}

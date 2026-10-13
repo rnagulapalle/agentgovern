@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { quoteDemoProfile } from "../../lib/workspace/deployment-capabilities";
 import { ControlProvider } from "../../components/control-plane/provider";
 import { ControlShell } from "../../components/control-plane/shell";
 import "./control-plane.css";
@@ -30,7 +31,7 @@ export default async function ControlLayout({
   if (!rows[0]) return <WorkspaceGate />;
   return (
     <ControlProvider>
-      <ControlShell member={rows[0]}>{children}</ControlShell>
+      <ControlShell member={rows[0]} quoteOnly={process.env.LOOPLABS_DEPLOYMENT_PROFILE === quoteDemoProfile}>{children}</ControlShell>
     </ControlProvider>
   );
 }
