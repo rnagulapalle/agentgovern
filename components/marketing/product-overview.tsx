@@ -37,7 +37,7 @@ export function ProductOverview({ gated = false, quoteOnly = false }: { gated?: 
         </p>
       )}
       <div className="sales-steps">
-        <article>
+        <article id="workflow-boundaries">
           <span className="sales-eyebrow">01 · DEFINE</span>
           <h2>Give the agent a boundary</h2>
           <p>
@@ -45,7 +45,7 @@ export function ProductOverview({ gated = false, quoteOnly = false }: { gated?: 
             allowed action and usage limit.
           </p>
         </article>
-        <article>
+        <article id="approved-execution">
           <span className="sales-eyebrow">02 · CONTROL</span>
           <h2>Review consequential actions</h2>
           <p>
@@ -53,7 +53,7 @@ export function ProductOverview({ gated = false, quoteOnly = false }: { gated?: 
             and block requests outside the boundary.
           </p>
         </article>
-        <article>
+        <article id="verified-outcomes">
           <span className="sales-eyebrow">03 · VERIFY</span>
           <h2>Resolve an uncertain outcome</h2>
           <p>

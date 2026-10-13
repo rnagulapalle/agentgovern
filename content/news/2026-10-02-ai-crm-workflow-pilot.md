@@ -57,7 +57,7 @@ These are proposed pilot acceptance criteria, not claims that a live LoopLabs co
 
 ## What can you try in LoopLabs today?
 
-The [interactive product tour](/control-plane) demonstrates identity, permissions, policy decisions, approvals, execution state, output checks, and reconciliation using prepared browser-local data. In the [reconciliation demo](/control-plane/reconciliation), you can isolate an agent, inspect a compensating change, and see why a record-version conflict prevents recovery from overwriting newer sample state.
+The [product overview](/platform) explains identity, permissions, approvals and outcome verification. The invited [quote workflow](/control-plane/quotes) evaluates one discount request with independent approval, a sample quote update and a simulated confirmation email. The [verification overview](/platform#verified-outcomes) explains why an uncertain write must be checked before another attempt. Broader control-plane workspaces are not available in this deployment.
 
 The demos do not connect to your CRM, execute live third-party actions, or provide a durable audit service. There is no self-service visual workflow builder today. Production integrations and their guarantees must be designed, implemented, and validated within an agreed pilot.
 
@@ -65,4 +65,4 @@ The demos do not connect to your CRM, execute live third-party actions, or provi
 
 Bring one workflow that updates your CRM, even if the process is manual today. We will map its authority and failure cases together, then agree whether a bounded pilot makes sense.
 
-For the first conversation, be ready to explain who owns the process, which record changes, what approval is required, and what your team does after a timeout. [Book a workflow discussion with the LoopLabs founders](/#demo), or first [explore the prepared workflows](/control-plane/workflows).
+For the first conversation, be ready to explain who owns the process, which record changes, what approval is required, and what your team does after a timeout. [Book a workflow discussion with the LoopLabs founders](/#demo), or first [explore the product overview](/platform).
