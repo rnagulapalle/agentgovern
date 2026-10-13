@@ -1,14 +1,14 @@
 import { NextRequest } from "next/server";
-import { database } from "@/lib/durable/database";
-import { authenticate } from "@/lib/durable/service";
-import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
-import { agentDirectory, registerAgent } from "@/lib/workspace/agents";
+import { tenantContext } from "../../../../lib/workspace/tenant-context";
+
+import { body, credential, failure, sameOrigin } from "../../../../lib/durable/http";
+import { agentDirectory, registerAgent } from "../../../../lib/workspace/agents";
 export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
   try {
-    const db = database();
+    const {db,actor} = await tenantContext().authenticated(credential(request));
     return Response.json(
-      await agentDirectory(db, await authenticate(db, credential(request))),
+      await agentDirectory(db, actor),
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (e) {
@@ -18,11 +18,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     sameOrigin(request);
-    const db = database();
+    const {db,actor} = await tenantContext().authenticated(credential(request));
     return Response.json(
       await registerAgent(
         db,
-        await authenticate(db, credential(request)),
+        actor,
         await body(request),
       ),
       { headers: { "Cache-Control": "no-store" } },

@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { createWorkloadPool } from "../lib/durable/workload-pool";
 import { authenticate } from "../lib/durable/service";
 import { connectorProvider } from "../lib/connectors/hosted";
 import { ConnectorControl } from "../lib/connectors/service";
@@ -6,7 +6,7 @@ import { WorkflowControl } from "../lib/workflows/service";
 import { EnquiryRunner } from "../lib/enquiries/runner";
 async function main() {
   if (!process.env.LOOPLABS_DATABASE_URL || !process.env.LOOPLABS_ENQUIRY_WORKER_TOKEN) throw Error("Worker configuration unavailable.");
-  const db = new Pool({ connectionString: process.env.LOOPLABS_DATABASE_URL, max: 3, connectionTimeoutMillis: 5000 });
+  const db = await createWorkloadPool(process.env, "worker");
   let stopping = false;
   for (const signal of ["SIGTERM", "SIGINT"]) process.on(signal, () => { stopping = true; });
   db.on("error", () => { stopping = true; });

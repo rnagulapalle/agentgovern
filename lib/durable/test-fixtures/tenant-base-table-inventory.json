@@ -1,0 +1,186 @@
+{
+  "contract": "tenant-base-table-inventory-1",
+  "scope": "Retained45 base table RLS expectations; later quote inventory verified separately by installed inventory tests. No measured runtime evidence.",
+  "tables": [
+    {
+      "table": "ll_orgs",
+      "prototypePolicy": "org-id"
+    },
+    {
+      "table": "ll_agents",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_tokens",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_records",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_actions",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_effects",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_events",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_members",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_sessions",
+      "prototypePolicy": "member-join"
+    },
+    {
+      "table": "ll_access_attempts",
+      "prototypePolicy": "unimplemented-no-runtime-grant"
+    },
+    {
+      "table": "ll_agent_profiles",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_sales_requests",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_refund_policies",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_refund_actions",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_refund_events",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_connector_policies",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_connector_actions",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_connector_events",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_workflow_runs",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_workflow_steps",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_workflow_events",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_workflow_agents",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_enquiry_plans",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_enquiry_dispatch",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_enquiry_worker_status",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_temporal_dispatch",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_workspace_recovery",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_workspace_recovery_events",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_connector_scopes",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_connector_scope_grants",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_connector_scope_events",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_temporal_record_routes",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_temporal_worker_builds",
+      "prototypePolicy": "global-owner-only"
+    },
+    {
+      "table": "ll_temporal_reset_intents",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_cloud_connections",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_cloud_scans",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_cloud_runtime_observations",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_cloud_project_connections",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_cloud_project_scans",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_cloud_project_observations",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_cloud_owner_reviews",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_quote_plans",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_quote_manager_grants",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_quote_member_generations",
+      "prototypePolicy": "direct-org"
+    },
+    {
+      "table": "ll_migrations",
+      "prototypePolicy": "global-read-only"
+    }
+  ]
+}

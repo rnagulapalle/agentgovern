@@ -44,3 +44,16 @@ assert(artifactDirectory===undefined,"This trial retrieves existing releases; ne
  assert(!source.includes('imageBuilder.start()')&&!source.includes('imageBuilder.build('),"Retained package trial must not rebuild");
  return source;
 }
+
+// Explicit isolated candidate inputs; never a fallback for accepted releases.
+export function candidatePackageTrial(parent){
+ let source=retainedPackageTrial(parent);
+ const replacements=[
+  ['import {loadPackageReleases} from "./staging-package-releases.mjs";', 'import {loadCandidatePackagesFromFile} from "./staging-candidate-package-files.mjs";'],
+  ['packageReleases=await loadPackageReleases(JSON.parse(await readFile(process.env.LOOPLABS_STAGING_PACKAGE_DIRECTORIES,"utf8")),docker,built);', 'packageReleases=await loadCandidatePackagesFromFile(process.env.LOOPLABS_STAGING_CANDIDATE_PACKAGE_REQUESTS,docker,built);assert.equal(packageReleases.releaseAccepted,false);'],
+  ['packageOrigins:packageReleases.origins,restoreContainment', 'packageOrigins:packageReleases.origins,candidatePackageInputs:{purpose:packageReleases.purpose,releaseAccepted:packageReleases.releaseAccepted,packages:packageReleases.packages},restoreContainment'],
+ ];
+ for(const [before,after] of replacements){assert.equal(source.split(before).length,2,"Candidate trial anchor is missing or ambiguous");source=source.replace(before,after);}
+ assert(!source.includes("loadPackageReleases")&&!source.includes("LOOPLABS_STAGING_PACKAGE_DIRECTORIES"));
+ return source;
+}

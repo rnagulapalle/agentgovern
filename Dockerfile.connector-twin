@@ -2,23 +2,29 @@
 # private stores, dependency runtime or Docker socket. Private fixture only.
 FROM python:3.12-slim AS dependencies
 WORKDIR /app
+# Existing TLS fixture verifies its exact leaf through the system OpenSSL tool.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 COPY scripts/connector-twin-requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY scripts/check-twin-dependencies.py /app/check-dependencies.py
 RUN python /app/check-dependencies.py /app/requirements.txt
 
 FROM dependencies AS fixture
-COPY --from=fetchsandbox --chown=1000:1000 app /app/backend/app
-COPY --from=fetchsandbox --chown=1000:1000 configs/hubspot /app/backend/configs/hubspot
-COPY --from=fetchsandbox --chown=1000:1000 configs/resend /app/backend/configs/resend
-COPY --from=fetchsandbox --chown=1000:1000 specs/hubspot /app/backend/specs/hubspot
-COPY --from=fetchsandbox --chown=1000:1000 specs/resend /app/backend/specs/resend
+ARG FIXTURE_UID=1000
+ARG FIXTURE_GID=1000
+COPY --from=fetchsandbox --chown=${FIXTURE_UID}:${FIXTURE_GID} app /app/backend/app
+COPY --from=fetchsandbox --chown=${FIXTURE_UID}:${FIXTURE_GID} configs/hubspot /app/backend/configs/hubspot
+COPY --from=fetchsandbox --chown=${FIXTURE_UID}:${FIXTURE_GID} configs/resend /app/backend/configs/resend
+COPY --from=fetchsandbox --chown=${FIXTURE_UID}:${FIXTURE_GID} specs/hubspot /app/backend/specs/hubspot
+COPY --from=fetchsandbox --chown=${FIXTURE_UID}:${FIXTURE_GID} specs/resend /app/backend/specs/resend
 COPY scripts/connector-twin.py /app/scripts/connector-twin.py
+COPY scripts/connector-twin-tls.py /app/scripts/connector-twin-tls.py
+COPY scripts/check-quote-email-health.py /app/scripts/check-quote-email-health.py
 COPY scripts/check-connector-health.py /app/scripts/check-connector-health.py
-RUN useradd --uid 1000 --no-create-home fixture
+RUN test "$FIXTURE_UID" -gt 0 && test "$FIXTURE_GID" -gt 0 && groupadd --gid "$FIXTURE_GID" fixture && useradd --uid "$FIXTURE_UID" --gid "$FIXTURE_GID" --no-create-home fixture
 ENV FETCHSANDBOX_BACKEND_PATH=/app/backend LOOPLABS_CONNECTOR_STATE_DIR=/state LOOPLABS_TWIN_CONTAINER=1 PYTHONDONTWRITEBYTECODE=1
-USER fixture
+USER ${FIXTURE_UID}:${FIXTURE_GID}
 # Fail during image construction if the non-root runtime cannot read its exact
 # prepared inputs. Preserve private source modes instead of making them public.
-RUN python -c "import os; from pathlib import Path; assert os.getuid()==1000; [Path('/app/backend/'+p).read_bytes() for p in ['configs/hubspot/sandbox_config.yaml','configs/resend/sandbox_config.yaml','specs/hubspot/openapi.yaml','specs/resend/openapi.yaml']]"
+RUN python -c "import os; from pathlib import Path; assert os.getuid()==int(os.environ['FIXTURE_UID']) and os.getgid()==int(os.environ['FIXTURE_GID']); [Path('/app/backend/'+p).read_bytes() for p in ['configs/hubspot/sandbox_config.yaml','configs/resend/sandbox_config.yaml','specs/hubspot/openapi.yaml','specs/resend/openapi.yaml']]"
 CMD ["sh", "-c", "python /app/check-dependencies.py /app/requirements.txt && exec python /app/scripts/connector-twin.py"]

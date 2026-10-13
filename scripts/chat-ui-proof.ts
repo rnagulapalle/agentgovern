@@ -1,10 +1,11 @@
+import {validateInstalledProofConstruction} from './current-proof-source-registry.mjs';
 // Actual browser -> Next app -> model API -> PostgreSQL -> isolated FetchSandbox twins.
-import { chromium, expect, type Page, type Browser } from "@playwright/test";
+import { chromium, expect, type Page, type Browser, type Route } from "@playwright/test";
 import { Pool } from "pg";
-import { randomBytes, randomUUID, createHash } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { spawn, type ChildProcess } from "node:child_process";
-import { readFile, writeFile, mkdtemp, mkdir, rm } from "node:fs/promises";
-import { resolve } from "node:path";
+import { readFile, writeFile, mkdtemp, mkdir, rm, realpath } from "node:fs/promises";
+import { resolve, join } from "node:path";
 import assert from "node:assert/strict";
 import { passwordHash } from "../lib/workspace/auth";
 import { tokenHash } from "../lib/durable/service";
@@ -18,42 +19,83 @@ import { activities } from "../runtime/temporal/activities";
 import { versionedActivities } from "../runtime/temporal/version-contract";
 import { TemporalOutbox } from "../runtime/temporal/outbox";
 import { enquiryRequest } from "../lib/enquiries/chat-contract";
+import { scopedPoolOptions, type PostgreSQLTransport } from "../lib/durable/pg-transport";
+import {readChatModelSession,chatModelEnvironment} from "./chat-ui-model-session.mjs";
+import { inspectAuthenticatedChatArtifact, admitExtractedChatProofWorker } from "./chat-ui-extracted-admission.mjs";
+import { installChatProofRoles } from "./chat-ui-installed-fixture";
+import {captureOwnedChatGroup,stopOwnedChatGroup} from "./chat-ui-owned-group";
+import {currentChatPane,selectVisibleChatPane} from "./chat-ui-pane-navigation";
+import {safeChatObservables} from "./chat-ui-safe-diagnostic";
+import { validateChatProofSources } from "./chat-ui-proof-sources";
 const origin = "http://localhost:3107", delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 async function main() {
+ validateInstalledProofConstruction();
+  const initialSources=await validateChatProofSources();
+  const modelSession=await readChatModelSession(process.stdin);
+  const artifactInput={artifactDirectory:process.env.LOOPLABS_CHAT_COMPILED_DIRECTORY,zipFile:process.env.LOOPLABS_CHAT_COMPILED_ZIP,intakeFile:process.env.LOOPLABS_CHAT_COMPILED_INTAKE,componentFile:process.env.LOOPLABS_CHAT_ORIGINAL_COMPONENT};
+  await inspectAuthenticatedChatArtifact(artifactInput);
+  assert.equal(process.env.LOOPLABS_STAGING_DRAIN_PROOF,"isolated");
+  assert(process.env.LOOPLABS_CHAT_PROOF_OUTPUT,"Exclusive private output path required");
+  const output=resolve(process.env.LOOPLABS_CHAT_PROOF_OUTPUT);
+  assert(!output.startsWith(resolve("docs")+"/"),"Historical evidence output refused");
+  await mkdir(output,{mode:0o700});
+  let pendingReceipt:object|undefined;
+  let phase="fixture-setup",diagnosticPage:Page|undefined,lastConnectorStatus:number|null=null,lastLayout:object|null=null;
+  const actionCode=(name:string)=>({"Submit prepared action":"submit","Approve exact action":"approve","Execute":"execute","Execute · lose response":"execute-lost","Verify outcome":"readback"}[name]||"other");
+  async function failureDiagnostic(error:unknown){
+    const value=error as {name?:unknown;stack?:unknown};
+    const line=typeof value.stack==="string"?value.stack.match(/chat-ui-proof\.ts:(\d+):(\d+)/):null;
+    const safeError=["AssertionError","TimeoutError","Error"].includes(String(value.name))?String(value.name):"OtherError";
+    const observables=diagnosticPage?await safeChatObservables(diagnosticPage):null;
+    await writeFile(resolve(output,"failure-diagnostic.json"),JSON.stringify({contract:"chat-proof-failure-diagnostic-1",phase,errorCategory:safeError,producerLine:line?Number(line[1]):null,lastConnectorStatus,lastLayout,observables,successReceiptIssued:false},null,2)+"\n",{mode:0o600,flag:"wx"});
+    console.log("FAIL phase="+phase);
+  }
   if (!process.env.LOOPLABS_TEST_DATABASE_URL) throw Error("Dedicated test PostgreSQL required.");
   await mkdir(".local", { recursive: true, mode: 0o700 });
-  const dir = await mkdtemp(resolve(".local/chat-ui-proof-"));
+  const dir = await realpath(await mkdtemp(resolve(".local/chat-ui-proof-")));
+  // Only the Next web process needs the bounded model session. Fixture/runtime
+  // children must not inherit it or fall back to the laptop's AWS profile files.
+  const noCloudEnvironment=():NodeJS.ProcessEnv=>({PATH:process.env.PATH,HOME:process.env.HOME,NODE_ENV:"production",FETCHSANDBOX_BACKEND_PATH:process.env.FETCHSANDBOX_BACKEND_PATH,AWS_CONFIG_FILE:resolve(dir,"absent-aws-config"),AWS_SHARED_CREDENTIALS_FILE:resolve(dir,"absent-aws-credentials"),AWS_EC2_METADATA_DISABLED:"true"});
   const recoveryEpoch=randomUUID();
   const schema = `chat_ui_${randomBytes(8).toString("hex")}`, token = randomBytes(32).toString("base64url"), password = randomBytes(24).toString("base64url");
-  const admin = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL });
-  const db = new Pool({ connectionString: process.env.LOOPLABS_TEST_DATABASE_URL, options: `-c search_path=${schema}` });
+  assert(process.env.LOOPLABS_PROOF_TRANSPORT_FILE,"Explicit owned verified TLS transport required");
+  const transport=JSON.parse(await readFile(process.env.LOOPLABS_PROOF_TRANSPORT_FILE,"utf8")) as PostgreSQLTransport;
+  const admin=new Pool(await scopedPoolOptions({url:process.env.LOOPLABS_TEST_DATABASE_URL,schema:"public",purpose:"installer",transport}));
+  const db=new Pool(await scopedPoolOptions({url:process.env.LOOPLABS_TEST_DATABASE_URL,schema,purpose:"installer",transport}));
+  let installed:Awaited<ReturnType<typeof installChatProofRoles>>|undefined;
+  let schemaOid:string|undefined;
   let temporal: TestWorkflowEnvironment | undefined;
   const packaged:ChildProcess[]=[];let recordBuildId="";
   let worker: ChildProcess | undefined;
   const workerToken = randomBytes(32).toString("base64url");
   let app: ChildProcess | undefined, twin: ChildProcess | undefined, browser: Browser | undefined;
   const checks: { name: string; passed: boolean }[] = [], observed: object[] = [];
-  const check = (name: string) => { checks.push({ name, passed: true }); console.log(`PASS ${name}`); };
+  const check = (name: string) => { checks.push({ name, passed: true }); phase="after-check-"+checks.length; console.log(`PASS ${name}`); };
+  const mobileActionScreenshots=new Set<string>();
+  const advancedButtonMeasurements: { label: string; step: number; viewport: number; height: number; lines: number }[] = [];
   const url = new URL(process.env.LOOPLABS_TEST_DATABASE_URL); url.searchParams.set("options", `-c search_path=${schema}`);
   async function startApp() {
-    app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...process.env, LOOPLABS_RECOVERY_EPOCH:recoveryEpoch, LOOPLABS_TEMPORAL_WORKSPACE: "staging", LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId, LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_RECORD_CATALOG: JSON.stringify({records:[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"},{version:"record-scope-1",workspaceId:"local-proof",contactId:"2002",recipient:"bob@example.test"}]}), LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
+    app = spawn("pnpm", ["exec", "next", "start", "-p", "3107"], { detached: true, env: { ...noCloudEnvironment(),...chatModelEnvironment(modelSession),LOOPLABS_TENANT_WEB_CONFIG:installed!.webFile, LOOPLABS_RECOVERY_EPOCH:recoveryEpoch, LOOPLABS_TEMPORAL_WORKSPACE: "staging", LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId, LOOPLABS_DURABLE_ORIGIN: "", LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token, LOOPLABS_RECORD_CATALOG: JSON.stringify({records:[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"},{version:"record-scope-1",workspaceId:"local-proof",contactId:"2002",recipient:"bob@example.test"}]}), LOOPLABS_CHAT_MODEL: "us.amazon.nova-lite-v1:0" }, stdio: ["ignore", "pipe", "pipe"] });
+    await captureOwnedChatGroup(app);
     for (let i = 0; i < 100; i++) { try { if ((await fetch(origin + "/sign-in")).ok) return; } catch {} await delay(100); }
     throw Error("UI app unavailable");
   }
   async function startWorker() {
-    worker = spawn("pnpm", ["exec", "tsx", "scripts/enquiry-worker.ts"], { detached: true, env: { ...process.env, LOOPLABS_RECOVERY_EPOCH:recoveryEpoch, LOOPLABS_DATABASE_URL: url.toString(), LOOPLABS_ENQUIRY_WORKER_TOKEN: workerToken, LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token }, stdio: ["ignore", "pipe", "pipe"] });
+    worker = spawn("pnpm", ["exec", "tsx", "scripts/enquiry-worker.ts"], { detached: true, env: { ...noCloudEnvironment(), ...installed!.environment("worker"), LOOPLABS_ENQUIRY_WORKER_TOKEN: workerToken, LOOPLABS_FETCHSANDBOX_BINDING: "", LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018", LOOPLABS_CONNECTOR_TWIN_TOKEN: token }, stdio: ["ignore", "pipe", "pipe"] });
+    await captureOwnedChatGroup(worker);
     for (let i = 0; i < 100; i++) { if ((await db.query("SELECT 1 FROM ll_enquiry_worker_status WHERE last_tick>now()-interval '10 seconds'")).rows[0]) return; await delay(100); }
     throw Error("Background worker unavailable");
   }
-  async function stopWorker() { if (worker?.pid) { try { process.kill(-worker.pid, "SIGKILL"); } catch {} await delay(300); } }
+  const stopOwnedGroup=stopOwnedChatGroup;
+  async function stopWorker(){await stopOwnedGroup(worker);}
   async function managed(page: Page) {
     await page.goto(origin + "/control-plane/work");
     const result = await chat(page, enquiryRequest + " Use customer@example.test.");
     assert(result.saved?.id);
     await page.getByRole("checkbox").check();
-    const [submitted] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Rehearse this plan", exact: true }).click()]);
+    const [submitted] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Submit for approval", exact: true }).click()]);
     assert.equal((await submitted).status(), 200);
-    await expect(page.getByRole("region", { name: "Rehearsal progress" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Run progress" })).toBeVisible();
     return result.saved.id as string;
   }
   async function approveManaged(page: Page, id: string) {
@@ -65,7 +107,7 @@ async function main() {
     for (let i = 0; i < 150; i++) { if ((await db.query("SELECT state FROM ll_workflow_runs WHERE id=$1", [id])).rows[0]?.state === "completed") return; await delay(100); }
     throw Error("Background run did not verify completion");
   }
-  async function stopApp() { if (app?.pid) { try { process.kill(-app.pid, "SIGKILL"); } catch {} await delay(400); } }
+  async function stopApp(){await stopOwnedGroup(app);}
   async function login(page: Page, email: string) {
     const prefetched: string[] = [];
     const observe = (r: import("@playwright/test").Request) => { if (r.headers()["next-router-prefetch"] === "1" || r.headers()["purpose"] === "prefetch") prefetched.push(r.url()); };
@@ -76,36 +118,122 @@ async function main() {
     assert.equal(prefetched.length, 0, "Sign-in must not fan out background route prefetches");
     await page.getByLabel("Email", { exact: true }).fill(email); await page.getByLabel("Password").fill(password);
     const [signedIn] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/session") && r.request().method() === "POST"), page.getByRole("button", { name: "Sign in", exact: true }).click()]);
-    const result = await signedIn; assert.equal(result.status(), 200, `UI sign-in: ${JSON.stringify(await result.json())}`);
-    await expect(page.getByRole("heading", { name: "Describe the work. Rehearse it first." })).toBeVisible();
+    const result = await signedIn; assert.equal(result.status(), 200, "Named UI sign-in refused");
+    await expect(page.getByRole("heading", { name: "Describe the work." })).toBeVisible();
   }
   async function open(page: Page, id: string) {
+    diagnosticPage=page;phase="open-saved-run-navigation";
     await page.goto(origin + "/control-plane/work");
-    await page.getByRole("button", { name: new RegExp(id.slice(0, 8)) }).click();
-    await expect(page.getByRole("heading", { name: /Customer handoff/ })).toBeVisible();
+    phase="open-saved-run-selection";await page.getByRole("button", { name: new RegExp(id.slice(0, 8)) }).click();
+    phase="open-saved-run-heading";await expect(page.getByRole("heading", { name: /Customer handoff/ })).toBeVisible();
   }
-  async function chat(page: Page, text: string) {
+  let pendingConversationObserved = false;
+  async function chat(page: Page, text: string, observePending = false) {
     await page.getByLabel("Your request or clarification").fill(text);
-    const [result] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Send request", exact: true }).click()]);
-    const response = await result; assert.equal(response.status(), 200); return response.json();
+    if (!observePending) {
+      const [result] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST"), page.getByRole("button", { name: "Send request", exact: true }).click()]);
+      assert.equal(result.status(), 200); return result.json();
+    }
+    let intercepted = false, chatRequests = 0;
+    let releaseRequest!: () => void;
+    const released = new Promise<void>(resolve => { releaseRequest = resolve; });
+    const chatRoute = async (route: Route) => {
+      if (route.request().method() === "POST" && route.request().postDataJSON().operation === "chat") {
+        chatRequests++; intercepted = true; await released;
+      }
+      await route.continue();
+    };
+    await page.route("**/api/workspace/enquiries*", chatRoute);
+    const result = page.waitForResponse(r => r.url().endsWith("/api/workspace/enquiries") && r.request().method() === "POST");
+    try {
+      await page.getByRole("button", { name: "Send request", exact: true }).evaluate(button => { if (!(button instanceof HTMLButtonElement)) throw Error("Send button unavailable"); button.click(); button.click(); });
+      try {
+        await expect.poll(() => intercepted, { timeout: 15000 }).toBe(true);
+        const conversation = page.getByRole("log", { name: "Workflow conversation" });
+        await expect(conversation.getByText(text, { exact: true })).toBeVisible();
+        await expect(conversation.getByRole("status").filter({ hasText: "Preparing your plan…" })).toBeVisible();
+        await expect(conversation.locator("article")).toHaveCount(2);
+        await expect(page.getByRole("button", { name: "Preparing…", exact: false })).toBeDisabled();
+        assert.equal(chatRequests, 1, "Double-submit must send one real model-planning request");
+        await page.screenshot({ path:resolve(output,"chat-ui-pending.png"), fullPage: true });
+      } finally { releaseRequest(); }
+      const response = await result; assert.equal(response.status(), 200);
+      const data = await response.json();
+      await expect(page.getByRole("log", { name: "Workflow conversation" }).locator("article")).toHaveCount(2);
+      await expect(page.getByRole("status").filter({ hasText: "Preparing your plan…" })).toHaveCount(0);
+      assert.equal(chatRequests, 1, "Pending work must not retry planning automatically");
+      pendingConversationObserved = true;
+      return data;
+    } finally { releaseRequest(); await page.unroute("**/api/workspace/enquiries*", chatRoute); }
   }
   async function prepare(page: Page) {
     await page.goto(origin + "/control-plane/work");
-    assert((await chat(page, enquiryRequest)).clarification);
-    const { saved } = await chat(page, "Use customer@example.test for this rehearsal. Keep ask-first approval.");
+    assert((await chat(page, enquiryRequest, !pendingConversationObserved)).clarification);
+    const { saved } = await chat(page, "Use customer@example.test. Validate with simulated systems and keep ask-first approval.");
     assert(saved?.id); assert.equal(saved.run_id, null);
     assert.equal((await db.query("SELECT count(*) FROM ll_workflow_runs WHERE id=$1", [saved.id])).rows[0].count, "0");
-    await expect(page.getByRole("heading", { name: "2. Review this exact plan" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Review this exact plan" })).toBeVisible();
     await page.getByText("Advanced: use registered agents", { exact: true }).click();
     await page.getByLabel(/^CRM agent/).selectOption("crm-agent"); await page.getByLabel(/^Messaging agent/).selectOption("email-agent");
     await page.getByRole("checkbox").check();
-    await page.getByRole("button", { name: "Create this reviewed workflow" }).click();
+    await page.getByRole("button", { name: "Create this reviewed workflow", exact: true }).click();
     await expect(page.getByRole("heading", { name: /Customer handoff/ })).toBeVisible();
     return saved;
   }
   function step(page: Page, ordinal: number) { return page.locator("article").filter({ has: page.getByRole("heading", { name: ordinal === 1 ? /^1\. Set/ : /^2\. Send/ }) }); }
+  // Measure the authenticated controls in their actual saved state before its
+  // existing real connector request. Resizing never submits or grants authority.
+  async function measureAdvancedAction(page: Page, ordinal: number, name: string) {
+    const originalViewport = page.viewportSize();
+    assert(originalViewport, "Actual browser viewport required");
+    const originalPane=await currentChatPane(page);
+    try {
+      for (const width of [1280, 390]) {
+        await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+        diagnosticPage=page;
+        if(width===390&&originalPane){phase=`action-${ordinal}-${actionCode(name)}-mobile-activity-navigation`;assert(await selectVisibleChatPane(page,"activity"),"Visible mobile Activity navigation required");}
+        phase=`action-${ordinal}-${actionCode(name)}-${width}-visible`;
+        const button = step(page, ordinal).getByRole("button", { name, exact: true });
+        await expect(button).toBeVisible();
+        phase=`action-${ordinal}-${actionCode(name)}-${width}-measure`;
+        const measured = await button.evaluate(element => {
+          const box = element.getBoundingClientRect();
+          const ys = new Set<number>();
+          const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+          while (walker.nextNode()) {
+            const node = walker.currentNode;
+            const text = node.textContent || "";
+            const first = text.search(/\S/), last = text.search(/\s*$/);
+            if (first < 0) continue;
+            const range = document.createRange();
+            range.setStart(node, first); range.setEnd(node, last);
+            for (const rect of range.getClientRects()) if (rect.width > 0 && rect.height > 0) ys.add(Math.round(rect.top));
+          }
+          return { height: box.height, lines: ys.size, left: box.left, right: box.right,
+            label: element.textContent?.trim(), viewport: innerWidth,
+            overflow: document.documentElement.scrollWidth > innerWidth || element.scrollWidth > element.clientWidth };
+        });
+        lastLayout={height:measured.height,lines:measured.lines,left:measured.left,right:measured.right,viewport:measured.viewport,overflow:measured.overflow};
+        phase=`action-${ordinal}-${actionCode(name)}-${width}-layout-assertions`;
+        assert.equal(measured.viewport, width);
+        assert.equal(measured.label, name);
+        assert(measured.height >= 44, `Advanced ${name} touch target below 44px at ${width}px`);
+        assert.equal(measured.lines, 1, `Advanced ${name} label wraps at ${width}px`);
+        assert(!measured.overflow && measured.left >= 0 && measured.right <= width, `Advanced ${name} overflows at ${width}px`);
+        advancedButtonMeasurements.push({ label: name, step: ordinal, viewport: width, height: measured.height, lines: measured.lines });
+        const screenshotKey=`${ordinal}-${actionCode(name)}`;
+        if(width===390&&!mobileActionScreenshots.has(screenshotKey)){await page.screenshot({path:resolve(output,`advanced-mobile-activity-${screenshotKey}.png`),fullPage:true});mobileActionScreenshots.add(screenshotKey);}
+      }
+    } finally {
+      if(originalPane){await page.setViewportSize({width:390,height:844});assert(await selectVisibleChatPane(page,originalPane),"Restore previous mobile chat pane through visible navigation");}
+      await page.setViewportSize(originalViewport);
+    }
+  }
   async function clickAction(page: Page, ordinal: number, name: string) {
-    const [result] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/durable/connectors") && r.request().method() === "POST"), step(page, ordinal).getByRole("button", { name, exact: true }).click()]); return result;
+    await measureAdvancedAction(page, ordinal, name);
+    if((page.viewportSize()?.width||0)<=700&&await currentChatPane(page))assert(await selectVisibleChatPane(page,"activity"),"Mobile action entry requires Activity navigation");
+    phase=`action-${ordinal}-${actionCode(name)}-request`;
+    const [result] = await Promise.all([page.waitForResponse(r => r.url().endsWith("/api/durable/connectors") && r.request().method() === "POST"), step(page, ordinal).getByRole("button", { name, exact: true }).click()]); lastConnectorStatus=result.status();phase=`action-${ordinal}-${actionCode(name)}-http-status`;return result;
   }
   async function proposeAndApprove(page: Page, reviewer: Page, id: string) {
     for (const ordinal of [1, 2]) assert.equal((await clickAction(page, ordinal, "Submit prepared action")).status(), 200);
@@ -116,31 +244,40 @@ async function main() {
     await open(page, id);
   }
   async function effects() { return JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects; }
+  async function committedMembershipChange(email:string,active:boolean) {
+    const client=await db.connect();
+    try{await client.query("BEGIN");await client.query("SET LOCAL lock_timeout='2s'");await client.query("SELECT id FROM ll_orgs WHERE id='local-proof' FOR UPDATE");await client.query("UPDATE ll_members SET active=$2 WHERE email=$1",[email,active]);await client.query("COMMIT");}
+    catch(error){await client.query("ROLLBACK");throw error;}finally{client.release();}
+  }
+
   async function run(page: Page, id: string) { return (await page.request.get(origin + "/api/durable/workflows?run=" + id)).json(); }
   async function complete(page: Page) {
     await page.getByRole("button", { name: "Verify and complete", exact: true }).click();
-    await expect(page.getByRole("region", { name: "Verification receipt" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Verification evidence" })).toBeVisible();
   }
   try {
     await admin.query(`CREATE SCHEMA ${schema}`);
-    for (const file of ["lib/durable/schema.sql", "lib/workspace/schema.sql", "lib/refunds/schema.sql", "lib/connectors/schema.sql", "lib/workflows/schema.sql", "lib/durable/proposal-schema.sql", "lib/enquiries/schema.sql", "lib/enquiries/managed-schema.sql", "lib/enquiries/temporal-schema.sql", "lib/durable/recovery-schema.sql", "lib/connectors/scope-schema.sql", "lib/enquiries/record-routing-schema.sql"]) await db.query(await readFile(file, "utf8"));
-    await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
-    await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('local-proof',$1)",[recoveryEpoch]);
-    for (const [email, name] of [["requester@example.test", "Requester"], ["reviewer@example.test", "Reviewer"]]) await db.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,'local-proof',$2,$3)", [email, name, passwordHash(password)]);
-    await db.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
+    schemaOid=(await admin.query("SELECT oid::text oid FROM pg_namespace WHERE nspname=$1",[schema])).rows[0].oid;
+    installed=await installChatProofRoles({url:process.env.LOOPLABS_TEST_DATABASE_URL!,transport,schema,generation:join(dir,"tenant-generation"),epoch:recoveryEpoch,installation:"c"+randomBytes(8).toString("hex"),seed:async owner=>{
+    for (const [email, name] of [["requester@example.test", "Requester"], ["reviewer@example.test", "Reviewer"]]) await owner.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,'local-proof',$2,$3)", [email, name, passwordHash(password)]);
+    await owner.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')");
     for (const [id, tool] of [["crm-agent", "twin.crm"], ["email-agent", "twin.email"]]) {
-      await db.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof',$1,$2,100)", [id, [tool]]);
-      await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'agent')", [tokenHash(randomBytes(32).toString("base64url")), id]);
+      await owner.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof',$1,$2,100)", [id, [tool]]);
+      await owner.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'agent')", [tokenHash(randomBytes(32).toString("base64url")), id]);
     }
-    await db.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES('local-proof','crm-agent','CRM agent','requester@example.test','crm_agent','crm_twin'),('local-proof','email-agent','Email agent','requester@example.test','email_agent','email_twin')");
+    await owner.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES('local-proof','crm-agent','CRM agent','requester@example.test','crm_agent','crm_twin'),('local-proof','email-agent','Email agent','requester@example.test','email_agent','email_twin')");
+    }});
     await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records:[{version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"},{version:"record-scope-1",workspaceId:"local-proof",contactId:"2002",recipient:"bob@example.test"}]}),{mode:0o600});
     await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','enquiry-runner','worker')", [tokenHash(workerToken)]);
     await writeFile(`${dir}/connector-twin-faults.json`,JSON.stringify({loseResponseRecords:["2002"]}),{mode:0o600});
     await writeFile(`${dir}/connector-twin-credentials.json`, JSON.stringify({ token }), { mode: 0o600 });
+    const workerArtifact=await admitExtractedChatProofWorker(installed.owner,artifactInput,resolve('.worker'));
+    recordBuildId=workerArtifact.buildId;
+    await writeFile(join(dir,"inspected-worker-artifact.json"),JSON.stringify(workerArtifact),{mode:0o600,flag:"wx"});
     const backend = process.env.FETCHSANDBOX_BACKEND_PATH || `${process.env.HOME}/sandbox/backend`;
-    twin = spawn(`${backend}/.venv/bin/python`, ["scripts/connector-twin.py"], { env: { ...process.env, LOOPLABS_CONNECTOR_STATE_DIR: dir }, stdio: ["ignore", "pipe", "pipe"] });
+    twin = spawn(`${backend}/.venv/bin/python`, ["scripts/connector-twin.py"], { env: { ...noCloudEnvironment(), LOOPLABS_CONNECTOR_STATE_DIR: dir }, stdio: ["ignore", "pipe", "pipe"] });
+    twin.stdout?.on("data",()=>{});twin.stderr?.on("data",()=>{});
     for (let i = 0; i < 100; i++) { try { if ((await fetch("http://127.0.0.1:8018/crm/crm/v3/objects/contacts/1001", { headers: { Authorization: `Bearer ${token}` } })).ok) break; } catch {} await delay(100); }
-    recordBuildId=JSON.parse(await readFile(".worker/temporal-manifest.json","utf8")).buildId;
     await startApp(); browser = await chromium.launch({ headless: true });
     const requester = await browser.newContext(), reviewerContext = await browser.newContext();
     const page = await requester.newPage(), reviewer = await reviewerContext.newPage();
@@ -161,21 +298,28 @@ async function main() {
     await page.reload();await expect(page.getByText("Accountable owner: requester@example.test",{exact:true})).toBeVisible();
     assert.equal((await db.query("SELECT count(*) FROM ll_connector_actions")).rows[0].count,"0");
     assert.equal((await db.query("SELECT count(*) FROM ll_workflow_runs")).rows[0].count,"0");
-    await page.screenshot({path:"docs/evidence/record-onboarding-desktop.png",fullPage:true});
+    await page.screenshot({path:resolve(output,"record-onboarding-desktop.png"),fullPage:true});
     await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    await page.screenshot({path:"docs/evidence/record-onboarding-mobile.png",fullPage:true});await page.setViewportSize({width:1280,height:900});
+    await page.screenshot({path:resolve(output,"record-onboarding-mobile.png"),fullPage:true});await page.setViewportSize({width:1280,height:900});
     check("Invited browser enrolls configured record, explicitly grants/revokes/restores agent access, denies stale restoration and reloads saved owner; no actions or workflow created; 390px layout has no overflow");
     const normal = await prepare(page);
-    await page.screenshot({ path: "docs/evidence/chat-ui-plan.png", fullPage: true });
+    await page.screenshot({ path:resolve(output,"chat-ui-plan.png"), fullPage: true });
+    const savedMembership = (await db.query("SELECT membership_owner FROM ll_enquiry_plans WHERE id=$1", [normal.id])).rows[0].membership_owner;
+    assert.deepEqual(savedMembership, {kind:"member", subject:"requester@example.test", generation:"1"});
     check("Typed natural-language request calls the real model, asks for the missing customer and saves an exact plan without effects");
     const duplicate = await page.request.post(origin + "/api/workspace/enquiries", { headers: { Origin: origin }, data: { operation: "chat", id: normal.id, turns: [{ role: "user", text: enquiryRequest }, { role: "user", text: "Use customer@example.test. Keep ask-first." }] } });
     assert.equal(duplicate.status(), 200); assert.equal((await duplicate.json()).saved.id, normal.id);
     const replay = await page.request.post(origin + "/api/workspace/enquiries", { headers: { Origin: origin }, data: { operation: "start", id: normal.id, planHash: normal.plan_hash, crmAgent: "crm-agent", emailAgent: "email-agent" } }); assert.equal(replay.status(), 200);
     assert.equal((await db.query("SELECT count(*) FROM ll_workflow_runs")).rows[0].count, "1"); assert.equal(Object.keys(await effects()).length, 0);
     check("Repeated typed intent and reviewed-plan creation reuse the same saved plan and run without authorizing execution");
+    phase="normal-submit-and-independent-approve";diagnosticPage=page;
     await proposeAndApprove(page, reviewer, normal.id);
+    const actionMemberships = (await db.query("SELECT membership_proposal,membership_approval FROM ll_connector_actions a JOIN ll_workflow_steps s ON s.action_id=a.id AND s.org_id=a.org_id WHERE s.run_id=$1", [normal.id])).rows;
+    assert.equal(actionMemberships.length, 2);
+    assert(actionMemberships.every(a => a.membership_proposal.requester.subject === "requester@example.test" && a.membership_proposal.owner.subject === "requester@example.test" && a.membership_proposal.planOwner.subject === "requester@example.test" && a.membership_approval.approver.subject === "reviewer@example.test" && a.membership_approval.approver.generation === "1"));
+    check("Installed membership23 captures actual saved-plan, requester, agent-owner and independent named approval history before connector dispatch");
     for (const ordinal of [1, 2]) assert.equal((await clickAction(page, ordinal, "Execute")).status(), 200);
-    await complete(page); await page.screenshot({ path: "docs/evidence/chat-ui-completed.png", fullPage: true });
+    await complete(page); await page.screenshot({ path:resolve(output,"chat-ui-completed.png"), fullPage: true });
     assert.equal(Object.keys(await effects()).length, 2); observed.push(await run(page, normal.id));
     check("Two independent named approvals, actual CRM/email HTTP effects and UI verification receipt complete the normal rehearsal");
     const lost = await prepare(page); await proposeAndApprove(page, reviewer, lost.id);
@@ -192,14 +336,14 @@ async function main() {
     const contact = await (await fetch("http://127.0.0.1:8018/crm/crm/v3/objects/contacts/1001", { headers: { Authorization: `Bearer ${token}` } })).json();
     const changed = await fetch("http://127.0.0.1:8018/crm/crm/v3/objects/contacts/1001", { method: "PATCH", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "If-Match": contact.updatedAt, "Idempotency-Key": `looplabs-${randomUUID()}` }, body: JSON.stringify({ properties: { lifecyclestage: "customer" } }) }); assert.equal(changed.status, 200);
     const staleBefore = await effects(); await clickAction(page, 1, "Execute"); assert.equal((await clickAction(page, 2, "Execute")).status(), 409); assert.deepEqual(await effects(), staleBefore);
-    observed.push(await run(page, stale.id)); await page.screenshot({ path: "docs/evidence/chat-ui-stale.png", fullPage: true });
+    observed.push(await run(page, stale.id)); await page.screenshot({ path:resolve(output,"chat-ui-stale.png"), fullPage: true });
     check("Customer data changed after approval: the atomic version check rejects the stale write and no downstream message executes");
     await page.goto(origin + "/control-plane/work"); assert((await chat(page, "Rehearse the acknowledgement and also give a discount and send immediately")).clarification);
     assert.equal((await db.query("SELECT count(*) FROM ll_enquiry_plans")).rows[0].count, "3");
     check("Unsupported extra actions stop in chat without creating a plan or workflow");
     await page.setViewportSize({ width: 390, height: 844 }); await page.goto(origin + "/control-plane/work");
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth && [...document.querySelectorAll(".cp-durable-card button")].every(b => b.getBoundingClientRect().right <= innerWidth)));
-    await page.screenshot({ path: "docs/evidence/chat-ui-mobile.png", fullPage: true }); check("390px mobile conversation has no horizontal overflow");
+    await page.screenshot({ path:resolve(output,"chat-ui-mobile.png"), fullPage: true }); check("390px mobile conversation has no horizontal overflow");
     const legacyEffects = await effects();
     await startWorker();
     const automatic = await managed(page);
@@ -224,12 +368,12 @@ async function main() {
     for (const id of Object.keys(lostEffects)) assert.deepEqual(recoveredEffects[id], lostEffects[id]);
     check("Real app and worker restart automatically read back a lost CRM response, dispatch only the held email, and save a full verification receipt without another CRM write");
     await page.goto(origin + "/control-plane/work"); await page.getByRole("button", { name: new RegExp(recovery.slice(0,8)) }).click();
-    await expect(page.getByRole("region", { name: "Verification receipt" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Verification evidence" })).toBeVisible();
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.screenshot({ path: "docs/evidence/enquiry-managed-desktop.png", fullPage: true });
+    await page.screenshot({ path:resolve(output,"enquiry-managed-desktop.png"), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    await page.screenshot({ path: "docs/evidence/enquiry-managed-mobile.png", fullPage: true });
+    await page.screenshot({ path:resolve(output,"enquiry-managed-mobile.png"), fullPage: true });
     check("Managed approval cards, connection setup and saved verification receipt remain readable at 390px without overflow");
     const managedRuns = [await run(page, automatic), await run(page, recovery)];
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -244,13 +388,14 @@ async function main() {
     temporal = await TestWorkflowEnvironment.createLocal();
     const temporalToken = randomBytes(32).toString("base64url");
     await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','enquiry-temporal','worker')", [tokenHash(temporalToken)]);
-    const actor = await authenticate(db, temporalToken);
+    const actor = await authenticate(installed.worker, temporalToken);
+    const schedulerActor=await authenticate(installed.scheduler,temporalToken);
     const queue = `ui-${randomUUID()}`;
-    const workflows = new WorkflowControl(db, new ConnectorControl(db, new FetchSandboxConnectors("http://127.0.0.1:8018", token)));
-    const outbox = new TemporalOutbox(db);
-    assert.equal(await outbox.tick(actor, temporal.client, queue), 1);
+    const workflows = new WorkflowControl(installed.worker, new ConnectorControl(installed.worker, new FetchSandboxConnectors("http://127.0.0.1:8018", token)));
+    const outbox = new TemporalOutbox(installed.scheduler);
+    assert.equal(await outbox.tick(schedulerActor, temporal.client, queue), 1);
     const intent = (await db.query("SELECT workflow_id FROM ll_temporal_dispatch WHERE plan_id=$1", [durable])).rows[0];
-    const executor = await Worker.create({ connection: temporal.nativeConnection, taskQueue: queue, workflowsPath: resolve("runtime/temporal/pinned-workflow.ts"), activities: versionedActivities(db, actor, activities(workflows, actor)), shutdownGraceTime: "1 second" });
+    const executor = await Worker.create({ connection: temporal.nativeConnection, taskQueue: queue, workflowsPath: resolve("runtime/temporal/pinned-workflow.ts"), activities: versionedActivities(installed.worker, actor, activities(workflows, actor)), shutdownGraceTime: "1 second" });
     await executor.runUntil(async () => {
       await approveManaged(reviewer, durable);
       assert.equal(await temporal!.client.workflow.getHandle(intent.workflow_id).result(), "completed");
@@ -259,14 +404,16 @@ async function main() {
     await page.reload();
     await page.getByRole("button", { name: new RegExp(durable.slice(0, 8)) }).click();
     await expect(page.getByRole("heading", { name: "Acknowledgement verified", exact: true })).toBeVisible();
-    await expect(page.getByText("Durable execution selected", { exact: true })).toBeVisible();
-    await page.screenshot({ path: "docs/evidence/enquiry-temporal-desktop.png", fullPage: true });
+    // Current verified-result UX hides obsolete scheduling guidance; ownership
+    // was already checked while pending and remains durable in the API.
+    await expect(page.getByText("Durable execution selected", { exact: true })).toHaveCount(0);
+    await page.screenshot({ path:resolve(output,"enquiry-temporal-desktop.png"), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    await page.screenshot({ path: "docs/evidence/enquiry-temporal-mobile.png", fullPage: true });
+    await page.screenshot({ path:resolve(output,"enquiry-temporal-mobile.png"), fullPage: true });
     check("Typed chat and invited UI transfer one saved run to Temporal without granting approval; second-member approvals complete exactly two effects and reload preserves ownership");
     const until=async(test:()=>Promise<boolean>,label:string,timeout=90000)=>{const start=Date.now();while(!(await test())){if(Date.now()-start>timeout)throw Error(`Timed out: ${label}`);await delay(100);}};
-    const packagedService=(role:"worker"|"scheduler")=>{const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{env:{...process.env,LOOPLABS_RECOVERY_EPOCH:recoveryEpoch,LOOPLABS_DATABASE_URL:url.toString(),LOOPLABS_TEMPORAL_WORKER_TOKEN:temporalToken,LOOPLABS_TEMPORAL_ADDRESS:temporal!.address,LOOPLABS_TEMPORAL_NAMESPACE:"default",LOOPLABS_TEMPORAL_TASK_QUEUE:"scoped-ui-"+schema,LOOPLABS_TEMPORAL_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",LOOPLABS_TEMPORAL_API_KEY:"",LOOPLABS_TEMPORAL_CERT_PATH:"",LOOPLABS_TEMPORAL_KEY_PATH:"",LOOPLABS_TEMPORAL_CA_PATH:"",LOOPLABS_TEMPORAL_POLL_MS:"250",LOOPLABS_TEMPORAL_HEALTH_PORT:role==="worker"?"19340":"19341",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:""},stdio:"ignore"});packaged.push(child);return child;};
+    const packagedService=(role:"worker"|"scheduler")=>{const child=spawn(process.execPath,[".worker/temporal-service.cjs",role],{env:{...noCloudEnvironment(),...installed!.environment(role),LOOPLABS_TEMPORAL_WORKER_TOKEN:temporalToken,LOOPLABS_TEMPORAL_ADDRESS:temporal!.address,LOOPLABS_TEMPORAL_NAMESPACE:"default",LOOPLABS_TEMPORAL_TASK_QUEUE:"scoped-ui-"+schema,LOOPLABS_TEMPORAL_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_RECORD_BUILD_ID:recordBuildId,LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true",LOOPLABS_TEMPORAL_API_KEY:"",LOOPLABS_TEMPORAL_CERT_PATH:"",LOOPLABS_TEMPORAL_KEY_PATH:"",LOOPLABS_TEMPORAL_CA_PATH:"",LOOPLABS_TEMPORAL_POLL_MS:"250",LOOPLABS_TEMPORAL_HEALTH_PORT:role==="worker"?"19340":"19341",LOOPLABS_CONNECTOR_TWIN_URL:"http://127.0.0.1:8018",LOOPLABS_CONNECTOR_TWIN_TOKEN:token,LOOPLABS_FETCHSANDBOX_BINDING:""},stdio:"ignore"});packaged.push(child);return child;};
     const ready=async(port:number)=>{try{return (await fetch(`http://127.0.0.1:${port}/health/ready`,{signal:AbortSignal.timeout(1000)})).ok;}catch{return false;}};
     let scopedWorker=packagedService("worker");packagedService("scheduler");await until(async()=>await ready(19340)&&await ready(19341),"scoped packaged readiness");
     await page.goto(origin+"/control-plane/records");
@@ -280,13 +427,16 @@ async function main() {
     const beforeScoped=await effects();
     for(const recipient of ["alice@example.test","bob@example.test"]){
       const record=records.find((r:{recipient:string})=>r.recipient===recipient);
-      await page.goto(origin+"/control-plane/work");await page.getByLabel("Customer record for this conversation").selectOption(record.id);
-      await page.getByLabel("Your request or clarification").fill(`Check the CRM record for ${recipient}, prepare an acknowledgement, and ask me before sending. Rehearse it with FetchSandbox first.`);
+      await page.goto(origin+"/control-plane/work");
+      const setup=page.locator("details.cp-chat-setup");
+      if(!await setup.evaluate(el=>(el as HTMLDetailsElement).open))await setup.locator("summary").click();
+      await page.getByLabel("Customer record for this conversation").selectOption(record.id);
+      await page.getByLabel("Your request or clarification").fill(`Check the CRM record for ${recipient}, prepare an acknowledgement, and ask me before sending. Validate it with simulated systems first.`);
       const [interpreted] = await Promise.all([page.waitForResponse(r=>r.url().includes("/api/workspace/enquiries?scope=")&&r.request().method()==="POST"), page.getByRole("button",{name:"Send request",exact:true}).click()]);const answer=await interpreted;assert.equal(answer.status(),200);const value=await answer.json();assert(value.saved);assert.equal(value.saved.plan.contact.email,recipient);scopedPlans.push(value.saved);
       await expect(page.getByText("Prepared reply to "+recipient,{exact:true})).toBeVisible();
       await page.getByLabel(/^CRM agent/).selectOption("crm-agent");await page.getByLabel(/^Messaging agent/).selectOption("email-agent");await page.getByRole("checkbox").check();
       const [submitted] = await Promise.all([page.waitForResponse(r=>r.url().includes("/api/workspace/enquiries?scope=")&&r.request().method()==="POST"), page.getByRole("button",{name:"Submit for independent approval",exact:true}).click()]);assert.equal((await submitted).status(),200);
-      await expect(page.getByRole("region",{name:"Rehearsal progress"})).toBeVisible();await expect(page.getByText("To: "+recipient,{exact:true})).toBeVisible();
+      await expect(page.getByRole("region",{name:"Run progress"})).toBeVisible();await expect(page.getByText("To: "+recipient,{exact:true})).toBeVisible();
       const duplicate=await page.request.post(origin+"/api/workspace/enquiries?scope="+record.id,{headers:{Origin:origin},data:{operation:"submit",id:value.saved.id,planHash:value.saved.plan_hash,crmAgent:"crm-agent",emailAgent:"email-agent"}});assert.equal(duplicate.status(),200);
       assert.equal((await db.query("SELECT count(*) FROM ll_connector_actions a JOIN ll_workflow_steps s ON s.org_id=a.org_id AND s.action_id=a.id WHERE s.run_id=$1 AND a.state='held'",[value.saved.id])).rows[0].count,"2");
     }
@@ -307,33 +457,79 @@ async function main() {
     await page.reload();await page.getByRole("button",{name:new RegExp(scopedPlans[1].id.slice(0,8))}).click();await expect(page.getByRole("heading",{name:"Acknowledgement verified",exact:true})).toBeVisible();await expect(page.getByText("To: bob@example.test",{exact:true})).toBeVisible();
     await expect(page.getByText("Independent action approvals are still required.",{exact:false})).toHaveCount(0);
     await expect(page.getByText("Execution is subject to independent approval and effect verification.",{exact:false})).toBeVisible();
-    await page.screenshot({path:"docs/evidence/scoped-chat-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.getByRole("region",{name:"Rehearsal progress"}).scrollIntoViewIfNeeded();
+    await page.setViewportSize({width:1280,height:900});assert.equal(await page.evaluate(()=>innerWidth),1280);
+    await page.screenshot({path:resolve(output,"scoped-chat-desktop.png"),fullPage:true});await page.setViewportSize({width:390,height:844});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.getByRole("region",{name:"Run progress"}).scrollIntoViewIfNeeded();
     assert(await page.locator(".cp-enquiry-progress p").evaluateAll(nodes=>nodes.every(n=>parseFloat(getComputedStyle(n).fontSize)>=16)));
-    await page.screenshot({path:"docs/evidence/scoped-chat-mobile.png",fullPage:false});
+    await page.screenshot({path:resolve(output,"scoped-chat-mobile.png"),fullPage:false});
+    check("Actual scoped desktop screenshot uses 1280px and mobile screenshot uses 390px with readable outcome text and no horizontal overflow");
     assert.deepEqual(await effects(),afterScoped);
     check("Confirmed packaged worker SIGKILL and real app restart preserve both scoped UI runs; independent approvals yield exactly four intended effects, actual lost CRM response reconciles without resend, histories replay and reload/mobile preserve exact recipients");
+    // All scoped runs are complete. Stop only this proof's worker/scheduler
+    // processes before direct administrator lifecycle mutation; NOWAIT refusal
+    // remains required when a real concurrent writer owns the workspace lock.
+    for(const child of packaged)if(child.exitCode===null&&!child.signalCode){child.kill("SIGTERM");for(let i=0;i<250 && child.exitCode===null&&!child.signalCode;i++)await delay(100);if(child.exitCode===null&&!child.signalCode)throw Error("Owned packaged process did not quiesce before membership lifecycle test");}
+    // An invisible deactivate/reactivate cycle must not revive approved work.
+    const historyPlan = await prepare(page); await proposeAndApprove(page, reviewer, historyPlan.id);
+    const historyAction = (await run(page, historyPlan.id)).steps[0];
+    const historyBefore = await effects();
+    await committedMembershipChange("reviewer@example.test",false);
+    await committedMembershipChange("reviewer@example.test",true);
+    assert.equal((await db.query("SELECT generation::text FROM ll_quote_member_generations WHERE email='reviewer@example.test'")).rows[0].generation, "2");
+    assert.equal((await clickAction(page, 1, "Execute")).status(), 200);
+    const historyAfter = (await db.query("SELECT state,membership_approval FROM ll_connector_actions WHERE id=$1", [historyAction.action_id])).rows[0];
+    assert.equal(historyAfter.state, "cancelled"); assert.equal(historyAfter.membership_approval.approver.generation, "1");
+    assert.deepEqual(await effects(), historyBefore);
+    check("Actual browser execution after named approver deactivation/reactivation cancels the old approval without provider effects or rebinding its original history");
+    // A saved typed plan predating owner revocation also cannot start fresh work.
+    await page.goto(origin + "/control-plane/work");
+    const staleOwner = await chat(page, enquiryRequest + " Use customer@example.test."); assert(staleOwner.saved?.id);
+    const ownerCounts = (await db.query("SELECT (SELECT count(*) FROM ll_workflow_runs)::int runs,(SELECT count(*) FROM ll_connector_actions)::int actions")).rows[0];
+    await committedMembershipChange("requester@example.test",false);
+    await committedMembershipChange("requester@example.test",true);
+    const staleOwnerStart = await page.request.post(origin + "/api/workspace/enquiries", {headers:{Origin:origin},data:{operation:"start",id:staleOwner.saved.id,planHash:staleOwner.saved.plan_hash,crmAgent:"crm-agent",emailAgent:"email-agent"}});
+    assert.equal(staleOwnerStart.status(),409);
+    assert.deepEqual((await db.query("SELECT (SELECT count(*) FROM ll_workflow_runs)::int runs,(SELECT count(*) FROM ll_connector_actions)::int actions")).rows[0],ownerCounts);
+    assert.equal((await db.query("SELECT run_id FROM ll_enquiry_plans WHERE id=$1",[staleOwner.saved.id])).rows[0].run_id,null);
+    assert.deepEqual(await effects(), historyBefore);
+    check("Real typed saved plan after requester deactivation/reactivation refuses workflow creation and leaves action/run counts, original plan and provider effects unchanged");
     // Actual exhausted allowance refusal must remain a human-readable saved draft.
-    assert((await db.query("SELECT reserved FROM ll_agents WHERE id=ANY($1::text[])",[["crm-agent","email-agent"]])).rows.every(r=>r.reserved>0));
+    assert((await db.query("SELECT reserved FROM ll_agents WHERE id=ANY($1::text[])",[["crm-agent","email-agent"]])).rows.every(r=>r.reserved>0), "Exhaustion case requires both registered agents to have prior reservations");
     await db.query("UPDATE ll_agents SET action_limit=reserved WHERE id=ANY($1::text[])",[["crm-agent","email-agent"]]);
     await page.setViewportSize({width:1280,height:900});await page.getByRole("button",{name:"Start a new conversation",exact:true}).click();
+    const exhaustedSetup=page.locator("details.cp-chat-setup");
+    if(!await exhaustedSetup.evaluate(el=>(el as HTMLDetailsElement).open))await exhaustedSetup.locator("summary").click();
+    await page.getByLabel("Customer record for this conversation").selectOption(scopedPlans[1].plan.recordEnrollment.id);
     await page.getByLabel("Your request or clarification").fill(enquiryRequest+" Use bob@example.test.");
     const [blockedChatResponse] = await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname==="/api/workspace/enquiries"&&r.request().method()==="POST"), page.getByRole("button",{name:"Send request",exact:true}).click()]);
-    const blockedPlan=(await (await blockedChatResponse).json()).saved;assert(blockedPlan?.id);
+    assert.equal((await blockedChatResponse).status(),200,"Exhaustion case typed request must be accepted before submission");
+    const blockedPlan=(await (await blockedChatResponse).json()).saved;assert(blockedPlan?.id,"Exhaustion case must save a typed plan before attempting held submission");
     await page.getByLabel(/^CRM agent/).selectOption("crm-agent");await page.getByLabel(/^Messaging agent/).selectOption("email-agent");await page.getByRole("checkbox").check();
     const [blockedSubmit] = await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname==="/api/workspace/enquiries"&&r.request().method()==="POST"), page.getByRole("button",{name:"Submit for independent approval",exact:true}).click()]);assert.equal((await blockedSubmit).status(),403);
-    await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Confirm saved submission",exact:true})).toBeVisible();await expect(page.getByRole("region",{name:"Verification receipt"})).toHaveCount(0);
+    await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Confirm saved submission",exact:true})).toBeVisible();await expect(page.getByRole("region",{name:"Verification evidence"})).toHaveCount(0);
     await expect(page.getByText("Action not submitted",{exact:true})).toHaveCount(2);await expect(page.getByText("Submission incomplete · reopen and retry rehearsal",{exact:true})).toHaveCount(0);
     const blockedRun=await run(page,blockedPlan.id);assert(blockedRun.steps.every((s:{state:string|null})=>s.state===null));assert.equal((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch WHERE plan_id=$1",[blockedPlan.id])).rows[0].n,0);assert.deepEqual(await effects(),afterScoped);
-    await page.reload();await page.getByRole("button",{name:new RegExp(blockedPlan.id.slice(0,8))}).click();await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await page.setViewportSize({width:390,height:844});await page.getByRole("region",{name:"Rehearsal progress"}).scrollIntoViewIfNeeded();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:"docs/evidence/chat-ui-submission-blocked.png",fullPage:false});assert.deepEqual(await effects(),afterScoped);
+    await page.reload();await page.getByRole("button",{name:new RegExp(blockedPlan.id.slice(0,8))}).click();await expect(page.getByRole("heading",{name:"Submission incomplete",exact:true})).toBeVisible();await page.setViewportSize({width:390,height:844});await page.getByRole("region",{name:"Run progress"}).scrollIntoViewIfNeeded();assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:resolve(output,"chat-ui-submission-blocked.png"),fullPage:false});assert.deepEqual(await effects(),afterScoped);
     check("Real typed scoped chat with exhausted registered-agent allowance retains a guided Submission incomplete view after refusal/reload; no submitted actions, Temporal ownership, verification receipt or new effects; 390px layout stays readable");
-    const fingerprints: Record<string, string> = {};
-    for (const file of ["docker-compose.yml","deploy.sh","lib/connectors/routing.ts","lib/enquiries/submission.ts","lib/enquiries/presentation.ts","app/api/durable/connectors/route.ts","app/api/durable/workflows/route.ts","lib/connectors/catalog.ts","app/api/workspace/records/route.ts","components/control-plane/records-workspace.tsx","app/control-plane/records/page.tsx","components/control-plane/shell.tsx","lib/connectors/request.ts","lib/connectors/content.ts","lib/connectors/record-scope.ts","lib/connectors/scopes.ts","lib/connectors/scope-schema.sql","lib/enquiries/record-routing-schema.sql","runtime/temporal/record-routing.ts","runtime/temporal/outbox.ts","runtime/temporal/version-contract.ts","lib/enquiries/runner.ts","lib/durable/proposal-schema.sql","lib/refunds/schema.sql","next.config.mjs", "lib/connectors/contracts.ts", "lib/connectors/twin.ts", "lib/connectors/hosted.ts", "lib/workflows/guard.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql", "lib/durable/service.ts","lib/workspace/identity.ts", "lib/enquiries/chat.ts", "lib/enquiries/chat-contract.ts", "lib/enquiries/service.ts", "app/api/workspace/enquiries/route.ts", "components/control-plane/enquiry-workspace.tsx", "components/control-plane/workflow-workspace.tsx", "lib/workflows/service.ts", "app/control-plane/control-plane.css", "components/marketing/chrome.tsx", "components/control-plane/access.tsx", "scripts/chat-ui-proof.ts", "lib/enquiries/dispatch.ts", "lib/enquiries/runner.ts", "lib/enquiries/managed-schema.sql", "components/control-plane/enquiry-progress.tsx", "components/control-plane/enquiry-execution.tsx", "app/api/workspace/enquiries/execution/route.ts", "scripts/enquiry-worker.ts", "lib/workspace/agents.ts", "lib/connectors/service.ts"])
-      fingerprints[file] = createHash("sha256").update(await readFile(file)).digest("hex");
-    await writeFile("docs/evidence/chat-ui-proof.json", JSON.stringify({ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, typedRequest: enquiryRequest, observedRuns: observed, providerEffects: legacyEffects, scopedRuns,blockedRun,scopedEffects:Object.fromEntries(Object.entries(afterScoped).filter(([id])=>!beforeScoped[id])),managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] }, null, 2) + "\n");
+    for (const label of ["Submit prepared action", "Approve exact action", "Execute", "Execute · lose response", "Verify outcome"]) {
+      for (const viewport of [1280, 390]) assert(advancedButtonMeasurements.some(m => m.label === label && m.viewport === viewport), `Missing actual advanced ${label} measurement at ${viewport}px`);
+    }
+    const fingerprints=await validateChatProofSources();
+    assert.deepEqual(fingerprints,initialSources,"Current chat proof sources changed during trial");
+    pendingReceipt={ at: new Date().toISOString(), scope: "Real browser, real Amazon Bedrock Nova Lite interpretation, isolated PostgreSQL and private FetchSandbox provider twins. No live CRM or real email delivery.", checks, advancedButtonMeasurements, typedRequest: enquiryRequest, observedRuns: observed, workerArtifact,sourceInventoryContract:"installed-chat-source-inventory-2",providerEffects: legacyEffects, scopedRuns,blockedRun,scopedEffects:Object.fromEntries(Object.entries(afterScoped).filter(([id])=>!beforeScoped[id])),managedRuns, managedProviderEffects: await effects(), sourceFingerprints: fingerprints, unsupported: ["Hosted CRM-to-email execution: atomic CRM contact-version enforcement remains unavailable; hosted proof must keep downstream held.", "General workflows, inbox listeners, schedules, arbitrary recipients, real email, durable conversation memory and live-provider readiness."] };
+  } catch(error){
+    try{await failureDiagnostic(error);}catch{console.log("FAIL diagnostic-unavailable");}
+    throw error;
   } finally {
     for(const child of packaged)if(child.exitCode===null&&!child.signalCode){child.kill("SIGTERM");for(let i=0;i<250 && child.exitCode===null&&!child.signalCode;i++)await delay(100);if(child.exitCode===null&&!child.signalCode)throw Error("Packaged child failed to shut down");}
-    await temporal?.teardown(); await browser?.close(); await stopWorker(); await stopApp(); if (twin?.pid) { twin.kill("SIGTERM"); await delay(400); }
-    await db.end(); await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`); await admin.end(); await rm(dir, { recursive: true, force: true });
+    await temporal?.teardown(); await browser?.close(); await stopWorker(); await stopApp(); if(twin?.pid&&twin.exitCode===null&&twin.signalCode===null){twin.kill("SIGTERM");for(let i=0;i<100&&twin.exitCode===null&&twin.signalCode===null;i++)await delay(50);assert(twin.exitCode!==null||twin.signalCode!==null,"Owned provider exit unconfirmed; destructive cleanup refused");}
+    await installed?.close();await db.end();
+    if(schemaOid){assert.equal((await admin.query("SELECT oid::text oid FROM pg_namespace WHERE nspname=$1",[schema])).rows[0]?.oid,schemaOid);for(const[name,oid]of Object.entries(installed?.roles??{}))assert.equal((await admin.query("SELECT oid::text oid FROM pg_roles WHERE rolname=$1",[name])).rows[0]?.oid,oid);await admin.query(`DROP SCHEMA ${schema} CASCADE`);for(const name of Object.keys(installed?.roles??{})){await admin.query("DROP OWNED BY "+name);await admin.query("DROP ROLE "+name);assert.equal((await admin.query("SELECT oid FROM pg_roles WHERE rolname=$1",[name])).rowCount,0);}
+      assert.equal((await admin.query("SELECT oid FROM pg_namespace WHERE nspname=$1",[schema])).rowCount,0);}
+    await admin.end(); await rm(dir, { recursive: true, force: true });
+    for(const key of Object.keys(modelSession))modelSession[key]="";
   }
+  assert(pendingReceipt,"Successful completed trial required");
+  assert.deepEqual(await validateChatProofSources(),initialSources,"Source drift after cleanup");
+  await writeFile(resolve(output,"chat-ui-proof.json"),JSON.stringify({...pendingReceipt,cleanup:{directChildLeadersExited:true,ownedDetachedGroupsAbsent:true,ownedRolesAbsent:true,ownedSchemaAbsent:true}},null,2)+"\n",{mode:0o600,flag:"wx"});
 }
-main().catch(e => { console.error("Chat UI proof failed:", e.message); process.exitCode = 1; });
+main().catch(() => { console.error("Chat UI proof failed; no successful successor receipt was issued."); process.exitCode = 1; });

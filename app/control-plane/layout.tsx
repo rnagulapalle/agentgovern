@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { ControlProvider } from "@/components/control-plane/provider";
-import { ControlShell } from "@/components/control-plane/shell";
+import { ControlProvider } from "../../components/control-plane/provider";
+import { ControlShell } from "../../components/control-plane/shell";
 import "./control-plane.css";
 import "../sales.css";
-import { database } from "@/lib/durable/database";
 import {
-  workspaceMember,
+  workspaceContext,
   WorkspaceGate,
-} from "@/components/control-plane/workspace-gate";
+} from "../../components/control-plane/workspace-gate";
 
 export const metadata: Metadata = {
   title: "Interactive agent control plane",
@@ -21,9 +20,10 @@ export default async function ControlLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const actor = await workspaceMember();
-  if (!actor) return <WorkspaceGate />;
-  const { rows } = await database().query(
+  const context = await workspaceContext();
+  if (!context) return <WorkspaceGate />;
+  const { db, actor } = context;
+  const { rows } = await db.query(
     "SELECT name,email FROM ll_members WHERE org_id=$1 AND email=$2 AND active=true",
     [actor.orgId, actor.subject],
   );

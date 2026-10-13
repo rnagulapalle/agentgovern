@@ -1,0 +1,3 @@
+import {it,expect,vi} from 'vitest';import type {Pool} from 'pg';
+import {publishQuoteWebExecution} from './quote-worker-publication';
+it('offline publisher refuses credential-mixed and accessor inputs before reading a publication, touching SQL or writing a generation',async()=>{const query=vi.fn();const owner={query} as unknown as Pool;let reads=0;const accessor={};Object.defineProperty(accessor,'version',{enumerable:true,get(){reads++;return 2;}});for(const bad of [accessor,{version:2,ownerPassword:'not-published'},Object.create({version:2})])await expect(publishQuoteWebExecution(owner,'/absent/output','/absent/web.json',bad)).rejects.toThrow('descriptor-only');expect(reads).toBe(0);expect(query).not.toHaveBeenCalled();});

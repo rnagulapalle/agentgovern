@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stagingHostAdmission, stagingRoles } from "./staging-host";
+import { stagingHostAdmission, stagingRoles, installedStagingRoles } from "./staging-host";
 const gib = 1024 ** 3, now = Date.parse("2026-10-08T12:00:00Z"), id = "a".repeat(64);
 const inventory = () => ({ observedAt: new Date(now).toISOString(), totalBytes: 16 * gib, availableBytes: 12 * gib, containerIds: [id], containers: [{ id, memoryBytes: 2 * gib }] });
 const plan = () => ({ hostReserveBytes: gib, services: stagingRoles.map(role => ({ role, memoryBytes: gib / 2 })) });
@@ -45,4 +45,12 @@ describe("staging host admission", () => {
     expect(stagingHostAdmission({ ...inventory(), containerIds: [], containers: [] }, plan(), now).admitted).toBe(true);
     expect(stagingHostAdmission(inventory(), { ...plan(), hostReserveBytes: Number.MAX_SAFE_INTEGER }, now).blockers).toContain("resource_budget_overflow");
   });
+});
+
+it("requires every installed quote and retained owner role under the explicit assembly profile", () => {
+ const installed={profile:"installed-ack-quote-1",hostReserveBytes:gib,services:installedStagingRoles.map(role=>({role,memoryBytes:128*1024**2}))};
+ expect(stagingHostAdmission(inventory(),installed,now).admitted).toBe(true);
+ expect(stagingHostAdmission(inventory(),{...installed,services:installed.services.slice(0,-1)},now).blockers).toContain("staging_resource_plan_incomplete");
+ expect(stagingHostAdmission(inventory(),{...installed,profile:"unknown"},now).blockers).toContain("staging_resource_profile_invalid");
+ expect(stagingHostAdmission(inventory(),{...installed,profile:undefined},now).admitted).toBe(false);
 });

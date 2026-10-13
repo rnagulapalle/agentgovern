@@ -1,6 +1,37 @@
 import { createHash } from "node:crypto";
-import { it, expect } from "vitest";
-import { operationsConfig, OperationsHealth, verifyArtifacts } from "./operations";
+import { it, expect, vi } from "vitest";
+import { operationsConfig, OperationsHealth, verifyArtifacts, diagnosticProviderWrite } from "./operations";
+import { ControlError } from "../../lib/durable/contracts";
+import type { ConnectorAction } from "../../lib/connectors/contracts";
+
+it("optional provider diagnostics preserve exact arguments and result without retrying", async () => {
+  const action={payload:{privateValue:"never-log"}} as unknown as ConnectorAction;
+  const result={outcome:"unknown" as const,detail:"Read-back required"};
+  const write=vi.fn(async()=>result),report=vi.fn();
+  expect(await diagnosticProviderWrite(write,report)(action,true)).toBe(result);
+  expect(write).toHaveBeenCalledExactlyOnceWith(action,true);expect(report).not.toHaveBeenCalled();
+});
+it("provider diagnostics emit only fixed categories and retain original failures even if reporting fails", async () => {
+  const action={} as ConnectorAction;
+  for (const error of [new ControlError(409,"Saved connector request or destination changed. No request was sent."),new ReferenceError("private-token-secret"),new TypeError("customer-private-data")]) {
+    const report=vi.fn<Parameters<typeof diagnosticProviderWrite>[1]>(()=>{throw Error("observer unavailable");}),write=vi.fn(async()=>{throw error;});
+    await expect(diagnosticProviderWrite(write,report)(action,false)).rejects.toBe(error);
+    expect(write).toHaveBeenCalledExactlyOnceWith(action,false);
+    const recorded=report.mock.calls[0][0];
+    expect(Object.keys(recorded).sort()).toEqual(["category","cause","kind","status"]);
+    expect(JSON.stringify(recorded)).not.toMatch(/private-token|customer-private|observer unavailable/);
+    expect(recorded.category).toBe(error instanceof ControlError ? "saved_request_binding_refused":"other_provider_failure");
+  }
+});
+it("provider diagnostics allowlist nested transport codes without exposing arbitrary causes",async()=>{
+  for(const code of ["ECONNREFUSED","UND_ERR_CONNECT_TIMEOUT","private-token-secret"]){
+    const cause={code,address:"private-customer-host",token:"private-token-secret"};
+    const error=new TypeError("fetch failed",{cause}),report=vi.fn();
+    await expect(diagnosticProviderWrite(async()=>{throw error;},report)({} as ConnectorAction,false)).rejects.toBe(error);
+    expect(report.mock.calls[0][0].cause).toBe(code==="private-token-secret"?"unclassified":code);
+    expect(JSON.stringify(report.mock.calls)).not.toMatch(/private-customer|private-token/);
+  }
+});
 const local = { LOOPLABS_TEMPORAL_ADDRESS:"127.0.0.1:7233", LOOPLABS_TEMPORAL_NAMESPACE:"default", LOOPLABS_TEMPORAL_TASK_QUEUE:"ack", LOOPLABS_TEMPORAL_BUILD_ID:"v1", LOOPLABS_TEMPORAL_ALLOW_INSECURE_LOOPBACK:"true" };
 it("allows only explicit credential-free local proof transport", () => {
   const c=operationsConfig(local,"worker"); expect(c.activitySlots).toBe(5); expect(c.healthPort).toBe(9320); expect(c.insecureLoopback).toBe(true);

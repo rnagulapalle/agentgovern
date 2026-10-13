@@ -1,14 +1,13 @@
 import { NextRequest } from "next/server";
-import { database } from "@/lib/durable/database";
-import { authenticate, DurableControl } from "@/lib/durable/service";
-import { ControlError } from "@/lib/durable/contracts";
-import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
+import { tenantContext } from "../../../lib/workspace/tenant-context";
+import { DurableControl } from "../../../lib/durable/service";
+import { ControlError } from "../../../lib/durable/contracts";
+import { body, credential, failure, sameOrigin } from "../../../lib/durable/http";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
-    const db = database();
-    const actor = await authenticate(db, credential(request));
+    const { db, actor } = await tenantContext().authenticated(credential(request));
     const service = new DurableControl(db);
     const id = request.nextUrl.searchParams.get("action");
     return Response.json(
@@ -22,8 +21,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     sameOrigin(request);
-    const db = database();
-    const actor = await authenticate(db, credential(request));
+    const { db, actor } = await tenantContext().authenticated(credential(request));
     const service = new DurableControl(db);
     const input = await body(request);
     const { operation, ...p } = input;

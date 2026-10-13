@@ -1,9 +1,10 @@
 "use client";
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { PageTitle } from "./ui";
 import { RequestPlanner } from "./request-planner";
 import { explainStep } from "@/lib/workflows/request";
+import { runProgress, savedMessage } from "@/lib/enquiries/presentation";
 type Step = {
   ordinal: number;
   action_id: string;
@@ -99,18 +100,18 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
   return (
     <div className="cp-durable">
       {!embeddedRunId && <PageTitle
-        eyebrow={guided ? "WORK WITH AGENTS" : "SAVED WORKFLOW RUNS"}
-        title={guided ? "Describe the work. Review the plan." : "Keep the next step on hold"}
+        eyebrow={guided ? "WORKFLOW PLANS" : "WORKFLOW RUNS"}
+        title={guided ? "Describe the work. Review the plan." : "Workflow runs"}
         description={guided ? "Prepare a supported job, choose scoped agents, and follow decisions through approval and verified outcomes." : "Verify a record update before a customer message can execute. Decisions and dependencies survive a refresh."}
       />}
-      <section className="cp-durable-scope">
+      {!embeddedRunId && <section className="cp-durable-scope">
         <strong>Prepared CRM and messaging workflow.</strong>
         <p>
           Two scoped agents submit actions; named people approve them. A final
           check verifies both outcomes. External systems are private
           FetchSandbox twins: no real CRM or email is connected. Any chat model interprets the request only; these buttons do not run an autonomous agent.
         </p>
-      </section>
+      </section>}
       {guided && <RequestPlanner onReview={setReviewed} />}
       {error && (
         <p role="alert" className="cp-durable-error">
@@ -182,46 +183,35 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
         ))}
       </section>}
       {run && (
-        <section className="cp-panel cp-durable-card">
-          <h2>Customer handoff · {run.state}</h2>
-          <p className="cp-durable-id">Run {run.id}</p>
+        <section className="cp-panel cp-durable-card cp-workflow-activity">
+          <h2>Customer handoff · Activity</h2>
+          <p>Validation environment · no real CRM connection or email delivery.</p>
+          <WorkflowRunSummary run={run} />
+          <details><summary>Run reference</summary><p className="cp-durable-id">Run {run.id}</p></details>
           {run.steps.map((s) => (
-            <article className="cp-durable-scope" key={s.ordinal}>
-              <h3>
-                {s.ordinal === 1
-                  ? `1. Set the sample contact lifecycle to ${(s.payload as { lifecycle: string }).lifecycle}`
-                  : "2. Send the prepared acknowledgement"}
-              </h3>
-              <p>
-                {s.agent_id} · {s.state || "Not submitted"}
-              </p>
-              <p>
-                {s.reason || "The scoped agent can now submit this exact step."}
-              </p>
-              <p>{explainStep(s.state)}</p>
-              {s.approved_by && <p>Approved by: {s.approved_by}</p>}
-              {s.evidence && <p>Observed effect: {s.evidence.detail} {s.evidence.reference && `Reference: ${s.evidence.reference}`}</p>}
-              {s.proposedRequest && <details><summary>Exact proposed connector request</summary><p>{s.proposedRequest.method} · {s.proposedRequest.resource}</p><pre>{JSON.stringify(s.proposedRequest.body, null, 2)}</pre><p>This is the approved request description. The observed effect above confirms what the provider twin reported; a proposed request alone is not execution evidence.</p></details>}
-              <div className="cp-durable-grid">
+            <WorkflowStepSummary step={s} run={run} key={s.ordinal}>
+              <div className="cp-durable-buttons">
                 {!s.state && (
-                  <button disabled={busy} onClick={() => action(s, "propose")}>
+                  <button className="cp-button" disabled={busy} onClick={() => action(s, "propose")}>
                     Submit prepared action
                   </button>
                 )}
                 {s.state === "held" && (
-                  <button disabled={busy} onClick={() => action(s, "approve")}>
+                  <button className="cp-button" disabled={busy} onClick={() => action(s, "approve")}>
                     Approve exact action
                   </button>
                 )}
                 {s.state === "ready" && (
                   <>
                     <button
+                      className="cp-button"
                       disabled={busy}
                       onClick={() => action(s, "execute")}
                     >
                       Execute
                     </button>
                     <button
+                      className="cp-button"
                       disabled={busy}
                       onClick={() => action(s, "execute", true)}
                     >
@@ -233,6 +223,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
                   s.state || "",
                 ) && (
                   <button
+                    className="cp-button"
                     disabled={busy}
                     onClick={() => action(s, "reconcile")}
                   >
@@ -240,10 +231,10 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
                   </button>
                 )}
               </div>
-            </article>
+            </WorkflowStepSummary>
           ))}
           <h3>3. Verify the full run</h3>
-          {run.state === "completed" && <section aria-label="Verification receipt" className="cp-durable-scope"><h3>Rehearsal verification receipt</h3><p>Run {run.id}: both connector effects were read back and the run was saved as completed. This is stored provider-twin evidence, not real email delivery or an independently signed certificate.</p>{run.steps.map(s => <p key={s.ordinal}>{s.connector}: {s.evidence?.outcome || s.state} · {s.evidence?.reference || "No reference"}</p>)}</section>}
+          <WorkflowVerificationSummary run={run} />
           <p>
             Both effects must be confirmed. Uncertainty and conflicting records
             keep the run open.
@@ -291,4 +282,31 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
       )}
     </div>
   );
+}
+
+
+// Presentation only. These summaries neither approve an action nor infer a
+// verified workflow from a stored completion label or one successful step.
+export function WorkflowRunSummary({ run }: { run: Run }) {
+  const result = runProgress(run.state, run.steps.map(s => ({ ...s, evidence: s.evidence || undefined })));
+  return <p role="status"><strong>{result.title === "Customer acknowledgement" ? "Waiting for independent approval" : result.title}</strong></p>;
+}
+export function WorkflowStepSummary({ step: s, run, children }: { step: Step; run?: Run; children?: ReactNode }) {
+  const fullRunVerified = Boolean(run?.steps.includes(s) && runProgress(run.state, run.steps.map(step => ({ ...step, evidence: step.evidence || undefined }))).receipt);
+  const message = s.connector === "email" ? savedMessage(s.proposedRequest?.body) : null;
+  return <article className="cp-durable-scope cp-workflow-step">
+    <h3>{s.ordinal === 1 ? `1. Set the sample contact lifecycle to ${(s.payload as { lifecycle: string }).lifecycle}` : "2. Send the prepared acknowledgement"}</h3>
+    <p role="status">{fullRunVerified ? "This step’s effect is confirmed. The customer record and acknowledgement passed their final check." : explainStep(s.state)}</p>
+    {message && <details><summary>Exact customer message · {message.recipient}</summary><p><strong>{message.subject}</strong></p><p>{message.text}</p></details>}
+    {s.connector === "email" && !message && <p>Exact saved message unavailable. Review the original request before sending.</p>}
+    {s.approved_by && <p>Approved by: {s.approved_by}</p>}
+    {s.evidence && <p>Observed effect: {s.evidence.detail}</p>}
+    <details><summary>Action and verification details</summary><p>Agent: {s.agent_id}</p><p>Stable action: {s.action_id}</p><p>Saved state: {s.state || "Not submitted"}</p>{s.reason && <p>{s.reason}</p>}{s.evidence?.reference && <p>Provider reference: {s.evidence.reference}</p>}</details>
+    {s.proposedRequest && <details><summary>Exact proposed connector request</summary><p>{s.proposedRequest.method} · {s.proposedRequest.resource}</p><pre>{JSON.stringify(s.proposedRequest.body, null, 2)}</pre><p>This is the approved request description. A proposed request alone is not execution evidence.</p></details>}
+    {children}
+  </article>;
+}
+export function WorkflowVerificationSummary({ run }: { run: Run }) {
+  if (!runProgress(run.state, run.steps.map(s => ({ ...s, evidence: s.evidence || undefined }))).receipt) return null;
+  return <section aria-label="Verification evidence" className="cp-durable-scope"><h3>Verification evidence</h3><p>The customer record update and acknowledgement were read back from the provider twins. No real email was delivered.</p><details><summary>Verification references</summary><p>Run {run.id}</p>{run.steps.map(s => <p key={s.ordinal}>{s.connector}: {s.evidence?.outcome} · {s.evidence?.reference || "No reference"}</p>)}<p>This is stored provider-twin evidence, not an independently signed certificate.</p></details></section>;
 }

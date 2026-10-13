@@ -38,7 +38,7 @@ export async function savedProvider(db:Pool,actor:Actor,kind:"plan"|"run"|"actio
   }
   if(!found){if(kind==="plan" && allowNewPlan)return {newPlan:true,scope:selected||null};throw new ControlError(404,"Saved work not found.");}
   const ids=[...plans.map(p=>p.plan.recordEnrollment?.id),...actions.map(a=>a.payload?.scopeGrant?.scopeId)].filter((s):s is string=>typeof s==="string"&&Boolean(s));
-  const scoped=plans.some(p=>Object.values(p.plan.requests||{}).some(r=>r?.version==="prepared-request-2"))||actions.some(a=>a.payload?.request?.version==="prepared-request-2");
+  const scoped=plans.some(p=>Object.values(p.plan.requests||{}).some(r=>r?.version==="prepared-request-2" || (r?.version==="prepared-request-3" && !!(r as {scope?:unknown}).scope)))||actions.some(a=>a.payload?.request?.version==="prepared-request-2" || (a.payload?.request?.version==="prepared-request-3" && !!(a.payload.request as {scope?:unknown}).scope));
   const unique=[...new Set(ids)];
   if(unique.length>1 || (scoped&&!unique.length))throw new ControlError(409,"Saved record destination is missing or inconsistent. No request was sent.");
   const scope=unique[0]||null;

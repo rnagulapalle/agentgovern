@@ -1,0 +1,7 @@
+import {it,expect} from 'vitest';
+import {spawn} from 'node:child_process';
+import {once} from 'node:events';
+import {awaitOwnedProcessExit,stopOwnedProcess,quiesceOwnedProof} from './temporal-owned-process-cleanup';
+it('actual owned process exits before cleanup returns and repeated stop is harmless',async()=>{const child=spawn(process.execPath,['-e','setInterval(()=>{},1000)']);await once(child,'spawn');await stopOwnedProcess(child);expect(child.exitCode!==null||child.signalCode!==null).toBe(true);await stopOwnedProcess(child);});
+it('actual live process exceeds bounded observation without being mistaken for terminal',async()=>{const child=spawn(process.execPath,['-e','setInterval(()=>{},1000)']);await once(child,'spawn');try{await expect(awaitOwnedProcessExit(child,10)).rejects.toThrow('unconfirmed');expect(child.exitCode).toBe(null);}finally{await stopOwnedProcess(child);}});
+it('pool/container uncertainty is aggregated and cannot establish destructive cleanup eligibility',async()=>{const calls:string[]=[];await expect(quiesceOwnedProof({stopContainers:async()=>{calls.push('container');throw Error('private data');},children:[],stopProviders:async()=>{calls.push('provider');},closePools:async()=>{calls.push('pool');throw Error('private password');}})).rejects.toThrow('owned-containers-unconfirmed,owned-pool-unconfirmed');expect(calls).toEqual(['container','provider','pool']);});

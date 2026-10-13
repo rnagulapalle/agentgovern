@@ -1,20 +1,21 @@
 import { cookies } from "next/headers";
-import { database } from "@/lib/durable/database";
-import { memberSession, WORKSPACE_COOKIE } from "@/lib/workspace/identity";
+import { tenantContext } from "../../lib/workspace/tenant-context";
+import { WORKSPACE_COOKIE } from "../../lib/workspace/identity";
 import {
   MarketingHeader,
   MarketingFooter,
-} from "@/components/marketing/chrome";
-import { ProductOverview } from "@/components/marketing/product-overview";
-export async function workspaceMember() {
+} from "../marketing/chrome";
+import { ProductOverview } from "../marketing/product-overview";
+export async function workspaceContext() {
   const token = (await cookies()).get(WORKSPACE_COOKIE)?.value;
   if (!token) return null;
   try {
-    return await memberSession(database(), token);
+    return await tenantContext().member(token);
   } catch {
     return null;
   }
 }
+export async function workspaceMember() { return (await workspaceContext())?.actor ?? null; }
 export function WorkspaceGate() {
   return (
     <div className="sales-page">

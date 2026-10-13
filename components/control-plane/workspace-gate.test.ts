@@ -9,12 +9,17 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next/headers", () => ({
   cookies: async () => ({ get: mocks.cookie }),
 }));
-vi.mock("@/lib/durable/database", () => ({
-  database: () => ({ query: mocks.query }),
-}));
-vi.mock("@/lib/workspace/identity", async (original) => ({
-  ...(await original<typeof import("@/lib/workspace/identity")>()),
-  memberSession: mocks.session,
+// Presentation unit boundary: production resolves credentials through the
+// installed tenant context, not an unrestricted database factory. Actual
+// broker/role isolation is exercised by the installed PostgreSQL suites.
+vi.mock("@/lib/workspace/tenant-context", () => ({
+  tenantContext: () => ({
+    member: async (token: string) => {
+      const actor = await mocks.session(token);
+      if (!actor) throw new Error("Invalid named session");
+      return { actor, db: { query: mocks.query } };
+    },
+  }),
 }));
 vi.mock("./provider", () => ({
   ControlProvider: ({ children }: { children: React.ReactNode }) => children,

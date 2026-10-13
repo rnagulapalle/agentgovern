@@ -3,7 +3,7 @@ import { requestMatches, savedRequest } from "./request";
 import { createHash } from "node:crypto";
 import { bindingMatches } from "./contracts";
 import { ControlError } from "../durable/contracts";
-import type { Connector, ConnectorAction, ConnectorProvider, Observation } from "./contracts";
+import type { ContactConnector, Connector, ConnectorAction, ConnectorProvider, Observation } from "./contracts";
 import { FetchSandboxConnectors, connectorBody } from "./twin";
 
 export interface HostedBinding {
@@ -11,7 +11,7 @@ export interface HostedBinding {
   ownerKey: string;
   workspaceId: string;
   contactId: string;
-  legs: Record<Connector, { sandboxId: string; apiKey: string }>;
+  legs: Record<ContactConnector, { sandboxId: string; apiKey: string }>;
 }
 const unavailable = () => new ControlError(503, "Hosted connector evidence unavailable. No safe retry inferred.");
 export class HostedFetchSandboxConnectors implements ConnectorProvider {
@@ -26,7 +26,7 @@ export class HostedFetchSandboxConnectors implements ConnectorProvider {
       || typeof binding.workspaceId !== "string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(binding.workspaceId)
       || typeof binding.contactId !== "string" || !/^[0-9]{1,24}$/.test(binding.contactId)
       || !binding.legs || !["crm", "email"].every(c => {
-        const leg = binding.legs[c as Connector];
+        const leg = binding.legs[c as ContactConnector];
         return leg && typeof leg.sandboxId === "string" && /^[a-f0-9]{10}$/.test(leg.sandboxId) && typeof leg.apiKey === "string" && leg.apiKey.length >= 16 && leg.apiKey.length <= 256;
       }) || binding.legs.crm.sandboxId === binding.legs.email.sandboxId) throw unavailable();
     this.workspaceId = binding.workspaceId;
@@ -40,7 +40,7 @@ export class HostedFetchSandboxConnectors implements ConnectorProvider {
     if (!response.ok) throw unavailable();
     return response.json();
   }
-  provider(connector: Connector, path: string, init: RequestInit = {}) {
+  provider(connector: ContactConnector, path: string, init: RequestInit = {}) {
     const leg = this.binding.legs[connector];
     return this.request(`/sandbox/${leg.sandboxId}${path}`, leg.apiKey, init);
   }

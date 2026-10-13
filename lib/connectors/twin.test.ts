@@ -200,7 +200,11 @@ it("refuses a scoped recipient changed in the trusted record before sending",asy
  const p=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,{version:"record-scope-1",workspaceId:"one",contactId:"2001",recipient:"alice@example.test"});
  const payload={template:"case_received" as const},action={...a("email"),org_id:"one",payload:{...payload,binding:p.bindingId,request:preparedRequest("email",payload,p.contactId,p.recordScope)}};
  const fetchMock=vi.fn().mockResolvedValue(new Response(JSON.stringify({id:"2001",updatedAt:"v1",properties:{email:"other@example.test"}}),{status:200}));vi.spyOn(globalThis,"fetch").mockImplementation(fetchMock);
- await expect(p.write(action,false)).rejects.toThrow("version");expect(fetchMock).toHaveBeenCalledTimes(1);
+ expect(await p.write(action,false)).toEqual({outcome:"conflict",detail:"The enrolled recipient changed before sending. No connector mutation was requested."});
+ expect(fetchMock).toHaveBeenCalledTimes(1);
+ expect(fetchMock.mock.calls[0][0]).toContain("/crm/crm/v3/objects/contacts/2001");
+ expect(fetchMock.mock.calls[0][1]?.method).toBeUndefined();
+ expect(fetchMock.mock.calls.some(([,init])=>init?.method==="POST"||init?.method==="PATCH")).toBe(false);
 });
 it("sends scoped snapshots with enrolled record headers and checks scoped readback",async()=>{
  const p=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,{version:"record-scope-1",workspaceId:"one",contactId:"2001",recipient:"alice@example.test"});
@@ -225,5 +229,15 @@ it("sends scoped snapshots with enrolled record headers and checks scoped readba
   effect.resource=action.payload.request.resource;
   if(connector==="crm"){record.properties.email="changed@example.test";expect((await p.inspect(action)).outcome).toBe("conflict");}
   request.mockRestore();
+ }
+});
+
+it("treats malformed trusted recipient evidence as unavailable without requesting a write",async()=>{
+ const p=new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,{version:"record-scope-1",workspaceId:"one",contactId:"2001",recipient:"alice@example.test"});
+ const payload={template:"case_received" as const},action={...a("email"),org_id:"one",payload:{...payload,binding:p.bindingId,request:preparedRequest("email",payload,p.contactId,p.recordScope)}};
+ for(const properties of [{}, {email:null}, {email:"invalid"}]){
+  const fetchMock=vi.fn().mockResolvedValue(new Response(JSON.stringify({id:"2001",updatedAt:"v1",properties}),{status:200}));vi.spyOn(globalThis,"fetch").mockImplementation(fetchMock);
+  await expect(p.write(action,false)).rejects.toMatchObject({status:503});
+  expect(fetchMock).toHaveBeenCalledTimes(1);expect(fetchMock.mock.calls[0][1]?.method).toBeUndefined();vi.restoreAllMocks();
  }
 });

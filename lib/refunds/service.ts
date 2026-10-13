@@ -66,6 +66,17 @@ export class RefundControl {
     await this.event(c, actor, a.id, state);
     return { ...a, state, reason, lease_token: null, lease_until: null };
   }
+  // First append-only held event binds the original requester. Later events
+  // cannot repair absent/malformed history or relabel the requester.
+  private async requester(c: PoolClient, orgId: string, id: string) {
+    const first = (await c.query(
+      "SELECT kind,subject FROM ll_refund_events WHERE org_id=$1 AND action_id=$2 ORDER BY id LIMIT 1",
+      [orgId, id],
+    )).rows[0];
+    return first?.kind === "held" && typeof first.subject === "string" &&
+      first.subject.length > 0 && first.subject.length <= 254 &&
+      first.subject.trim() === first.subject ? first.subject : null;
+  }
   async context(c: PoolClient, actor: Actor) {
     const policy = (
       await c.query("SELECT * FROM ll_refund_policies WHERE org_id=$1", [
@@ -102,9 +113,11 @@ export class RefundControl {
       return "Refund agent identity or refund permission is unavailable.";
     if (a.policy_version !== policy.version || a.amount > policy.hard_limit)
       return "Refund policy changed; propose a new action.";
-    const valid = a.approved_by
-      ? await activeApprover(c, actor.orgId, a.approved_by)
-      : false;
+    const requester = a.approved_by ? await this.requester(c, actor.orgId, a.id) : null;
+    const valid = !!a.approved_by && requester !== null && requester !== a.approved_by &&
+      await activeApprover(c, actor.orgId, a.approved_by);
+    if (a.approved_by && !valid)
+      return "Saved independent approval is invalid or revoked.";
     if (
       !approving &&
       a.amount > policy.auto_limit &&
@@ -275,6 +288,13 @@ export class RefundControl {
           "rejected",
           "Operator rejected this refund.",
         );
+      const requester = await this.requester(c, actor.orgId, a.id);
+      if (!requester)
+        throw new ControlError(409, "The original refund requester cannot be verified. Prepare fresh work.");
+      if (requester === actor.subject)
+        throw new ControlError(403, "A different operator must approve this refund.");
+      if (!(await activeApprover(c, actor.orgId, actor.subject)))
+        throw new ControlError(403, "An active operator must approve this refund.");
       const reason = await this.invalid(c, actor, a, true);
       if (reason) return this.state(c, actor, a, "cancelled", reason);
       await c.query(

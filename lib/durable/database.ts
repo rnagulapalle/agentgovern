@@ -1,29 +1,8 @@
-import { Pool, type PoolClient } from "pg";
+import { type Pool, type PoolClient } from "pg";
 import { ControlError } from "./contracts";
 
-let pool: Pool | undefined;
-export function database() {
-  const url = process.env.LOOPLABS_DATABASE_URL;
-  if (!url)
-    throw new ControlError(
-      503,
-      "The workspace is temporarily unavailable. Please contact the LoopLabs team.",
-    );
-  if (!pool) {
-    pool = new Pool({
-      connectionString: url,
-      max: 10,
-      connectionTimeoutMillis: 5000,
-      idleTimeoutMillis: 30000,
-    });
-    pool.on("error", () =>
-      console.error(
-        "Durable database idle connection failed. New requests will reconnect.",
-      ),
-    );
-  }
-  return pool;
-}
+/** Scoped deployments never construct a singleton fallback. */
+export function database(): never { throw new ControlError(503, "Authenticated scoped database context required."); }
 export async function transaction<T>(
   db: Pool,
   orgId: string,

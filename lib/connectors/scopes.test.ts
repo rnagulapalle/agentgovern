@@ -1,12 +1,14 @@
+import {verifyProfileArtifacts} from "../../runtime/temporal/operations";
+import { TemporalAdmission } from "../../runtime/temporal/admission";
 import {TemporalOutbox} from "../../runtime/temporal/outbox";
 import {recordActivities} from "../../runtime/temporal/record-routing";
 import {versionedActivities,type RunContract} from "../../runtime/temporal/version-contract";
 import {activities} from "../../runtime/temporal/activities";
 import {EnquiryRunner} from "../enquiries/runner";
 import {readFile} from "node:fs/promises";
-import {randomBytes,randomUUID} from "node:crypto";
+import {createHash,randomBytes,randomUUID} from "node:crypto";
 import {Pool} from "pg";
-import {beforeAll,beforeEach,afterAll,it,expect,vi} from "vitest";
+import {beforeAll,beforeEach,afterAll,it,expect,vi,describe} from "vitest";
 import {authenticate,tokenHash} from "../durable/service";
 import {transaction} from "../durable/database";
 import type {Actor} from "../durable/contracts";
@@ -19,8 +21,9 @@ const schema=`scopes_${randomBytes(8).toString("hex")}`;
 let db:Pool,admin:Pool,operator:Actor,reviewer:Actor,agent:Actor,worker:Actor,other:Actor,scopes:ScopeControl,control:ConnectorControl;
 let writes=0,source:string|null="v1",gate:Promise<void>|undefined;
 let provider:ConnectorProvider;
-vi.mock("../durable/database",async original=>({...await original<typeof import("../durable/database")>(),database:()=>db}));
 const scope={version:"record-scope-1" as const,workspaceId:"one",contactId:"2001",recipient:"alice@example.test"};
+async function enrolled(){const id=randomUUID();await scopes.enroll(operator,id);await scopes.grant(operator,id,"agent");return id;}
+describe("unenrolled migration compatibility (not installed tenant proof)", () => {
 beforeAll(async()=>{
  if(!process.env.LOOPLABS_TEST_DATABASE_URL)throw Error("Dedicated PostgreSQL is required.");
  admin=new Pool({connectionString:process.env.LOOPLABS_TEST_DATABASE_URL});await admin.query(`CREATE SCHEMA ${schema}`);
@@ -42,7 +45,6 @@ beforeEach(async()=>{
  scopes=new ScopeControl(db,provider);control=new ConnectorControl(db,provider);
 });
 afterAll(async()=>{await db?.end();await admin?.query(`DROP SCHEMA ${schema} CASCADE`);await admin?.end();});
-async function enrolled(){const id=randomUUID();await scopes.enroll(operator,id);await scopes.grant(operator,id,"agent");return id;}
 async function proposed(){return control.propose(agent,{actionId:randomUUID(),agentId:"agent",connector:"crm",payload:{lifecycle:"lead"}});}
 it("enrolls idempotently and never reactivates authority on repeat enrollment/grant",async()=>{
  const id=randomUUID(),rows=await Promise.all([scopes.enroll(operator,id),scopes.enroll(operator,id)]);expect(rows[0]).toEqual(rows[1]);
@@ -77,7 +79,7 @@ it("revocation after a possible effect preserves uncertainty through reconciliat
  await scopes.setActive(operator,id,true,"agent");expect((await control.reconcile(operator,a.id)).state).toBe("uncertain");await control.execute(worker,a.id);expect(writes).toBe(1);
 });
 it("freezes enrollment into plans and requires grants for both agents before starting",async()=>{
- const flow=new WorkflowControl(db,control),enquiry=new EnquiryControl(db,flow,async()=>({id:"2001",email:scope.recipient,version:"v1",lifecycle:"lead"}));
+ const flow=new WorkflowControl(db,control),enquiry=new EnquiryControl(db,flow,async()=>({id:"2001",email:scope.recipient,version:"v1",lifecycle:"lead"}),scope.contactId,new TemporalAdmission(db,"ack-"+"c".repeat(64)));
  await expect(enquiry.prepare(operator,randomUUID(),"service")).rejects.toThrow("enrolled record");const id=await enrolled(),plan=(await enquiry.prepare(operator,randomUUID(),"service") as {saved:{id:string;plan_hash:string;plan:object}}).saved;
  expect(plan.plan).toHaveProperty("recordEnrollment",{id,version:1});await expect(enquiry.start(operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("record grant");
  await scopes.grant(operator,id,"email");await enquiry.start(operator,plan.id,plan.plan_hash,"agent","email");const run=await flow.read(operator,plan.id);
@@ -121,7 +123,7 @@ it("holds downstream execution when an independently approved predecessor's reco
 
 async function routed(){
  const scopeId=await enrolled();await scopes.grant(operator,scopeId,"email");
- const flow=new WorkflowControl(db,control),enquiry=new EnquiryControl(db,flow,async()=>({id:"2001",email:scope.recipient,version:"v1",lifecycle:"lead"}));
+ const flow=new WorkflowControl(db,control),enquiry=new EnquiryControl(db,flow,async()=>({id:"2001",email:scope.recipient,version:"v1",lifecycle:"lead"}),scope.contactId,new TemporalAdmission(db,"ack-"+"c".repeat(64)));
  const plan=(await enquiry.prepare(operator,randomUUID(),"service") as {saved:{id:string;plan_hash:string}}).saved;
  await enquiry.start(operator,plan.id,plan.plan_hash,"agent","email",true);
  for(const step of (await flow.read(operator,plan.id)).steps)await control.propose(operator,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});
@@ -216,21 +218,7 @@ it("resolves saved plan/run/action destinations without caller retargeting or le
  expect(defaults).toBe(0);
  await selectedProvider(db,operator,null,factory);await savedProvider(db,operator,"proposal",randomUUID(),null,false,factory);expect(defaults).toBe(2);expect(writes).toBe(0);
 });
-it("submits scoped chat with existing grants, saves held actions idempotently and pins durable ownership",async()=>{
- const {submitScoped}=await import("../enquiries/submission"),{EnquiryChat}=await import("../enquiries/chat");
- const id=await enrolled();await scopes.grant(operator,id,"email");const flow=new WorkflowControl(db,control),enquiries=new EnquiryControl(db,flow,async()=>({id:scope.contactId,email:scope.recipient,version:"v1",lifecycle:"lead"}));
- const intent={job:"acknowledgement",customerEmail:scope.recipient,askFirst:true,rehearsal:true,extraActions:false};const chat=new EnquiryChat(enquiries,{interpret:async()=>intent});
- const mismatch=await chat.respond(operator,randomUUID(),[{role:"user",text:"Rehearse customer@example.test and ask first"}]);expect(mismatch).toHaveProperty("clarification");expect((await enquiries.list(operator)).length).toBe(0);
- const missing=new EnquiryChat(enquiries,{interpret:async()=>({...intent,customerEmail:null})});expect(await missing.respond(operator,randomUUID(),[{role:"user",text:"Rehearse and ask first"}])).toHaveProperty("clarification",expect.stringContaining(scope.recipient));
- const result=await chat.respond(operator,randomUUID(),[{role:"user",text:`Check CRM for ${scope.recipient}, prepare an acknowledgement, ask first and rehearse.`}]);const plan=(result as {saved:{id:string;plan_hash:string}}).saved;
- expect(plan).toBeDefined();expect(writes).toBe(0);
- await expect(submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","")).rejects.toThrow("compatible durable");expect((await flow.list(operator)).length).toBe(0);
- const requests=await Promise.all([submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64)),submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64))]);expect(requests[0]).toEqual(requests[1]);expect(writes).toBe(0);
- const run=await flow.read(operator,plan.id);expect(run.steps.map((s:{state:string|null})=>s.state)).toEqual(["held","held"]);expect(run.steps[1].proposedRequest?.body).toHaveProperty("to",[scope.recipient]);
- expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(1);expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions")).rows[0].n).toBe(2);
- await expect(submitScoped(enquiries,reviewer,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64))).rejects.toThrow("Only the plan owner");
- await scopes.setActive(operator,id,false,"email");await expect(submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email","ack-"+"c".repeat(64))).rejects.toThrow("record grant");expect(writes).toBe(0);
-});
+
 
 it("refuses malformed scoped saved metadata and preserves legacy destination semantics",async()=>{
  const {savedProvider}=await import("./routing");const {plan}=await routed();const id=randomUUID();
@@ -241,23 +229,101 @@ it("refuses malformed scoped saved metadata and preserves legacy destination sem
  await expect(savedProvider(db,operator,"plan","bad")).rejects.toThrow("stable enquiry ID");expect(writes).toBe(0);
 });
 
+
+
+});
+
+import {createInstalledTenantFixture} from "../workspace/installed-tenant-fixture";
+import {configureTenantContext} from "../workspace/tenant-context";
+import {digest} from "../workspace/identity";
+
+describe("genuine installed tenant sessions and scoped services",()=>{
+ let installed:Awaited<ReturnType<typeof createInstalledTenantFixture>>;
+ let installedBuild:string;
+ const testWorkspaces=new Map([["submits scoped chat with existing grants, saves held actions idempotently and pins durable ownership", "scope-chat"], ["exposes bounded scoped submission through the invited API without weaker legacy paths or approval", "scope-http"]]);
+ const sessionKeys=new Map<string,Record<string,string>>();
+ beforeAll(async()=>{
+  const artifact=JSON.parse(await readFile(".worker/temporal-manifest.json","utf8"));
+  const serviceBytes=await readFile(".worker/temporal-service.cjs"),workflowBytes=await readFile(".worker/temporal-workflow.cjs"),lockBytes=await readFile("pnpm-lock.yaml");
+  verifyProfileArtifacts("ack",artifact.buildId,artifact,serviceBytes,workflowBytes,lockBytes);
+  installedBuild=artifact.buildId;
+  const workflowHash=createHash("sha256").update(workflowBytes).digest("hex");
+  installed=await createInstalledTenantFixture({tenants:[...testWorkspaces.values(),"installed-foreign"],salesOrg:"scope-chat",seed:async owner=>{
+   // Actual compiled ACK bytes are verified above. The owner-only image field
+   // below is an explicitly labelled SQL predicate fixture, NOT inspected image
+   // provenance, worker execution or release/admission acceptance evidence.
+   await owner.query("INSERT INTO ll_temporal_worker_builds(worker_build_id,image_id,workflow_sha256,service_sha256,lock_sha256) VALUES($1,$2,$3,$4,$5)",[installedBuild,"sha256:"+createHash("sha256").update("explicit-admission-test-image-placeholder").digest("hex"),workflowHash,createHash("sha256").update(serviceBytes).digest("hex"),createHash("sha256").update(lockBytes).digest("hex")]);
+   for(const org of [...testWorkspaces.values(),"installed-foreign"]){
+    const sessions:Record<string,string>={};sessionKeys.set(org,sessions);
+    for(const subject of ["operator","reviewer","owner"]){
+     const email=`${org}-${subject}@example.test`,key=randomBytes(32).toString("base64url");sessions[subject]=key;
+     await owner.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,$2,$3,'unused')",[email,org,subject]);
+     await owner.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,$2,now()+interval '1 hour')",[digest(key),email]);
+    }
+    await owner.query("INSERT INTO ll_connector_policies(org_id,connector) VALUES($1,'crm'),($1,'email')",[org]);
+    for(const [id,tool,role,connector] of [["agent", "twin.crm", "crm_agent", "crm_twin"], ["email", "twin.email", "email_agent", "email_twin"], ["unowned", "twin.crm", null, null]] as const){
+     await owner.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES($1,$2,$3,100)",[org,id,[tool]]);
+     if(role)await owner.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES($1,$2,$2,$3,$4,$5)",[org,id,`${org}-owner@example.test`,role,connector]);
+     const key=randomBytes(32).toString("base64url");sessions[id]=key;
+     await owner.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,$2,$3,'agent')",[tokenHash(key),org,id]);
+    }
+   }
+  }});
+  configureTenantContext(installed.context);
+ });
+ beforeEach(async context=>{
+  const org=testWorkspaces.get(context.task.name);if(!org)throw Error("Missing installed test workspace");
+  db=installed.web(org);
+  const sessions=sessionKeys.get(org)!;
+  operator=(await installed.context.authenticated(sessions.operator)).actor;
+  reviewer=(await installed.context.authenticated(sessions.reviewer)).actor;
+  agent=await authenticate(db,sessions.agent);
+  other=(await installed.context.authenticated(sessionKeys.get("installed-foreign")!.operator)).actor;
+  writes=0;
+  scope.workspaceId=org;source="v1";gate=undefined;
+  provider={bindingId:"a".repeat(64),workspaceId:org,contactId:scope.contactId,recordScope:{...scope},source:async()=>source,write:async()=>{writes++;if(gate)await gate;return{outcome:"verified",detail:"Fixture accepted"};},inspect:async()=>({outcome:"verified",detail:"Fixture readback"})};
+  scopes=new ScopeControl(db,provider);control=new ConnectorControl(db,provider);
+ });
+ afterAll(async()=>{await installed?.close();});
+it("submits scoped chat with existing grants, saves held actions idempotently and pins durable ownership",async()=>{
+ const {submitScoped}=await import("../enquiries/submission"),{EnquiryChat}=await import("../enquiries/chat");
+ const id=await enrolled();await scopes.grant(operator,id,"email");const flow=new WorkflowControl(db,control),enquiries=new EnquiryControl(db,flow,async()=>({id:scope.contactId,email:scope.recipient,version:"v1",lifecycle:"lead"}),scope.contactId,new TemporalAdmission(db,installedBuild));
+ const intent={job:"acknowledgement",customerEmail:scope.recipient,askFirst:true,rehearsal:true,extraActions:false};const chat=new EnquiryChat(enquiries,{interpret:async()=>intent});
+ const mismatch=await chat.respond(operator,randomUUID(),[{role:"user",text:"Rehearse customer@example.test and ask first"}]);expect(mismatch).toHaveProperty("clarification");expect((await enquiries.list(operator)).length).toBe(0);
+ const missing=new EnquiryChat(enquiries,{interpret:async()=>({...intent,customerEmail:null})});expect(await missing.respond(operator,randomUUID(),[{role:"user",text:"Rehearse and ask first"}])).toHaveProperty("clarification",expect.stringContaining(scope.recipient));
+ const result=await chat.respond(operator,randomUUID(),[{role:"user",text:`Check CRM for ${scope.recipient}, prepare an acknowledgement, ask first and rehearse.`}]);const plan=(result as {saved:{id:string;plan_hash:string}}).saved;
+ expect(plan).toBeDefined();expect(writes).toBe(0);
+ await expect(submitScoped(new EnquiryControl(db,flow,enquiries.contact,scope.contactId,new TemporalAdmission(db,"")),operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("compatible worker");expect((await flow.list(operator)).length).toBe(0);
+ const unavailable=new EnquiryControl(db,flow,enquiries.contact,scope.contactId);
+ await expect(submitScoped(unavailable,operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("compatible worker");expect((await flow.list(operator)).length).toBe(0);
+ const adapter=new TemporalAdmission(db,installedBuild);
+ const outage=new EnquiryControl(db,flow,enquiries.contact,scope.contactId,{assertReady:c=>adapter.assertReady(c),transfer:async()=>{throw Error("scheduler unavailable");}});
+ await expect(submitScoped(outage,operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("scheduler unavailable");
+ expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(0);
+ const pending=await flow.read(operator,plan.id);expect(pending.steps.map((s:{state:string|null})=>s.state)).toEqual(["held","held"]);expect(writes).toBe(0);
+ const requests=await Promise.all([submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email"),submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email")]);expect(requests[0]).toEqual(requests[1]);expect(writes).toBe(0);
+ const run=await flow.read(operator,plan.id);expect(run.steps.map((s:{action_id:string})=>s.action_id)).toEqual(pending.steps.map((s:{action_id:string})=>s.action_id));expect(run.steps.map((s:{state:string|null})=>s.state)).toEqual(["held","held"]);expect(run.steps[1].proposedRequest?.body).toHaveProperty("to",[scope.recipient]);
+ expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(1);expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions")).rows[0].n).toBe(2);
+ await expect(submitScoped(enquiries,reviewer,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("Only the plan owner");
+ await scopes.setActive(operator,id,false,"email");await expect(submitScoped(enquiries,operator,plan.id,plan.plan_hash,"agent","email")).rejects.toThrow("record grant");expect(writes).toBe(0);
+});
 it("exposes bounded scoped submission through the invited API without weaker legacy paths or approval",async()=>{
  const hosted=await import("./hosted"),{NextRequest}=await import("next/server"),{GET,POST}=await import("@/app/api/workspace/enquiries/route");
  const scopeId=await enrolled();await scopes.grant(operator,scopeId,"email");
  const bound={...provider,contact:async()=>({id:scope.contactId,properties:{email:scope.recipient,lifecyclestage:"lead"},updatedAt:"v1"})} as unknown as import("./routing").ConnectedProvider;
  const mocked=vi.spyOn(hosted,"connectorProvider").mockImplementation((()=>bound) as typeof hosted.connectorProvider);
- const key=randomBytes(32).toString("base64url");await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one','operator','operator')",[tokenHash(key)]);
+ const key=sessionKeys.get(operator.orgId)!.operator;
  const origin="https://looplabs.run",url=origin+"/api/workspace/enquiries?scope="+scopeId;
  const req=(p?:object,scopeIdOverride?:string)=>new NextRequest(scopeIdOverride?origin+"/api/workspace/enquiries?scope="+scopeIdOverride:url,{method:p?"POST":"GET",headers:{Authorization:`Bearer ${key}`,Origin:origin,"Content-Type":"application/json"},...(p?{body:JSON.stringify(p)}:{})});
  const oldWorkspace=process.env.LOOPLABS_TEMPORAL_WORKSPACE,oldBuild=process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID,oldEpoch=process.env.LOOPLABS_RECOVERY_EPOCH;
- const recoveryEpoch=randomUUID();await db.query("INSERT INTO ll_workspace_recovery(org_id,epoch) VALUES('one',$1),('two',$1)",[recoveryEpoch]);
+ const recoveryEpoch=(await installed.owner.query("SELECT epoch::text FROM ll_workspace_recovery WHERE org_id=$1",[operator.orgId])).rows[0].epoch;
  try{
  const plan=(await new EnquiryControl(db,new WorkflowControl(db,control),async()=>({id:scope.contactId,email:scope.recipient,version:"v1",lifecycle:"lead"})).prepareChat(operator,randomUUID())).saved;
  const p={operation:"submit",id:plan.id,planHash:plan.plan_hash,crmAgent:"agent",emailAgent:"email"};
  delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;delete process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID;
  expect((await POST(req(p))).status).toBe(409);expect((await db.query("SELECT count(*)::int n FROM ll_workflow_runs")).rows[0].n).toBe(0);
- process.env.LOOPLABS_TEMPORAL_WORKSPACE="staging";delete process.env.LOOPLABS_RECOVERY_EPOCH;expect((await POST(req(p))).status).toBe(503);process.env.LOOPLABS_RECOVERY_EPOCH=recoveryEpoch;expect((await POST(req(p))).status).toBe(409);expect((await db.query("SELECT count(*)::int n FROM ll_workflow_runs")).rows[0].n).toBe(0);
- process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID="ack-"+"c".repeat(64);
+ process.env.LOOPLABS_TEMPORAL_WORKSPACE="staging";await installed.owner.query("UPDATE ll_workspace_recovery SET epoch=$1 WHERE org_id=$2",[randomUUID(),operator.orgId]);expect((await POST(req(p))).status).toBe(503);await installed.owner.query("UPDATE ll_workspace_recovery SET epoch=$1 WHERE org_id=$2",[recoveryEpoch,operator.orgId]);expect((await POST(req(p))).status).toBe(409);expect((await db.query("SELECT count(*)::int n FROM ll_workflow_runs")).rows[0].n).toBe(0);
+ process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID=installedBuild;
  expect(await (await GET(req())).json()).toHaveProperty("connections.recordDurableAvailable",true);
  expect((await POST(req({...p,recipient:"wrong@example.test"}))).status).toBe(400);
  expect((await POST(req({...p,operation:"start"}))).status).toBe(409);expect((await POST(req({operation:"rehearse",id:plan.id,planHash:plan.plan_hash}))).status).toBe(409);
@@ -265,5 +331,15 @@ it("exposes bounded scoped submission through the invited API without weaker leg
  expect((await POST(req(p))).status).toBe(200);expect((await POST(req({operation:"resume",id:plan.id,planHash:plan.plan_hash}))).status).toBe(200);
  expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions WHERE state='held'")).rows[0].n).toBe(2);expect(writes).toBe(0);
  const before=(await db.query("SELECT count(*)::int n FROM ll_agents")).rows[0].n;expect(before).toBe(3);
+ // An installed admission fence still refuses fresh work after owner drain.
+ // Existing held actions and reservations remain saved; nothing is dispatched.
+ const fresh=(await new EnquiryControl(db,new WorkflowControl(db,control),async()=>({id:scope.contactId,email:scope.recipient,version:"v1",lifecycle:"lead"})).prepareChat(operator,randomUUID())).saved;
+ await installed.owner.query("UPDATE ll_temporal_worker_builds SET state='draining',draining_at=now() WHERE worker_build_id=$1",[installedBuild]);
+ expect((await POST(req({...p,id:fresh.id,planHash:fresh.plan_hash}))).status).toBe(503);
+ expect((await db.query("SELECT count(*)::int n FROM ll_temporal_dispatch")).rows[0].n).toBe(1);
+ expect((await new WorkflowControl(db,control).read(operator,fresh.id)).steps.map((step:{state:string|null})=>step.state)).toEqual(["held","held"]);
+ expect(writes).toBe(0);
+
  }finally{if(oldEpoch===undefined)delete process.env.LOOPLABS_RECOVERY_EPOCH;else process.env.LOOPLABS_RECOVERY_EPOCH=oldEpoch;mocked.mockRestore();if(oldWorkspace===undefined)delete process.env.LOOPLABS_TEMPORAL_WORKSPACE;else process.env.LOOPLABS_TEMPORAL_WORKSPACE=oldWorkspace;if(oldBuild===undefined)delete process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID;else process.env.LOOPLABS_TEMPORAL_RECORD_BUILD_ID=oldBuild;}
+});
 });

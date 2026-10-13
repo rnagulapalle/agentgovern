@@ -1,16 +1,14 @@
 import { NextRequest } from "next/server";
-import { database } from "@/lib/durable/database";
-import { authenticate } from "@/lib/durable/service";
-import { body, credential, failure, sameOrigin } from "@/lib/durable/http";
-import { ControlError } from "@/lib/durable/contracts";
-import { ConnectorControl } from "@/lib/connectors/service";
-import { savedProvider } from "@/lib/connectors/routing";
-import { connectorProvider } from "@/lib/connectors/hosted";
+import { tenantContext } from "../../../../lib/workspace/tenant-context";
+import { body, credential, failure, sameOrigin } from "../../../../lib/durable/http";
+import { ControlError } from "../../../../lib/durable/contracts";
+import { ConnectorControl } from "../../../../lib/connectors/service";
+import { savedProvider } from "../../../../lib/connectors/routing";
+import { connectorProvider } from "../../../../lib/connectors/hosted";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 async function context(request: NextRequest,id?:string,proposal=false,operation?:unknown) {
-  const db = database();
-  const actor = await authenticate(db, credential(request));
+  const { db, actor } = await tenantContext().authenticated(credential(request));
   if(operation!==undefined && (typeof operation!=="string" || !["propose","contain","enable","approve","reject","execute","reconcile"].includes(operation)))throw new ControlError(400,"Unknown action.");
   return {
     actor,

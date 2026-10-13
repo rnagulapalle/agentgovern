@@ -45,3 +45,11 @@ it("requires an explicit scoped resolver and refuses contract downgrade",async()
  const input={...valid,connectorVersion:"private-record-twin-2"};expect(await next.advanceContract(input)).toBe("waiting");expect(scoped).toHaveBeenCalledWith(input);expect(advance).not.toHaveBeenCalled();
  query.mockResolvedValueOnce({rows:[{plan_hash:valid.planHash,owner_active:true}]});await expect(next.advanceContract(input)).rejects.toThrow("Unsupported scoped");
 });
+
+it('edited scoped message has a separate pinned contract and cannot reuse retained record-v2 or legacy history',async()=>{
+ const plan={recordEnrollment:{id:'scope',version:1},requests:{crm:{version:'prepared-request-2'},email:{version:'prepared-request-3',scope:{contactId:'2001'}}}};
+ const {query,advance}=setup([{plan_hash:valid.planHash,owner_active:true,plan}]);const scoped=vi.fn().mockResolvedValue('waiting'),next=versionedActivities({query} as unknown as Pool,{orgId:'tenant-a',subject:'enquiry-temporal',role:'worker',tokenHash:'test'},{advance},scoped);
+ await expect(next.advanceContract(valid)).rejects.toThrow('legacy');await expect(next.advanceContract({...valid,connectorVersion:'private-record-twin-2'})).rejects.toThrow('exact connector');
+ expect(await next.advanceContract({...valid,connectorVersion:'private-record-twin-3'})).toBe('waiting');expect(scoped).toHaveBeenCalledTimes(1);expect(advance).not.toHaveBeenCalled();
+ query.mockResolvedValueOnce({rows:[{plan_hash:valid.planHash,owner_active:true,plan:{...plan,requests:{...plan.requests,email:{version:'prepared-request-2'}}}}]});await expect(next.advanceContract({...valid,connectorVersion:'private-record-twin-3'})).rejects.toThrow('exact connector');
+});

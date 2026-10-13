@@ -11,10 +11,11 @@ run() {
 run "Repository policy and claim gate" pnpm check:repo
 run "Lint" pnpm lint
 run "TypeScript" pnpm typecheck
+run "Temporal service and workflow bundles" pnpm temporal:build
+run "Quote Temporal integration-test bundles" node scripts/build-temporal-worker.mjs quote
 run "Adversarial tests and coverage" pnpm test:coverage
 run "Isolated staging database bootstrap and refusal proof" node --import tsx scripts/staging-database-proof.mjs
 run "Background runner bundle" node scripts/build-enquiry-worker.mjs
-run "Temporal service and workflow bundles" pnpm temporal:build
 run "Production build" pnpm build
 run "Rendered internal links" pnpm check:links
 run "Diff hygiene" git diff --check

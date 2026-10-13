@@ -1,5 +1,5 @@
 import {it,expect} from "vitest";
-import {typedReceipt} from "./staging-browser-record.mjs";
+import {typedReceipt,typedSourceFiles,membershipAuthoritySourceFiles} from "./staging-browser-record.mjs";
 // Synthetic extension of the earlier measured result tests retention/refusal only.
 import {readFileSync} from "node:fs";
 const prior=JSON.parse(readFileSync("docs/evidence/staging-platform-browser-prepared-proof.json","utf8"));
@@ -29,4 +29,13 @@ it("accepts only exact image-retention evidence and refuses inflated or unknown 
 
 it("refuses absent incomplete or substituted dependency-image proof",()=>{
  for(const change of [undefined,{...result.dependencyImages,runtimeBindings:2},{...result.dependencyImages,schemaExecutions:5},{...result.dependencyImages,platform:"linux/arm64"},{...result.dependencyImages,images:[]},{...result.dependencyImages,secret:"private"}])expect(()=>typedReceipt({...result,dependencyImages:change},metadata,{})).toThrow();
+});
+
+it("covers additive membership history dependencies without erasing any historical runtime source",()=>{
+ const files=typedSourceFiles(prior.sourceFingerprints);
+ expect(files).toHaveLength(106);
+ expect(files).toEqual(expect.arrayContaining(Object.keys(prior.sourceFingerprints)));
+ expect(files).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/membership-schema.sql","scripts/membership-authority-setup.ts"]));
+ expect(new Set(files).size).toBe(files.length);
+ for(const file of membershipAuthoritySourceFiles)expect(typedSourceFiles({...prior.sourceFingerprints,[file]:"d".repeat(64)})).toEqual(files);
 });

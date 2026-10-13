@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { database } from "@/lib/durable/database";
-import { authenticate } from "@/lib/durable/service";
-import { ControlError } from "@/lib/durable/contracts";
-import { body, browserOrigin, failure, sameOrigin, SESSION_COOKIE } from "@/lib/durable/http";
+import { tenantContext } from "../../../../lib/workspace/tenant-context";
+import { ControlError } from "../../../../lib/durable/contracts";
+import { body, browserOrigin, failure, sameOrigin, SESSION_COOKIE } from "../../../../lib/durable/http";
 export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +9,7 @@ export async function POST(request: NextRequest) {
     const value = await body(request);
     if (typeof value.token !== "string" || Object.keys(value).length !== 1)
       throw new ControlError(400, "Provide an operator access token.");
-    const actor = await authenticate(database(), value.token);
+    const { actor } = await tenantContext().authenticated(value.token);
     if (actor.role !== "operator")
       throw new ControlError(403, "Only an operator can open this workspace.");
     const response = NextResponse.json({ subject: actor.subject });

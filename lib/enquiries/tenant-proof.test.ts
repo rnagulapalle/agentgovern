@@ -1,12 +1,13 @@
-import {readFile} from "node:fs/promises";
+import {readHistoricalProof} from '../../scripts/historical-proof-sources.mjs';
 import {createHash} from "node:crypto";
 import {expect,it} from "vitest";
 import proof from "../../docs/evidence/tenant-isolation-proof.json";
-it("requires actual source-bound two-company HTTP refusal and correctly targeted effect proof",async()=>{
- expect(proof.measurements).toEqual({companies:2,deniedHttpRequests:64,deniedBrowserRequests:8,deniedDatabaseRequests:13,runtimeGrantStatements:30,restrictedDatabaseLogin:true,databaseTenantRls:false,effects:4,taskQueues:2,workerProcesses:3,schedulerProcesses:2,crashedWorkers:1,replayedHistories:2});
- expect(proof.checks).toHaveLength(10);
- expect(proof.checks.some(c=>c.includes("Actual LOGIN runtime uses 30 provisioner grants"))).toBe(true);
- expect(proof.checks.some(c=>c.includes("Thirteen actual restricted-database attacks"))).toBe(true);
+it("historical original measurement: requires actual source-bound two-company HTTP refusal and correctly targeted effect proof",async()=>{
+ const historical=readHistoricalProof('tenant-isolation-proof.json');expect(historical).toMatchObject({historical:true,eligible:false,releaseAccepted:false,currentSourceValidated:false});expect(historical.receipt).toEqual(proof);
+ expect(proof.measurements).toEqual({companies:2,deniedHttpRequests:64,deniedBrowserRequests:8,deniedDatabaseRequests:15,runtimeGrantStatements:33,restrictedDatabaseLogin:true,databaseTenantRls:false,effects:4,taskQueues:2,workerProcesses:3,schedulerProcesses:2,crashedWorkers:1,replayedHistories:2});
+ expect(proof.checks).toHaveLength(12);
+ expect(proof.checks.some(c=>c.includes("Actual LOGIN runtime uses 33 provisioner grants"))).toBe(true);
+ expect(proof.checks.some(c=>c.includes("Fifteen actual restricted-database attacks"))).toBe(true);
  expect(proof.checks.some(c=>c.includes("shared role still reads both companies (no RLS claim)"))).toBe(true);
  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["scripts/durable-runtime-role.ts","scripts/workspace-setup.ts","scripts/refund-setup.ts","scripts/connector-setup.ts","scripts/enquiry-setup.ts","scripts/enquiry-managed-setup.ts","scripts/temporal-setup.ts","scripts/workspace-recovery.ts","scripts/record-scope-setup.ts","scripts/record-routing-setup.ts"]));
  expect(proof.checks.some(c=>c.includes("expired sessions lose API access without effects"))).toBe(true);
@@ -17,6 +18,10 @@ it("requires actual source-bound two-company HTTP refusal and correctly targeted
  expect(proof.checks.some(c=>c.includes("Both actual company histories replay"))).toBe(true);
  expect(proof.checks.some(c=>c.includes("Repeated completed activity calls retain four effects"))).toBe(true);
  expect(proof.workflowIds).toHaveLength(2);expect(proof.buildId).toMatch(/^ack-[a-f0-9]{64}$/);
+ expect(proof.checks.join(" ")).toContain("Installed migration23");
+ expect(proof.checks.join(" ")).toContain("independent approval histories");
+ expect(Object.keys(proof.sourceFingerprints)).toContain("scripts/quote-membership-setup.ts");
  expect(proof.scope).toContain("not saturation, remote TLS or an independent security audit");
- for(const [file,hash] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(await readFile(file)).digest("hex"),file).toBe(hash);
+ expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql"]));
+ for(const [file,hash] of Object.entries(proof.sourceFingerprints))expect(createHash("sha256").update(historical.sources[file]).digest("hex"),file).toBe(hash);
 });
