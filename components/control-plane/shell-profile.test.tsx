@@ -20,3 +20,9 @@ it('quote scope states exact independent actions and simulated effects',()=>{
  const h=renderToStaticMarkup(createElement(ControlScopeNote,{durable:true,quoteOnly:true}));
  expect(h).toContain('Another named member');expect(h).toContain('each exact action');expect(h).toContain('No live customer records');expect(h).toContain('no customer email');expect(h).not.toContain('refund');
 });
+it('script profile links only installed saved controls and never browser-local history',()=>{
+ const h=renderToStaticMarkup(<ControlShell member={member} scriptDemo>Script content</ControlShell>);
+ for(const key of ['quotes','agents','actions','workflow-runs','history'])expect(h).toContain(`href="/control-plane/${key}"`);
+ for(const key of ['work','discovery','connectors','records','requests','verification','audit','reconciliation','settings'])expect(h).not.toContain(`href="/control-plane/${key}"`);
+ expect(h).toContain('Saved decision history');expect(h).not.toContain('PREPARED EXAMPLES');
+});

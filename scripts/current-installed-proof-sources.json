@@ -3,7 +3,9 @@
   "families": {
     "web": [
       "app/api/durable/connectors/route.ts",
+      "app/api/durable/route.ts",
       "app/api/durable/workflows/route.ts",
+      "app/api/workspace/agents/route.ts",
       "app/api/workspace/discovery/owners/route.ts",
       "app/api/workspace/discovery/route.ts",
       "app/api/workspace/enquiries/route.ts",
@@ -11,19 +13,30 @@
       "app/api/workspace/quotes/setup/route.ts",
       "app/api/workspace/quotes/verification/route.ts",
       "app/api/workspace/session/route.ts",
+      "app/control-plane/actions/page.tsx",
+      "app/control-plane/agents/page.tsx",
       "app/control-plane/control-plane.css",
+      "app/control-plane/history/page.tsx",
       "app/control-plane/layout.tsx",
       "app/control-plane/quotes/page.tsx",
       "app/control-plane/work/page.tsx",
+      "app/control-plane/workflow-runs/page.tsx",
       "app/sales.css",
       "components/brand/loop-mark.tsx",
+      "components/control-plane/actions-workspace.tsx",
+      "components/control-plane/agents-workspace.tsx",
+      "components/control-plane/connector-actions-workspace.tsx",
+      "components/control-plane/discount-history.tsx",
+      "components/control-plane/durable-workspace.tsx",
       "components/control-plane/enquiry-execution.tsx",
       "components/control-plane/enquiry-progress.tsx",
       "components/control-plane/enquiry-workspace.tsx",
       "components/control-plane/provider.tsx",
       "components/control-plane/quote-workflow-view.tsx",
       "components/control-plane/quote-workspace.tsx",
+      "components/control-plane/refund-workspace.tsx",
       "components/control-plane/request-planner.tsx",
+      "components/control-plane/saved-history-workspace.tsx",
       "components/control-plane/shell.tsx",
       "components/control-plane/ui.tsx",
       "components/control-plane/workflow-workspace.tsx",
@@ -50,6 +63,7 @@
       "lib/control-plane/model.ts",
       "lib/durable/contracts.ts",
       "lib/durable/database.ts",
+      "lib/durable/history-export.ts",
       "lib/durable/http.ts",
       "lib/durable/pg-transport.ts",
       "lib/durable/recovery.ts",
@@ -98,6 +112,7 @@
       "lib/quotes/verification-receipt.ts",
       "lib/quotes/worker-admission-schema.sql",
       "lib/quotes/workflow-view.ts",
+      "lib/refunds/contracts.ts",
       "lib/site.ts",
       "lib/workflows/guard.ts",
       "lib/workflows/request.ts",
@@ -125,6 +140,7 @@
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
       "lib/workspace/owned-private-file.ts",
+      "lib/workspace/presentation.ts",
       "lib/workspace/response.ts",
       "lib/workspace/tenant-bootstrap.ts",
       "lib/workspace/tenant-context.ts",
@@ -2398,6 +2414,10 @@
     },
     {
       "from": "components/control-plane/shell.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
+      "from": "components/control-plane/shell.tsx",
       "to": "components/control-plane/provider.tsx"
     },
     {
@@ -2419,6 +2439,10 @@
     {
       "from": "app/control-plane/layout.tsx",
       "to": "components/control-plane/workspace-gate.tsx"
+    },
+    {
+      "from": "components/control-plane/workspace-gate.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
     },
     {
       "from": "components/control-plane/workspace-gate.tsx",
@@ -2533,11 +2557,127 @@
       "to": "lib/quotes/plan-v2.ts"
     },
     {
-      "from": "app/api/workspace/session/route.ts",
+      "from": "app/control-plane/actions/page.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
+      "from": "app/control-plane/actions/page.tsx",
+      "to": "components/control-plane/actions-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/actions-workspace.tsx",
+      "to": "components/control-plane/durable-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/durable-workspace.tsx",
+      "to": "components/control-plane/discount-history.tsx"
+    },
+    {
+      "from": "components/control-plane/discount-history.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/discount-history.tsx",
+      "to": "lib/durable/history-export.ts"
+    },
+    {
+      "from": "lib/durable/history-export.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/discount-history.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/durable-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/durable-workspace.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/actions-workspace.tsx",
+      "to": "components/control-plane/refund-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/refund-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/refund-workspace.tsx",
+      "to": "lib/refunds/contracts.ts"
+    },
+    {
+      "from": "lib/refunds/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/actions-workspace.tsx",
+      "to": "components/control-plane/connector-actions-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/connector-actions-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/connector-actions-workspace.tsx",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/connector-actions-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "app/control-plane/agents/page.tsx",
+      "to": "components/control-plane/agents-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/agents-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/agents-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/agents-workspace.tsx",
+      "to": "lib/workspace/presentation.ts"
+    },
+    {
+      "from": "app/control-plane/agents/page.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
+      "from": "app/control-plane/workflow-runs/page.tsx",
+      "to": "components/control-plane/workflow-workspace.tsx"
+    },
+    {
+      "from": "app/control-plane/history/page.tsx",
+      "to": "components/control-plane/saved-history-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/saved-history-workspace.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/saved-history-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/saved-history-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/saved-history-workspace.tsx",
+      "to": "components/control-plane/discount-history.tsx"
+    },
+    {
+      "from": "app/api/workspace/agents/route.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
     {
-      "from": "app/api/workspace/session/route.ts",
+      "from": "app/api/workspace/agents/route.ts",
       "to": "lib/durable/http.ts"
     },
     {
@@ -2547,6 +2687,34 @@
     {
       "from": "lib/durable/http.ts",
       "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "app/api/workspace/agents/route.ts",
+      "to": "lib/workspace/agents.ts"
+    },
+    {
+      "from": "app/api/durable/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "app/api/durable/route.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "app/api/durable/route.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "app/api/durable/route.ts",
+      "to": "lib/durable/http.ts"
+    },
+    {
+      "from": "app/api/workspace/session/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "app/api/workspace/session/route.ts",
+      "to": "lib/durable/http.ts"
     },
     {
       "from": "app/api/workspace/session/route.ts",
@@ -10386,6 +10554,10 @@
     },
     {
       "from": "components/control-plane/shell.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
+      "from": "components/control-plane/shell.tsx",
       "to": "components/control-plane/provider.tsx"
     },
     {
@@ -10423,6 +10595,10 @@
     {
       "from": "app/control-plane/layout.tsx",
       "to": "components/control-plane/workspace-gate.tsx"
+    },
+    {
+      "from": "components/control-plane/workspace-gate.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
     },
     {
       "from": "components/control-plane/workspace-gate.tsx",
@@ -16345,7 +16521,7 @@
     "Dockerfile.temporal": "c91cbd9a95619fda023224ba0eb1b11545333f4f8d86ba71c7382ab7bb6f5932",
     "app/api/durable/connectors/route.ts": "d5ad9870868142d8ec301f97f01cc6b2d3036f674781a3e8358e8317620e96c4",
     "app/api/durable/refunds/route.ts": "fcdd7df26762dc9be63ae89409c2b04d33e2ecacb8e390609c6c1007bd2d311d",
-    "app/api/durable/route.ts": "6e987f5cbf23dce73c598ef2db240b48de7c1e9f8ba287b998de9d1df29c4836",
+    "app/api/durable/route.ts": "7bcdbf6718446dcc082f5bd79efe66f679cad5711e4fbed9747dcc5014186eff",
     "app/api/durable/workflows/route.ts": "2a448b416ad2f70e87bbea03afdffd2dd0d2814fdd64fd40c4bb1660d194ba64",
     "app/api/workspace/agents/route.ts": "29c130f1ea1b824edf9a4a84198d0b3c99559fdb28c7ae7144a7361f3e3b6e81",
     "app/api/workspace/discovery/owners/route.ts": "17dfa9b71e4447620f47b2fc145b77fa01f927de5cb16e9d3da0a4715d8271b3",
@@ -16357,17 +16533,26 @@
     "app/api/workspace/quotes/verification/route.ts": "1386e0ab2f169a7a842258fd19d7d7ebae2842d843017a70cda9701a46a9a7ea",
     "app/api/workspace/records/route.ts": "7c49b2287d84c7cfdb6d4e29bd52b0b2a9fc23ed8a3f4f822040a8cc1684abd6",
     "app/api/workspace/session/route.ts": "5194c1a54bde45b893cb398075b4a625edca806d4b41efc53d824698842b55ce",
+    "app/control-plane/actions/page.tsx": "d7ed38ab4b0f698f266cfdb4609307cc6f5d3e2d592c376ca3a422e70b90b8d7",
+    "app/control-plane/agents/page.tsx": "1e26531fa126bff611d9c94a75a100b8f2a4ab7c1b3069a8060ded6f44c71dce",
     "app/control-plane/control-plane.css": "2cd5918b34f9675f1ef729369384f8cf9a0bfa61f593c407788342eb60fcd51f",
     "app/control-plane/discovery/page.tsx": "fde4db786ba307da01443a0e904ca4e6bd10a3ca6993909a993862a863a9a208",
-    "app/control-plane/layout.tsx": "0edef236c03a15a194f9ea73f88006354ac89fca38c416a671dce6cf14fc14d3",
+    "app/control-plane/history/page.tsx": "baeb70147a3557a7f461061f005cacb6a19844e5cf50029e9b4d3d9389b82491",
+    "app/control-plane/layout.tsx": "97efd7aaa6ae58174a4068087991074d80c4111ad60543a2f6da5d2467efde40",
     "app/control-plane/quotes/page.tsx": "959e496795d77d13557b7f6d7f66933cff5701cfe79cf384a2ed2d03d2002cce",
     "app/control-plane/work/page.tsx": "d56f08ebfbfcb7deed94fb1a73de0fd1be9dc1f40f065871b7fcb31a02ceb617",
+    "app/control-plane/workflow-runs/page.tsx": "df2bfa6088f195cd1fdd1f31ac4abae07ef1da2b8d168ffdc21cb8ada36e1def",
     "app/sales.css": "688fb553b999966168eea82cdba0564e052bada3b9240c74c696210b5109bec6",
     "components/brand/loop-mark.tsx": "a520ee6e522a488f2e081d217f219099f48e3eca4cf5c67104eacea7616bdf79",
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
+    "components/control-plane/actions-workspace.tsx": "fdd3c639f05589253f1fb9da1d801f0d7234ca7352225dcb050ac816a0cc260a",
+    "components/control-plane/agents-workspace.tsx": "f7b5092740215451a7853750cf388a3cab597555e4775842ac1ec8c7aa9a2fe6",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
+    "components/control-plane/connector-actions-workspace.tsx": "77924ed4d393ec8c86d962083b629d30c450e698efa16eb36bcb7bc35dd1f73e",
+    "components/control-plane/discount-history.tsx": "d83c22e07fffef66679574f941099201f89056ad0ffb34ecebaa9296481de5fb",
     "components/control-plane/discovery-workspace.css": "b06512356fb2b357ae56cc88b17e8993a68d9d3f87cea80a82281c1cd16e7b7f",
     "components/control-plane/discovery-workspace.tsx": "2ef8660014b3c8dadbff0edca640e5d074d2d363014eb7385050400c052ed5e9",
+    "components/control-plane/durable-workspace.tsx": "aaba9dd6d4c95c3f3ed77105c1b4e4ae51b31ad73fc368c73ed08061ac7e8810",
     "components/control-plane/enquiry-execution.tsx": "127a84fdf2915f275194d8b9096f76318d59fe9446884703da4f1bb193982496",
     "components/control-plane/enquiry-progress.tsx": "df957b6f3c11e7c40f560930063118742422f525c6004ec74ac6ca24337c3bb4",
     "components/control-plane/enquiry-workspace.tsx": "fc4c0434be27e3dbdb2620eca709cb0dd87994d7d07fd2d56cfe2e4945a175a0",
@@ -16375,13 +16560,15 @@
     "components/control-plane/provider.tsx": "dd9c3ae5b8fcc20a01117f4b293282a42fd7d89d9d93a40f306381d9934d64da",
     "components/control-plane/quote-workflow-view.tsx": "a44b90b9d119e617cbcb29749633a4172f0a54aa695f9706a33ffbaf411f5a1c",
     "components/control-plane/quote-workspace.tsx": "b1591aaa40e7af7362643d4c4b843673286650c7c51070a751d9a73c4bef2663",
+    "components/control-plane/refund-workspace.tsx": "3d751741e99cc54d5dd4aae5439be98b82cd1abf7f546d37ac018d8d48797449",
     "components/control-plane/request-planner.tsx": "659a3778dc1e542c264f7814ef655b72eac3542f3a4d34dde8fe440f5e8e32e8",
-    "components/control-plane/shell.tsx": "9abec7b5a0a22536e15287885784de48908d83a8225781c24748cd7c51e32413",
+    "components/control-plane/saved-history-workspace.tsx": "c27650a0a1ef0b17b57c54cd2fa1cfed4a407f9e39d773b97ec4ffe26e4cf7ec",
+    "components/control-plane/shell.tsx": "7bb01fb80ea85ce4c58e7b7e3db32a91ca69730dfc290b8014283482b0403d63",
     "components/control-plane/ui.tsx": "cdf670619bf6e5d6dec5e828ebc3e2e4039a056089ecb8add523dea0e88065db",
     "components/control-plane/workflow-workspace.tsx": "4e73f03d6f2817f549faf21449fc1c458758bf8eaa903e26d8fe68f4626b17ea",
-    "components/control-plane/workspace-gate.tsx": "983a29c284ff70c3c5d14f827b518eac607eb19acc79104d7a8c56ee107c7cd9",
-    "components/marketing/chrome.tsx": "d79a124fbb4fba22a777539b21b987f472eb518fb004f8e24ca210d847b3f0ab",
-    "components/marketing/product-overview.tsx": "614a66b85874586b53ae593a10722b576a740aa4783d34592d85a5890db7524d",
+    "components/control-plane/workspace-gate.tsx": "a29c737a46790dc6d1b6bf13eb95fc3aac9ba8bf2910e2951b891641327b5466",
+    "components/marketing/chrome.tsx": "515e22fb0e36006fe345cf0c458c2f7bbcd0e8a419827c5041708d4bb7e0c613",
+    "components/marketing/product-overview.tsx": "2211c7d2eacba47c5ef3da9399813bb72e9c429cc43c77863448ab293c82efab",
     "current-profile-image-bytes-component.mjs": "d9612f5d505a9e957b859be6010a352270e2ed389d150bb1779f6386de491e59",
     "docs/evidence/historical-chat-artifact-sources-v1.json.gz": "98cdb5fa86b3ca17d5523e95e1479251f05293a2f0a0c1452ed2f3ecf3a59cb1",
     "install-order.json": "63ea4ac05ffc1b3052cd932723a25fe980e474f54bddba30f55ff9b724cd2c7e",
@@ -16407,13 +16594,14 @@
     "lib/control-plane/model.ts": "7314eb1f3aa9d059e85370167b5d494f6df2093a61fba707b03079b1c68f57e4",
     "lib/durable/contracts.ts": "6ea08e75c6304e68d951b93e98e1fedc1af53988428394dfa2a00eee7678f7b6",
     "lib/durable/database.ts": "1411acd8c739773311ae4393bdec3099334927ce360ca396eff5744f40022683",
+    "lib/durable/history-export.ts": "11ed2bdadd0ca5af3ad8f7926c73b10af054f98ba723dd258e2e0449a13a5266",
     "lib/durable/http.ts": "b1c0813e3b094e5b40c9e51adf99d1074851e00b2287af61cb7ec95a7f38bcce",
     "lib/durable/pg-transport.ts": "df8ee427bc35224540820572fd1ef332b12ca53cc280d72cae2421b1678b92eb",
     "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
     "lib/durable/recovery-schema.sql": "75af0b8e95425de3d0b88f927e8612ed50ade36db85969da322c98c17eefe395",
     "lib/durable/recovery.ts": "4d5bd461564e6273e7a512826d30692e660a2621049d6562ce08bebff0ce5240",
     "lib/durable/schema.sql": "1443e0d0ed90ab054d30d8c6ae1359a18e7fd104408ba305f2d6abe96f304d05",
-    "lib/durable/service.ts": "4cc904287196032d12ba185d39d533356098f98963a7d380656c0e2e9b01c5ac",
+    "lib/durable/service.ts": "34af9288b2f342e9a292bab1214a58b947cb3310dec4b1e3bb4911ed3a3d9bbe",
     "lib/durable/tenant-boundary-prototype-schema.sql": "df5ebc3a8200b0ef03926d7a745fbe714889bf1c7bd63bde712bae34e1596ae6",
     "lib/durable/tenant-boundary-prototype.test.ts": "9e6a26d989d54e007f693634328e9abfb8f831b36b7af2cff9cc9fcdc5829d06",
     "lib/durable/tenant-pool.ts": "f5f4fedca20ceea7323c9c93e74b55f5a41d9ca44222d609b14f4487e009595b",
@@ -16507,13 +16695,14 @@
     "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
     "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
     "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
-    "lib/workspace/deployment-capabilities.ts": "14ccec40fbc415c133bc7719544acaa57d286aea47aa204764911c97e41c3089",
+    "lib/workspace/deployment-capabilities.ts": "3dfea35a0f232f22050a9ab1f735ce1b53456099b61b1f02835b3026b783f7d7",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
     "lib/workspace/installed-tenant-fixture.ts": "7e3d9869ccdc2d3ac1229a57d4af24d29c0d658ec9bb7861767f066d2f185ea3",
     "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
     "lib/workspace/membership-authority.ts": "baaca16e454cedf3c5eb3f98a5bd0a4dd11bce0931660a5189c1b6dcb4abd682",
     "lib/workspace/navigation.ts": "1cf72ddc34e3b4d530fc41d521adb409be1eabafbf70689e6222c89c92fbab26",
     "lib/workspace/owned-private-file.ts": "c568195f2dff56091f4713e58cc8dd3f151773541878886add698b8a8c8075ad",
+    "lib/workspace/presentation.ts": "fd6b7d053efdf973473b0d9b87735967d5b6f25f32923c390ed8080f1341f47b",
     "lib/workspace/quote-execution-migrations.ts": "01bb2a3af7aae129de399f3d57062991f33c9c262b01bb5c71f756847d432a9e",
     "lib/workspace/quote-recovery-inventory.ts": "88b20b3439e97a23b2a281353b295207747d088dc7f7b72e566d3c999a224a48",
     "lib/workspace/quote-worker-publication.ts": "0ff247c498cc3b9f47735a4cf3a4fefe1a92887e3a7f9fa0447ed59b0aa06eaf",
@@ -16546,7 +16735,7 @@
     "runtime/temporal/version-contract.ts": "318bacf1f4a4549275e2f399256fc27436d48ed8c8232e3bd53fc9160d3fd9b8",
     "scripts/authenticated-ui-recording.mjs": "570bed5ae1d7e2201e6cec74be2410b6add7407f5b666f455291c86207bb7e74",
     "scripts/build-temporal-worker.mjs": "8acc8392c4d8cdd1c222481af89fa1ef11ee49c0991cf414e5dc20b11ddb2629",
-    "scripts/chat-ui-current-sources.json": "3c2811a378fdc0523828988666396964c19c4d495048716cf1827081c6886bdd",
+    "scripts/chat-ui-current-sources.json": "e651164ac1f43c0dfff314b01f88225bb00789d2b4b7c8ff24d821e212d8e77c",
     "scripts/chat-ui-extracted-admission.mjs": "e3a077db7c94f42b98c883e5fae08bfc40b14c649ba1bc4385b29e713449d17d",
     "scripts/chat-ui-installed-fixture.ts": "638aa49142498bc5eb7a3b2a33671419e1c8ded5d8721d2c1f0270db43c7633e",
     "scripts/chat-ui-model-session.mjs": "55bf6e71cdc87368c4fee254b6d0ceb75ad6ca1b9b5965df903517e029dc540a",
@@ -16565,7 +16754,7 @@
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "a92f365ed6c04ec1aa8298049f48a630e65112202d01511d5639adaba01d8892",
+    "scripts/current-proof-source-registry.mjs": "465d5b40a197c847b903a3e291f7c73524d26c2f38c970ac387b7474c455e2e3",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "6789ccfb6c9cc96f59ea2156e281df55931cd5e5b9eccd676ae2806b33b9112d",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",

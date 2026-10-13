@@ -3,8 +3,12 @@
 # configuration are managed separately; an app release must not replace them.
 set -euo pipefail
 if [[ "${1:-}" == --profile ]]; then
-  [[ $# == 2 && "$2" == quote-demo ]] || { echo 'Unsupported explicit deployment profile.' >&2; exit 1; }
-  exec bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/deploy-quote-demo.sh"
+  [[ $# == 2 ]] || { echo 'Unsupported explicit deployment profile.' >&2; exit 1; }
+  case "$2" in
+    quote-demo) exec bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/deploy-quote-demo.sh" ;;
+    control-demo) exec bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/deploy-control-demo.sh" ;;
+    *) echo 'Unsupported explicit deployment profile.' >&2; exit 1 ;;
+  esac
 fi
 [[ $# == 0 ]] || { echo 'Unexpected deployment arguments.' >&2; exit 1; }
 

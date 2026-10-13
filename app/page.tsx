@@ -517,6 +517,7 @@ export default function LandingPage() {
             <p className="ll-sandbox-note">
               The invited quote workspace demonstrates a discount request, independent approval,
               a verified sample quote change, and a simulated confirmation email.
+              The illustrated tour uses sample browser data for output checks and multi-step traces.
               The diagrams illustrate broader control patterns. Quote planning uses a bounded model;
               no real money moves and customer systems are not connected.
             </p>

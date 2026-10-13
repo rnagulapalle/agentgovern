@@ -1,0 +1,306 @@
+{
+  "at": "2026-10-13T22:17:08.288Z",
+  "scope": "Isolated PostgreSQL schema and private FetchSandbox HubSpot Contacts / Resend single-send fixtures. No live CRM, real email, model or money.",
+  "checks": [
+    {
+      "name": "crm: exact approval, execute and authoritative read-back",
+      "passed": true,
+      "detail": "Real LoopLabs service -> HTTP -> existing FetchSandbox engine -> persisted provider state."
+    },
+    {
+      "name": "crm: replay sends no second effect",
+      "passed": true,
+      "detail": "Compare provider effect journal before and after action replay."
+    },
+    {
+      "name": "crm: response lost after effect, reconcile without resend",
+      "passed": true,
+      "detail": "Twin writes and persists then delays response; 1.5s adapter timeout."
+    },
+    {
+      "name": "crm: restart preserves effect and prevents duplicate replay",
+      "passed": true,
+      "detail": "Restart the actual twin process; replay returns existing effect."
+    },
+    {
+      "name": "crm: later write produces conflict",
+      "passed": true,
+      "detail": "Distinct fixture record versions reveal intervening writes; live HubSpot CAS not claimed."
+    },
+    {
+      "name": "email: exact approval, execute and authoritative read-back",
+      "passed": true,
+      "detail": "Real LoopLabs service -> HTTP -> existing FetchSandbox engine -> persisted provider state."
+    },
+    {
+      "name": "email: replay sends no second effect",
+      "passed": true,
+      "detail": "Compare provider effect journal before and after action replay."
+    },
+    {
+      "name": "email: response lost after effect, reconcile without resend",
+      "passed": true,
+      "detail": "Twin writes and persists then delays response; 1.5s adapter timeout."
+    },
+    {
+      "name": "email: restart preserves effect and prevents duplicate replay",
+      "passed": true,
+      "detail": "Restart the actual twin process; replay returns existing effect."
+    },
+    {
+      "name": "provider rejects unauthorized requests",
+      "passed": true,
+      "detail": "No provider credential is given to agents."
+    },
+    {
+      "name": "provider rejects recipient and template escape",
+      "passed": true,
+      "detail": "Only the prepared sample recipient and exact message are allowed."
+    },
+    {
+      "name": "provider 401: retain uncertainty, never blind retry",
+      "passed": true,
+      "detail": "Actual HTTP rejection; absence is not proof that an arbitrary real provider cannot complete."
+    },
+    {
+      "name": "provider 429: retain uncertainty, never blind retry",
+      "passed": true,
+      "detail": "Actual HTTP rejection; absence is not proof that an arbitrary real provider cannot complete."
+    },
+    {
+      "name": "provider 500: retain uncertainty, never blind retry",
+      "passed": true,
+      "detail": "Actual HTTP rejection; absence is not proof that an arbitrary real provider cannot complete."
+    },
+    {
+      "name": "crm: stale approved source cannot overwrite a later update",
+      "passed": true,
+      "detail": "The fixture enforces an exact source version at write time. This CAS extension is not a live HubSpot feature claim."
+    },
+    {
+      "name": "destination binding: retargeting cannot reuse approval or rewrite a replay",
+      "passed": true,
+      "detail": "Real saved approval and adapter destination change; original ID/hash retained, dispatch cancelled and actual provider effect journal unchanged."
+    },
+    {
+      "name": "exact request: frozen approval, forgery refusal and actual provider body",
+      "passed": true,
+      "detail": "Real named approval, immutable database refusal, direct adapter refusal before HTTP, stable same-ID replay, and one real twin write equal to the saved request. No live email delivery."
+    },
+    {
+      "name": "worker SIGKILL before effect",
+      "passed": true,
+      "detail": "Terminate a real worker process; lease expiry injected in isolated test schema. Before-effect absence remains uncertain, never automatically retried."
+    },
+    {
+      "name": "worker SIGKILL after effect",
+      "passed": true,
+      "detail": "Terminate a real worker process; lease expiry injected in isolated test schema. Before-effect absence remains uncertain, never automatically retried."
+    },
+    {
+      "name": "workflow: external agents submit scoped steps through actual HTTP handlers",
+      "passed": true,
+      "detail": "Separate Node agent processes use only scoped keys. Provider credentials stay in the server harness."
+    },
+    {
+      "name": "workflow: fresh action IDs cannot escape enrolled agent boundaries",
+      "passed": true,
+      "detail": "Enrollment restricts these agent identities to immutable workflow step IDs, not merely the dashboard path."
+    },
+    {
+      "name": "workflow: downstream API cannot bypass a missing predecessor",
+      "passed": true,
+      "detail": "The dependency guard is enforced in the shared action execution service, not only in the dashboard."
+    },
+    {
+      "name": "workflow: lost upstream response holds downstream execution",
+      "passed": true,
+      "detail": "Actual twin write completes before its response is delayed; the message stays undispatched."
+    },
+    {
+      "name": "workflow: API process termination preserves run and proposals",
+      "passed": true,
+      "detail": "Terminate the actual HTTP handler process with SIGKILL, restart it and replay the external agent submission."
+    },
+    {
+      "name": "workflow: reconciliation unlocks the downstream step without resending upstream",
+      "passed": true,
+      "detail": "Third step reads both twin outcomes; there are two intended effects and no automatic upstream resend."
+    },
+    {
+      "name": "workflow: stale CRM approval cannot release the downstream message",
+      "passed": true,
+      "detail": "The actual twin rejects a stale approved CRM source version and the dependent message remains undispatched."
+    },
+    {
+      "name": "workflow: provider bypass without its private credential is rejected",
+      "passed": true,
+      "detail": "A LoopLabs agent key is not a provider credential. This is fixture enforcement, not a customer network audit."
+    },
+    {
+      "name": "enquiry: saved plan, independent approvals, lost response and restart through HTTP",
+      "passed": true,
+      "detail": "Real PostgreSQL and FetchSandbox HTTP. A reviewed sample enquiry survives API restart; response loss is reconciled without resending and the acknowledgement stays held until its predecessor is verified. No real delivery or model is used."
+    },
+    {
+      "name": "record scope: two independent customers save exact plans and complete their own CRM/message effects",
+      "passed": true,
+      "detail": "Actual saved plans, independent approvals, concurrent two-record runs and separate provider readback. This is not a capacity benchmark or background worker proof."
+    },
+    {
+      "name": "record scope: wrong record and tenant cannot exercise the original approval",
+      "passed": true,
+      "detail": "Original record and another workspace refused by adapter/controller and actual fixture; no extra provider effects."
+    },
+    {
+      "name": "record scope: recipient change at the write boundary is refused atomically",
+      "passed": true,
+      "detail": "Fixture injects a record-to-recipient change inside the same synchronous provider write, then refuses the send. Earlier contact read alone is not proof."
+    },
+    {
+      "name": "record scope: restart preserves separate effects and original approvals do not resend",
+      "passed": true,
+      "detail": "Real process restart retains enrolled records, versions and changed recipient; completed action replay adds no effects."
+    },
+    {
+      "name": "scope grant: revocation before dispatch and reactivation cannot revive an old exact approval",
+      "passed": true,
+      "detail": "Actual persisted grant version change refuses dispatch; reactivation increments the version and does not rewrite the saved approval."
+    },
+    {
+      "name": "scope grant: revoke after an actual effect then restart keeps uncertainty and adds no sends",
+      "passed": true,
+      "detail": "Actual HTTP effect precedes a lost response and database grant revocation; original action remains contained after real provider restart and reactivation."
+    },
+    {
+      "name": "fixture storage: failed persistence cannot attest a volatile effect or permit automatic resend",
+      "passed": true,
+      "detail": "Inject an actual persistence exception after native mutation: the process refuses volatile readback, returns unknown, and restart never causes an inferred resend. This is a fixture failure check, not production storage certification."
+    },
+    {
+      "name": "isolated database backup and restore preserves actions and evidence",
+      "passed": true,
+      "detail": "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA."
+    }
+  ],
+  "sourceFingerprints": {
+    "app/api/durable/connectors/route.ts": "d5ad9870868142d8ec301f97f01cc6b2d3036f674781a3e8358e8317620e96c4",
+    "app/api/durable/workflows/route.ts": "2a448b416ad2f70e87bbea03afdffd2dd0d2814fdd64fd40c4bb1660d194ba64",
+    "app/api/workspace/enquiries/route.ts": "27572354ed4ee88191523bee3481fd1a93ef026548640f72d77278e337e842a8",
+    "install-order.json": "63ea4ac05ffc1b3052cd932723a25fe980e474f54bddba30f55ff9b724cd2c7e",
+    "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
+    "lib/connectors/content.ts": "891cb662e2ee4cd397b28e3433453ca5c60c8468ab0e016cb9fecf8e10597ba0",
+    "lib/connectors/contracts.ts": "45a2e5a89a381ba5db3fd344fb4ce1ca929b6d1063ea14de113fa86edc22b1dc",
+    "lib/connectors/email-observation.ts": "52282105eef31416e42df1b7e7a41f8bb23090038fef5e8865de32635d7a6565",
+    "lib/connectors/hosted.ts": "dbb52a50eeb94c652df397bb8dc3b0f89ab801ee8e50d32df6399213948fbe05",
+    "lib/connectors/native-quote-mail.ts": "b9e986571708cff4bf7dfc554fbdc3a7d8b28ea66c37689e8db6a32246234270",
+    "lib/connectors/native-quote.ts": "8e6dfb809052ff4fcc366abe358cdf0c8027784d0d8c4a8e5a61514b3d074cdd",
+    "lib/connectors/quote-action.ts": "bccb1fd0ba4eb1143d247eecaca5b116f2c222e4b3a6b28623ba866e55e679fb",
+    "lib/connectors/record-scope.ts": "d84de98f4e00e4a0d50ae3b8ecf6f30d3286c62d3d64546145d8d1a2b8dd04f7",
+    "lib/connectors/request.ts": "92b64f4b384d11d3434126c60709f56a9f8490d1117d96ff42925b4f5d0210aa",
+    "lib/connectors/routing.ts": "b57b0a248884a42974234d5126e3a32fcb9862fa7589c101defa4b41cccb1945",
+    "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
+    "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
+    "lib/connectors/scopes.ts": "4915dd59986762a5efdec7e94d6f29bd918e647f97e04c78c30c25428f1f1d2e",
+    "lib/connectors/service.ts": "5ad9372e7681290c1fc34faa603ab2f6bc8574415b1ac847230b886c6e485fc9",
+    "lib/connectors/twin.ts": "493d996a44c0aaa8cecab33aa5d47bc62c259f9d111f4b285aa37d127e044431",
+    "lib/durable/contracts.ts": "6ea08e75c6304e68d951b93e98e1fedc1af53988428394dfa2a00eee7678f7b6",
+    "lib/durable/database.ts": "1411acd8c739773311ae4393bdec3099334927ce360ca396eff5744f40022683",
+    "lib/durable/http.ts": "b1c0813e3b094e5b40c9e51adf99d1074851e00b2287af61cb7ec95a7f38bcce",
+    "lib/durable/pg-transport.ts": "df8ee427bc35224540820572fd1ef332b12ca53cc280d72cae2421b1678b92eb",
+    "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
+    "lib/durable/recovery-schema.sql": "75af0b8e95425de3d0b88f927e8612ed50ade36db85969da322c98c17eefe395",
+    "lib/durable/recovery.ts": "4d5bd461564e6273e7a512826d30692e660a2621049d6562ce08bebff0ce5240",
+    "lib/durable/schema.sql": "1443e0d0ed90ab054d30d8c6ae1359a18e7fd104408ba305f2d6abe96f304d05",
+    "lib/durable/service.ts": "34af9288b2f342e9a292bab1214a58b947cb3310dec4b1e3bb4911ed3a3d9bbe",
+    "lib/durable/tenant-boundary-prototype-schema.sql": "df5ebc3a8200b0ef03926d7a745fbe714889bf1c7bd63bde712bae34e1596ae6",
+    "lib/durable/tenant-pool.ts": "f5f4fedca20ceea7323c9c93e74b55f5a41d9ca44222d609b14f4487e009595b",
+    "lib/durable/workload-pool.ts": "1042b30e45a9c5ce57cbd7bf45e1294d87cecbe7bbebf1a632f7e225796dca09",
+    "lib/enquiries/chat-contract.ts": "adcfd4308e6a9325930203b6a23f6e6179dfe25acaccf897ba1a456d652b56c2",
+    "lib/enquiries/chat.ts": "d0dda47792794d019b5c36429a173ece75c36572212cf6e8feb822056d407581",
+    "lib/enquiries/contracts.ts": "f5158c75f45ef6dfef14043b0bfa809210f205441d9028aa37ccaca80b119b80",
+    "lib/enquiries/dispatch.ts": "4f25ebda0e3f4e7a46d9c534166fc04b35df11ff0971ad0241e3db4efd7005b3",
+    "lib/enquiries/managed-schema.sql": "88818301d4bff0dbfc6d61740f12abe0b0c080045dde7785766b870ac74c92be",
+    "lib/enquiries/record-routing-schema.sql": "05c2c214c09e14b9567402206a1efe6b4fb1f064d07203386f7a7e23947e8267",
+    "lib/enquiries/reset-intent-schema.sql": "907e8dc8168d4f538a576c4a79bceab4f9ed12bc5fbd9a742565a63343828297",
+    "lib/enquiries/revision-schema.sql": "2bfa317431823b35951c4b07bbfae9df4e710491bac7c78e6be23507003c776d",
+    "lib/enquiries/revision.ts": "2f43b6e31be549dc0f80e9580a8173f21f6c7f5830c150ea555f1f2466b69635",
+    "lib/enquiries/runner.ts": "e57cb86be0a8bf49001668e2ef2f331c6176bfe449e7841db8c7ad3641729e79",
+    "lib/enquiries/schema.sql": "8e9c620147658f3bd59cd2948d0a46f872eb74066d67eba9f844bc5410fdd743",
+    "lib/enquiries/service.ts": "f20e3c5b7f103e3cf165160c47e7875e748c48868ef66fe73366327b6322a759",
+    "lib/enquiries/submission.ts": "8714792ff4fbbd5a4920588c054564f1313956e1d4ba37fcc543c62e5a908b6d",
+    "lib/enquiries/temporal-schema.sql": "72705c41e2674baadeda22b7e324e9e232947e1a40a7d5717d0cf1280b3736da",
+    "lib/enquiries/worker-admission-schema.sql": "8fa0d638e759fec11b0f529e56383a0fd4b7e8cecf13f432b096128e6e70fa73",
+    "lib/orchestration/admission.ts": "83716b11fac148f92ed024edf9a1c492041ec3b8fb11fd3a6e3a1cff6a524e6a",
+    "lib/orchestration/quote-contract.ts": "99f0dc0263189112f24694d87937ec0a24281a6f62839fe6438debb334ac1372",
+    "lib/quotes/authority-schema.sql": "9bca0a7882861f068c12c982038d41c392b327993e466d1ea76dcaf06fe8dfd0",
+    "lib/quotes/authority.ts": "f0da146d7d5504c411f84e11ca2d63882a4a3995c49f0522b2d8574d8f442d43",
+    "lib/quotes/background.ts": "eef879a0e7547a49053863a726b8d0422abc133da0672d7157a95342319d08f9",
+    "lib/quotes/digest.ts": "15c655b0eec32d9af939f28710ce8023044150d902886b185b88023f26a19c84",
+    "lib/quotes/effect.ts": "a9181e7ee47942b32335f4068a6d76cbee8e9fd8e76ca69e6a701a7ae7364990",
+    "lib/quotes/https-transport.ts": "e3828bf57c7fd9e7aa08e6ed8c581850fbc3117cc6486b50bd05f01d94b7395d",
+    "lib/quotes/json-body-transport.ts": "e6732a49a20e79bd635e75b5d655dba9eb3e3433f486c9dff5aa0a0b3b2c3b7b",
+    "lib/quotes/membership-schema.sql": "d2d9c813566d661020223b03a317eefb1fde439f7f164de61e503c309211a1ba",
+    "lib/quotes/membership.ts": "879db345daa984e6083326d3ff6edca5171601cb8f72787555a2611170c92ffe",
+    "lib/quotes/native-email-transport.ts": "883094d1277108c47fe5b2c728ef4916bb5a88f8b07444bf44b702ce07346b66",
+    "lib/quotes/native-transport.ts": "9a9f10e3141fdecd9d02691fcb86c39e8fbbb852e558323e29a04ae11ff9373f",
+    "lib/quotes/plan-v2-schema.sql": "2d9bb08328a8a05c97f0eae0aeeb8232e4d5087d599f92a45a7ece75040318c3",
+    "lib/quotes/plan-v2.ts": "e20bebf998ea3dad9fe734321be34c4c1697f621704aad8fa5c2b9a09be7ddbc",
+    "lib/quotes/plan.ts": "3124905f961bcd4c0a331da025d675cb5a014b24b59f06457976243fc4b18938",
+    "lib/quotes/schema.sql": "e5fe056acb1cfae170ab1b4da9c90a94b316b99fc27402a0e9f66a8b348ff7ac",
+    "lib/quotes/store.ts": "050bd64acccc5fed9748ee12a156b1c5c32968ca366a91c83f3b963e136b9793",
+    "lib/quotes/transaction-context.ts": "351324ea6bcd6b11f886d4d9ddebcd5ac2ada56de8a7abfc8e390b69cecf0fc2",
+    "lib/quotes/verification-receipt.ts": "cabdb7b5a337b0a38c344776258133afa9ab396383def68783d1b1b31c287d6d",
+    "lib/quotes/workflow-view.ts": "7dd8d5a9c056c48d82652e15b477ed1c613245e97bf36845072f711fd1c0aa35",
+    "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
+    "lib/workflows/guard.ts": "b68617f0147b052e5ed113fb42527103a41b7d0cd7dc7895a17411fb2755be03",
+    "lib/workflows/schema.sql": "fad98c6bed6e4cdc0168b5248ca5cbf7411c35ec49cd3bcbd24b27eb11bf3e4d",
+    "lib/workflows/service.ts": "957bff81ab39e28cfaf883831eb9d8c2e08673f50ec93126d83cb62efc4e3fde",
+    "lib/workspace/agents.ts": "a7dc16a213f2699679593dc11a2e8aead7533d4832df6180372a9133ea810fe2",
+    "lib/workspace/auth.ts": "c76a1d2373604da598bb9195e16a001a4e09fccd8e5d7adc8f7b8c04a0d00604",
+    "lib/workspace/cloud-inventory-schema.sql": "aceb85a2cf7bf8f4c8d29a110904233267847ce64d7f26eca9f5ce210730dd49",
+    "lib/workspace/cloud-owner-review-schema.sql": "336f33a43ba22b5b6e9bb5f93e75bd5101267328184821fb76c6df93371c05c6",
+    "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
+    "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
+    "lib/workspace/installed-tenant-fixture.ts": "7e3d9869ccdc2d3ac1229a57d4af24d29c0d658ec9bb7861767f066d2f185ea3",
+    "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
+    "lib/workspace/membership-authority.ts": "baaca16e454cedf3c5eb3f98a5bd0a4dd11bce0931660a5189c1b6dcb4abd682",
+    "lib/workspace/owned-private-file.ts": "c568195f2dff56091f4713e58cc8dd3f151773541878886add698b8a8c8075ad",
+    "lib/workspace/schema.sql": "5efa86906dd872f6eb059cb4be7c73a1790b5fd4b5910dc480f7e1b4e231725e",
+    "lib/workspace/tenant-bootstrap.ts": "b2b4e85ee7d5a4409bcc04a3dc6a0b46c839ac3acd4f9d5f26e686c055fb2ee3",
+    "lib/workspace/web-recovery-deployment.ts": "40a4f402e95fd524414ea10ecd77b916ecd61193cffeedc7f86f9a56dd6c183b",
+    "lib/workspace/tenant-context.ts": "09e7b6c172663fdf59c74289715df64b6099c07ea275a7429ee6c7c66671f7a2",
+    "lib/workspace/quote-workload-installation.ts": "d7b76e3d524bc285382b28f91862681297ffb07765eefad1a067f000f1428a58",
+    "lib/workspace/recovery-capture.ts": "a8a03c53658b485af49636b2d54e6cb9c69dc6369b331bfab8ae4720de2be08d",
+    "lib/workspace/tenant-installer.ts": "6a46811062d6e82a282263d414dbc590d9b9b3739040f3337c8744eb3594db43",
+    "lib/workspace/tenant-read-inventory.ts": "64f5e0e4ec8981c0612a2fda85f51947fe0305f3e5d0d6180a1f408bd94a36f8",
+    "package.json": "ee468b27483d24aecb2df0aeb5a50e790a8fc0fac3e073e5158caee68a66645d",
+    "pnpm-lock.yaml": "6b49ac11c789339af815e0c08193ec0cad25e85557b53240ffd7b8909fb936bc",
+    "runtime/temporal/activities.ts": "9be7fd957c81efbfdc6d365ad583c89fe7cdfe9ed931627ec8690aa65e5d8ab0",
+    "runtime/temporal/admission.ts": "77348e8c27f69fd2d5e765401c62ca9492473db5f050580151c4f564d97ddeb8",
+    "runtime/temporal/operations.ts": "d0ee8ece790da73b7e4eebb8cad351631df7853fabc29a2ad799656312dfadc6",
+    "runtime/temporal/outbox.ts": "1f8ec2d77c6c4b63378fdc1a824ac5ebf8c98417c8dd5f9a5f89ad0f599ccc7a",
+    "runtime/temporal/record-routing.ts": "eb80b015ba2684da22c9ae4456e45a965497e8dda952e7b1354f34397b146a7d",
+    "runtime/temporal/staging-preflight.ts": "08ac1336369bccb8fb151a29f7745d45c49da155893d1255b9a717ccf017a774",
+    "runtime/temporal/version-contract.ts": "318bacf1f4a4549275e2f399256fc27436d48ed8c8232e3bd53fc9160d3fd9b8",
+    "scripts/connector-proof-diagnostic.ts": "d9d999b495c00138a0f01053331003031e6cbe40710b0a76291a2f996c3ca84c",
+    "scripts/connector-proof-installation.ts": "c5081c3b7818502f0978811c4b3420b13b13aefc56fc5ad6b1e720fa59e4509d",
+    "scripts/connector-proof-sources.ts": "5314464a1f5a682e20262b2e5cbcc7769b987b5f9f9860d7917e53b47e6ac556",
+    "scripts/connector-proof-worker.ts": "6a580f6996343c492306cfeb9bf5c61386b2f4ef8988a2dcfafd6619941563a5",
+    "scripts/connector-proof.ts": "9c79e9199789ca07d8e93b64f7bf256a734c4fbf9e4383b6a93d4e58317fd4d3",
+    "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
+    "scripts/current-proof-source-registry.mjs": "465d5b40a197c847b903a3e291f7c73524d26c2f38c970ac387b7474c455e2e3",
+    "scripts/discovery-installed-source-contract.mjs": "05233889d31afc173c223954c8acce15610cb93299aca15d296fc7c0c12b9cb4",
+    "scripts/workflow-agent.mjs": "ba686dbe89ee3b5e999666d31597728016dc6aade2b0f3fc806db9c24acb85be",
+    "scripts/workflow-http-proof-server.ts": "e3de80fb1d00f5a455c1fdf5d6d3d28c870f1b7271cc62cd4c579c7835d8d50f",
+    "tsconfig.json": "feec4b19d9acba4e15b6c95ad652ed3f7d9c09cd62afadc7c2d8e9416699073b"
+  },
+  "localRestoreMilliseconds": 266,
+  "limits": [
+    "Fixture action journal and contact version are LoopLabs extensions, not live provider parity.",
+    "No SSO, failover, production load or real delivery proof.",
+    "Three offline-enrolled test records; two scoped manual runs. Record-scoped background routing, sustained load and live recipients remain unsupported."
+  ],
+  "providerEffects": 18,
+  "ownedCleanupVerified": true
+}

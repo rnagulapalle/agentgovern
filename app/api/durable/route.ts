@@ -29,7 +29,11 @@ export async function POST(request: NextRequest) {
     if (operation === "propose") result = await service.propose(actor, p);
     else if (operation === "configure")
       result = await service.configure(actor, p);
-    else {
+    else if (operation === "discountConnectorAccess") {
+      if (Object.keys(p).length !== 1 || typeof p.active !== "boolean")
+        throw new ControlError(400, "Choose one valid discount connector access state.");
+      result = await service.configureDiscountConnector(actor, p.active);
+    } else {
       if (typeof p.actionId !== "string")
         throw new ControlError(400, "Action ID is required.");
       const allowed =

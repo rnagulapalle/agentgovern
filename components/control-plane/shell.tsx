@@ -28,6 +28,7 @@ import {
   SlidersHorizontal,
   Undo2,
 } from "lucide-react";
+import { scriptDemoSections } from "../../lib/workspace/deployment-capabilities";
 import { useControl } from "./provider";
 import { BrandMark, Modal } from "./ui";
 
@@ -38,6 +39,7 @@ const groups = [
       { key: "overview", label: "Overview", icon: LayoutGrid },
       { key: "work", label: "Workflow plans", icon: MessageSquare },
       { key: "quotes", label: "Distributor quotes", icon: BookOpen },
+      { key: "history", label: "Saved decision history", icon: History },
       { key: "agents", label: "Agents", icon: Bot },
       { key: "discovery", label: "Cloud inventory", icon: Cloud },
       { key: "connectors", label: "Connections", icon: Database },
@@ -60,7 +62,8 @@ const groups = [
     ],
   },
 ];
-export function ControlScopeNote({ durable, quoteOnly = false }: { durable: boolean; quoteOnly?: boolean }) {
+export function ControlScopeNote({ durable, quoteOnly = false, scriptDemo = false }: { durable: boolean; quoteOnly?: boolean; scriptDemo?: boolean }) {
+  if (scriptDemo) return <p>Discounts use a sample record; CRM updates and messages use isolated simulated systems. Decisions and history are saved on the server. No live customer records change and no email is delivered.</p>;
   if (quoteOnly) return <p>Sample distributor quotes and simulated confirmations. Another named member must approve each exact action. No live customer records change and no customer email is delivered.</p>;
   return <p>{durable
     ? "Discounts change a sample record; refunds use a simulated payment provider. Decisions are saved on the server. No real money moves. When configured, AI helps prepare bounded customer acknowledgement plans; it cannot approve or execute actions. Business connectors remain simulated, with no live customer updates or real email delivery."
@@ -70,16 +73,19 @@ export function ControlShell({
   children,
   member,
   quoteOnly = false,
+  scriptDemo = false,
 }: {
   children: React.ReactNode;
   member: { name: string; email: string };
   quoteOnly?: boolean;
+  scriptDemo?: boolean;
 }) {
   const { state, toast } = useControl();
   const pathname = usePathname();
   const section = pathname.split("/")[2] || "overview";
   const durable = [
     "overview",
+    "history",
     "work",
     "quotes",
     "actions",
@@ -112,7 +118,7 @@ export function ControlShell({
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
   }, [durable]);
-  const navigation = quoteOnly ? [{ name: "QUOTE WORKSPACE", items: groups[0].items.filter(item => item.key === "quotes") }] : groups;
+  const navigation = quoteOnly ? [{ name: "QUOTE WORKSPACE", items: groups[0].items.filter(item => item.key === "quotes") }] : scriptDemo ? [{ name: "CONTROL WORKSPACE", items: groups[0].items.filter(item => scriptDemoSections.includes(item.key)) }] : groups;
   const title =
     navigation.flatMap((g) => g.items).find((i) => i.key === section)?.label ||
     "Example settings";
@@ -217,7 +223,7 @@ export function ControlShell({
               <span className="cp-live-dot" />
               <strong>{quoteOnly ? "Quote action controls" : "Governed by default"}</strong>
             </div>
-            <p>{quoteOnly ? "Independent approval. Verified result." : "Identity. Action. Execution. Output."}</p>
+            <p>{quoteOnly ? "Independent approval. Verified result." : scriptDemo ? "Named authority. Verified effects." : "Identity. Action. Execution. Output."}</p>
             <div className="cp-enforcement-bars">
               {Array.from({ length: 30 }, (_, i) => (
                 <i key={i} style={{ height: 8 + ((i * 7) % 13) }} />
@@ -228,7 +234,7 @@ export function ControlShell({
               <span>v0.1</span>
             </span>
           </div>
-          {!quoteOnly && <Link
+          {!quoteOnly && !scriptDemo && <Link
             prefetch={false}
             href="/control-plane/settings"
             className={`cp-nav-item ${section === "settings" ? "is-active" : ""}`}
@@ -289,7 +295,7 @@ export function ControlShell({
                 </kbd>
               </button>
             )}
-            {!quoteOnly && <Link
+            {!quoteOnly && !scriptDemo && <Link
               prefetch={false}
               className="cp-notifications"
               href={durable ? "/control-plane" : "/control-plane/approvals"}
@@ -319,7 +325,7 @@ export function ControlShell({
         </main>
         <footer className="cp-app-footer">
           <span>
-            <BrandMark small /> Action, execution, and output controls
+            <BrandMark small /> {scriptDemo ? "Action controls and saved decisions" : "Action, execution, and output controls"}
           </span>
           <span>
             {durable
@@ -388,6 +394,11 @@ export function ControlShell({
               ["02", "Get independent approval", "The requester cannot approve their own actions. The designated manager reviews and approves the exact quote update."],
               ["03", "Verify the quote first", "Check the observed quote result. The customer confirmation stays held until the quote is verified and separately approved."],
               ["04", "Review the saved result", "Check the full result and reopen the saved request. Confirmation acceptance is simulated; it is not customer delivery."],
+            ] : scriptDemo ? [
+              ["01", "Onboard an agent", "Choose a named owner, one allowed connector and a request allowance. Keep its one-time key private."],
+              ["02", "Apply discount rules", "An allowed request can execute. An exception needs another member’s approval. A request above the hard limit is blocked."],
+              ["03", "Verify uncertain outcomes", "Use the sample lost-response control, then verify the saved effect before any retry."],
+              ["04", "Follow a customer handoff", "CRM verification gates the customer message. Review saved discount history and contain the discount connector without stopping unrelated agents."],
             ] : durable
               ? [
                   [
@@ -445,7 +456,7 @@ export function ControlShell({
           </div>
           <div className="cp-note">
             <BookOpen size={17} />
-            <ControlScopeNote durable={durable} quoteOnly={quoteOnly} />
+            <ControlScopeNote durable={durable} quoteOnly={quoteOnly} scriptDemo={scriptDemo} />
           </div>
         </Modal>
       )}

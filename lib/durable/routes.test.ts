@@ -37,6 +37,19 @@ beforeAll(async()=>{fixture=await createInstalledTenantFixture({tenants:['http',
  await owner.query("INSERT INTO ll_agents(org_id,id,tools) VALUES('http','http-agent',ARRAY['proof.discount'])");await owner.query("INSERT INTO ll_records(org_id) VALUES('http')");}});},20000);
  afterAll(async()=>fixture?.close());
 describe("Actual durable API routes", () => {
+  it("enforces operator-only exact connector access without changing unrelated agents", async () => {
+    await fixture.owner.query("INSERT INTO ll_agents(org_id,id,tools) VALUES('http','unrelated-quote',ARRAY['twin.quote'])");
+    for (const role of ['agent','worker'] as const)
+      expect((await POST(req({operation:'discountConnectorAccess',active:false},role))).status).toBe(403);
+    for (const value of [{operation:'discountConnectorAccess',active:'yes'}, {operation:'discountConnectorAccess',active:false,connector:'quote'}])
+      expect((await POST(req(value))).status).toBe(400);
+    expect((await POST(req({operation:'discountConnectorAccess',active:false},'operator','https://evil.example'))).status).toBe(403);
+    expect((await POST(req({operation:'discountConnectorAccess',active:false}))).status).toBe(200);
+    const states=()=>fixture.owner.query("SELECT id,active FROM ll_agents WHERE org_id='http' ORDER BY id");
+    expect((await states()).rows).toEqual([{id:'http-agent',active:false},{id:'unrelated-quote',active:true}]);
+    expect((await POST(req({operation:'discountConnectorAccess',active:true}))).status).toBe(200);
+    expect((await states()).rows).toEqual([{id:'http-agent',active:true},{id:'unrelated-quote',active:true}]);
+  });
   it("fails closed for anonymous access and cross-site browser mutations", async () => {
     expect(
       (await GET(new NextRequest("https://looplabs.run/api/durable"))).status,

@@ -9,7 +9,16 @@ import {installedAssemblySourceSnapshot} from './staging-installed-source-snapsh
 // construction metadata, not execution evidence or a replacement historical pin.
 const installedReleaseRoots2={...currentProofRoots,assembly:[...currentProofRoots.assembly,'scripts/staging-platform-proof.mjs','scripts/staging-installed-release-intake.mjs','scripts/staging-installed-observation-record.mjs','scripts/staging-installed-accepted-origins.mjs','scripts/staging-installed-artifact-download.mjs','scripts/staging-installed-artifact-extract.py','scripts/staging-installed-origin-check.mjs','scripts/staging-installed-held-ack-controller.mjs']};
 export function constructInstalledReleaseRegistry2(root=process.cwd()){return constructCurrentProofRegistry(root,installedReleaseRoots2);}
-export function validateInstalledReleaseRegistry2(expected,root=process.cwd()){assert.deepEqual(expected,constructInstalledReleaseRegistry2(root),'Complete current producer/intake closure changed');return true;}
+export function validateInstalledReleaseRegistry2(expected,root=process.cwd()){
+ // Refuse malformed caller metadata before walking the repository. The complete
+ // current-byte comparison below remains mandatory for a well-shaped registry.
+ assert(expected&&typeof expected==='object'&&!Array.isArray(expected),'Closed construction registry required');
+ sameKeys(expected,['contract','families','edges','directories','nonAstAssets','sourceFingerprints']);
+ assert.equal(expected.contract,'installed-platform-proof-source-1');
+ for(const key of ['edges','directories','nonAstAssets'])assert(Array.isArray(expected[key]),'Construction list required: '+key);
+ for(const key of ['families','sourceFingerprints'])assert(expected[key]&&typeof expected[key]==='object'&&!Array.isArray(expected[key]),'Construction map required: '+key);
+ assert.deepEqual(expected,constructInstalledReleaseRegistry2(root),'Complete current producer/intake closure changed');return true;
+}
 export const installedImageRoles2=Object.freeze(['web','worker','twin','quoteEmail','provisioner','quote']);
 const digest=value=>assert(typeof value==='string'&&/^[a-f0-9]{64}$/.test(value));
 const sameKeys=(value,keys)=>assert.deepEqual(Object.keys(value).sort(),[...keys].sort());

@@ -1,5 +1,5 @@
 import Link from "next/link";
-export function ProductOverview({ gated = false, quoteOnly = false }: { gated?: boolean; quoteOnly?: boolean }) {
+export function ProductOverview({ gated = false, quoteOnly = false, scriptDemo = false }: { gated?: boolean; quoteOnly?: boolean; scriptDemo?: boolean }) {
   return (
     <main className="sales-main">
       <div className="sales-eyebrow">
@@ -77,6 +77,15 @@ export function ProductOverview({ gated = false, quoteOnly = false }: { gated?: 
           sample systems. No real money moves and no customer email is delivered.
           Reviewing a plan does not authorize execution. Agent registration, the model gateway,
           and the other platform workspaces are not available in this deployment.
+        </p> : scriptDemo ? <p>
+          Invited users can register sample discount, CRM and messaging agents with named
+          owners and action limits. Review exact requests, approve exceptions independently,
+          verify uncertain results, and inspect saved decision history. A fixed CRM-to-message
+          workflow holds the message until the CRM change is verified. The separate quote
+          workspace remains available. All effects use sample records or simulated systems;
+          no customer email is delivered. Reviewing a plan does not authorize execution.
+          Live customer connectors, refunds and a general workflow builder are not available
+          in this deployment.
         </p> : <p>
           Invited users can register discount, CRM and messaging agents with
           named owners and supported boundaries. Saved controls govern a sample

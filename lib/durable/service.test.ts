@@ -283,6 +283,30 @@ describe("PostgreSQL control boundary", () => {
       status: 400,
     });
   });
+  it("contains only the discount connector and preserves unrelated agent states", async () => {
+    await db.query("INSERT INTO ll_agents(org_id,id,tools,active) VALUES('one','quote-agent',ARRAY['twin.quote'],true),('one','email-agent',ARRAY['twin.email'],false),('one','crm-agent',ARRAY['twin.crm'],true)");
+    const queued = await control.propose(agent, proposal());
+    const executing = await control.propose(agent, proposal());
+    const lease = await control.claim(worker, executing.id);
+    await control.configureDiscountConnector(operator, false);
+    const states = async () => (await db.query("SELECT id,active FROM ll_agents WHERE org_id='one' ORDER BY id")).rows;
+    expect(await states()).toEqual([{id:'crm-agent',active:true},{id:'email-agent',active:false},{id:'quote-agent',active:true},{id:'test-agent',active:false}]);
+    expect((await control.readAction(operator, queued.id)).state).toBe('cancelled');
+    expect((await control.readAction(operator, executing.id)).state).toBe('uncertain');
+    await expect(control.applyEffect(worker, executing.id, lease.lease_token!)).rejects.toMatchObject({status:409});
+    expect((await control.snapshot(operator)).agents.find(a=>a.id==='quote-agent')?.active).toBe(true);
+    await control.configureDiscountConnector(operator, true);
+    expect(await states()).toEqual([{id:'crm-agent',active:true},{id:'email-agent',active:false},{id:'quote-agent',active:true},{id:'test-agent',active:true}]);
+    expect((await control.readAction(operator, queued.id)).state).toBe('cancelled');
+  });
+  it("refuses ambiguous multi-connector containment without partially revoking agents or work", async () => {
+    await db.query("INSERT INTO ll_agents(org_id,id,tools) VALUES('one','shared-agent',ARRAY['proof.discount','twin.quote'])");
+    const pending = await control.propose(agent, proposal());
+    await expect(control.configureDiscountConnector(operator, false)).rejects.toMatchObject({status:409});
+    expect((await db.query("SELECT bool_and(active) active FROM ll_agents WHERE org_id='one'")).rows[0].active).toBe(true);
+    expect((await control.readAction(operator, pending.id)).state).toBe('ready');
+    expect((await db.query("SELECT count(*) n FROM ll_events WHERE kind='discount_connector_contained'")).rows[0].n).toBe('0');
+  });
   it("keeps a lost response uncertain and reconciles without a second write", async () => {
     const a = await control.propose(agent, proposal());
     expect((await control.execute(worker, a.id, true)).state).toBe("uncertain");

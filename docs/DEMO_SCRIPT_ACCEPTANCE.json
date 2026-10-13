@@ -1,0 +1,315 @@
+{
+  "version": 1,
+  "objective": "Deliver and record every beat of the supplied special-pricing demo on production, preserving the existing quote evaluation.",
+  "status": "in_progress_not_deployed",
+  "baseline": {
+    "webCommit": "435dbda1a61f7c547499d6d564d68bdfc0006385",
+    "authorityCommit": "d4ee705d806f74d2433e298f08cc761ad1fba45a",
+    "preserve": "Existing quote policy, manager grants, identities, saved plans, connector bindings and provider effects. Do not reassign them to fit this script."
+  },
+  "demoContract": {
+    "requesterAndAgentOwner": "Pratibha",
+    "independentApprover": "Raj",
+    "agentName": "Special pricing agent",
+    "delegatedPercent": 15,
+    "hardCapPercent": 50,
+    "hardCapNote": "Installed sample configuration: 50 percent is a displayed sample hard cap, not an asserted customer policy.",
+    "effectScope": "Controlled sample discount record, isolated CRM and email provider twins; no real customer delivery or payments.",
+    "modelUse": "No model invocation in this scripted workflow; preserve the separate existing Bedrock quote planner.",
+    "accountIsolation": "Two independent member sessions. Do not impersonate a reviewer or count an operator-issued synthetic session as real sign-in acceptance."
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "beats": [
+        1
+      ],
+      "title": "Safe installed demo workspace and prerequisites",
+      "reuse": [
+        "Invited member authentication",
+        "Scoped tenant installation",
+        "Existing server controls"
+      ],
+      "tasks": [
+        "Map exact permitted menu and API routes",
+        "Enroll the controlled discount record and isolated CRM/email bindings through existing provisioning",
+        "Verify privileges and real two-member sign-in",
+        "Keep the existing quote evaluation unchanged",
+        "Add read-only surface preflight"
+      ],
+      "acceptance": [
+        "No menu links to disabled pages",
+        "Anonymous and revoked access denied",
+        "Missing provider capabilities fail closed",
+        "Before/after existing quote acceptance passes"
+      ],
+      "status": "partial_production_runtime_recovered_script_routes_still_denied",
+      "runtimeRecovery": {
+        "receipt": "/Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/temporal-recovery/production-recovery-receipt.json",
+        "scope": "One-shot existing Temporal namespace JWT renewal only; four services healthy, images/permissions/mounts unchanged, production web container unchanged",
+        "automaticRenewal": "Timer installed and initial not_due check passed; actual scheduled renewal unobserved",
+        "expiresAtUnix": 1792014218
+      }
+    },
+    {
+      "id": "M2",
+      "beats": [
+        2
+      ],
+      "title": "Agent onboarding and restricted one-time credential",
+      "reuse": [
+        "Agent registration API",
+        "Saved owner/role/allowance",
+        "Hashed agent tokens"
+      ],
+      "tasks": [
+        "Expose the existing registration flow in the installed demo workspace",
+        "Register Special pricing agent owned by Pratibha",
+        "Show the generated private key once and clear it on close",
+        "Prevent credentials entering recordings or exports"
+      ],
+      "acceptance": [
+        "Registration survives refresh",
+        "Agent can propose/read only its own requests",
+        "Agent cannot approve/execute/configure",
+        "Unknown owner, duplicate ID, exhausted allowance and replay are checked"
+      ],
+      "status": "partial_installed_role_service_proof_not_production_browser_accepted",
+      "localEvidence": {
+        "test": "lib/workspace/demo-script.integration.test.ts: exact named-member pricing sequence through installed scoped PostgreSQL roles",
+        "receipt": "/Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/demo-milestone-quality/run-aca5e74438b7/focused.log",
+        "scope": "Disposable local installation; product sign-in/services exercised, no actual human Chrome login, process crash, deployed workflow or recording acceptance"
+      }
+    },
+    {
+      "id": "M3",
+      "beats": [
+        3
+      ],
+      "title": "Exact pricing decisions and independent approval",
+      "reuse": [
+        "DurableControl policy evaluation",
+        "Held proposal author checks",
+        "15-minute exact approval"
+      ],
+      "tasks": [
+        "Configure the sample discount boundary at 15 percent delegation and displayed 50 percent hard cap",
+        "Run 5 percent ready then execute",
+        "Run 25 percent held then approve as Raj and execute as Pratibha",
+        "Run 70 percent blocked"
+      ],
+      "acceptance": [
+        "Exact observed record versions and effect counts",
+        "Requester cannot approve own held action",
+        "Changed payload/policy, expired approval and revoked approver refuse",
+        "Blocked request creates zero connector effects",
+        "Existing quote remains 10/20 percent with its original requester and approver"
+      ],
+      "status": "partial_installed_role_service_proof_not_production_browser_accepted",
+      "localEvidence": {
+        "test": "lib/workspace/demo-script.integration.test.ts: exact named-member pricing sequence through installed scoped PostgreSQL roles",
+        "receipt": "/Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/demo-milestone-quality/run-aca5e74438b7/focused.log",
+        "scope": "Disposable local installation; product sign-in/services exercised, no actual human Chrome login, process crash, deployed workflow or recording acceptance"
+      }
+    },
+    {
+      "id": "M4",
+      "beats": [
+        4
+      ],
+      "title": "Lost response, containment and effect reconciliation",
+      "reuse": [
+        "Controlled record write/effect transaction",
+        "Execution leases",
+        "Uncertain-to-verified transitions"
+      ],
+      "tasks": [
+        "Expose the existing simulated lost-response control only for the controlled connector",
+        "Persist the effect then intentionally omit its acknowledgement",
+        "Read back the effect before allowing another execution"
+      ],
+      "acceptance": [
+        "Uncertain state visible in UI",
+        "Exactly one effect and record-version increment",
+        "Retry/refresh/restart do not write twice",
+        "Unknown or conflicting evidence stays contained",
+        "No fault injection for a live connector"
+      ],
+      "status": "partial_installed_role_service_proof_not_production_browser_accepted",
+      "localEvidence": {
+        "test": "lib/workspace/demo-script.integration.test.ts: exact named-member pricing sequence through installed scoped PostgreSQL roles",
+        "receipt": "/Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/demo-milestone-quality/run-aca5e74438b7/focused.log",
+        "scope": "Disposable local installation; product sign-in/services exercised, no actual human Chrome login, process crash, deployed workflow or recording acceptance"
+      }
+    },
+    {
+      "id": "M5",
+      "beats": [
+        5
+      ],
+      "title": "CRM-to-message dependency and external agent proposal",
+      "reuse": [
+        "WorkflowControl",
+        "Immutable step IDs",
+        "ConnectorControl",
+        "Agent HTTP client"
+      ],
+      "tasks": [
+        "Install isolated CRM and email bindings with actual atomic source-version capability",
+        "Onboard and select CRM/messaging agents",
+        "Approve and execute each step independently",
+        "Verify CRM effect before messaging dispatch",
+        "Expose pause and final verification; resuming a paused workflow is outside the supplied script",
+        "Run an external process proposing over HTTP with its scoped key"
+      ],
+      "acceptance": [
+        "Message stays held before CRM verification",
+        "Stale customer data and duplicate requests refuse or reconcile safely",
+        "Restart preserves pending approval and dependencies",
+        "Pause stops new dispatch without claiming to recall sent email",
+        "Actual connector requests and observed effects recorded",
+        "Missing hosted atomic-version guarantee remains blocked"
+      ],
+      "status": "partial_private_CRM_binding_checked_script_execution_pending",
+      "separateRegressionEvidence": {
+        "receipt": "/Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/demo-milestone-quality/run-b63854fe7e52/native.log",
+        "tests": 37,
+        "files": 3,
+        "scope": "Isolated native quote/email fixture and background Temporal regression with pinned FetchSandbox provider; does not prove the script CRM-to-message browser journey or production before/after acceptance",
+        "ownedFixtureRemoved": true
+      }
+    },
+    {
+      "id": "M6",
+      "beats": [
+        6
+      ],
+      "title": "Saved history, export and connector-scoped stop",
+      "reuse": [
+        "Protected event tables",
+        "Existing bounded history/export UI",
+        "Containment transitions"
+      ],
+      "tasks": [
+        "Show named approver and uncertain-to-verified event sequence",
+        "Refresh and reopen in the other member session",
+        "Export bounded records with scope/counts and no secrets",
+        "Contain only the selected connector and its grants/actions",
+        "Avoid existing blanket organization agent revocation that would affect quote agents"
+      ],
+      "acceptance": [
+        "Runtime cannot update/delete protected events",
+        "Export accurately states truncation and is not called signed or independent audit",
+        "Queued work cancelled and in-flight work uncertain",
+        "Existing quote agents and unrelated connectors remain active",
+        "Reactivation never revives stale approval"
+      ],
+      "status": "partial_local_scoped_containment_verified_not_deployed",
+      "localEvidence": {
+        "testScope": "70 tests across 7 files, including exact pricing sequence and application-role history mutation denial. No production/browser acceptance.",
+        "receipt": "/Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/demo-milestone-quality/run-aca5e74438b7/focused.log",
+        "measured": [
+          "Operator-only scoped discount containment through installed tenant API",
+          "Wrong-origin and malformed command refusal",
+          "Unrelated quote/CRM/email agent access unchanged",
+          "Queued discount cancelled; leased discount uncertain; no resurrection on re-enable",
+          "Mixed-connector agent authority refuses before changing state"
+        ],
+        "remaining": [
+          "Real two-member browser history and refresh",
+          "Bounded export scope/truncation disclosure",
+          "Installed quote before/after same-contract proof",
+          "Production containment and final recording"
+        ]
+      }
+    },
+    {
+      "id": "M7",
+      "beats": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "title": "Production acceptance and standalone recording",
+      "tasks": [
+        "Run affected application, SQL-role, failure/replay and installed integration gates",
+        "Retest the existing quote workflow against the same contract",
+        "Deploy through the reviewed release path with rollback",
+        "Execute all seven beats in real Chrome member sessions",
+        "Record with credentials masked",
+        "Validate closing claims against receipts"
+      ],
+      "acceptance": [
+        "Every beat has production browser evidence and reproducible data/effect counts",
+        "No unpassed check labeled passed",
+        "No unsupported universal checkpoint or native Foundry claim",
+        "No live Salesforce/Copilot/Claude, SSO or independent audit claim",
+        "Read-only research assistant described as unbuilt with data-egress risk",
+        "Original script coverage checklist all accepted before demo milestone complete"
+      ],
+      "status": "blocked_release_gate_and_real_browser_acceptance",
+      "qualityAttempt": {
+        "exitCode": 1,
+        "passedTests": 2623,
+        "failedTests": 35,
+        "skippedTests": 52,
+        "receipt": "/Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/demo-milestone-quality/run-e025c7069deb/quality.log",
+        "setupErrors": [
+          "Unpinned default FetchSandbox checkout refused at source-verification",
+          "Missing authenticated compiled artifact paths",
+          "PostgreSQL17 archive commands against disposable PostgreSQL16 refused transaction_timeout"
+        ],
+        "otherFailures": [
+          "Stale source-bound connector/discovery/chat evidence",
+          "Two old link expectations conflict with deployed public platform links"
+        ],
+        "laterQualitySteps": "Not reached after coverage/test exit 1",
+        "scope": "Historical failed attempt; subsequent PG17/provider/authenticated-input and source-evidence repairs are undergoing a new full run."
+      },
+      "subsequentTargetedResults": [
+        {
+          "scope": "Correct public overview/verification destinations and absence of disabled private examples",
+          "tests": 6,
+          "files": 2,
+          "result": "passed",
+          "command": "pnpm exec vitest run components/landing/execution-integrity.test.ts components/news/crm-pilot.test.ts",
+          "observedToolSession": 23398,
+          "fullQualityPass": false
+        },
+        {
+          "scope": "Pinned native quote/mail fixture regression, separate from full quality and manual script acceptance",
+          "tests": 37,
+          "files": 3,
+          "result": "passed",
+          "receipt": "/Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/demo-milestone-quality/run-b63854fe7e52/native.log",
+          "fullQualityPass": false
+        }
+      ],
+      "browserObservation": {
+        "observed": "Normal production sign-in succeeded for Raj in regular Chrome and Pratibha in separate Incognito window. Independent sessions visible; all seven script beats not yet run.",
+        "receipt": "/Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/demo-script-chrome/sign-in-observation.json",
+        "productionWorkflowAccepted": false
+      }
+    }
+  ],
+  "releaseRules": [
+    "Reuse existing engines and schemas; add migrations only if needed and never edit applied ones",
+    "New profile/route availability is not execution authority",
+    "Do not change the current quote scope to imitate the pricing demo",
+    "Passing a fixture or route preflight is not browser/application/native-agent acceptance",
+    "The broader three deferred gate failures still need resolution or explicit scope accounting; no false passes"
+  ],
+  "progressAsOf": "2026-10-13",
+  "deploymentStatus": "No changes in this acceptance plan or scoped-containment patch are deployed; web remains 435dbda and authority remains d4ee705.",
+  "currentBlockers": [
+    "Production web still uses quote-only profile; reviewed control-demo release and full quality remain pending.",
+    "All seven script beats, same-contract quote before/after acceptance, and recording remain unmeasured on new web.",
+    "Final frozen-source full quality not yet passed. Historical setup failures and stale receipts are not counted as successes.",
+    "Temporal timer is installed but actual scheduled credential renewal remains unobserved.",
+    "Model credential refresh is time-bounded; unattended model credential renewal on Lightsail is not established."
+  ]
+}

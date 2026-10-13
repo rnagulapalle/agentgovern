@@ -3,7 +3,7 @@ import Link from "next/link";
 import { workspaceJson } from "@/lib/workspace/response";
 import { useCallback, useEffect, useState } from "react";
 import { PageTitle } from "./ui";
-import { agentPresentation } from "@/lib/workspace/presentation";
+import { agentPresentation, agentReviewDestination } from "@/lib/workspace/presentation";
 interface Directory {
   agents: {
     id: string;
@@ -18,7 +18,7 @@ interface Directory {
   }[];
   owners: { email: string; name: string }[];
 }
-export function AgentsWorkspace() {
+export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }) {
   const [data, setData] = useState<Directory | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -50,7 +50,7 @@ export function AgentsWorkspace() {
         <p>
           Choose one supported connector. Rules and action limits apply on the
           server. CRM and customer-message actions always require named
-          approval. The prepared refund agent has its own payment boundary.
+          approval. {!scriptDemo && "The prepared refund agent has its own payment boundary."}
         </p>
         <form
           className="cp-durable-form"
@@ -224,16 +224,12 @@ export function AgentsWorkspace() {
                 </dd>
               </div>
             </dl>
-            <Link
+            {agentReviewDestination(a.tools, scriptDemo) ? <Link
               className="cp-button"
-              href={
-                agentPresentation(a.tools).workflow
-                  ? `/control-plane/actions?workflow=${agentPresentation(a.tools).workflow}`
-                  : "/control-plane/connectors"
-              }
+              href={agentReviewDestination(a.tools, scriptDemo)!}
             >
               Review actions →
-            </Link>
+            </Link> : <p>This agent’s workflow is not enabled in this deployment.</p>}
           </article>
         ))}
       </section>

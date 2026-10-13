@@ -178,6 +178,7 @@
     "lib/workspace/cloud-inventory-schema.sql",
     "lib/workspace/cloud-owner-review-schema.sql",
     "lib/workspace/cloud-project-schema.sql",
+    "lib/workspace/deployment-capabilities.ts",
     "lib/workspace/identity.ts",
     "lib/workspace/membership-authority-schema.sql",
     "lib/workspace/membership-authority.ts",

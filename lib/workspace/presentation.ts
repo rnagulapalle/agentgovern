@@ -1,4 +1,6 @@
 export function agentPresentation(tools: string[]) {
+  if (tools.includes("twin.quote"))
+    return { role: "Quote agent", action: "Update the enrolled sample quote", workflow: "quotes" };
   if (tools.includes("stripe.refund"))
     return {
       role: "Refund agent",
@@ -28,4 +30,12 @@ export function agentPresentation(tools: string[]) {
     action: "No supported action assigned",
     workflow: null,
   };
+}
+
+/** A navigation hint only; the destination retains its own server authorization. */
+export function agentReviewDestination(tools: string[], scriptDemo = false): string | null {
+  const workflow = agentPresentation(tools).workflow;
+  if (workflow === 'quotes') return '/control-plane/quotes';
+  if (scriptDemo && (workflow === 'refunds' || workflow === null)) return null;
+  return workflow ? `/control-plane/actions?workflow=${workflow}` : '/control-plane/connectors';
 }

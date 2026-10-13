@@ -561,6 +561,25 @@ export class DurableControl {
       );
     });
   }
+  /** Sample discount connector scope only. Existing workspace-wide administration
+   * remains separate; this operation never revokes unrelated connector agents. */
+  async configureDiscountConnector(actor: Actor, active: boolean) {
+    if (typeof active !== "boolean") throw new ControlError(400, "Choose a valid connector access state.");
+    return transaction(this.db, actor.orgId, async c => {
+      await authorize(c, actor, ["operator"]);
+      const scope = "('proof.discount'=ANY(a.tools) OR EXISTS(SELECT 1 FROM ll_agent_profiles p WHERE p.org_id=a.org_id AND p.agent_id=a.id AND p.connector='discount_record'))";
+      const ambiguous = await c.query(
+        `SELECT a.id FROM ll_agents a WHERE a.org_id=$1 AND ${scope} AND EXISTS(SELECT 1 FROM unnest(a.tools) tool WHERE tool<>'proof.discount')`, [actor.orgId],
+      );
+      if (ambiguous.rowCount) throw new ControlError(409, "Discount connector containment requires single-connector agent authority. No agent state changed.");
+      await c.query(`UPDATE ll_agents a SET active=$2 WHERE a.org_id=$1 AND ${scope}`, [actor.orgId, active]);
+      await event(c, actor, null, active ? "discount_connector_enabled" : "discount_connector_contained");
+      if (!active) {
+        const {rows} = await c.query("SELECT * FROM ll_actions WHERE org_id=$1 AND state IN ('held','ready','executing')", [actor.orgId]);
+        for (const action of rows) await transition(c, actor, action, action.state === "executing" ? "uncertain" : "cancelled", "Discount connector contained; previous authorization invalidated.");
+      }
+    });
+  }
   async configure(
     actor: Actor,
     command: { agentActive?: boolean; autoLimit?: number },
