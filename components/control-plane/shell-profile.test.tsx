@@ -30,3 +30,9 @@ it('script profile links only installed saved controls and never browser-local h
 });
 
 it.each(["workflows","approvals","policies","outputs","reconciliation","connectors"])("saved %s page never inherits browser-local navigation or evidence labels", section=>{location.path="/control-plane/"+section;const h=renderToStaticMarkup(<ControlShell member={member} scriptDemo>Saved content</ControlShell>);expect(h).toContain("Saved controls");expect(h).toContain("decisions saved on the server");expect(h).not.toContain("Browser-local sample data");expect(h).not.toContain("changes saved in this browser");expect(h).not.toContain("Search anything");expect(h).not.toContain("href=\"/control-plane/settings\"");});
+
+it('administrator persona appears only in installed saved workspace and never changes limited profile navigation',()=>{
+ const installed=renderToStaticMarkup(<ControlShell member={member} scriptDemo>Content</ControlShell>);
+ expect(installed).toContain('Workspace administrator');
+ for(const props of [{quoteOnly:true},{}]){const limited=renderToStaticMarkup(<ControlShell member={member} {...props}>Content</ControlShell>);expect(limited).not.toContain('Workspace administrator');}
+});

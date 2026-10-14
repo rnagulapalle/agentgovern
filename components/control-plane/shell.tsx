@@ -270,6 +270,7 @@ export function ControlShell({
             <span>
               <strong>{member.name}</strong>
               <small>{member.email}</small>
+              {scriptDemo && <small>Workspace administrator</small>}
             </span>
             <ArrowUpRight size={14} />
           </Link>
