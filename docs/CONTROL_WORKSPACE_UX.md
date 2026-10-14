@@ -41,3 +41,15 @@ navigation and recovery evaluation. Reuse current durable controls and discovery
 contracts rather than constructing a parallel execution engine.
 
 The action overview is a recent slice: each installed snapshot returns at most 100 actions. Empty lists describe only loaded rows, never the absence of older pending work.
+
+## Invited administrator product view
+
+The saved control workspace labels invited human accounts **Workspace administrator**. This is a presentation persona, not a new authorization role. Existing server authority remains `operator`, obtained only from the active tenant-scoped member directory and authenticated session. Scoped workload keys never receive this persona or human authority.
+
+Policies & access enumerates supported registration, boundary configuration, exact review, execution, verification, containment, and history inspection. It also states that administrator visibility cannot bypass self-approval restrictions, hard limits, tenant scope, or unsupported actions. Invitations, cloud IAM administration, and billing are not implemented by this persona.
+
+Policies & access and Connections include a full product capability catalog. The current isolated control profile exposes bounded quote planning; arbitrary chat workflow generation, inbox monitoring, cloud discovery/import, and general output enforcement remain unavailable. Unavailable capabilities do not link to blocked routes. All installed action controls retain their original server checks.
+
+Validation of this increment must distinguish read-only presentation tests from actual production founder membership and independent approval checks. No credentials are altered by the increment.
+
+The shared connector snapshot may include quote updates and quote confirmation email (`quote-step-1`). The customer action queue validates all known connector discriminators, then excludes quote updates and quote-contract email. Quote policy rows are validated but not treated as customer policy. Counts describe customer actions within the latest 100 connector actions, not 100 customer-only records. Unknown connector/state data remains unconfirmed.

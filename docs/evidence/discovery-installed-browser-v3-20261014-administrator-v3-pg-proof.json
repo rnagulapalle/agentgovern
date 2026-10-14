@@ -1,0 +1,30 @@
+{
+  "pgOnly": false,
+  "setupOnly": false,
+  "providerOnly": false,
+  "authOnly": false,
+  "ownedSubprocessEnvironment": [
+    "PATH",
+    "HOME",
+    "LC_ALL=C",
+    "LANG=C"
+  ],
+  "pgPid": 492,
+  "exitCode": 0,
+  "signal": null,
+  "pgReady": true,
+  "wrongPasswordRefused": true,
+  "plaintextRefused": true,
+  "firstProbeError": {
+    "code": "ECONNREFUSED",
+    "message": ""
+  },
+  "lastProbeError": {
+    "code": "ECONNREFUSED",
+    "message": ""
+  },
+  "startupError": null,
+  "pgOutput": "2026-10-14 08:41:21.259 PDT [492] LOG:  starting PostgreSQL 17.11 (Homebrew) on aarch64-apple-darwin25.6.0, compiled by Apple clang version 21.0.0 (clang-2100.1.1.101), 64-bit\n2026-10-14 08:41:21.259 PDT [492] LOG:  listening on IPv4 address \"127.0.0.1\", port 54445\n2026-10-14 08:41:21.259 PDT [492] LOG:  listening on IPv6 address \"::1\", port 54445\n2026-10-14 08:41:21.260 PDT [495] LOG:  database system was shut down at 2026-10-14 08:41:21 PDT\n2026-10-14 08:41:21.262 PDT [492] LOG:  database system is ready to accept connections\n2026-10-14 08:41:21.374 PDT [501] FATAL:  password authentication failed for user \"fixture\"\n2026-10-14 08:41:21.374 PDT [501] DETAIL:  Connection matched file \"/Users/raj/.codex/looplabs-research/2026-10-14-workspace-administrator/owned-typed-quote-pg-ijh5VS/data/pg_hba.conf\" line 4: \"hostssl all all ::1/128 scram-sha-256\"\n2026-10-14 08:41:21.376 PDT [502] FATAL:  pg_hba.conf rejects connection for host \"::1\", user \"fixture\", database \"postgres\", no encryption\n2026-10-14 08:41:35.438 PDT [10740] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 08:41:35.438 PDT [10797] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 08:41:35.439 PDT [554] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 08:41:35.439 PDT [553] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 08:41:35.439 PDT [10796] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 08:41:35.438 PDT [1106] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 08:41:37.457 PDT [492] LOG:  received smart shutdown request\n2026-10-14 08:41:37.459 PDT [492] LOG:  background worker \"logical replication launcher\" (PID 498) exited with exit code 1\n2026-10-14 08:41:37.460 PDT [493] LOG:  shutting down\n2026-10-14 08:41:37.460 PDT [493] LOG:  checkpoint starting: shutdown immediate\n2026-10-14 08:41:37.483 PDT [493] LOG:  checkpoint complete: wrote 293 buffers (1.8%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.011 s, sync=0.007 s, total=0.024 s; sync files=285, longest=0.001 s, average=0.001 s; distance=2988 kB, estimate=2988 kB; lsn=0/1806730, redo lsn=0/1806730\n2026-10-14 08:41:37.485 PDT [492] LOG:  database system is shut down\n",
+  "ownedCleanupTerminal": true,
+  "production": false
+}

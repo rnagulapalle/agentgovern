@@ -20,7 +20,7 @@ it.each(['overview','workflows','approvals','policies','connections','outputs','
  expect(h).toContain('Sample records and isolated simulated systems');expect(h).not.toContain('workflow=refunds');expect(h).not.toContain('No held requests');expect(h).not.toContain('No unresolved requests');
  if(section==='connections'){expect(h).toContain('Not connected in this deployment');expect(h).not.toContain('href="/control-plane/discovery"');}
 });
-async function mounted(section:SavedWorkspaceSection,run:(page:Page,requests:string[])=>Promise<void>,failure?:'pricing'|'connectors'|'malformed'|'unknown-state'){
+async function mounted(section:SavedWorkspaceSection,run:(page:Page,requests:string[])=>Promise<void>,failure?:'pricing'|'connectors'|'malformed'|'unknown-state'|'mixed-quote'|'unknown-connector'){
  const esbuild=requireModule(requireModule.resolve('esbuild',{paths:[requireModule.resolve('@temporalio/worker')]}));
  const result=await esbuild.build({stdin:{contents:`import React from 'react';import {createRoot} from 'react-dom/client';import {SavedWorkspace} from './components/control-plane/saved-workspace';createRoot(document.getElementById('app')).render(<SavedWorkspace section="${section}"/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,platform:'browser',format:'iife',outfile:'memory/workspace.js',write:false,jsx:'automatic',alias:{'@':resolve('.')},define:{'process.env':'{}','process.env.NODE_ENV':'"test"'}});
  const browser=await chromium.launch({headless:true});const requests:string[]=[];
@@ -29,7 +29,7 @@ async function mounted(section:SavedWorkspaceSection,run:(page:Page,requests:str
   if(p==='/')return route.fulfill({contentType:'text/html',body:'<div id="app"></div>'});
   requests.push(route.request().method()+' '+p);
   const denied=(failure==='pricing'&&p==='/api/durable')||(failure==='connectors'&&p==='/api/durable/connectors');
-  return route.fulfill({status:denied?403:200,contentType:'application/json',body:JSON.stringify(denied?{error:'Current access refused.'}:failure==='malformed'?{actions:'unknown'}:failure==='unknown-state'?{...pricing,actions:[{...pricing.actions[0],state:'new-unknown-state'}]}:p==='/api/durable'?pricing:connectors)});
+  return route.fulfill({status:denied?403:200,contentType:'application/json',body:JSON.stringify(denied?{error:'Current access refused.'}:failure==='malformed'?{actions:'unknown'}:failure==='unknown-state'?{...pricing,actions:[{...pricing.actions[0],state:'new-unknown-state'}]}:p==='/api/durable'?pricing:failure==='unknown-connector'?{...connectors,actions:[{...connectors.actions[0],connector:'future-unknown'}]}:failure==='mixed-quote'?{...connectors,actions:[...connectors.actions,{id:'quote-update-held',agent_id:'quote-agent',connector:'quote',state:'held',payload:{contract:'quote-step-1'}},{id:'quote-email-held',agent_id:'quote-mail-agent',connector:'email',state:'held',payload:{contract:'quote-step-1'}},{id:'customer-email-held',agent_id:'customer-mail-agent',connector:'email',state:'held',payload:{template:'case_received'}}],policies:[...connectors.policies,{connector:'quote',active:true,version:1}]}:connectors)});
  });await page.goto('https://workspace-owned.test/');await page.addScriptTag({content:result.outputFiles.find((x:{path:string})=>x.path.endsWith('.js'))?.text||result.outputFiles[0].text});await run(page,requests);}finally{await browser.close();}
 }
 it('mounted overview uses only installed read APIs and preserves exact-action deep links',async()=>mounted('overview',async(page,requests)=>{
@@ -37,7 +37,7 @@ it('mounted overview uses only installed read APIs and preserves exact-action de
  expect(await page.getByRole('link',{name:'Review exact request'}).getAttribute('href')).toContain('#action-'+pricing.actions[0].id);
  expect(await page.getByRole('link',{name:'Inspect outcome'}).getAttribute('href')).toContain('workflow=crm#action-source-uncertain');
  await page.getByRole('button',{name:'Refresh saved status'}).click();await page.getByRole('heading',{name:'25% pricing request'}).waitFor();
- expect(await page.getByText('Showing up to the latest 100 pricing actions and 100 customer actions. Older pending work may be outside this view.').count()).toBe(2);
+ expect(await page.getByText('Showing up to the latest 100 pricing actions and the customer actions within the latest 100 connector actions. Quote-plan actions are reviewed separately. Older pending work may be outside this view.').count()).toBe(2);
  expect(requests).toEqual(['GET /api/durable','GET /api/durable/connectors','GET /api/durable','GET /api/durable/connectors']);
 }),15000);
 it.each(['pricing','connectors'] as const)('mounted %s failure preserves a partial queue rather than claiming no work',async failure=>mounted('overview',async page=>{
@@ -55,3 +55,26 @@ it('connection view does not equate policy availability with live provider healt
 }),15000);
 
 it("unknown action states do not become a successful empty queue",async()=>mounted("overview",async page=>{await page.getByRole("alert").first().waitFor();expect(await page.getByText("No held requests",{exact:false}).count()).toBe(0);expect(await page.getByRole("link",{name:"Review exact request"}).count()).toBe(0);},"unknown-state"),15000);
+
+it('administrator catalog exposes every product area without granting authority or linking blocked cloud and general chat routes',()=>{
+ const h=renderToStaticMarkup(<SavedWorkspace section="policies"/>);
+ for(const phrase of ['Workspace administrator','server authority remains operator','self-approval','bypass a hard limit','another workspace','unsupported action','Account invitations','cloud IAM administration','billing management','Chat and workflow planning','Cloud discovery and import','General output enforcement','Unavailable in this deployment'])expect(h).toContain(phrase);
+ for(const route of ['discovery','work','settings','records','requests'])expect(h).not.toContain('href="/control-plane/'+route+'"');
+ expect(h).not.toContain('super-admin');expect(h).not.toContain('type="submit"');
+});
+it('catalog remains visible when a saved API refuses access without claiming granted privileges',async()=>mounted('policies',async(page,requests)=>{
+ await page.getByRole('alert').waitFor();await page.getByRole('heading',{name:'Workspace administrator',exact:true}).waitFor();
+ await page.getByText('Availability describes this deployment; it grants no new authority.',{exact:false}).waitFor();
+ expect(requests.every(r=>r.startsWith('GET '))).toBe(true);
+},'pricing'),15000);
+
+it('known quote update and quote email are excluded from customer queue while actual customer rows survive',async()=>mounted('overview',async(page,requests)=>{
+ await page.getByRole('heading',{name:'Customer record update',exact:true}).waitFor();await page.getByRole('heading',{name:'Customer acknowledgement',exact:true}).waitFor();
+ expect(await page.getByRole('alert').count()).toBe(0);const hrefs=await page.getByRole('link',{name:'Review exact request'}).evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));expect(hrefs.some(h=>h?.includes('customer-email-held'))).toBe(true);expect(hrefs.some(h=>h?.includes('quote-email-held')||h?.includes('quote-update-held'))).toBe(false);expect(requests.every(r=>r.startsWith('GET '))).toBe(true);
+},'mixed-quote'),15000);
+it('mixed quote policy does not reject connections or claim quote health as customer health',async()=>mounted('connections',async page=>{
+ await page.getByText('Sample policy active; this is not a provider health or live-delivery check.').waitFor();expect(await page.getByRole('alert').count()).toBe(0);expect(await page.getByText('No active sample policy is confirmed.').count()).toBe(1);
+},'mixed-quote'),15000);
+it('unknown connector still refuses data rather than displaying an empty or successful customer queue',async()=>mounted('overview',async page=>{
+ await page.getByRole('alert').waitFor();expect(await page.getByText('No unresolved requests',{exact:false}).count()).toBe(0);expect(await page.getByRole('heading',{name:'Customer record update',exact:true}).count()).toBe(0);
+},'unknown-connector'),15000);
