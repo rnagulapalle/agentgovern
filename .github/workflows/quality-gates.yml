@@ -17,11 +17,11 @@ jobs:
     name: quality-gates
     # One reviewed internal PR uses a one-job runner with a host-owned admission hook.
     # All other PRs and pushes retain the ordinary Ubuntu job.
-    runs-on: ${{ (github.event_name == 'pull_request' && github.event.pull_request.number == 85 && github.event.pull_request.head.repo.full_name == 'rnagulapalle/agentgovern' && github.event.pull_request.head.ref == 'codex/new-server-cutover-oct13') && 'looplabs-pr85-reviewed-20261013' || 'ubuntu-latest' }}
-    timeout-minutes: ${{ (github.event_name == 'pull_request' && github.event.pull_request.number == 85 && github.event.pull_request.head.repo.full_name == 'rnagulapalle/agentgovern' && github.event.pull_request.head.ref == 'codex/new-server-cutover-oct13') && 45 || 15 }}
+    runs-on: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'rnagulapalle/agentgovern' && github.event.pull_request.head.ref == 'codex/workflow-list-quote-boundary') && 'looplabs-p1p2-reviewed-20261013' || 'ubuntu-latest' }}
+    timeout-minutes: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'rnagulapalle/agentgovern' && github.event.pull_request.head.ref == 'codex/workflow-list-quote-boundary') && 45 || 15 }}
     services:
       postgres:
-        image: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.number == 85 && github.event.pull_request.head.repo.full_name == 'rnagulapalle/agentgovern' && github.event.pull_request.head.ref == 'codex/new-server-cutover-oct13') && 'postgres:17' || '' }}
+        image: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'rnagulapalle/agentgovern' && github.event.pull_request.head.ref == 'codex/workflow-list-quote-boundary') && 'postgres:17' || '' }}
         env:
           POSTGRES_USER: looplabs
           POSTGRES_PASSWORD: ci-local-only
@@ -34,7 +34,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      LOOPLABS_OWNED_CI: ${{ github.event_name == 'pull_request' && github.event.pull_request.number == 85 && github.event.pull_request.head.repo.full_name == 'rnagulapalle/agentgovern' && github.event.pull_request.head.ref == 'codex/new-server-cutover-oct13' }}
+      LOOPLABS_OWNED_CI: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'rnagulapalle/agentgovern' && github.event.pull_request.head.ref == 'codex/workflow-list-quote-boundary' }}
       LOOPLABS_TEST_DATABASE_URL: postgresql://looplabs:ci-local-only@127.0.0.1:5432/looplabs_test
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
           persist-credentials: false
       - name: Run reviewed owned full quality
         if: env.LOOPLABS_OWNED_CI == 'true'
-        run: /opt/homebrew/bin/node /Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/integrated-quality/github-ephemeral-pr85/run-quality.mjs
+        run: /opt/homebrew/bin/node /Users/raj/.codex/looplabs-research/2026-10-13-new-server-migration/integrated-quality/github-ephemeral-p1p2/run-quality.mjs
       - uses: pnpm/action-setup@v4
         if: env.LOOPLABS_OWNED_CI != 'true'
         with:
