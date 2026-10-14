@@ -1,0 +1,30 @@
+{
+  "pgOnly": false,
+  "setupOnly": false,
+  "providerOnly": false,
+  "authOnly": false,
+  "ownedSubprocessEnvironment": [
+    "PATH",
+    "HOME",
+    "LC_ALL=C",
+    "LANG=C"
+  ],
+  "pgPid": 10013,
+  "exitCode": 0,
+  "signal": null,
+  "pgReady": true,
+  "wrongPasswordRefused": true,
+  "plaintextRefused": true,
+  "firstProbeError": {
+    "code": "ECONNREFUSED",
+    "message": ""
+  },
+  "lastProbeError": {
+    "code": "ECONNREFUSED",
+    "message": ""
+  },
+  "startupError": null,
+  "pgOutput": "2026-10-14 06:32:49.149 PDT [10013] LOG:  starting PostgreSQL 17.11 (Homebrew) on aarch64-apple-darwin25.6.0, compiled by Apple clang version 21.0.0 (clang-2100.1.1.101), 64-bit\n2026-10-14 06:32:49.149 PDT [10013] LOG:  listening on IPv4 address \"127.0.0.1\", port 50222\n2026-10-14 06:32:49.149 PDT [10013] LOG:  listening on IPv6 address \"::1\", port 50222\n2026-10-14 06:32:49.151 PDT [10016] LOG:  database system was shut down at 2026-10-14 06:32:49 PDT\n2026-10-14 06:32:49.152 PDT [10013] LOG:  database system is ready to accept connections\n2026-10-14 06:32:49.265 PDT [10022] FATAL:  password authentication failed for user \"fixture\"\n2026-10-14 06:32:49.265 PDT [10022] DETAIL:  Connection matched file \"/Users/raj/.codex/looplabs-research/2026-10-14-control-workspace/owned-typed-quote-pg-1nKYnT/data/pg_hba.conf\" line 4: \"hostssl all all ::1/128 scram-sha-256\"\n2026-10-14 06:32:49.267 PDT [10023] FATAL:  pg_hba.conf rejects connection for host \"::1\", user \"fixture\", database \"postgres\", no encryption\n2026-10-14 06:33:04.795 PDT [10073] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 06:33:04.795 PDT [20181] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 06:33:04.795 PDT [10046] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 06:33:04.795 PDT [10110] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 06:33:04.795 PDT [10045] LOG:  could not receive data from client: Connection reset by peer\n2026-10-14 06:33:06.806 PDT [10013] LOG:  received smart shutdown request\n2026-10-14 06:33:06.808 PDT [10013] LOG:  background worker \"logical replication launcher\" (PID 10019) exited with exit code 1\n2026-10-14 06:33:06.808 PDT [10014] LOG:  shutting down\n2026-10-14 06:33:06.809 PDT [10014] LOG:  checkpoint starting: shutdown immediate\n2026-10-14 06:33:06.830 PDT [10014] LOG:  checkpoint complete: wrote 293 buffers (1.8%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.010 s, sync=0.007 s, total=0.022 s; sync files=285, longest=0.001 s, average=0.001 s; distance=2988 kB, estimate=2988 kB; lsn=0/1806730, redo lsn=0/1806730\n2026-10-14 06:33:06.832 PDT [10013] LOG:  database system is shut down\n",
+  "ownedCleanupTerminal": true,
+  "production": false
+}

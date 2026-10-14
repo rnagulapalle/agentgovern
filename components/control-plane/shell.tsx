@@ -28,7 +28,7 @@ import {
   SlidersHorizontal,
   Undo2,
 } from "lucide-react";
-import { scriptDemoSections } from "../../lib/workspace/deployment-capabilities";
+
 import { useControl } from "./provider";
 import { BrandMark, Modal } from "./ui";
 
@@ -83,7 +83,7 @@ export function ControlShell({
   const { state, toast } = useControl();
   const pathname = usePathname();
   const section = pathname.split("/")[2] || "overview";
-  const durable = [
+  const durable = scriptDemo || [
     "overview",
     "history",
     "work",
@@ -118,10 +118,22 @@ export function ControlShell({
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
   }, [durable]);
-  const navigation = quoteOnly ? [{ name: "QUOTE WORKSPACE", items: groups[0].items.filter(item => item.key === "quotes") }] : scriptDemo ? [{ name: "CONTROL WORKSPACE", items: groups[0].items.filter(item => scriptDemoSections.includes(item.key)) }] : groups;
+  const savedNavigation = [{ name: "CONTROL WORKSPACE", items: [
+    { key: "overview", label: "Overview", icon: LayoutGrid },
+    { key: "workflows", label: "Workflows", icon: GitBranch },
+    { key: "workflow-runs", label: "Runs", icon: Activity },
+    { key: "approvals", label: "Approvals", icon: ShieldCheck },
+    { key: "agents", label: "Agents", icon: Bot },
+    { key: "connectors", label: "Connections", icon: Database },
+    { key: "policies", label: "Policies & access", icon: SlidersHorizontal },
+    { key: "outputs", label: "Output controls", icon: ShieldCheck },
+    { key: "reconciliation", label: "Reconciliation", icon: Undo2 },
+    { key: "history", label: "History", icon: History },
+  ] }];
+  const navigation = quoteOnly ? [{ name: "QUOTE WORKSPACE", items: groups[0].items.filter(item => item.key === "quotes") }] : scriptDemo ? savedNavigation : groups;
   const title =
     navigation.flatMap((g) => g.items).find((i) => i.key === section)?.label ||
-    "Example settings";
+    (scriptDemo && section === "quotes" ? "Distributor quote" : scriptDemo && section === "actions" ? "Action details" : "Example settings");
   const results = [
     ...state.agents.map((a) => ({
       name: a.name,
@@ -221,14 +233,14 @@ export function ControlShell({
           <div className="cp-enforcement">
             <div>
               <span className="cp-live-dot" />
-              <strong>{quoteOnly ? "Quote action controls" : "Governed by default"}</strong>
+              <strong>{quoteOnly ? "Quote action controls" : scriptDemo ? "Sample action controls" : "Governed by default"}</strong>
             </div>
             <p>{quoteOnly ? "Independent approval. Verified result." : scriptDemo ? "Named authority. Verified effects." : "Identity. Action. Execution. Output."}</p>
-            <div className="cp-enforcement-bars">
+            {!scriptDemo && <div className="cp-enforcement-bars">
               {Array.from({ length: 30 }, (_, i) => (
                 <i key={i} style={{ height: 8 + ((i * 7) % 13) }} />
               ))}
-            </div>
+            </div>}
             <span>
               {quoteOnly ? "SAMPLE QUOTE WORKSPACE" : durable ? "SAVED WORKSPACE" : "INTERACTIVE DEMO"}{" "}
               <span>v0.1</span>

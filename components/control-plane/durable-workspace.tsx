@@ -301,7 +301,7 @@ export function DurableWorkspace({ scriptDemo = false }: { scriptDemo?: boolean 
                 <p>No actions yet. Request a discount change to get started.</p>
               ) : (
                 snapshot.actions.map((a) => (
-                  <article key={a.id}>
+                  <article key={a.id} id={`action-${a.id}`}>
                     <div className="cp-durable-action-head">
                       <h3>
                         {a.discount}% discount · source version{" "}

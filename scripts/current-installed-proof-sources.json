@@ -13,11 +13,14 @@
       "app/api/workspace/quotes/setup/route.ts",
       "app/api/workspace/quotes/verification/route.ts",
       "app/api/workspace/session/route.ts",
+      "app/control-plane/[section]/page.tsx",
       "app/control-plane/actions/page.tsx",
       "app/control-plane/agents/page.tsx",
+      "app/control-plane/connectors/page.tsx",
       "app/control-plane/control-plane.css",
       "app/control-plane/history/page.tsx",
       "app/control-plane/layout.tsx",
+      "app/control-plane/page.tsx",
       "app/control-plane/quotes/page.tsx",
       "app/control-plane/work/page.tsx",
       "app/control-plane/workflow-runs/page.tsx",
@@ -26,6 +29,7 @@
       "components/control-plane/actions-workspace.tsx",
       "components/control-plane/agents-workspace.tsx",
       "components/control-plane/connector-actions-workspace.tsx",
+      "components/control-plane/connectors-workspace.tsx",
       "components/control-plane/discount-history.tsx",
       "components/control-plane/durable-workspace.tsx",
       "components/control-plane/enquiry-execution.tsx",
@@ -37,10 +41,14 @@
       "components/control-plane/refund-workspace.tsx",
       "components/control-plane/request-planner.tsx",
       "components/control-plane/saved-history-workspace.tsx",
+      "components/control-plane/saved-workspace.css",
+      "components/control-plane/saved-workspace.tsx",
+      "components/control-plane/screens.tsx",
       "components/control-plane/shell.tsx",
       "components/control-plane/ui.tsx",
       "components/control-plane/workflow-workspace.tsx",
       "components/control-plane/workspace-gate.tsx",
+      "components/control-plane/workspace-overview.tsx",
       "components/marketing/chrome.tsx",
       "components/marketing/product-overview.tsx",
       "instrumentation.ts",
@@ -1173,6 +1181,258 @@
   },
   "edges": [
     {
+      "from": "app/control-plane/page.tsx",
+      "to": "components/control-plane/workspace-overview.tsx"
+    },
+    {
+      "from": "components/control-plane/workspace-overview.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/workspace-overview.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/workspace-overview.tsx",
+      "to": "lib/refunds/contracts.ts"
+    },
+    {
+      "from": "lib/refunds/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/workspace-overview.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/ui.tsx",
+      "to": "lib/control-plane/model.ts"
+    },
+    {
+      "from": "lib/control-plane/model.ts",
+      "to": "lib/engine/evaluate.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/registry.ts"
+    },
+    {
+      "from": "lib/engine/registry.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/hash.ts"
+    },
+    {
+      "from": "lib/control-plane/model.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "app/control-plane/page.tsx",
+      "to": "components/control-plane/saved-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/connectors/content.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/durable/database.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/identity.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/identity.ts",
+      "to": "lib/durable/recovery.ts"
+    },
+    {
+      "from": "lib/durable/recovery.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/durable/tenant-pool.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "lib/durable/tenant-pool.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/durable/recovery.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/durable/recovery.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/durable/recovery.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/record-scope.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/request.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/request.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/request.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/connectors/request.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "components/control-plane/saved-workspace.css"
+    },
+    {
+      "from": "app/control-plane/page.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
+      "from": "app/control-plane/connectors/page.tsx",
+      "to": "components/control-plane/connectors-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/connectors-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/connectors-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "app/control-plane/connectors/page.tsx",
+      "to": "components/control-plane/saved-workspace.tsx"
+    },
+    {
+      "from": "app/control-plane/connectors/page.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
+      "from": "app/control-plane/[section]/page.tsx",
+      "to": "components/control-plane/screens.tsx"
+    },
+    {
+      "from": "components/control-plane/screens.tsx",
+      "to": "lib/control-plane/model.ts"
+    },
+    {
+      "from": "components/control-plane/screens.tsx",
+      "to": "components/control-plane/provider.tsx"
+    },
+    {
+      "from": "components/control-plane/provider.tsx",
+      "to": "lib/control-plane/model.ts"
+    },
+    {
+      "from": "components/control-plane/provider.tsx",
+      "to": "lib/analytics.ts"
+    },
+    {
+      "from": "components/control-plane/screens.tsx",
+      "to": "lib/analytics.ts"
+    },
+    {
+      "from": "components/control-plane/screens.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "app/control-plane/[section]/page.tsx",
+      "to": "lib/control-plane/model.ts"
+    },
+    {
+      "from": "app/control-plane/[section]/page.tsx",
+      "to": "components/control-plane/saved-workspace.tsx"
+    },
+    {
+      "from": "app/control-plane/[section]/page.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
       "from": "middleware.ts",
       "to": "lib/workspace/deployment-capabilities.ts"
     },
@@ -1205,14 +1465,6 @@
       "to": "lib/durable/tenant-pool.ts"
     },
     {
-      "from": "lib/durable/tenant-pool.ts",
-      "to": "lib/durable/pg-transport.ts"
-    },
-    {
-      "from": "lib/durable/tenant-pool.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
       "from": "lib/workspace/tenant-bootstrap.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
@@ -1227,46 +1479,6 @@
     {
       "from": "lib/workspace/tenant-context.ts",
       "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/workspace/identity.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/identity.ts",
-      "to": "lib/durable/recovery.ts"
-    },
-    {
-      "from": "lib/durable/recovery.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
-      "from": "lib/durable/recovery.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/durable/recovery.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/durable/database.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/durable/recovery.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "lib/workspace/tenant-context.ts",
@@ -1447,70 +1659,6 @@
     {
       "from": "lib/quotes/effect.ts",
       "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/connectors/content.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/connectors/scopes.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/record-scope.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/request.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/request.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/request.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/connectors/request.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "lib/quotes/effect.ts",
@@ -2377,44 +2525,8 @@
       "to": "components/control-plane/provider.tsx"
     },
     {
-      "from": "components/control-plane/provider.tsx",
-      "to": "lib/control-plane/model.ts"
-    },
-    {
-      "from": "lib/control-plane/model.ts",
-      "to": "lib/engine/evaluate.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/registry.ts"
-    },
-    {
-      "from": "lib/engine/registry.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/hash.ts"
-    },
-    {
-      "from": "lib/control-plane/model.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
-      "from": "components/control-plane/provider.tsx",
-      "to": "lib/analytics.ts"
-    },
-    {
       "from": "app/control-plane/layout.tsx",
       "to": "components/control-plane/shell.tsx"
-    },
-    {
-      "from": "components/control-plane/shell.tsx",
-      "to": "lib/workspace/deployment-capabilities.ts"
     },
     {
       "from": "components/control-plane/shell.tsx",
@@ -2423,10 +2535,6 @@
     {
       "from": "components/control-plane/shell.tsx",
       "to": "components/control-plane/ui.tsx"
-    },
-    {
-      "from": "components/control-plane/ui.tsx",
-      "to": "lib/control-plane/model.ts"
     },
     {
       "from": "app/control-plane/layout.tsx",
@@ -2607,10 +2715,6 @@
     {
       "from": "components/control-plane/refund-workspace.tsx",
       "to": "lib/refunds/contracts.ts"
-    },
-    {
-      "from": "lib/refunds/contracts.ts",
-      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "components/control-plane/actions-workspace.tsx",
@@ -10554,10 +10658,6 @@
     },
     {
       "from": "components/control-plane/shell.tsx",
-      "to": "lib/workspace/deployment-capabilities.ts"
-    },
-    {
-      "from": "components/control-plane/shell.tsx",
       "to": "components/control-plane/provider.tsx"
     },
     {
@@ -16533,12 +16633,15 @@
     "app/api/workspace/quotes/verification/route.ts": "1386e0ab2f169a7a842258fd19d7d7ebae2842d843017a70cda9701a46a9a7ea",
     "app/api/workspace/records/route.ts": "7c49b2287d84c7cfdb6d4e29bd52b0b2a9fc23ed8a3f4f822040a8cc1684abd6",
     "app/api/workspace/session/route.ts": "5194c1a54bde45b893cb398075b4a625edca806d4b41efc53d824698842b55ce",
+    "app/control-plane/[section]/page.tsx": "51e4f40aa1c7553ffb4eaa82f53c397d653a6b7dc7c018a02baf02fc1b4ca12c",
     "app/control-plane/actions/page.tsx": "d7ed38ab4b0f698f266cfdb4609307cc6f5d3e2d592c376ca3a422e70b90b8d7",
     "app/control-plane/agents/page.tsx": "1e26531fa126bff611d9c94a75a100b8f2a4ab7c1b3069a8060ded6f44c71dce",
+    "app/control-plane/connectors/page.tsx": "01a6c0cd909333864894d42fc4a6f46b809821707c5463ef2a2b0797c9c0ec5e",
     "app/control-plane/control-plane.css": "2cd5918b34f9675f1ef729369384f8cf9a0bfa61f593c407788342eb60fcd51f",
     "app/control-plane/discovery/page.tsx": "fde4db786ba307da01443a0e904ca4e6bd10a3ca6993909a993862a863a9a208",
     "app/control-plane/history/page.tsx": "baeb70147a3557a7f461061f005cacb6a19844e5cf50029e9b4d3d9389b82491",
     "app/control-plane/layout.tsx": "97efd7aaa6ae58174a4068087991074d80c4111ad60543a2f6da5d2467efde40",
+    "app/control-plane/page.tsx": "fb0e85f0d6073a8339e0716c966c4da8e7d9b9a0d0923b88978d86031ea48560",
     "app/control-plane/quotes/page.tsx": "959e496795d77d13557b7f6d7f66933cff5701cfe79cf384a2ed2d03d2002cce",
     "app/control-plane/work/page.tsx": "d56f08ebfbfcb7deed94fb1a73de0fd1be9dc1f40f065871b7fcb31a02ceb617",
     "app/control-plane/workflow-runs/page.tsx": "df2bfa6088f195cd1fdd1f31ac4abae07ef1da2b8d168ffdc21cb8ada36e1def",
@@ -16548,11 +16651,12 @@
     "components/control-plane/actions-workspace.tsx": "fdd3c639f05589253f1fb9da1d801f0d7234ca7352225dcb050ac816a0cc260a",
     "components/control-plane/agents-workspace.tsx": "f7b5092740215451a7853750cf388a3cab597555e4775842ac1ec8c7aa9a2fe6",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
-    "components/control-plane/connector-actions-workspace.tsx": "77924ed4d393ec8c86d962083b629d30c450e698efa16eb36bcb7bc35dd1f73e",
+    "components/control-plane/connector-actions-workspace.tsx": "25cac7d96c3f52db9096d8721436962968c4997e97940d0b715e8f16f0f5f367",
+    "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
     "components/control-plane/discount-history.tsx": "d83c22e07fffef66679574f941099201f89056ad0ffb34ecebaa9296481de5fb",
     "components/control-plane/discovery-workspace.css": "b06512356fb2b357ae56cc88b17e8993a68d9d3f87cea80a82281c1cd16e7b7f",
     "components/control-plane/discovery-workspace.tsx": "2ef8660014b3c8dadbff0edca640e5d074d2d363014eb7385050400c052ed5e9",
-    "components/control-plane/durable-workspace.tsx": "aaba9dd6d4c95c3f3ed77105c1b4e4ae51b31ad73fc368c73ed08061ac7e8810",
+    "components/control-plane/durable-workspace.tsx": "85f5e71c32c20c56ba286d5043cb57702821994236f83c7001e556fdf5178a6f",
     "components/control-plane/enquiry-execution.tsx": "127a84fdf2915f275194d8b9096f76318d59fe9446884703da4f1bb193982496",
     "components/control-plane/enquiry-progress.tsx": "df957b6f3c11e7c40f560930063118742422f525c6004ec74ac6ca24337c3bb4",
     "components/control-plane/enquiry-workspace.tsx": "fc4c0434be27e3dbdb2620eca709cb0dd87994d7d07fd2d56cfe2e4945a175a0",
@@ -16563,10 +16667,14 @@
     "components/control-plane/refund-workspace.tsx": "3d751741e99cc54d5dd4aae5439be98b82cd1abf7f546d37ac018d8d48797449",
     "components/control-plane/request-planner.tsx": "659a3778dc1e542c264f7814ef655b72eac3542f3a4d34dde8fe440f5e8e32e8",
     "components/control-plane/saved-history-workspace.tsx": "c27650a0a1ef0b17b57c54cd2fa1cfed4a407f9e39d773b97ec4ffe26e4cf7ec",
-    "components/control-plane/shell.tsx": "7bb01fb80ea85ce4c58e7b7e3db32a91ca69730dfc290b8014283482b0403d63",
+    "components/control-plane/saved-workspace.css": "ca602c6a14675c99fba6c008115057435f14713a1b0ee5f5509f548053618652",
+    "components/control-plane/saved-workspace.tsx": "411580d57641daa5d1f669233924932659004560d58a7c25d1ea87dd2d19c27f",
+    "components/control-plane/screens.tsx": "8012e435d8a2ac823ade4c2e51fefd1891f167c1bb0efcbf6f4be8dd05cdcc1a",
+    "components/control-plane/shell.tsx": "d607760b8252d0bd43e4d199cbabb90b610d52d25b8f09ce973ebb5d3f6c5e4c",
     "components/control-plane/ui.tsx": "cdf670619bf6e5d6dec5e828ebc3e2e4039a056089ecb8add523dea0e88065db",
     "components/control-plane/workflow-workspace.tsx": "44f4bb671e04898089138bca9c9e03c33915e26e20f2e31b3d29aafde4c2548e",
     "components/control-plane/workspace-gate.tsx": "a29c737a46790dc6d1b6bf13eb95fc3aac9ba8bf2910e2951b891641327b5466",
+    "components/control-plane/workspace-overview.tsx": "a15f1c75b912dddef7a41e1d97d8887a0421a0d32ca13e23f11f50fec82a413e",
     "components/marketing/chrome.tsx": "515e22fb0e36006fe345cf0c458c2f7bbcd0e8a419827c5041708d4bb7e0c613",
     "components/marketing/product-overview.tsx": "2211c7d2eacba47c5ef3da9399813bb72e9c429cc43c77863448ab293c82efab",
     "current-profile-image-bytes-component.mjs": "d9612f5d505a9e957b859be6010a352270e2ed389d150bb1779f6386de491e59",
@@ -16695,7 +16803,7 @@
     "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
     "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
     "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
-    "lib/workspace/deployment-capabilities.ts": "3dfea35a0f232f22050a9ab1f735ce1b53456099b61b1f02835b3026b783f7d7",
+    "lib/workspace/deployment-capabilities.ts": "8f2902522568e1dd1b6a7dc4ee90c1273b8bf9970d604fc791f0c7f9462829d4",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
     "lib/workspace/installed-tenant-fixture.ts": "7e3d9869ccdc2d3ac1229a57d4af24d29c0d658ec9bb7861767f066d2f185ea3",
     "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
@@ -16754,7 +16862,7 @@
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "465d5b40a197c847b903a3e291f7c73524d26c2f38c970ac387b7474c455e2e3",
+    "scripts/current-proof-source-registry.mjs": "8d8c3cbc3fe0054a83fc8439988a3af500c42dcde62aeb8590b9df0a5617792a",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "6789ccfb6c9cc96f59ea2156e281df55931cd5e5b9eccd676ae2806b33b9112d",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",

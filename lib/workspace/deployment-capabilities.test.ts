@@ -28,7 +28,7 @@ describe('source-owned quote deployment restriction', () => {
 
 describe('bounded control demonstration installation', () => {
   const script = 'isolated-control-demo-1';
-  it.each(['quotes', 'agents', 'actions', 'workflow-runs', 'history'])('exposes only installed screen %s', section => {
+  it.each(['quotes', 'agents', 'actions', 'workflow-runs', 'history', 'workflows', 'approvals', 'policies', 'connectors', 'outputs', 'reconciliation'])('exposes only installed screen %s', section => {
     expect(decide(script, '/control-plane/' + section, 'GET')).toBe('allow');
     expect(decide(script, '/control-plane/' + section, 'HEAD')).toBe('allow');
     expect(decide(script, '/control-plane/' + section, 'POST')).toBe('deny');
@@ -37,9 +37,9 @@ describe('bounded control demonstration installation', () => {
     for (const method of ['GET', 'POST']) expect(decide(script, path, method)).toBe('allow');
     for (const method of ['PUT', 'PATCH', 'DELETE', 'TRACE', 'OPTIONS']) expect(decide(script, path, method)).toBe('deny');
   });
-  it.each(['/api/workspace/discovery', '/api/workspace/records', '/api/workspace/enquiries', '/api/durable/session', '/api/durable/refunds', '/control-plane/audit', '/control-plane/reconciliation', '/control-plane/work', '/control-plane/unknown', '/api/durable/', '/api/durable/%77orkflows'])('does not broaden access to %s', path => expect(decide(script, path, 'GET')).toBe('deny'));
-  it('preserves the quote landing route and APIs', () => {
-    expect(decide(script, '/control-plane', 'GET')).toBe('quote-home');
+  it.each(['/api/workspace/discovery', '/api/workspace/records', '/api/workspace/enquiries', '/api/durable/session', '/api/durable/refunds', '/control-plane/audit', '/control-plane/work', '/control-plane/unknown', '/api/durable/', '/api/durable/%77orkflows'])('does not broaden access to %s', path => expect(decide(script, path, 'GET')).toBe('deny'));
+  it('opens the authenticated overview while preserving exact quote APIs', () => {
+    expect(decide(script, '/control-plane', 'GET')).toBe('allow');
     expect(decide(script, '/api/workspace/quotes', 'POST')).toBe('allow');
     expect(decide(script, '/api/workspace/quotes/setup', 'POST')).toBe('deny');
   });
