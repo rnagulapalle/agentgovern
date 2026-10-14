@@ -92,3 +92,20 @@ it('failed record insertion rolls back run completion atomically; paused state a
  const view=await f.flow.quoteVerification(f.owner,saved.id);expect(view.historical).toEqual(receipt);expect(view.current.outcome).toBe('conflict');await expect(f.flow.verify(f.owner,saved.id)).rejects.toMatchObject({status:409});
  await f.installed.owner.query('UPDATE ll_members SET active=false WHERE email=$1',[f.manager.subject]);await expect(f.flow.quoteVerification(f.manager,saved.id)).rejects.toMatchObject({status:403});expect((await f.web.query('SELECT count(*)::int n FROM ll_workflow_events WHERE quote_verification IS NOT NULL')).rows[0].n).toBe(1);
 }));
+
+
+it('expired approval preserves the original receipt but refuses a new full verification without provider writes',async()=>fixture(async f=>{
+ const {saved,receipt}=await f.ready();await f.web.query("UPDATE ll_workflow_runs SET state='completed' WHERE id=$1",[saved.id]);await f.insert(f.web,receipt);
+ // Simulate elapsed application time without editing the immutable DB approval.
+ // The retained receipt is SQL fixture metadata, not provider completion proof.
+ const action=await f.control.read(f.owner,saved.plan.update.actionId);
+ const clock=vi.spyOn(Date,'now').mockReturnValue(new Date(action.approval_until!).getTime()+1);
+ try{
+ const before=(await f.web.query('SELECT id,state,approval_until,evidence FROM ll_connector_actions ORDER BY id')).rows;
+ const view=await f.flow.quoteVerification(f.owner,saved.id);expect(view.historical).toEqual(receipt);expect(view.current.outcome).toBe('conflict');
+ await expect(f.flow.verify(f.owner,saved.id)).rejects.toMatchObject({status:409});
+ expect((await f.web.query('SELECT id,state,approval_until,evidence FROM ll_connector_actions ORDER BY id')).rows).toEqual(before);
+ expect((await f.web.query('SELECT quote_verification FROM ll_workflow_events WHERE quote_verification IS NOT NULL')).rows).toEqual([{quote_verification:receipt}]);
+ expect(f.control.provider.write).not.toHaveBeenCalled();expect(f.message.provider.write).not.toHaveBeenCalled();
+ }finally{clock.mockRestore();}
+}));

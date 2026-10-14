@@ -71,7 +71,7 @@ export async function typedQuoteSuccessorBrowserProof(directory,{controller,comp
    assert.equal(state.actions.find(a=>a.id===p.message.actionId).state,'held');assert.equal(state.actions.find(a=>a.id===p.message.actionId).approved_by,null);
    phase='fresh-successor-confirmation';await reopen(reviewer);await click(reviewer,'Approve confirmation','review');
    await expect.poll(async()=>{state=await resolve(page);return state.actions.every(a=>a.state==='succeeded');},{timeout:60000}).toBe(true);
-   await click(page,'Refresh saved state','resolve');await click(page,'Check full result','verify');state=await resolve(page);assert.equal(state.run.state,'completed');
+   await click(page,'Refresh saved state','resolve');if(await page.getByRole('button',{name:'Check full result',exact:true}).count())await click(page,'Check full result','verify');else await click(page,'Recheck current status','resolve');state=await resolve(page);assert.equal(state.run.state,'completed');
    await controller('observe',{phase:'successor-completed',...ids});const completedObservation=JSON.parse(await readFile(join(directory,'quote-provider-observation.json'),'utf8'));
    const measured=assertSuccessorProviderCompletion(baseline,completedObservation,saved);
    const verificationPath='/api/workspace/quotes/verification?'+new URLSearchParams({scope,id:saved.id,planHash:saved.planHash});const verification=await json(page,verificationPath);assert.equal(verification.status,200);assert.equal(verification.value.current.outcome,'verified');assert.equal(verification.value.historical.runId,saved.id);assert.equal(verification.value.historical.planHash,saved.planHash);assert.deepEqual(verification.value.historical.steps.map(step=>step.actionId),[p.update.actionId,p.message.actionId]);

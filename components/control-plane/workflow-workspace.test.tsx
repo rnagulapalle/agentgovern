@@ -38,6 +38,15 @@ it("embedded Activity omits repeated prepared-workflow introduction while standa
  const standalone=renderToStaticMarkup(createElement(WorkflowWorkspace));expect(standalone).toContain("Prepared CRM and messaging workflow.");expect(standalone).toContain("no real CRM or email is connected");
 });
 
+it("customer handoff navigation points quote owners to the dedicated quote workspace",()=>{
+ const html=renderToStaticMarkup(createElement(WorkflowWorkspace));
+ expect(html).toContain("Saved customer handoffs");
+ expect(html).toContain('href="/control-plane/quotes"');
+ expect(html).toContain("Distributor quotes →");
+ const embedded=renderToStaticMarkup(createElement(WorkflowWorkspace,{embeddedRunId:"saved-run"}));
+ expect(embedded).not.toContain("Saved customer handoffs");
+});
+
 it("activity heading reflects uncertain, partial and final-check states without flattening them into approval or completion",()=>{
  for(const [changed,title] of [
   [{...run,state:"active",steps:run.steps.map(s=>({...s,state:"uncertain"}))},"Checking the outcome"],

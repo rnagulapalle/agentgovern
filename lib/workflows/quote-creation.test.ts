@@ -73,6 +73,23 @@ it("actual concurrent graph creation preserves saved identities, requests and de
  await expect(w.create(owner,p.update.agentId,p.message.agentId,p.planId)).rejects.toThrow("different plan");
  expect((await w.read(owner,p.planId)).quoteView).toMatchObject({planId:p.planId,completion:"not-established"});
 }));
+it("customer handoff listing excludes quote graphs while preserving scoped quote reads and role boundaries",async()=>fixture(async(db,w,p)=>{
+ await w.createQuote(owner,p.planId);
+ const handoff=randomUUID(),otherTenantRun=randomUUID();
+ await db.query("INSERT INTO ll_workflow_runs(org_id,id,created_by) VALUES($1,$2,$3),($4,$5,$6)",[owner.orgId,handoff,owner.subject,foreign.orgId,otherTenantRun,foreign.subject]);
+ const handoffs=new WorkflowControl(db,w.connectors);
+ expect((await handoffs.list(owner)).map(r=>r.id)).toEqual([handoff]);
+ await expect(handoffs.list(foreign)).rejects.toMatchObject({status:403});
+ const foreignHandoffs=new WorkflowControl(db,new ConnectorControl(db,{...w.connectors.provider,workspaceId:foreign.orgId}));
+ expect((await foreignHandoffs.list(foreign)).map(r=>r.id)).toEqual([otherTenantRun]);
+ // The navigation fix must not weaken the quote-specific read boundary.
+ await expect(handoffs.read(owner,p.planId)).rejects.toMatchObject({status:503});
+ expect((await w.read(owner,p.planId)).quoteView).toMatchObject({planId:p.planId});
+ const agent:Actor={...owner,role:"agent",subject:p.update.agentId,tokenHash:`agent-${p.update.agentId}`};
+ await expect(handoffs.list(agent)).rejects.toMatchObject({status:403});
+ expect((await db.query("SELECT count(*)::int n FROM ll_connector_actions")).rows[0].n).toBe(0);
+}));
+
 it("source/pricing drift, absent admission and foreign/manager identities refuse without graph",async()=>fixture(async(db,w,p,c)=>{
  for(const a of [foreign,manager,{...owner,tokenHash:"wrong"}])await expect(w.createQuote(a,p.planId)).rejects.toThrow();
  await expect(new WorkflowControl(db,w.connectors).createQuote(owner,p.planId)).rejects.toThrow("server-owned");

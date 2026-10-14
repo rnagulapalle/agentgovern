@@ -238,3 +238,21 @@ it('actual held requestor advance is an exact no-op with no approval lease event
  const returned=normalize(await f.quote.execute(f.owner,q.id));expect(returned).toEqual(exact);expect(returned).toMatchObject({id:q.id,org_id:'one',agent_id:f.saved.plan.update.agentId,payload_hash:q.payload_hash,policy_version:3,state:'held',approved_by:null,approval_until:null,lease_token:null,lease_until:null});expect(await snapshot()).toEqual(before);expect(normalize((await f.native.owner.query('SELECT * FROM native_quotes ORDER BY workspace_id,quote_id')).rows)).toEqual(nativeBefore);expect(await f.native.count()).toBe(0);expect(f.native.writes).not.toHaveBeenCalled();expect(await f.mail.count()).toBe(0);expect(f.mail.transport.posts).toBe(0);expect(await f.mail.readState()).toEqual(mailBefore);
  await expect(f.quote.review(f.owner,q.id,q.payload_hash,true)).rejects.toMatchObject({status:403});expect((await f.quote.review(f.manager,q.id,q.payload_hash,true)).state).toBe('ready');expect((await f.installed.owner.query('SELECT state,approved_by,lease_token FROM ll_connector_actions WHERE id=$1',[m.id])).rows[0]).toEqual({state:'held',approved_by:null,lease_token:null});expect(await f.native.count()).toBe(0);expect(f.mail.transport.posts).toBe(0);
 }),15000);
+
+
+it('elapsed approval after actual twin completion preserves the receipt and prevents repeated effects',async()=>fixture(async f=>{
+ const {q,m}=await executed(f);const receipt=await verifyReceipt(f);
+ const before=(await f.web.query('SELECT id,state,approval_until,evidence FROM ll_connector_actions ORDER BY id')).rows;
+ const expires=Math.max(...before.map(a=>new Date(a.approval_until).getTime()));
+ // Elapsed application clock only; database approvals and recorded effects stay intact.
+ const clock=vi.spyOn(Date,'now').mockReturnValue(expires+1);
+ try{
+  const reloaded=new WorkflowControl(f.web,f.quote,f.flow.quotes);
+  expect(await reloaded.quoteVerification(f.owner,f.saved.id)).toMatchObject({historical:receipt,current:{outcome:'conflict'}});
+  await expect(reloaded.verify(f.owner,f.saved.id)).rejects.toMatchObject({status:409});
+  expect((await f.quote.execute(f.owner,q.id)).state).toBe('succeeded');expect((await f.message.execute(f.owner,m.id)).state).toBe('succeeded');
+  expect((await f.web.query('SELECT id,state,approval_until,evidence FROM ll_connector_actions ORDER BY id')).rows).toEqual(before);
+  expect((await f.web.query('SELECT quote_verification FROM ll_workflow_events WHERE quote_verification IS NOT NULL')).rows).toEqual([{quote_verification:receipt}]);
+  expect(await f.native.count()).toBe(1);expect(await f.mail.count()).toBe(1);expect(f.mail.transport.posts).toBe(1);
+ }finally{clock.mockRestore();}
+}),15000);

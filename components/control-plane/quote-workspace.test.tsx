@@ -1,7 +1,7 @@
 import {createElement} from "react";
 import {renderToStaticMarkup} from "react-dom/server";
 import {expect,it} from "vitest";
-import {QuoteWorkspace,QuoteVerificationStatus,QuoteDecisionControls,quoteNextDecision,quoteCurrentlyVerified,quotePresentedView,quoteConversationTurns,type QuoteSnapshot} from "./quote-workspace";
+import {QuoteWorkspace,QuoteVerificationStatus,QuoteDecisionControls,quoteNextDecision,quoteCurrentlyVerified,quoteHistoricallyVerified,quotePresentedView,quoteConversationTurns,type QuoteSnapshot} from "./quote-workspace";
 import type {QuotePlanV2} from "@/lib/quotes/plan-v2";
 // Presentation fixtures do not establish authority or provider conformance.
 const plan={version:'distributor-quote-plan-2',approver:'manager@company.example',update:{actionId:'update'},message:{actionId:'message'}} as QuotePlanV2;
@@ -36,8 +36,8 @@ import type {QuoteVerificationView} from '@/lib/quotes/verification-receipt';
 it('retained verification is displayed separately from fresh current status and never grants a control',()=>{
  const historical={verifiedAt:'2026-10-10T00:00:00.000Z',runId:'saved-run',receiptHash:'retained-hash',steps:[{ordinal:1,actionId:'quote-action',providerReference:'quote-ref'},{ordinal:2,actionId:'email-action',providerReference:'email-ref'}]} as QuoteVerificationView['historical'];
  const render=(outcome:'verified'|'unknown'|'conflict',history=historical)=>renderToStaticMarkup(createElement(QuoteVerificationStatus,{view:{historical:history,current:{outcome,checkedAt:'2026-10-10T01:00:00.000Z',detail:'Actual current check'}}}));
- for(const outcome of ['unknown','conflict'] as const){const h=render(outcome);expect(h).toContain('Current verification needs attention');expect(h).toContain('Original verification retained');expect(h).not.toContain('verified now');expect(h).not.toContain('<button');expect(h).not.toContain('<pre');expect(h).toContain('<details>');}
- expect(render('verified')).toContain('Quote and confirmation verified now');expect(render('unknown',null)).toContain('No final verification record');expect(render('verified',null)).not.toContain('verified now');expect(render('verified')).not.toContain('real customer delivery');expect(renderToStaticMarkup(createElement(QuoteVerificationStatus,{view:null}))).toBe('');
+ for(const outcome of ['unknown','conflict'] as const){const h=render(outcome);expect(h).toContain('Recorded result');expect(h).toContain('were verified at completion');expect(h).toContain('Current check');expect(h).toContain('expired approvals cannot be reused');expect(h).not.toContain('Current verification needs attention');expect(h).not.toContain('verified now');expect(h).not.toContain('<button');expect(h).not.toContain('<pre');expect(h).toContain('<details>');}
+ expect(render('verified')).toContain('Current authority and provider evidence match the recorded result');expect(render('unknown',null)).toContain('No final verification record');expect(render('verified',null)).not.toContain('verified now');expect(render('verified')).not.toContain('real customer delivery');expect(renderToStaticMarkup(createElement(QuoteVerificationStatus,{view:null}))).toBe('');
 });
 
 it('background continuation is initial-stage owner-only and queued state never claims execution or exposes manual sends',()=>{
@@ -52,10 +52,10 @@ import {chromium} from '@playwright/test';
 import {createRequire} from 'node:module';
 import {resolve} from 'node:path';
 const moduleRequire=createRequire(import.meta.url);
-async function mountedWorkspace(run:(page:import('@playwright/test').Page)=>Promise<void>,history:{status:number;body:unknown},setup:{status:number;body:unknown}){
+async function mountedWorkspace(run:(page:import('@playwright/test').Page)=>Promise<void>,history:{status:number;body:unknown},setup:{status:number;body:unknown},respond?:(request:import('@playwright/test').Request)=>{status:number;body:unknown}|undefined){
  const esbuild=moduleRequire(moduleRequire.resolve('esbuild',{paths:[moduleRequire.resolve('@temporalio/worker')]})) as {build:(options:Record<string,unknown>)=>Promise<{outputFiles:{text:string}[]}>};
  const bundled=await esbuild.build({stdin:{contents:"import React from 'react';import {createRoot} from 'react-dom/client';import {QuoteWorkspace} from './components/control-plane/quote-workspace';createRoot(document.getElementById('app')).render(<QuoteWorkspace/>);",resolveDir:process.cwd(),loader:'tsx'},bundle:true,platform:'browser',format:'iife',write:false,jsx:'automatic',alias:{'@':resolve('.')},define:{'process.env.NODE_ENV':'"test"'}});
- const browser=await chromium.launch({headless:true});try{const page=await browser.newPage();await page.route('https://looplabs-owned.test/**',async route=>{const path=new URL(route.request().url()).pathname;if(path==='/')return route.fulfill({contentType:'text/html',body:'<!doctype html><div id="app"></div>'});const response=path==='/api/workspace/quotes/setup'?setup:history;await route.fulfill({status:response.status,contentType:'application/json',body:JSON.stringify(response.body)});});await page.goto('https://looplabs-owned.test/');await page.addScriptTag({content:bundled.outputFiles[0].text});await run(page);}finally{await browser.close();}
+ const browser=await chromium.launch({headless:true});try{const page=await browser.newPage();await page.route('https://looplabs-owned.test/**',async route=>{const path=new URL(route.request().url()).pathname;if(path==='/')return route.fulfill({contentType:'text/html',body:'<!doctype html><div id="app"></div>'});const response=respond?.(route.request())??(path==='/api/workspace/quotes/setup'?setup:history);await route.fulfill({status:response.status,contentType:'application/json',body:JSON.stringify(response.body)});});await page.goto('https://looplabs-owned.test/');await page.addScriptTag({content:bundled.outputFiles[0].text});await run(page);}finally{await browser.close();}
 }
 const currentSetup={viewer:'owner@company.example',available:true,scopes:[{id:'current-scope',quoteId:'quote-42',distributorId:'dist-7',manager:'manager@company.example',canPrepare:true,plans:[]}]};
 it('mounted quote workspace retains valid current setup after historical authority409, with explicit history failure',async()=>mountedWorkspace(async page=>{
@@ -105,11 +105,11 @@ it('correlated current receipt removes contradictory pending copy while retainin
  const result=renderToStaticMarkup(createElement(QuoteWorkflowArtifact,{view:projected,currentlyVerified:true}));
  expect(result).toContain('Quote update verified');expect(result).toContain('Confirmation acceptance verified');expect(result).not.toContain('current verification required');expect(result).not.toContain('approval is required');expect(result).not.toContain('delivered');
  const controls=renderToStaticMarkup(createElement(QuoteDecisionControls,{snapshot:s,viewer:s.saved.createdBy,busy:false,onOperation:()=>{},verification:v}));
- expect(controls).toContain('Quote update and confirmation acceptance are verified');expect(controls).toContain('Check full result');expect(controls).toContain('Refresh saved state');expect(controls).not.toContain('worker waits');expect(controls).not.toContain('action states alone');expect(controls).not.toContain('Approve confirmation');expect(controls).not.toContain('Send approved confirmation');
+ expect(controls).toContain('Quote update and confirmation acceptance are verified');expect(controls).toContain('Recheck current status');expect(controls).toContain('Refresh saved state');expect(controls).not.toContain('worker waits');expect(controls).not.toContain('action states alone');expect(controls).not.toContain('Approve confirmation');expect(controls).not.toContain('Send approved confirmation');
 });
-it.each(['unknown','conflict'] as const)('historical success with current%s retains pending labels and recheck instead of presenting completion',outcome=>{
+it.each(['unknown','conflict'] as const)('historical success with current%s retains completed result without claiming current verification',outcome=>{
  const {s,v,artifact}=verifiedPresentation();v.current.outcome=outcome;
- expect(quoteCurrentlyVerified(s,v)).toBe(false);expect(quotePresentedView(artifact,s,v)).toBe(artifact);expect(quoteNextDecision(s,s.saved.createdBy,v)).toContain('Check the full result');
+ expect(quoteCurrentlyVerified(s,v)).toBe(false);expect(quoteHistoricallyVerified(s,v)).toBe(true);const presented=quotePresentedView(artifact,s,v);expect(presented.steps[0].status).toBe('Quote update verified at completion');expect(presented.steps[1].status).toBe('Confirmation acceptance verified at completion');expect(quoteNextDecision(s,s.saved.createdBy,v)).toContain('was verified at completion');const result=renderToStaticMarkup(createElement(QuoteWorkflowArtifact,{view:presented,historicallyVerified:true}));expect(result).not.toContain('approval is required');expect(result).not.toContain('delivered');
  expect(renderToStaticMarkup(createElement(QuoteDecisionControls,{snapshot:s,viewer:s.saved.createdBy,busy:false,onOperation:()=>{},verification:v}))).not.toContain('acceptance are verified');
 });
 it('held, uncertain, paused, missing receipt and recorded states alone never become verified presentation',()=>{
@@ -119,10 +119,34 @@ it('held, uncertain, paused, missing receipt and recorded states alone never bec
 });
 it('foreign or changed receipt identity and mismatched displayed graph cannot supply completed step labels',()=>{
  const {s,v,artifact}=verifiedPresentation();
- for(const field of ['runId','planHash','workspaceId','quoteId','recoveryEpoch'] as const){const changed=structuredClone(v);changed.historical![field]='foreign';expect(quoteCurrentlyVerified(s,changed)).toBe(false);}
- for(const field of ['actionId','binding','payloadHash'] as const){const changed=structuredClone(v);changed.historical!.steps[0][field]='foreign';expect(quoteCurrentlyVerified(s,changed)).toBe(false);}
+ for(const field of ['runId','planHash','workspaceId','quoteId','recoveryEpoch'] as const){const changed=structuredClone(v);changed.historical![field]='foreign';expect(quoteCurrentlyVerified(s,changed)).toBe(false);expect(quoteHistoricallyVerified(s,changed)).toBe(false);}
+ for(const field of ['actionId','binding','payloadHash'] as const){const changed=structuredClone(v);changed.historical!.steps[0][field]='foreign';expect(quoteCurrentlyVerified(s,changed)).toBe(false);expect(quoteHistoricallyVerified(s,changed)).toBe(false);}
  const reversed=structuredClone(v);reversed.historical!.steps.reverse();expect(quoteCurrentlyVerified(s,reversed)).toBe(false);
  const missing=structuredClone(v);missing.historical!.steps.pop();expect(quoteCurrentlyVerified(s,missing)).toBe(false);
  for(const field of ['planId','planHash'] as const){const changed={...artifact,[field]:'foreign'};expect(quotePresentedView(changed,s,v)).toBe(changed);}
  const changed=structuredClone(artifact);changed.steps[1].actionId='foreign';expect(quotePresentedView(changed,s,v)).toBe(changed);
 });
+
+
+it.each([390,1280])('mounted %dpx completed quote rechecks read-only status after expiry without resending or reapproving',async width=>{
+ const {s,v,artifact}=verifiedPresentation();v.historical!.verifiedAt='2026-10-11T00:00:00.000Z';
+ const requests:string[]=[];let expired=false;
+ await mountedWorkspace(async page=>{
+  await page.setViewportSize({width,height:1000});await page.getByText('Saved quote workflows',{exact:true}).click();await page.getByRole('button',{name:'View quote-42 · dist-7 · 14%'}).click();
+  await page.getByText('Current authority and provider evidence match the recorded result.',{exact:true}).waitFor();
+  expired=true;await page.getByRole('button',{name:'Recheck current status',exact:true}).click();
+  await page.getByText('Current authority or provider state has changed.',{exact:true}).waitFor();
+  expect(await page.getByText('Quote update verified at completion',{exact:true}).isVisible()).toBe(true);
+  expect(await page.getByText('Confirmation acceptance verified at completion',{exact:true}).isVisible()).toBe(true);
+  expect(await page.getByText('Permission for further actions',{exact:true}).isVisible()).toBe(true);
+  expect(await page.getByRole('alert').count()).toBe(0);
+  for(const name of ['Apply approved discount','Send approved confirmation','Approve quote update','Approve confirmation','Continue in background','Check full result'])expect(await page.getByRole('button',{name,exact:true}).count()).toBe(0);
+  expect(requests).toEqual(['resolve','resolve']);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false);
+ },{status:200,body:{quotes:[{id:s.saved.id,quoteId:'quote-42',distributorId:'dist-7',discountBps:1400}]}},{status:200,body:{...currentSetup,scopes:[{...currentSetup.scopes[0],manager:s.saved.plan.approver}]}},request=>{
+  const url=new URL(request.url());
+  if(url.pathname.endsWith('/verification'))return {status:200,body:{...v,current:{...v.current,outcome:expired?'conflict':'verified',detail:expired?'Current authority or provider state changed; historical verification does not authorize further work.':v.current.detail}}};
+  if(request.method()==='POST'){const {operation}=request.postDataJSON();requests.push(operation);return {status:200,body:s};}
+  if(url.searchParams.has('run'))return {status:200,body:{view:artifact}};
+ });
+},15000);

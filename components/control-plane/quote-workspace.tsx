@@ -12,11 +12,11 @@ export type QuoteScope={id:string;quoteId:string;distributorId:string;manager:st
 type Summary={id:string;quoteId:string;distributorId:string;discountBps:number;totalMinor:number;manager:string};
 export type QuoteAction={id:string;connector:string;payload_hash:string;state:string;approved_by:string|null;evidence?:{reference?:string}|null};
 export type QuoteSnapshot={saved:SavedQuotePlan;run:{id:string;state:string}|null;actions:QuoteAction[];background?:{available:boolean;state:'pending'|'started'|null};completion:"not-established"};
-/** Presentation correlation only. The server's fresh check supplies authority;
- * recorded action states or a historical receipt alone never supply it. */
-export function quoteCurrentlyVerified(snapshot:QuoteSnapshot,verification:QuoteVerificationView|null){
+/** Presentation correlation only. A matched receipt describes the recorded
+ * result; neither historical nor current verification grants execution authority. */
+export function quoteHistoricallyVerified(snapshot:QuoteSnapshot,verification:QuoteVerificationView|null){
  const p=snapshot.saved.plan as QuotePlanV2,r=verification?.historical;
- if(verification?.current?.outcome!=='verified'||!r||snapshot.run?.state!=='completed'||
+ if(!r||snapshot.run?.state!=='completed'||
     snapshot.run.id!==snapshot.saved.id||p.planId!==snapshot.saved.id||r.runId!==snapshot.run.id||
     r.planHash!==snapshot.saved.planHash||r.workspaceId!==p.workspaceId||r.quoteId!==p.quote.id||
     r.recoveryEpoch!==p.authority.recoveryEpoch||snapshot.actions.length!==2||!Array.isArray(r.steps)||r.steps.length!==2)return false;
@@ -26,15 +26,20 @@ export function quoteCurrentlyVerified(snapshot:QuoteSnapshot,verification:Quote
    step.payloadHash===a.payload_hash&&step.binding===part.request.binding;
  });
 }
+export function quoteCurrentlyVerified(snapshot:QuoteSnapshot,verification:QuoteVerificationView|null){
+ return verification?.current?.outcome==='verified'&&quoteHistoricallyVerified(snapshot,verification);
+}
 export function quotePresentedView(view:QuoteWorkflowView,snapshot:QuoteSnapshot|null,verification:QuoteVerificationView|null):QuoteWorkflowView {
  if(!snapshot||view.planId!==snapshot.saved.id||view.planHash!==snapshot.saved.planHash||
     view.steps.length!==2||view.steps.some((s,i)=>s.ordinal!==i+1||s.actionId!==snapshot.saved.plan[i===0?'update':'message'].actionId)||
-    !quoteCurrentlyVerified(snapshot,verification))return view;
- return {...view,steps:view.steps.map(s=>({...s,status:s.ordinal===1?'Quote update verified':'Confirmation acceptance verified'}))};
+    !quoteHistoricallyVerified(snapshot,verification))return view;
+ const current=quoteCurrentlyVerified(snapshot,verification);
+ return {...view,steps:view.steps.map(s=>({...s,status:(s.ordinal===1?'Quote update verified':'Confirmation acceptance verified')+(current?'':' at completion')}))};
 }
 export function quoteNextDecision(snapshot:QuoteSnapshot,viewer:string,verification:QuoteVerificationView|null=null){
  const p=snapshot.saved.plan as QuotePlanV2,update=snapshot.actions.find(a=>a.id===p.update.actionId),message=snapshot.actions.find(a=>a.id===p.message.actionId);
  if(quoteCurrentlyVerified(snapshot,verification))return 'Quote update and confirmation acceptance are verified. Recheck the full result whenever you need a current check.';
+ if(quoteHistoricallyVerified(snapshot,verification))return 'This workflow was verified at completion. The latest check does not confirm current authority and provider state. Review the current check below; the saved result does not authorize another action.';
  if(snapshot.run?.state==='paused')return "Workflow paused. Further execution stays held; recorded effects remain available for inspection.";
  if(!snapshot.run)return "Review this proposal, then submit its two actions for independent approval.";
  if(snapshot.actions.length!==2)return "Submission is partial. Inspect existing work before retrying the same saved request.";
@@ -52,7 +57,7 @@ export function quoteNextDecision(snapshot:QuoteSnapshot,viewer:string,verificat
 export function QuoteDecisionControls({snapshot,viewer,busy,onOperation,verification=null}:{snapshot:QuoteSnapshot;viewer:string;busy:boolean;verification?:QuoteVerificationView|null;onOperation:(operation:string,step?:'update'|'message',approve?:boolean)=>void}){
  const p=snapshot.saved.plan as QuotePlanV2,owner=viewer===snapshot.saved.createdBy&&snapshot.run?.state!=='paused',manager=viewer===p.approver&&snapshot.run?.state!=='paused';
  const update=snapshot.actions.find(a=>a.id===p.update.actionId),message=snapshot.actions.find(a=>a.id===p.message.actionId);
- return <section aria-label="Next quote decision" className="cp-panel cp-durable-card"><h2>{quoteCurrentlyVerified(snapshot,verification)?'Current result':'Next decision'}</h2><p>{quoteNextDecision(snapshot,viewer,verification)}</p><div className="cp-durable-buttons">
+ return <section aria-label="Next quote decision" className="cp-panel cp-durable-card"><h2>{quoteHistoricallyVerified(snapshot,verification)?'Recorded result':'Next decision'}</h2><p>{quoteNextDecision(snapshot,viewer,verification)}</p><div className="cp-durable-buttons">
  {owner&&(!snapshot.run||snapshot.actions.length!==2)&&<button className="cp-button" disabled={busy} onClick={()=>onOperation('submit')}>{snapshot.run?'Retry exact submission':'Submit for approval'}</button>}
  {manager&&update?.state==='held'&&<><button className="cp-button" disabled={busy} onClick={()=>onOperation('review','update',true)}>Approve quote update</button><button className="cp-button secondary" disabled={busy} onClick={()=>onOperation('review','update',false)}>Decline quote update</button></>}
  {owner&&update?.state==='ready'&&message?.state==='held'&&snapshot.background?.available&&!snapshot.background.state&&<button className="cp-button" disabled={busy} onClick={()=>onOperation('background')}>Continue in background</button>}
@@ -60,14 +65,18 @@ export function QuoteDecisionControls({snapshot,viewer,busy,onOperation,verifica
  {manager&&update?.state==='succeeded'&&message?.state==='held'&&<><button className="cp-button" disabled={busy} onClick={()=>onOperation('review','message',true)}>Approve confirmation</button><button className="cp-button secondary" disabled={busy} onClick={()=>onOperation('review','message',false)}>Decline confirmation</button></>}
  {owner&&!snapshot.background?.state&&update?.state==='succeeded'&&message?.state==='ready'&&<button className="cp-button" disabled={busy} onClick={()=>onOperation('advance','message')}>Send approved confirmation</button>}
  {snapshot.actions.filter(a=>a.state==='uncertain'||a.state==='executing').map(a=><button className="cp-button secondary" key={a.id} disabled={busy} onClick={()=>onOperation('observe',a.id===p.update.actionId?'update':'message')}>Check existing {a.id===p.update.actionId?'quote':'confirmation'} effect</button>)}
- {owner&&update?.state==='succeeded'&&message?.state==='succeeded'&&<button className="cp-button" disabled={busy} onClick={()=>onOperation('verify')}>Check full result</button>}
- <button className="cp-button secondary" disabled={busy} onClick={()=>onOperation('resolve')}>Refresh saved state</button></div><p>{!quoteCurrentlyVerified(snapshot,verification)&&snapshot.background?.state?'Background continuation requested; queued work is not execution or verification. The worker waits for the separate confirmation decision. ':''}{quoteCurrentlyVerified(snapshot,verification)?'Each exact action was independently approved.':'Independent approval applies separately to each exact action.'}</p></section>;
+ {owner&&update?.state==='succeeded'&&message?.state==='succeeded'&&<button className="cp-button" disabled={busy} onClick={()=>onOperation(quoteHistoricallyVerified(snapshot,verification)?'resolve':'verify')}>{quoteHistoricallyVerified(snapshot,verification)?'Recheck current status':'Check full result'}</button>}
+ <button className="cp-button secondary" disabled={busy} onClick={()=>onOperation('resolve')}>Refresh saved state</button></div><p>{!quoteHistoricallyVerified(snapshot,verification)&&snapshot.background?.state?'Background continuation requested; queued work is not execution or verification. The worker waits for the separate confirmation decision. ':''}{quoteHistoricallyVerified(snapshot,verification)?'Each exact action was independently approved.':'Independent approval applies separately to each exact action.'}</p></section>;
 }
 /** History is evidence of its original check; only fresh current status may
  * describe the provider state now. Neither grants action authority. */
 export function QuoteVerificationStatus({view}:{view:QuoteVerificationView|null}){
  if(!view)return null;
- return <section className="cp-panel cp-durable-card" aria-label="Quote verification"><h2>{view.current.outcome==='verified'&&view.historical?'Quote and confirmation verified now':'Current verification needs attention'}</h2><p>{view.current.detail}</p><p>Checked {view.current.checkedAt}</p>{view.historical?<><p>Original verification retained from {view.historical.verifiedAt}. This record does not replace the current check.</p><details><summary>Verification references</summary><p>Run: {view.historical.runId}</p><p>Receipt: {view.historical.receiptHash}</p>{view.historical.steps.map(step=><p key={step.actionId}>{step.ordinal===1?'Quote update':'Customer confirmation'} · {step.providerReference}</p>)}</details></>:<p>No final verification record has been saved yet.</p>}</section>;
+ return <section className="cp-panel cp-durable-card" aria-label="Quote verification"><h2>Verification history and current status</h2>
+ <h3>Recorded result</h3>{view.historical?<p>Quote update and simulated confirmation acceptance were verified at completion on {view.historical.verifiedAt}. The original result is retained.</p>:<p>No final verification record has been saved yet.</p>}
+ <h3>Current check</h3><p>{view.current.outcome==='verified'&&view.historical?'Current authority and provider evidence match the recorded result.':view.current.outcome==='conflict'?'Current authority or provider state has changed.':'Current verification is unavailable.'}</p><p>{view.current.detail}</p><p>Checked {view.current.checkedAt}</p>
+ <h3>Permission for further actions</h3><p>This result does not authorize another action. Any further execution requires current authorization; expired approvals cannot be reused.</p>
+ {view.historical&&<details><summary>Verification references</summary><p>Run: {view.historical.runId}</p><p>Receipt: {view.historical.receiptHash}</p>{view.historical.steps.map(step=><p key={step.actionId}>{step.ordinal===1?'Quote update':'Customer confirmation'} · {step.providerReference}</p>)}</details>}</section>;
 }
 /** Ephemeral current-request context only. The retained server parseTurns
  * accepts user turns; assistant copy remains display-only, never authority. */
@@ -105,7 +114,7 @@ export function QuoteWorkspace(){
  {!!quotes?.length&&<details className="cp-panel cp-durable-card"><summary>Saved quote workflows</summary><div className="cp-durable-buttons">{quotes.map(q=><button className="cp-button secondary" key={q.id} disabled={busy} onClick={()=>void select(q.id)}>View {q.quoteId} · {q.distributorId} · {q.discountBps/100}%</button>)}</div></details>}
  <div className="cp-durable-buttons quote-tabs" role="tablist" aria-label="Quote workspace views">{['Conversation','Plan','Activity'].map(t=><button className="cp-button secondary" role="tab" aria-selected={tab===t} key={t} onClick={()=>setTab(t)}>{t}</button>)}</div>
  <div className="quote-main"><section data-active={tab==='Conversation'} className="cp-panel cp-durable-card quote-conversation" aria-label="Quote conversation"><h2>Tell us the quote decision</h2><p>Use an enrolled distributor quote. Pricing, policy and the designated manager come from workspace configuration.</p>{messages.map((m,i)=><p key={i}><strong>{m.role==='user'?'You':'LoopLabs'}:</strong> {m.text}</p>)}{!messages.length&&<p>Try: “Prepare a 14% discount for this distributor and ask the designated manager before changing the quote or sending confirmation.”</p>}</section>
- <div data-active={tab==='Plan'} className="quote-artifact">{view?<QuoteWorkflowArtifact view={presentedView!} currentlyVerified={presentedView!==view}/>:<section className="cp-panel cp-durable-card"><h2>Quote plan</h2><p>Your exact saved pricing and customer message will appear here for review.</p></section>}</div></div>
+ <div data-active={tab==='Plan'} className="quote-artifact">{view?<QuoteWorkflowArtifact view={presentedView!} currentlyVerified={!!snapshot&&quoteCurrentlyVerified(snapshot,verification)} historicallyVerified={presentedView!==view}/>:<section className="cp-panel cp-durable-card"><h2>Quote plan</h2><p>Your exact saved pricing and customer message will appear here for review.</p></section>}</div></div>
  {tab==='Activity'&&<section className="cp-panel cp-durable-card"><h2>Activity</h2>{snapshot?<><p>{quoteNextDecision(snapshot,viewer,verification)}</p><details><summary>Technical references</summary>{snapshot.actions.map(a=><p key={a.id}>{a.connector} · {a.state} · {a.id}</p>)}</details></>:<p>Select a saved quote to inspect its recorded actions.</p>}</section>}
  <QuoteVerificationStatus view={verification}/>{snapshot&&<QuoteDecisionControls snapshot={snapshot} verification={verification} viewer={viewer} busy={busy} onOperation={(o,s,a)=>void operate(o,s,a)}/>}
  {tab!=='Conversation'&&(snapshot||requestId.current)&&<button className="cp-button secondary quote-new-request" type="button" disabled={busy} onClick={newRequest}>New quote request</button>}

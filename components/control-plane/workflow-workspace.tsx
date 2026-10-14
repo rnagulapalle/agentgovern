@@ -173,7 +173,8 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
         </p>
       </section>}
       {!embeddedRunId && <section className="cp-panel cp-durable-card">
-        <h2>Saved runs</h2>
+        <h2>Saved customer handoffs</h2>
+        <p>For pricing workflows and their approval history, open <Link href="/control-plane/quotes">Distributor quotes →</Link></p>
         {runs.map((r) => (
           <p key={r.id}>
             <button disabled={busy} onClick={() => task(() => open(r.id))}>
