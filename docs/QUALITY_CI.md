@@ -27,9 +27,10 @@ cleared before Python setup and the application tests. The unchanged gate builds
 both workflow bundles, runs every test with existing coverage thresholds, performs
 the database refusal proof, builds the app and checks rendered links.
 
-The source-construction test has a 30-second setup deadline for several actual
-filesystem/TypeScript closure traversals on shared runners. Its dependency,
-omission and tamper assertions remain unchanged. Other test deadlines are unchanged.
+The source-construction test and four two-origin filesystem/mock-Docker drills
+have 30-second setup deadlines for repeated current-source/TypeScript closure
+traversals on shared runners. Their dependency, omission, cold-load, tamper and
+cleanup assertions remain unchanged. Product-operation deadlines are unchanged.
 
 If the pinned provider or measured artifacts change, prepare and authenticate a
 new private bundle, update its inventory and object digests, and grant the role
