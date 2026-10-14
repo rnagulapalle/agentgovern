@@ -191,7 +191,7 @@ export function ConnectorActionsWorkspace({
         {data?.actions
           .filter((a) => a.connector === connector)
           .map((a) => (
-            <article className="cp-durable-scope" key={a.id}>
+            <article className="cp-durable-scope" key={a.id} id={`action-${a.id}`}>
               <h3>
                 {connector === "crm"
                   ? `Set lifecycle to ${(a.payload as { lifecycle: string }).lifecycle}`

@@ -3,7 +3,7 @@
  * default-denies other protected entry points, independently of client input. */
 export const quoteDemoProfile = 'isolated-quote-demo-1';
 export const scriptDemoProfile = 'isolated-control-demo-1';
-export const scriptDemoSections = Object.freeze(['quotes', 'agents', 'actions', 'workflow-runs', 'history']);
+export const scriptDemoSections = Object.freeze(['quotes', 'agents', 'actions', 'workflow-runs', 'history', 'workflows', 'approvals', 'policies', 'connectors', 'outputs', 'reconciliation']);
 const apiMethods: Readonly<Record<string, readonly string[]>> = Object.freeze({
   '/api/workspace/session': Object.freeze(['GET', 'POST', 'DELETE']),
   '/api/workspace/quotes': Object.freeze(['GET', 'POST']),
@@ -28,7 +28,7 @@ export function deploymentRouteDecision(profile: string | undefined, pathname: s
   if (pathname.startsWith('/api/') || pathname === '/api') return (profile === scriptDemoProfile ? scriptApiMethods : apiMethods)[pathname]?.includes(method) ? 'allow' : 'deny';
   if (pathname === '/control-plane' || pathname.startsWith('/control-plane/')) {
     if (!['GET', 'HEAD'].includes(method) || !(profile === scriptDemoProfile ? scriptPages : pages).has(pathname)) return 'deny';
-    return pathname === '/control-plane' ? 'quote-home' : 'allow';
+    return pathname === '/control-plane' && profile === quoteDemoProfile ? 'quote-home' : 'allow';
   }
   return 'allow'; // Marketing/static assets use existing handlers.
 }

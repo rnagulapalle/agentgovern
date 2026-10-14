@@ -1,7 +1,9 @@
 import React, { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { expect, it, vi } from 'vitest';
-vi.mock('next/navigation', () => ({usePathname:()=>'/control-plane/quotes'}));
+import { beforeEach, expect, it, vi } from 'vitest';
+const location=vi.hoisted(()=>({path:'/control-plane/quotes'}));
+beforeEach(()=>{location.path='/control-plane/quotes';});
+vi.mock('next/navigation', () => ({usePathname:()=>location.path}));
 vi.mock('./provider', () => ({useControl:()=>({state:{approvals:[],incidents:[],agents:[],runs:[],policies:[]},toast:null})}));
 import { ControlShell, ControlScopeNote } from './shell';
 const member={name:'Quote evaluator',email:'evaluator@example.test'};
@@ -22,7 +24,9 @@ it('quote scope states exact independent actions and simulated effects',()=>{
 });
 it('script profile links only installed saved controls and never browser-local history',()=>{
  const h=renderToStaticMarkup(<ControlShell member={member} scriptDemo>Script content</ControlShell>);
- for(const key of ['quotes','agents','actions','workflow-runs','history'])expect(h).toContain(`href="/control-plane/${key}"`);
- for(const key of ['work','discovery','connectors','records','requests','verification','audit','reconciliation','settings'])expect(h).not.toContain(`href="/control-plane/${key}"`);
- expect(h).toContain('Saved decision history');expect(h).not.toContain('PREPARED EXAMPLES');
+ for(const key of ['workflows','approvals','policies','connectors','outputs','reconciliation','agents','workflow-runs','history'])expect(h).toContain(`href="/control-plane/${key}"`);
+ for(const key of ['work','discovery','records','requests','verification','audit','settings'])expect(h).not.toContain(`href="/control-plane/${key}"`);
+ for(const label of ['Overview','Workflows','Runs','Approvals','Agents','Connections','Policies &amp; access','Output controls','Reconciliation','History'])expect(h).toContain(label);expect(h).not.toContain('PREPARED EXAMPLES');expect(h).not.toContain('cp-enforcement-bars');
 });
+
+it.each(["workflows","approvals","policies","outputs","reconciliation","connectors"])("saved %s page never inherits browser-local navigation or evidence labels", section=>{location.path="/control-plane/"+section;const h=renderToStaticMarkup(<ControlShell member={member} scriptDemo>Saved content</ControlShell>);expect(h).toContain("Saved controls");expect(h).toContain("decisions saved on the server");expect(h).not.toContain("Browser-local sample data");expect(h).not.toContain("changes saved in this browser");expect(h).not.toContain("Search anything");expect(h).not.toContain("href=\"/control-plane/settings\"");});
