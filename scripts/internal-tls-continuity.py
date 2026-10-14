@@ -1,5 +1,6 @@
 
-import subprocess,json,hashlib,pathlib,datetime
+import subprocess,json,hashlib,pathlib,datetime,sys
+assert sys.argv[1:] in ([],["--authority-only"]), "Explicit continuity scope required"
 DB='ll-platform-27ec7699f577-application-db-1'
 def sql(text):
  return subprocess.check_output(['docker','exec',DB,'psql','-X','-h','/tmp','-U','trial','-d','trial','-At','-v','ON_ERROR_STOP=1','-c',text],text=True).strip()
@@ -22,5 +23,5 @@ roleConfig=sql("SELECT coalesce(jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text
 stateRoot=pathlib.Path('/srv/looplabs-production/releases/d4ee705d806f74d2433e298f08cc761ad1fba45a/installation/private-runtime/application/quote-provider/email-state')
 emailFiles={str(f.relative_to(stateRoot)):hashlib.sha256(f.read_bytes()).hexdigest() for f in sorted(stateRoot.rglob('*')) if f.is_file()}
 node="import pathlib,hashlib,json;root=pathlib.Path('/state');files=sorted(root.rglob('*'));assert not any(f.is_symlink() for f in files);print(json.dumps({str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in files if f.is_file()}))"
-connectorFiles=json.loads(subprocess.check_output(['docker','exec','ll-platform-27ec7699f577-connector-twin-1','python3','-c',node],text=True))
+connectorFiles={} if sys.argv[1:]==['--authority-only'] else json.loads(subprocess.check_output(['docker','exec','ll-platform-27ec7699f577-connector-twin-1','python3','-c',node],text=True))
 print(json.dumps({'checkedUtc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'scope':'Read-only local maintenance SQL and persisted provider file digests; not application TLS acceptance. No raw table rows or credentials emitted.','database':database,'schemas':schemas,'roles':roles,'roleMembershipSha256':hashlib.sha256(roleMembers.encode()).hexdigest(),'relationMetadata':relations,'relations':checks,'sequences':sequences,'functions':functions,'views':views,'defaultAclSha256':hashlib.sha256(defaultAcl.encode()).hexdigest(),'roleConfigSha256':hashlib.sha256(roleConfig.encode()).hexdigest(),'emailStateFiles':emailFiles,'connectorStateFiles':connectorFiles}))
