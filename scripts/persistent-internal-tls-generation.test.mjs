@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {createHash} from 'node:crypto';
-import {mapPublicationPaths,renewSealedPublication,validateSealedPublication,rebindInternalTlsCompose,retainedDatabaseStartup,assertRetainedPostgresMetadata} from './persistent-internal-tls-generation.mjs';
+import {mapPublicationPaths,renewSealedPublication,validateSealedPublication,rebindInternalTlsCompose,retainedDatabaseStartup,assertRetainedPostgresMetadata,renewalPublicationDirectories} from './persistent-internal-tls-generation.mjs';
 const bytes=v=>Buffer.from(JSON.stringify(v));const sha=b=>createHash('sha256').update(b).digest('hex');
 const authorities=['db','native','email'].map((k,i)=>({oldFile:'/old/'+k+'/ca.pem',newFile:'/next/'+k+'/ca.pem',oldSha:String(i+1).repeat(64),newSha:String(i+4).repeat(64)}));
 const transport=i=>({mode:'verified-tls',trust:'owned-ca',caFile:authorities[i].oldFile,caSha256:authorities[i].oldSha});
@@ -26,4 +26,8 @@ describe('retained PostgreSQL renewal refuses initialization',()=>{
 
 describe('transport mapping preserves unrelated prototype-named literal values',()=>{
  it('only maps own exact path entries and preserves constructor/prototype string credentials',()=>{const value={token:'constructor',label:'__proto__',file:'/old/web.json'};expect(mapPublicationPaths(value,{'/old/web.json':'/next/web.json'})).toEqual({token:'constructor',label:'__proto__',file:'/next/web.json'});const c=compose();c.services.web.environment={CONFIG:'/old/config.json',TOKEN:'constructor',OTHER:'__proto__'};const next=rebindInternalTlsCompose(c,{directories:{'/old/trust':'/next/trust'},files:{'/old/config.json':'/next/config.json'}});expect(next.services.web.environment).toEqual({CONFIG:'/next/config.json',TOKEN:'constructor',OTHER:'__proto__'});expect(()=>renewSealedPublication(publication('execution.json',{version:2,purpose:'quote-demo-execution',webGenerationFile:'constructor'}),{paths:{},authorities})).toThrow('Linked successor generation required');});
+});
+
+describe('runtime publication paths use the authoritative explicit contract',()=>{
+ it('ignores preserved scope/admission metadata as paths and rejects missing or wrong-purpose required file',()=>{const r={version:1,purpose:'retained-private-installed-runtime',files:{webFile:'/old/web/web.json',workerFile:'/old/worker/workloads.json',schedulerFile:'/old/scheduler/workloads.json'},quoteFiles:{workerFile:'/old/qw/workloads.json',schedulerFile:'/old/qs/workloads.json'},quotePublications:{scopeId:'retained-scope',nativeExecutionApproved:false,releaseAccepted:false,webExecutionFile:'/old/qweb/execution.json',workerExecutionFile:'/old/qworker/execution.json',backgroundFile:'/old/background/background.json'},quoteProvider:{listenerFile:'/old/listener/listener.json'}};expect(renewalPublicationDirectories(r)).toHaveLength(9);expect(()=>renewalPublicationDirectories({...r,quotePublications:{...r.quotePublications,backgroundFile:undefined}})).toThrow('Exact required runtime publication paths');expect(()=>renewalPublicationDirectories({...r,quotePublications:{...r.quotePublications,backgroundFile:'/old/background/workloads.json'}})).toThrow('Exact required runtime publication paths');});
 });

@@ -54,7 +54,7 @@ export function rebindInternalTlsCompose(before,{directories,files,web}){
  for(const name of Object.keys(before.services).filter(s=>!services.includes(s)))assert.deepEqual(after.services[name],before.services[name]);
  return after;
 }
-export function renewalPublicationDirectories(ready){assert(ready?.version===1&&ready.purpose==='retained-private-installed-runtime');const files=[...Object.values(ready.files),...Object.values(ready.quoteFiles),...Object.values(ready.quotePublications),ready.quoteProvider.listenerFile];assert(files.every(f=>typeof f==='string'&&names.has(basename(f))));return [...new Set(files.map(dirname))];}
+export function renewalPublicationDirectories(ready){assert(ready?.version===1&&ready.purpose==='retained-private-installed-runtime');const fields=[[ready.files.webFile,'web.json'],[ready.files.workerFile,'workloads.json'],[ready.files.schedulerFile,'workloads.json'],[ready.quoteFiles.workerFile,'workloads.json'],[ready.quoteFiles.schedulerFile,'workloads.json'],[ready.quotePublications.webExecutionFile,'execution.json'],[ready.quotePublications.workerExecutionFile,'execution.json'],[ready.quotePublications.backgroundFile,'background.json'],[ready.quoteProvider.listenerFile,'listener.json']];assert(fields.every(([f,name])=>typeof f==='string'&&resolve(f)===f&&basename(f)===name),'Exact required runtime publication paths');return [...new Set(fields.map(([f])=>dirname(f)))];}
 export const internalTlsServices=Object.freeze(services);
 // A successor root holds only scoped runtime publications, never the offline
 // installation/owner credential bundle or mutable email/provider state.
