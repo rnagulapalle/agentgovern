@@ -238,7 +238,10 @@ export class WorkflowControl {
       await this.connectors.authority(c, actor, ["operator"]);
       return (
         await c.query(
-          "SELECT * FROM ll_workflow_runs WHERE org_id=$1 ORDER BY created_at DESC LIMIT 50",
+          // This list is consumed by the customer-handoff workspace. Quote
+          // graphs require their own reader and current named quote authority.
+          // Keep compatibility with pre-quote schemas without widening kinds.
+          "SELECT r.* FROM ll_workflow_runs r WHERE org_id=$1 AND COALESCE(to_jsonb(r)->>'workflow_kind','customer-acknowledgement')='customer-acknowledgement' ORDER BY created_at DESC LIMIT 50",
           [actor.orgId],
         )
       ).rows;

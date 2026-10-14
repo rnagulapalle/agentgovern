@@ -1,3 +1,22 @@
+## Local quote status presentation (P1b, October 13)
+
+The quote workspace separates the retained result at completion, the latest server
+check, and permission for further actions. A correlated completed run keeps its
+historical step labels when current verification is unknown or conflicts. The UI
+never infers that a generic conflict specifically means approval expiry or provider
+drift. A completed run's “Recheck current status” resolves saved state and requests
+the read-only verification view; it does not reapprove, resend, or issue another
+final-verification mutation. Initial final verification still uses the existing
+verification operation. Server authorization and expiry checks are unchanged.
+
+Presentation tests cover missing/mismatched receipts, held and uncertain actions,
+and mounted desktop/mobile status refresh. A SQL metadata fixture checks receipt
+retention separately from a native twin integration that executes and verifies both
+effects before advancing the application clock past approval expiry. That integration
+checks one retained receipt, refusal of fresh final verification, and unchanged
+provider effect counts after repeated execution attempts. Neither proves live delivery.
+These local changes do not establish deployed browser acceptance.
+
 ## October 8 staged server workflow increment
 
 The earlier architecture below describes the original browser-local examples. The invited server workspace now adds PostgreSQL-backed scoped identity/policy/approval/lease/effect controls and isolated Temporal adoption. See `TEMPORAL_ADOPTION_PLAN.md`, `PERSISTED_PROPOSAL_BOUNDARIES.md`, `PERSISTED_RECORD_GRANTS.md`, `SCOPED_TEMPORAL_ROUTING.md` and `SCOPED_CHAT_EXPERIENCE.md` for current contracts and measured proof.

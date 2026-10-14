@@ -503,6 +503,21 @@ export class DurableControl {
           "Reconciliation verified the existing effect. No retry performed.",
         );
       }
+      // Containment revokes this action permanently, even if the connector is
+      // enabled again. Readback above may confirm an existing effect, but proof
+      // of absence must never restore the revoked authorization.
+      const invalidated = (await c.query(
+        "SELECT 1 FROM ll_events WHERE org_id=$1 AND action_id=$2 AND kind='authorization_invalidated' LIMIT 1",
+        [actor.orgId, id],
+      )).rowCount;
+      // Older contained actions predate the explicit invalidation event. Their
+      // exact persisted containment reasons must remain fail-closed on upgrade.
+      const legacyContainment = [
+        "Discount connector contained; previous authorization invalidated.",
+        "Authority changed; previous authorization invalidated.",
+      ].includes(a.reason);
+      if (invalidated || legacyContainment)
+        return transition(c, actor, a, "cancelled", "Previous authorization was invalidated. No effect was recorded; submit a new action.");
       const reason = invalid(a, context, now);
       if (reason) return transition(c, actor, a, "cancelled", reason);
       return transition(
@@ -575,8 +590,11 @@ export class DurableControl {
       await c.query(`UPDATE ll_agents a SET active=$2 WHERE a.org_id=$1 AND ${scope}`, [actor.orgId, active]);
       await event(c, actor, null, active ? "discount_connector_enabled" : "discount_connector_contained");
       if (!active) {
-        const {rows} = await c.query("SELECT * FROM ll_actions WHERE org_id=$1 AND state IN ('held','ready','executing')", [actor.orgId]);
-        for (const action of rows) await transition(c, actor, action, action.state === "executing" ? "uncertain" : "cancelled", "Discount connector contained; previous authorization invalidated.");
+        const {rows} = await c.query("SELECT * FROM ll_actions WHERE org_id=$1 AND state IN ('held','ready','executing','uncertain')", [actor.orgId]);
+        for (const action of rows) {
+          await event(c, actor, action.id, "authorization_invalidated");
+          await transition(c, actor, action, ["executing", "uncertain"].includes(action.state) ? "uncertain" : "cancelled", "Discount connector contained; previous authorization invalidated.");
+        }
       }
     });
   }
@@ -623,17 +641,19 @@ export class DurableControl {
       }
       if (command.agentActive === false || command.autoLimit !== undefined) {
         const { rows } = await c.query(
-          "SELECT * FROM ll_actions WHERE org_id=$1 AND state IN ('held','ready','executing')",
+          "SELECT * FROM ll_actions WHERE org_id=$1 AND state IN ('held','ready','executing','uncertain')",
           [actor.orgId],
         );
-        for (const a of rows)
+        for (const a of rows) {
+          await event(c, actor, a.id, "authorization_invalidated");
           await transition(
             c,
             actor,
             a,
-            a.state === "executing" ? "uncertain" : "cancelled",
+            ["executing", "uncertain"].includes(a.state) ? "uncertain" : "cancelled",
             "Authority changed; previous authorization invalidated.",
           );
+        }
       }
     });
   }

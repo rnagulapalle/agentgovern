@@ -10,6 +10,11 @@ The private `/control-plane/workflow-runs` workspace links two saved actions:
 2. A different scoped messaging agent proposes the fixed case-received acknowledgement.
 3. A named operator verifies both external outcomes before marking the run completed.
 
+The saved list contains customer handoffs only. Distributor quote runs are reviewed
+in `/control-plane/quotes`, linked beside this list, using the quote-specific reader
+and its named owner/manager authority checks. A quote must not be opened through
+the CRM handler. This separation does not change execution or approval authority.
+
 Register dedicated CRM and messaging agents under Agents and boundaries. Start a run and select those agents. Enrollment restricts those identities to immutable workflow step IDs; standalone action requests, including ready requests created before enrollment, cannot execute. This restriction persists across runs; use dedicated agents. There is no unenrollment or automatic resume control in this release.
 
 The server assigns the two action IDs and fixed payloads. Workflow creation uses a caller-supplied UUID idempotency key; identical enrollment replays return the same run, while changing agents under the same ID conflicts. Each agent can read and propose only its own step; it cannot approve, execute, list all runs or complete verification. The workspace also offers prepared submissions as the signed-in person, with attribution and independent approval.
