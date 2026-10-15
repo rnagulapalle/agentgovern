@@ -25,6 +25,7 @@ export function discoverySession(value: unknown, now = Date.now()): DiscoverySes
 export interface AwsReadOptions {
   executable: string;
   region: string;
+  accountId?: string;
   session: () => Promise<DiscoverySession>;
   now?: () => number;
 }
@@ -84,7 +85,8 @@ export function awsCliInventoryApi(options: AwsReadOptions): AwsRuntimeInventory
 
 // Same isolated signing transport; no public arbitrary-command API is exposed.
 export function awsCliInvocationApi(options: AwsReadOptions): AwsInvocationLogsApi {
-  const read = signedRead(options);
+  if (typeof options.accountId !== "string" || !/^[0-9]{12}$/.test(options.accountId)) throw Error("Explicit observation account required");
+  const accountId = options.accountId, region = options.region, read = signedRead(options);
   return {
     callerIdentity: () => read("sts", "get-caller-identity", {}, "{Account:Account}"),
     listEvents: input => {
@@ -95,7 +97,10 @@ export function awsCliInvocationApi(options: AwsReadOptions): AwsInvocationLogsA
         || input.limit !== 100
         || (input.nextToken !== undefined && (typeof input.nextToken !== "string" || !/^\S{1,2048}$/.test(input.nextToken))))
         return Promise.reject(Error("Invalid bounded observation request"));
-      return read("logs", "filter-log-events", { ...input }, "{events:events[].{eventId:eventId,timestamp:timestamp,message:message},nextToken:nextToken}");
+      // Pin the AWS resource account in the signed request too. A rotated session
+      // must not redirect the same log-group name into a different account.
+      const { logGroupName, ...window } = input;
+      return read("logs", "filter-log-events", { ...window, logGroupIdentifier: `arn:aws:logs:${region}:${accountId}:log-group:${logGroupName}` }, "{events:events[].{eventId:eventId,timestamp:timestamp,message:message},nextToken:nextToken}");
     },
   };
 }

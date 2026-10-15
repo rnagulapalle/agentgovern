@@ -44,3 +44,22 @@ describe('bounded control demonstration installation', () => {
     expect(decide(script, '/api/workspace/quotes/setup', 'POST')).toBe('deny');
   });
 });
+
+
+describe('AWS journey installation switch', () => {
+  const script = 'isolated-control-demo-1';
+  it('defaults closed and enables only exact AWS journey routes and supported methods', () => {
+    for (const path of ['/control-plane/discovery', '/api/workspace/discovery', '/api/workspace/discovery/owners', '/api/workspace/discovery/activity']) {
+      expect(decide(script, path, 'GET')).toBe('deny');
+      for (const method of ['PUT', 'DELETE', 'PATCH', 'TRACE']) expect(decide(script, path, method, true)).toBe('deny');
+    }
+    expect(decide(script, '/control-plane/discovery', 'GET', true)).toBe('allow');
+    expect(decide(script, '/api/workspace/discovery', 'POST', true)).toBe('allow');
+    expect(decide(script, '/api/workspace/discovery/owners', 'GET', true)).toBe('allow');
+    expect(decide(script, '/api/workspace/discovery/activity', 'POST', true)).toBe('allow');
+    expect(decide(script, '/api/workspace/discovery/activity', 'GET', true)).toBe('deny');
+    expect(decide(script, '/api/workspace/discovery/activity/execute', 'POST', true)).toBe('deny');
+    for (const profile of ['', 'unknown', 'isolated-quote-demo-1']) expect(decide(profile, '/api/workspace/discovery', 'POST', true)).toBe('deny');
+    expect(decide(script, '/api/workspace/discovery/%61ctivity', 'POST', true)).toBe('deny');
+  });
+});

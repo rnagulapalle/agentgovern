@@ -21,10 +21,15 @@ const scriptApiMethods: Readonly<Record<string, readonly string[]>> = Object.fre
 const scriptPages = new Set(['/control-plane', ...scriptDemoSections.map(section => `/control-plane/${section}`)]);
 const pages = new Set(['/control-plane', '/control-plane/quotes']);
 export type DeploymentRouteDecision = 'legacy' | 'allow' | 'quote-home' | 'deny';
-export function deploymentRouteDecision(profile: string | undefined, pathname: string, method: string): DeploymentRouteDecision {
+export function deploymentRouteDecision(profile: string | undefined, pathname: string, method: string, awsConnections = false): DeploymentRouteDecision {
   if (profile === undefined) return 'legacy';
   if (profile !== quoteDemoProfile && profile !== scriptDemoProfile) return 'deny'; // Empty/unknown does not enable legacy.
   if (!pathname.startsWith('/') || /[%\\\u0000-\u0020]/.test(pathname) || pathname.includes('//') || pathname.split('/').some(p => p === '.' || p === '..')) return 'deny';
+  if (profile === scriptDemoProfile && awsConnections === true) {
+    if (pathname === '/control-plane/discovery') return ['GET', 'HEAD'].includes(method) ? 'allow' : 'deny';
+    if (pathname === '/api/workspace/discovery/activity') return method === 'POST' ? 'allow' : 'deny';
+    if (['/api/workspace/discovery', '/api/workspace/discovery/owners'].includes(pathname)) return ['GET', 'POST'].includes(method) ? 'allow' : 'deny';
+  }
   if (pathname.startsWith('/api/') || pathname === '/api') return (profile === scriptDemoProfile ? scriptApiMethods : apiMethods)[pathname]?.includes(method) ? 'allow' : 'deny';
   if (pathname === '/control-plane' || pathname.startsWith('/control-plane/')) {
     if (!['GET', 'HEAD'].includes(method) || !(profile === scriptDemoProfile ? scriptPages : pages).has(pathname)) return 'deny';

@@ -24,7 +24,7 @@ export default async function ControlPage({
 }) {
   const { section } = await params;
   if (!sections.includes(section)) notFound();
-  if (process.env.LOOPLABS_DEPLOYMENT_PROFILE === scriptDemoProfile && (section === "workflows" || section === "approvals" || section === "policies" || section === "outputs" || section === "reconciliation")) return <SavedWorkspace section={section} />;
+  if (process.env.LOOPLABS_DEPLOYMENT_PROFILE === scriptDemoProfile && (section === "workflows" || section === "approvals" || section === "policies" || section === "outputs" || section === "reconciliation")) return <SavedWorkspace section={section} awsConnections={process.env.LOOPLABS_AWS_CONNECTIONS === "enabled"} />;
   const { inspect } = await searchParams;
   return (
     <ControlScreen section={section as Section} initialInspect={inspect} />

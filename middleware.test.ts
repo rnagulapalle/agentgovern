@@ -22,3 +22,10 @@ describe('Next15 protected-route interception', () => {
     vi.stubEnv('LOOPLABS_DEPLOYMENT_PROFILE','');expect(middleware(new NextRequest('https://looplabs.run/api/workspace/session')).status).toBe(403);
   });
 });
+
+it('AWS installation flag is server-only, exact and preserves downstream authorization', () => {
+ vi.stubEnv('LOOPLABS_DEPLOYMENT_PROFILE','isolated-control-demo-1');
+ for (const flag of [undefined, '', 'true', 'ENABLED']) { vi.stubEnv('LOOPLABS_AWS_CONNECTIONS',flag); expect(middleware(new NextRequest('https://looplabs.run/api/workspace/discovery?enabled=true',{method:'POST',headers:{'x-aws-connections':'enabled'}})).status).toBe(403); }
+ vi.stubEnv('LOOPLABS_AWS_CONNECTIONS','enabled'); expect(middleware(new NextRequest('https://looplabs.run/api/workspace/discovery',{method:'POST'})).headers.get('x-middleware-next')).toBe('1');
+ expect(middleware(new NextRequest('https://looplabs.run/api/workspace/discovery/activity',{method:'GET'})).status).toBe(403);
+});
