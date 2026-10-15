@@ -52,3 +52,24 @@ it("composes exact-version collection and preserves explicit unknown coverage", 
   const result = await collectAwsRuntimeInventory(awsCliInventoryApi(config()), { tenantId: "tenant", connectionId: "connection", accountId: "123456789012", region: "us-west-2" }, new Date(time).toISOString());
   expect(result.completeness).toBe("complete-api-traversal"); expect(result.records[0].coverage.enforcement).toBe("unverified"); expect(result.records[0].gaps).toEqual(["effective-permissions-unknown", "declared-tools-unknown"]);
 });
+
+it("observation transport only signs bounded CloudWatch reads with isolated credentials", async () => {
+  const { awsCliInvocationApi } = await import("./cloud-aws-cli");
+  execute.mockImplementation((_p, _a, _o, cb) => cb(null, '{"events":[],"nextToken":null}'));
+  const input = { logGroupName: `/aws/bedrock-agentcore/runtimes/${id}-DEFAULT`, startTime: 1000, endTime: 2000, limit: 100, nextToken: "opaque+/=" };
+  await awsCliInvocationApi(config()).listEvents(input);
+  const [, args, options] = execute.mock.calls[0];
+  expect(args.slice(0, 2)).toEqual(["logs", "filter-log-events"]);
+  expect(JSON.parse(args[args.indexOf("--cli-input-json") + 1])).toEqual(input);
+  expect(options.env.AWS_CONFIG_FILE).toBe("/dev/null");
+  expect(args).not.toContain("--endpoint-url"); expect(args).not.toContain("--no-sign-request");
+  expect(args.at(-1)).toBe("{events:events[].{eventId:eventId,timestamp:timestamp,message:message},nextToken:nextToken}");
+});
+it("observation transport refuses arbitrary log groups, commands, windows and cursors before credentials", async () => {
+  const { awsCliInvocationApi } = await import("./cloud-aws-cli");
+  const cfg = config(), api = awsCliInvocationApi(cfg);
+  const input = { logGroupName: `/aws/bedrock-agentcore/runtimes/${id}-DEFAULT`, startTime: 1000, endTime: 2000, limit: 100 };
+  for (const bad of [null, { ...input, logGroupName: "/aws/other" }, { ...input, limit: 1000 }, { ...input, endTime: 10000000 }, { ...input, startTime: -1 }, { ...input, command: "put-log-events" }, { ...input, nextToken: "bad cursor" }])
+    await expect(api.listEvents(bad as never)).rejects.toThrow("Invalid bounded observation");
+  expect(cfg.session).not.toHaveBeenCalled(); expect(execute).not.toHaveBeenCalled();
+});

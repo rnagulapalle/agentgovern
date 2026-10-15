@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 const child = vi.hoisted(() => ({ calls: 0 }));
 vi.mock("node:child_process", async original => ({ ...await original<object>(), execFile: (_path: string, _args: unknown, _options: unknown, callback: (error: null, out: string) => void) => { child.calls++; callback(null, JSON.stringify({ Account: "123456789012" })); } }));
-import { cloudDiscoveryBinding } from "./cloud-binding";
+import { cloudDiscoveryBinding, cloudObservationBinding } from "./cloud-binding";
 const scope = { tenantId: "company-a", connectionId: "aws-a", accountId: "123456789012", region: "us-west-2" };
 const now = Date.now();
 const value = () => ({ scope: { ...scope }, executable: "/usr/bin/false", session: { accessKeyId: `ASIA${"A".repeat(16)}`, secretAccessKey: "b".repeat(40), sessionToken: "c".repeat(40), expiresAt: new Date(now + 600000).toISOString() } });
@@ -37,5 +37,23 @@ it("scope or executable changes and credential expiry after binding creation sto
     await writeFile(path, JSON.stringify(value())); const api = await cloudDiscoveryBinding(scope, path, () => now);
     await writeFile(path, JSON.stringify(changed)); await expect(api.callerIdentity()).rejects.toThrow("credentials unavailable");
   }
+  expect(child.calls).toBe(0);
+}));
+
+it("observation reuses private scoped session binding and refuses scope drift before a log read", async () => fixture(async path => {
+  const api = await cloudObservationBinding(scope, path, () => now);
+  expect(child.calls).toBe(0);
+  expect(await api.callerIdentity()).toEqual({ Account: scope.accountId });
+  const changed = value(); changed.scope.connectionId = "foreign";
+  await writeFile(path, JSON.stringify(changed));
+  await expect(api.listEvents({ logGroupName: "/aws/bedrock-agentcore/runtimes/pilot-DEFAULT", startTime: 1, endTime: 2, limit: 100 })).rejects.toThrow("credentials unavailable");
+  expect(child.calls).toBe(1);
+}));
+it("observation refuses broad-readable bindings and untrusted executable without cloud access", async () => fixture(async path => {
+  await chmod(path, 0o644);
+  await expect(cloudObservationBinding(scope, path, () => now)).rejects.toThrow("access is unavailable");
+  await chmod(path, 0o600);
+  await writeFile(path, JSON.stringify({ ...value(), executable: "ambient-aws" }));
+  await expect(cloudObservationBinding(scope, path, () => now)).rejects.toThrow("transport is unavailable");
   expect(child.calls).toBe(0);
 }));

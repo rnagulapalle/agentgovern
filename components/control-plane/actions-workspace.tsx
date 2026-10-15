@@ -17,7 +17,7 @@ export function ActionsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean 
     <>
       <div className="workspace-workflow-select">
         <label>
-          Workflow
+          Action type
           <select
             value={selectedWorkflow}
             onChange={(e) => setWorkflow(e.target.value)}
@@ -29,8 +29,7 @@ export function ActionsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean 
           </select>
         </label>
         <p>
-          One workspace. Each workflow keeps its own permissions, approval rules
-          and saved history.
+          Choose the operation to review. Each action type has its own permissions, approval rules and saved history.
         </p>
       </div>
       {selectedWorkflow === "crm" || selectedWorkflow === "email" ? (

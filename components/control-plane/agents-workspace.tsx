@@ -48,9 +48,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
       <section className="cp-panel cp-durable-card">
         <h2>Onboard an agent</h2>
         <p>
-          Choose one supported connector. Rules and action limits apply on the
-          server. CRM and customer-message actions always require named
-          approval. {!scriptDemo && "The prepared refund agent has its own payment boundary."}
+          Choose the system this agent may act on. Its allowed action and request allowance are saved on the server. Customer-record changes and messages require independent approval. {!scriptDemo && "The prepared refund agent has its own payment boundary."}
         </p>
         <form
           className="cp-durable-form"
@@ -124,7 +122,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
             </select>
           </label>
           <label>
-            Role
+            Agent type (assigned)
             <input
               value={
                 connector === "discount_record"
@@ -137,7 +135,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
             />
           </label>
           <label>
-            Connector
+            Allowed system
             <select
               value={connector}
               onChange={(e) => setConnector(e.target.value)}
@@ -148,7 +146,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
             </select>
           </label>
           <label>
-            Lifetime requests
+            Lifetime request allowance
             <input
               type="number"
               name="actionLimit"
@@ -201,10 +199,10 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
             <dl>
               <div>
                 <dt>Owner</dt>
-                <dd>{a.owner || "Workspace owner"}</dd>
+                <dd>{a.owner || "Owner not supplied"}</dd>
               </div>
               <div>
-                <dt>Role</dt>
+                <dt>Agent type</dt>
                 <dd>{agentPresentation(a.tools).role}</dd>
               </div>
               <div>
@@ -220,7 +218,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
                 <dd>
                   {a.tools.includes("stripe.refund")
                     ? "Amount and budget rules on the Refunds workflow"
-                    : `${a.reserved} / ${a.action_limit} lifetime requests`}
+                    : `${a.reserved} of ${a.action_limit} lifetime requests used`}
                 </dd>
               </div>
             </dl>

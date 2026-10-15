@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { DiscountHistory } from "./discount-history";
+import { DiscountApprovalBrief } from "./discount-approval-brief";
 import { PageTitle, PanelHead, Status } from "./ui";
 import type {
   DurableAction,
@@ -18,7 +19,9 @@ const labels: Record<string, string> = {
   uncertain: "Outcome uncertain",
   conflict: "Manual review",
   recovered: "State restored",
-  cancelled: "Permission changed",
+  blocked: "Blocked",
+  rejected: "Rejected",
+  cancelled: "Cancelled",
 };
 export function DurableWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
@@ -94,7 +97,7 @@ export function DurableWorkspace({ scriptDemo = false }: { scriptDemo?: boolean 
   return (
     <div className="cp-durable">
       <PageTitle
-        eyebrow="DISCOUNT WORKFLOW"
+        eyebrow="ACTION REQUESTS"
         title="Discount changes"
         description="Review what agents want to change, approve exceptions, and resolve uncertain outcomes. Your actions and decisions stay saved across sessions."
         action={
@@ -331,12 +334,13 @@ export function DurableWorkspace({ scriptDemo = false }: { scriptDemo?: boolean 
                         <dd>{a.approval_until ? new Date(a.approval_until).toLocaleString() : "Not applicable"}</dd>
                       </div>
                       <div>
-                        <dt>Recorded effects</dt>
+                        <dt>Recorded changes</dt>
                         <dd>{snapshot.effects.filter(e => e.action_id === a.id).length}</dd>
                       </div>
                     </dl>
+                    {a.state === "held" && <DiscountApprovalBrief action={a} snapshot={snapshot} />}
                     <details>
-                      <summary>Review action details</summary>
+                      <summary>Technical request reference</summary>
                       <p>
                         Discount: {a.discount}%. Expected record version:{" "}
                         {a.expected_version}.
@@ -377,7 +381,7 @@ export function DurableWorkspace({ scriptDemo = false }: { scriptDemo?: boolean 
                             disabled={busy}
                             onClick={() => operation(a, "execute", true)}
                           >
-                            Execute · lose response
+                            Execute with simulated lost response
                           </button>
                         </>
                       )}
