@@ -59,7 +59,7 @@ export async function verifyFixtureInventory(root,manifest){
 export async function restoreProviderGitStructure(repository,commit){
  assert(/^[a-f0-9]{40}$/.test(commit));
  await mkdir(join(repository,'.git/refs'),{recursive:true});
- assert.equal(execFileSync('git',['-C',repository,'cat-file','-t',commit],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim(),'commit');
+ assert.equal(execFileSync('git',['-C',repository,'cat-file','-t',commit],{env:{PATH:process.env.PATH,HOME:process.env.HOME},encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim(),'commit');
 }
 export async function prepareQualityFixtures(archiveArg,outputArg,appArg=process.cwd()){
  const app=await realpath(appArg),archive=await realpath(archiveArg),output=resolve(outputArg);

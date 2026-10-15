@@ -11,14 +11,19 @@ test('fixture byte changes, extras and missing files cannot become authenticated
 
 test('file-only fixture restoration recreates required empty Git refs without inventing objects',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'ll-quality-git-'));
- const git=args=>execFileSync('git',['-C',dir,...args],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
+ const git=args=>execFileSync('git',['-C',dir,...args],{env:{PATH:process.env.PATH,HOME:process.env.HOME},encoding:'utf8',stdio:['ignore','pipe','pipe']});
  try{
   git(['init']);await writeFile(join(dir,'source.txt'),'reviewed source');git(['add','source.txt']);
   git(['-c','user.name=Fixture test','-c','user.email=fixture@example.invalid','commit','-m','fixture']);
   const commit=git(['rev-parse','HEAD']).trim();await writeFile(join(dir,'.git/HEAD'),commit+'\n');
   await rm(join(dir,'.git/refs'),{recursive:true});
   expect(()=>git(['ls-tree',commit])).toThrow();
-  await restoreProviderGitStructure(dir,commit);
+  const oldDir=process.env.GIT_DIR,oldTree=process.env.GIT_WORK_TREE;
+  process.env.GIT_DIR=join(dir,'unrelated.git');process.env.GIT_WORK_TREE=join(dir,'unrelated-worktree');
+  try{await restoreProviderGitStructure(dir,commit);}finally{
+   if(oldDir===undefined)delete process.env.GIT_DIR;else process.env.GIT_DIR=oldDir;
+   if(oldTree===undefined)delete process.env.GIT_WORK_TREE;else process.env.GIT_WORK_TREE=oldTree;
+  }
   expect(git(['ls-tree','--name-only',commit]).trim()).toBe('source.txt');
   await expect(restoreProviderGitStructure(dir,'0'.repeat(40))).rejects.toThrow();
   await expect(restoreProviderGitStructure(dir,'not-a-commit')).rejects.toThrow();
