@@ -56,6 +56,13 @@ const LABELS: Record<string, string> = {
   planned: "Ready to restore",
   resolved: "Reconciled",
   conflict: "Manual review",
+  held: "Needs approval",
+  ready: "Ready to execute",
+  executing: "Applying change",
+  succeeded: "Change confirmed",
+  uncertain: "Outcome uncertain",
+  cancelled: "Cancelled",
+  recovered: "Previous value restored",
 };
 export function Status({ value, label }: { value: string; label?: string }) {
   return (

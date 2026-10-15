@@ -30,6 +30,7 @@
       "components/control-plane/agents-workspace.tsx",
       "components/control-plane/connector-actions-workspace.tsx",
       "components/control-plane/connectors-workspace.tsx",
+      "components/control-plane/discount-approval-brief.tsx",
       "components/control-plane/discount-history.tsx",
       "components/control-plane/durable-workspace.tsx",
       "components/control-plane/enquiry-execution.tsx",
@@ -136,6 +137,8 @@
       "lib/workspace/cloud-google-binding.ts",
       "lib/workspace/cloud-google-http.ts",
       "lib/workspace/cloud-inventory.ts",
+      "lib/workspace/cloud-invocation-observation.ts",
+      "lib/workspace/cloud-invocation-reader.ts",
       "lib/workspace/cloud-operations.ts",
       "lib/workspace/cloud-owner-review.ts",
       "lib/workspace/cloud-private-binding.ts",
@@ -773,6 +776,8 @@
       "lib/workspace/cloud-google-http.ts",
       "lib/workspace/cloud-inventory-schema.sql",
       "lib/workspace/cloud-inventory.ts",
+      "lib/workspace/cloud-invocation-observation.ts",
+      "lib/workspace/cloud-invocation-reader.ts",
       "lib/workspace/cloud-operations.ts",
       "lib/workspace/cloud-owner-review-schema.sql",
       "lib/workspace/cloud-owner-review.ts",
@@ -1015,6 +1020,8 @@
       "lib/workspace/cloud-google-binding.ts",
       "lib/workspace/cloud-google-http.ts",
       "lib/workspace/cloud-inventory.ts",
+      "lib/workspace/cloud-invocation-observation.ts",
+      "lib/workspace/cloud-invocation-reader.ts",
       "lib/workspace/cloud-operations.ts",
       "lib/workspace/cloud-owner-review.ts",
       "lib/workspace/cloud-private-binding.ts",
@@ -2698,6 +2705,14 @@
     },
     {
       "from": "components/control-plane/durable-workspace.tsx",
+      "to": "components/control-plane/discount-approval-brief.tsx"
+    },
+    {
+      "from": "components/control-plane/discount-approval-brief.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/durable-workspace.tsx",
       "to": "components/control-plane/ui.tsx"
     },
     {
@@ -3238,6 +3253,26 @@
     },
     {
       "from": "lib/workspace/cloud-aws-cli.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-aws-cli.ts",
+      "to": "lib/workspace/cloud-invocation-reader.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-reader.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-reader.ts",
+      "to": "lib/workspace/cloud-invocation-observation.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-observation.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-observation.ts",
       "to": "lib/workspace/cloud-discovery.ts"
     },
     {
@@ -10213,6 +10248,26 @@
       "to": "lib/workspace/cloud-discovery.ts"
     },
     {
+      "from": "lib/workspace/cloud-aws-cli.ts",
+      "to": "lib/workspace/cloud-invocation-reader.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-reader.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-reader.ts",
+      "to": "lib/workspace/cloud-invocation-observation.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-observation.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-observation.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
       "from": "lib/workspace/cloud-binding.ts",
       "to": "lib/workspace/cloud-discovery.ts"
     },
@@ -14737,6 +14792,26 @@
       "to": "lib/workspace/cloud-discovery.ts"
     },
     {
+      "from": "lib/workspace/cloud-aws-cli.ts",
+      "to": "lib/workspace/cloud-invocation-reader.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-reader.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-reader.ts",
+      "to": "lib/workspace/cloud-invocation-observation.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-observation.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-invocation-observation.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
       "from": "lib/workspace/cloud-binding.ts",
       "to": "lib/workspace/cloud-discovery.ts"
     },
@@ -16648,31 +16723,32 @@
     "app/sales.css": "688fb553b999966168eea82cdba0564e052bada3b9240c74c696210b5109bec6",
     "components/brand/loop-mark.tsx": "a520ee6e522a488f2e081d217f219099f48e3eca4cf5c67104eacea7616bdf79",
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
-    "components/control-plane/actions-workspace.tsx": "fdd3c639f05589253f1fb9da1d801f0d7234ca7352225dcb050ac816a0cc260a",
-    "components/control-plane/agents-workspace.tsx": "f7b5092740215451a7853750cf388a3cab597555e4775842ac1ec8c7aa9a2fe6",
+    "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
+    "components/control-plane/agents-workspace.tsx": "57272432e9ab8757a71b1bce43f9489df06c3661d0fbba13b9a1a0260dead7d2",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
-    "components/control-plane/connector-actions-workspace.tsx": "25cac7d96c3f52db9096d8721436962968c4997e97940d0b715e8f16f0f5f367",
+    "components/control-plane/connector-actions-workspace.tsx": "67053c52bfdda7c2e49426c514defe9ade582f8613c0fff668d49fc9190d385f",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
-    "components/control-plane/discount-history.tsx": "d83c22e07fffef66679574f941099201f89056ad0ffb34ecebaa9296481de5fb",
+    "components/control-plane/discount-approval-brief.tsx": "8d44b575118d60b1e6a22cbc07e4fa7b9ba03c90eedacc2d2490e5d0b98f1378",
+    "components/control-plane/discount-history.tsx": "c38c42a43b51b8c18d2fb8f8bb77834edc62e523035a4b3cfe8ec65cbf328100",
     "components/control-plane/discovery-workspace.css": "b06512356fb2b357ae56cc88b17e8993a68d9d3f87cea80a82281c1cd16e7b7f",
     "components/control-plane/discovery-workspace.tsx": "2ef8660014b3c8dadbff0edca640e5d074d2d363014eb7385050400c052ed5e9",
-    "components/control-plane/durable-workspace.tsx": "85f5e71c32c20c56ba286d5043cb57702821994236f83c7001e556fdf5178a6f",
+    "components/control-plane/durable-workspace.tsx": "8b28f5f6696bd3832817ddf09fc1c9535aef671d329e4f472a7e04f0c635e50a",
     "components/control-plane/enquiry-execution.tsx": "127a84fdf2915f275194d8b9096f76318d59fe9446884703da4f1bb193982496",
-    "components/control-plane/enquiry-progress.tsx": "df957b6f3c11e7c40f560930063118742422f525c6004ec74ac6ca24337c3bb4",
+    "components/control-plane/enquiry-progress.tsx": "d75ce63d60927b6c4f8f8807a642936e427040e4de0b65d3195ee1b7d76d6b36",
     "components/control-plane/enquiry-workspace.tsx": "fc4c0434be27e3dbdb2620eca709cb0dd87994d7d07fd2d56cfe2e4945a175a0",
     "components/control-plane/project-discovery-workspace.tsx": "687f021a0b6ecaa5ae1aded40c30ed8875c81b6875c9fea1997014d4d5699854",
     "components/control-plane/provider.tsx": "dd9c3ae5b8fcc20a01117f4b293282a42fd7d89d9d93a40f306381d9934d64da",
     "components/control-plane/quote-workflow-view.tsx": "835149a7c08bd9d42826edc7428b76a09c768dbdb526565f531635210e7913af",
-    "components/control-plane/quote-workspace.tsx": "a229212cab401d06c7e4020ca6684d64e4ba89e088ddfe2a8486863069f3af5b",
+    "components/control-plane/quote-workspace.tsx": "4753eec41270b2bb97233e0b8b08bcaaff197881befa83f344d16d968b3a0e23",
     "components/control-plane/refund-workspace.tsx": "3d751741e99cc54d5dd4aae5439be98b82cd1abf7f546d37ac018d8d48797449",
     "components/control-plane/request-planner.tsx": "659a3778dc1e542c264f7814ef655b72eac3542f3a4d34dde8fe440f5e8e32e8",
     "components/control-plane/saved-history-workspace.tsx": "c27650a0a1ef0b17b57c54cd2fa1cfed4a407f9e39d773b97ec4ffe26e4cf7ec",
     "components/control-plane/saved-workspace.css": "ca602c6a14675c99fba6c008115057435f14713a1b0ee5f5509f548053618652",
-    "components/control-plane/saved-workspace.tsx": "94f1b130d61cd6e924595acbada0359c59ceec471a32891952ec3dc7c350d3b9",
+    "components/control-plane/saved-workspace.tsx": "99b4568c809207973534f998a379e86201a3df579bdc85d9551371728a5b4bd0",
     "components/control-plane/screens.tsx": "8012e435d8a2ac823ade4c2e51fefd1891f167c1bb0efcbf6f4be8dd05cdcc1a",
-    "components/control-plane/shell.tsx": "3e37c63309a8b137a3d058c9410b8f714d51233a47def39420467174f54b592e",
-    "components/control-plane/ui.tsx": "cdf670619bf6e5d6dec5e828ebc3e2e4039a056089ecb8add523dea0e88065db",
-    "components/control-plane/workflow-workspace.tsx": "44f4bb671e04898089138bca9c9e03c33915e26e20f2e31b3d29aafde4c2548e",
+    "components/control-plane/shell.tsx": "a25735a042aa1f8e9c2f7ff992426a3a75a38824c6895145ca5136ba4f66cfb2",
+    "components/control-plane/ui.tsx": "11f6b237acaf2ed53cb0daa94cca2459774494e78d2ade6cd0155a7911958ee2",
+    "components/control-plane/workflow-workspace.tsx": "98922abdd9abaf7b4659ac0897ad3256d584195b643af76f2e8a9de757a4bc91",
     "components/control-plane/workspace-gate.tsx": "a29c737a46790dc6d1b6bf13eb95fc3aac9ba8bf2910e2951b891641327b5466",
     "components/control-plane/workspace-overview.tsx": "a15f1c75b912dddef7a41e1d97d8887a0421a0d32ca13e23f11f50fec82a413e",
     "components/marketing/chrome.tsx": "515e22fb0e36006fe345cf0c458c2f7bbcd0e8a419827c5041708d4bb7e0c613",
@@ -16784,16 +16860,18 @@
     "lib/workflows/service.ts": "fc27db88a101a5874b6560e3e4088c6f1dce73b9b8b0a609844eb9dc3c1491e6",
     "lib/workspace/agents.ts": "a7dc16a213f2699679593dc11a2e8aead7533d4832df6180372a9133ea810fe2",
     "lib/workspace/auth.ts": "c76a1d2373604da598bb9195e16a001a4e09fccd8e5d7adc8f7b8c04a0d00604",
-    "lib/workspace/cloud-aws-cli.ts": "57f3b5875bf4d9fb0178005c45cb60d2fc588a4d3b5036fef6d29969b314e24e",
+    "lib/workspace/cloud-aws-cli.ts": "2d4876bb25ae570a925f5e68c89b98e9995b5b3160b560fcd9eceebe06c86534",
     "lib/workspace/cloud-azure-binding.ts": "9147b0bc4dac0570e0a3b4d076788b1ab35cd05705fd2a90eceeb56127ef19b5",
     "lib/workspace/cloud-azure-cli.ts": "9691d88982dfc4a0471138789a21fe97f09c9e5d0bd6dd4fafe15763ae88b366",
     "lib/workspace/cloud-azure-http.ts": "4aee186eb7170a459c0d8eb1db07b5e7fcd85059aa5ff61f7338095a450c8294",
-    "lib/workspace/cloud-binding.ts": "6cfef79540a32621621c31695cd2a2c3e128aa9acb2154bbb0b03bfdecda434d",
+    "lib/workspace/cloud-binding.ts": "775b15730dd05b340d6afde5c60e60c6ec2c81544aa7d6cb642ddbfa1732a800",
     "lib/workspace/cloud-discovery.ts": "127ac2be9b9df0800718b31cb1231ca0155ca59f4e1f967a0a56fddaffe116cb",
     "lib/workspace/cloud-google-binding.ts": "0dab7008942f8bec744bbfe90a32dff28173e182f5dfc9e1695d26471b81e33a",
     "lib/workspace/cloud-google-http.ts": "ddee4cb1d4dd4730f4ca6a07bc945e3383574013b521866b7fa7a9ca7523dc63",
     "lib/workspace/cloud-inventory-schema.sql": "aceb85a2cf7bf8f4c8d29a110904233267847ce64d7f26eca9f5ce210730dd49",
     "lib/workspace/cloud-inventory.ts": "e3515267dbdc81e74eb6834250370a4fb550f666ce60f18f8fef6675df4197d0",
+    "lib/workspace/cloud-invocation-observation.ts": "3b1eab4b85d5ec1c8a0733048fdf1b574cb789909b4ebb2fa1a8fadd3b373d20",
+    "lib/workspace/cloud-invocation-reader.ts": "52d4217bea73142317fd185f557d1e8807e6ee96807287df27b6770d43067f49",
     "lib/workspace/cloud-operations.ts": "656b4751764f5ddda98db8bf70d90277d815f298e59b0326f2d49432569eed61",
     "lib/workspace/cloud-owner-review-schema.sql": "336f33a43ba22b5b6e9bb5f93e75bd5101267328184821fb76c6df93371c05c6",
     "lib/workspace/cloud-owner-review.ts": "3849c978ec47f30d110d6ba0c8b0eec3121e39c98bc086a874a56006613c8697",

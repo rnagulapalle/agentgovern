@@ -11,7 +11,7 @@ it("primary activity shows independent review and exact business change; private
  expect(primary).toContain("Set the sample contact lifecycle to customer");expect(primary).toContain("Waiting for an independent reviewer");expect(primary).not.toContain("private-agent");expect(primary).not.toContain("Detailed policy reason");expect(html).toContain("Stable action: private-crm-action");expect(html).not.toContain('<details open');expect(html).toContain('<button disabled="">Approve exact action</button>');
 });
 it("exact stored customer message remains reviewable once with technical payload closed",()=>{
- const html=render(message);expect(html).toContain("Exact customer message · customer@example.test");expect(html).toContain("Reviewed subject");expect(html).toContain("Reviewed content, not a current template.");expect(html).toContain("Exact proposed connector request");expect(html).not.toContain('<details open');
+ const html=render(message);expect(html).toContain("Exact customer message · customer@example.test");expect(html).toContain("Reviewed subject");expect(html).toContain("Reviewed content, not a current template.");expect(html).toContain("Technical details: exact system request");expect(html).not.toContain('<details open');
  const before=html.slice(0,html.indexOf('<details>'));expect(before).not.toContain("Reviewed content");expect(before).not.toContain("<pre");
 });
 it("missing or malformed saved message is unavailable rather than replaced by a template",()=>{
@@ -34,8 +34,8 @@ it("an unsupported completion label is explicitly review-needed, never a verifie
 
 import {WorkflowWorkspace} from "./workflow-workspace";
 it("embedded Activity omits repeated prepared-workflow introduction while standalone workflow setup retains its validation boundary",()=>{
- const embedded=renderToStaticMarkup(createElement(WorkflowWorkspace,{embeddedRunId:"saved-run"}));expect(embedded).not.toContain("Prepared CRM and messaging workflow.");expect(embedded).not.toContain("Submit prepared action");
- const standalone=renderToStaticMarkup(createElement(WorkflowWorkspace));expect(standalone).toContain("Prepared CRM and messaging workflow.");expect(standalone).toContain("no real CRM or email is connected");
+ const embedded=renderToStaticMarkup(createElement(WorkflowWorkspace,{embeddedRunId:"saved-run"}));expect(embedded).not.toContain("Sample customer-record and message workflow.");expect(embedded).not.toContain("Submit for approval");
+ const standalone=renderToStaticMarkup(createElement(WorkflowWorkspace));expect(standalone).toContain("Sample customer-record and message workflow.");expect(standalone).toContain("no real customer record changes or email is delivered");
 });
 
 it("customer handoff navigation points quote owners to the dedicated quote workspace",()=>{

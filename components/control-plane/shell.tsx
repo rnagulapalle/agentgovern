@@ -121,14 +121,14 @@ export function ControlShell({
   const savedNavigation = [{ name: "CONTROL WORKSPACE", items: [
     { key: "overview", label: "Overview", icon: LayoutGrid },
     { key: "workflows", label: "Workflows", icon: GitBranch },
-    { key: "workflow-runs", label: "Runs", icon: Activity },
+    { key: "workflow-runs", label: "Workflow runs", icon: Activity },
     { key: "approvals", label: "Approvals", icon: ShieldCheck },
     { key: "agents", label: "Agents", icon: Bot },
     { key: "connectors", label: "Connections", icon: Database },
     { key: "policies", label: "Policies & access", icon: SlidersHorizontal },
     { key: "outputs", label: "Output controls", icon: ShieldCheck },
     { key: "reconciliation", label: "Reconciliation", icon: Undo2 },
-    { key: "history", label: "History", icon: History },
+    { key: "history", label: "Decision history", icon: History },
   ] }];
   const navigation = quoteOnly ? [{ name: "QUOTE WORKSPACE", items: groups[0].items.filter(item => item.key === "quotes") }] : scriptDemo ? savedNavigation : groups;
   const title =
@@ -233,9 +233,9 @@ export function ControlShell({
           <div className="cp-enforcement">
             <div>
               <span className="cp-live-dot" />
-              <strong>{quoteOnly ? "Quote action controls" : scriptDemo ? "Sample action controls" : "Governed by default"}</strong>
+              <strong>{quoteOnly ? "Quote action controls" : scriptDemo ? "Workspace controls" : "Governed by default"}</strong>
             </div>
-            <p>{quoteOnly ? "Independent approval. Verified result." : scriptDemo ? "Named authority. Verified effects." : "Identity. Action. Execution. Output."}</p>
+            <p>{quoteOnly ? "Independent approval. Verified result." : scriptDemo ? "Named owners. Approval rules. Outcome checks." : "Identity. Action. Execution. Output."}</p>
             {!scriptDemo && <div className="cp-enforcement-bars">
               {Array.from({ length: 30 }, (_, i) => (
                 <i key={i} style={{ height: 8 + ((i * 7) % 13) }} />
@@ -408,10 +408,10 @@ export function ControlShell({
               ["03", "Verify the quote first", "Check the observed quote result. The customer confirmation stays held until the quote is verified and separately approved."],
               ["04", "Review the saved result", "Check the full result and reopen the saved request. Confirmation acceptance is simulated; it is not customer delivery."],
             ] : scriptDemo ? [
-              ["01", "Onboard an agent", "Choose a named owner, one allowed connector and a request allowance. Keep its one-time key private."],
-              ["02", "Apply discount rules", "An allowed request can execute. An exception needs another member’s approval. A request above the hard limit is blocked."],
-              ["03", "Verify uncertain outcomes", "Use the sample lost-response control, then verify the saved effect before any retry."],
-              ["04", "Follow a customer handoff", "CRM verification gates the customer message. Review saved discount history and contain the discount connector without stopping unrelated agents."],
+              ["01", "Define the agent’s scope", "An agent is an identified worker. A connection is the system it may use. Assign an owner, one supported action and a lifetime request allowance. Keep its key private."],
+              ["02", "Review the action", "An action is one exact proposed change. Policy allows it, requires independent approval, or blocks it. Approval does not execute the action."],
+              ["03", "Follow workflow execution", "A workflow links actions in order. Each action must meet its rules before execution. Dependent steps wait for verified results."],
+              ["04", "Reconcile uncertain outcomes", "Reconciliation checks whether a change happened. Verify the saved result before trying again. Containment stops new work; it does not undo a change already accepted."],
             ] : durable
               ? [
                   [

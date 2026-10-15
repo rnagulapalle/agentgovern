@@ -14,7 +14,7 @@ export function DiscountHistory({ snapshot }: { snapshot: Snapshot }) {
       }}>Export history</button>} />
     <p>{report.counts.actions} recent actions · {report.counts.events} recent events · {report.counts.effects} recorded effects for these actions.</p>
     <ol className="cp-durable-events">{report.events.slice(0, expanded ? 200 : 10).map(e => <li key={e.id}>
-      <strong>{e.kind.replaceAll('_', ' ')}</strong>
+      <strong>{({ held: 'Approval requested', ready: 'Ready to execute', approved: 'Approved', rejected: 'Rejected', blocked: 'Blocked', executing: 'Execution started', effect_recorded: 'Change recorded', succeeded: 'Change confirmed', uncertain: 'Outcome uncertain', cancelled: 'Cancelled', recovered: 'Previous value restored', conflict: 'Manual review required' } as Record<string, string>)[e.kind] || e.kind.replaceAll('_', ' ')}</strong>
       <span>{e.actor} · {new Date(e.at).toLocaleString()}</span>
       <span className="cp-durable-id">{e.actionId || 'Workspace control'}</span>
     </li>)}</ol>

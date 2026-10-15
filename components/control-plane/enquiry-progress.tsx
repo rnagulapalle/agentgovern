@@ -45,7 +45,7 @@ export function EnquiryProgress({ id,planHash,recordScoped=false }: { id: string
     <VerificationEvidence run={run} />
     {scoped && planHash && presentation.incomplete && member===run.created_by && run.state==="active" && <button className="cp-button" disabled={busy} onClick={async()=>{setBusy(true);setError("");try{await api("/api/workspace/enquiries",{operation:"resume",id,planHash});await load();}catch(e){setError(e instanceof Error?e.message:"Submission could not be confirmed. Reopen saved work before retrying.");}finally{setBusy(false);}}}>Confirm saved submission</button>}
     {run.state === "active" && <button className="cp-button" disabled={busy} onClick={async () => { setBusy(true); try { await api("/api/durable/workflows", { operation: "pause", runId: id }); await load(); } catch (e) { setError(e instanceof Error ? e.message : "Pause could not be confirmed."); } finally { setBusy(false); } }}><CirclePause size={18} aria-hidden="true" /> Pause work</button>}
-    {run.state === "active" && <p>Pause stops new dispatches. An action already sent may still take effect. A paused or changed plan requires new reviewed work.</p>}
+    {run.state === "active" && <p>Pause stops new execution attempts. An action already sent may still take effect. A paused or changed plan requires new reviewed work.</p>}
   </section>;
 }
 

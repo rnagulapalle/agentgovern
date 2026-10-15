@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import type { AwsRuntimeInventoryApi } from "./cloud-discovery";
+import type { AwsInvocationLogsApi } from "./cloud-invocation-reader";
 
 export interface DiscoverySession {
   accessKeyId: string;
@@ -21,12 +22,13 @@ export function discoverySession(value: unknown, now = Date.now()): DiscoverySes
 }
 // An administrator-owned AWS CLI v2 signs requests. Never accept a client-supplied
 // executable, endpoint, profile or command. This bridge does not acquire authority.
-export function awsCliInventoryApi(options: {
+export interface AwsReadOptions {
   executable: string;
   region: string;
   session: () => Promise<DiscoverySession>;
   now?: () => number;
-}): AwsRuntimeInventoryApi {
+}
+function signedRead(options: AwsReadOptions) {
   const { executable, region, session } = options, now = options.now ?? Date.now;
   if (!/^\/[a-zA-Z0-9_./-]{1,512}$/.test(executable) || executable.split("/").includes("..")
     || !/^[a-z]{2}-[a-z]+-[1-9]$/.test(region) || typeof session !== "function")
@@ -55,6 +57,10 @@ export function awsCliInventoryApi(options: {
       });
     });
   }
+  return read;
+}
+export function awsCliInventoryApi(options: AwsReadOptions): AwsRuntimeInventoryApi {
+  const read = signedRead(options);
   return {
     callerIdentity: () => read("sts", "get-caller-identity", {}, "{Account:Account}"),
     listRuntimes: input => {
@@ -72,6 +78,24 @@ export function awsCliInventoryApi(options: {
         return Promise.reject(new Error("Invalid discovery runtime request"));
       return read("bedrock-agentcore-control", "get-agent-runtime", { ...input },
         "{agentRuntimeId:agentRuntimeId,agentRuntimeArn:agentRuntimeArn,agentRuntimeVersion:agentRuntimeVersion,roleArn:roleArn,workloadIdentityDetails:{workloadIdentityArn:workloadIdentityDetails.workloadIdentityArn}}");
+    },
+  };
+}
+
+// Same isolated signing transport; no public arbitrary-command API is exposed.
+export function awsCliInvocationApi(options: AwsReadOptions): AwsInvocationLogsApi {
+  const read = signedRead(options);
+  return {
+    callerIdentity: () => read("sts", "get-caller-identity", {}, "{Account:Account}"),
+    listEvents: input => {
+      if (!input || Object.keys(input).some(k => !["logGroupName", "startTime", "endTime", "limit", "nextToken"].includes(k))
+        || typeof input.logGroupName !== "string" || !/^\/aws\/bedrock-agentcore\/runtimes\/[A-Za-z0-9_-]{1,220}$/.test(input.logGroupName)
+        || !Number.isSafeInteger(input.startTime) || input.startTime < 0 || !Number.isSafeInteger(input.endTime)
+        || input.endTime <= input.startTime || input.endTime - input.startTime > 900_000
+        || input.limit !== 100
+        || (input.nextToken !== undefined && (typeof input.nextToken !== "string" || !/^\S{1,2048}$/.test(input.nextToken))))
+        return Promise.reject(Error("Invalid bounded observation request"));
+      return read("logs", "filter-log-events", { ...input }, "{events:events[].{eventId:eventId,timestamp:timestamp,message:message},nextToken:nextToken}");
     },
   };
 }

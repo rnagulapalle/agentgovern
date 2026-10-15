@@ -105,11 +105,9 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
         description={guided ? "Prepare a supported job, choose scoped agents, and follow decisions through approval and verified outcomes." : "Verify a record update before a customer message can execute. Decisions and dependencies survive a refresh."}
       />}
       {!embeddedRunId && <section className="cp-durable-scope">
-        <strong>Prepared CRM and messaging workflow.</strong>
+        <strong>Sample customer-record and message workflow.</strong>
         <p>
-          Two scoped agents submit actions; named people approve them. A final
-          check verifies both outcomes. External systems are private
-          FetchSandbox twins: no real CRM or email is connected. Any chat model interprets the request only; these buttons do not run an autonomous agent.
+          Two registered agents have separate actions. Another named member approves each request, and the final check verifies both results. The CRM and email systems are simulated; no real customer record changes or email is delivered. These controls submit requests on your behalf, rather than running an autonomous agent.
         </p>
       </section>}
       {guided && <RequestPlanner onReview={setReviewed} />}
@@ -121,9 +119,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
       {!embeddedRunId && (!guided || reviewed) && <section className="cp-panel cp-durable-card">
         <h2>Start a customer handoff</h2>
         <p>
-          Choose registered agents. Enrollment restricts them to workflow steps;
-          standalone requests are refused. The message stays held until the
-          record update is verified.
+          Choose an agent for each step. In this workflow, these agents may submit only their assigned actions. The message cannot execute until the customer-record update is verified.
         </p>
         <div className="cp-durable-form">
           <label>
@@ -194,12 +190,12 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
               <div className="cp-durable-buttons">
                 {!s.state && (
                   <button className="cp-button" disabled={busy} onClick={() => action(s, "propose")}>
-                    Submit prepared action
+                    Submit for approval
                   </button>
                 )}
                 {s.state === "held" && (
                   <button className="cp-button" disabled={busy} onClick={() => action(s, "approve")}>
-                    Approve exact action
+                    Approve this action
                   </button>
                 )}
                 {s.state === "ready" && (
@@ -216,7 +212,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
                       disabled={busy}
                       onClick={() => action(s, "execute", true)}
                     >
-                      Execute · lose response
+                      Execute with simulated lost response
                     </button>
                   </>
                 )}
@@ -240,7 +236,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
             Both effects must be confirmed. Uncertainty and conflicting records
             keep the run open.
           </p>
-          <p>Pausing stops new dispatches; an action already sent may still take effect. Paused runs cannot resume in this version.</p>
+          <p>Pausing stops new execution attempts; an action already sent may still take effect. Paused runs cannot resume in this version.</p>
           <button
             disabled={busy || run.state !== "active"}
             className="cp-button"
@@ -254,7 +250,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
               })
             }
           >
-            Verify and complete
+            Verify the full run
           </button>{" "}
           <button
             disabled={busy || run.state !== "active"}
@@ -271,7 +267,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
             Pause workflow
           </button>
           <details>
-            <summary>Connect an external agent</summary>
+            <summary>Technical integration: external agent</summary>
             <p>
               Use its private scoped key with the workflow-agent example. Each
               agent receives only its own step. It can submit and inspect, but
@@ -303,7 +299,7 @@ export function WorkflowStepSummary({ step: s, run, children }: { step: Step; ru
     {s.approved_by && <p>Approved by: {s.approved_by}</p>}
     {s.evidence && <p>Observed effect: {s.evidence.detail}</p>}
     <details><summary>Action and verification details</summary><p>Agent: {s.agent_id}</p><p>Stable action: {s.action_id}</p><p>Saved state: {s.state || "Not submitted"}</p>{s.reason && <p>{s.reason}</p>}{s.evidence?.reference && <p>Provider reference: {s.evidence.reference}</p>}</details>
-    {s.proposedRequest && <details><summary>Exact proposed connector request</summary><p>{s.proposedRequest.method} · {s.proposedRequest.resource}</p><pre>{JSON.stringify(s.proposedRequest.body, null, 2)}</pre><p>This is the approved request description. A proposed request alone is not execution evidence.</p></details>}
+    {s.proposedRequest && <details><summary>Technical details: exact system request</summary><p>{s.proposedRequest.method} · {s.proposedRequest.resource}</p><pre>{JSON.stringify(s.proposedRequest.body, null, 2)}</pre><p>This is the approved request description. A proposed request alone is not execution evidence.</p></details>}
     {children}
   </article>;
 }
