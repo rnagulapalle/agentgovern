@@ -5,7 +5,7 @@ import { awsCliInventoryApi, type DiscoverySession } from "./cloud-aws-cli";
 import { collectAwsRuntimeInventory } from "./cloud-discovery";
 const time = Date.parse("2026-10-09T13:30:00.000Z");
 const session = (): DiscoverySession => ({ accessKeyId: "ASIA" + "A".repeat(16), secretAccessKey: "a".repeat(40), sessionToken: "b".repeat(40), expiresAt: new Date(time + 300_000).toISOString() });
-const config = () => ({ executable: "/usr/local/bin/aws", region: "us-west-2", session: vi.fn(async () => session()), now: () => time });
+const config = () => ({ executable: "/usr/local/bin/aws", region: "us-west-2", accountId: "123456789012", session: vi.fn(async () => session()), now: () => time });
 const id = "service-1234567890", arn = `arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/${id}`;
 beforeEach(() => { execute.mockReset(); });
 it("only exposes signed read commands with exact inputs, stripped outputs and isolated bounded process environment", async () => {
@@ -60,7 +60,8 @@ it("observation transport only signs bounded CloudWatch reads with isolated cred
   await awsCliInvocationApi(config()).listEvents(input);
   const [, args, options] = execute.mock.calls[0];
   expect(args.slice(0, 2)).toEqual(["logs", "filter-log-events"]);
-  expect(JSON.parse(args[args.indexOf("--cli-input-json") + 1])).toEqual(input);
+  const { logGroupName, ...window } = input;
+  expect(JSON.parse(args[args.indexOf("--cli-input-json") + 1])).toEqual({ ...window, logGroupIdentifier: `arn:aws:logs:us-west-2:123456789012:log-group:${logGroupName}` });
   expect(options.env.AWS_CONFIG_FILE).toBe("/dev/null");
   expect(args).not.toContain("--endpoint-url"); expect(args).not.toContain("--no-sign-request");
   expect(args.at(-1)).toBe("{events:events[].{eventId:eventId,timestamp:timestamp,message:message},nextToken:nextToken}");
@@ -72,4 +73,12 @@ it("observation transport refuses arbitrary log groups, commands, windows and cu
   for (const bad of [null, { ...input, logGroupName: "/aws/other" }, { ...input, limit: 1000 }, { ...input, endTime: 10000000 }, { ...input, startTime: -1 }, { ...input, command: "put-log-events" }, { ...input, nextToken: "bad cursor" }])
     await expect(api.listEvents(bad as never)).rejects.toThrow("Invalid bounded observation");
   expect(cfg.session).not.toHaveBeenCalled(); expect(execute).not.toHaveBeenCalled();
+});
+
+it("observation requires a fixed account and cannot accept a browser-chosen log-group ARN", async () => {
+ const { awsCliInvocationApi } = await import("./cloud-aws-cli");
+ for (const accountId of [undefined, "", "bad", "123456789012/other"]) expect(() => awsCliInvocationApi({...config(),accountId})).toThrow("Explicit observation account");
+ const api=awsCliInvocationApi(config());
+ await expect(api.listEvents({logGroupName:"/aws/bedrock-agentcore/runtimes/service-1234567890-DEFAULT",startTime:1,endTime:2,limit:100,logGroupIdentifier:"arn:aws:logs:us-west-2:999999999999:log-group:other"} as never)).rejects.toThrow("Invalid bounded observation");
+ expect(execute).not.toHaveBeenCalled();
 });

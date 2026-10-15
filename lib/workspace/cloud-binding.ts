@@ -18,7 +18,7 @@ async function boundReadOptions(scope: CloudDiscoveryScope, path: string | undef
   }
   const first = await read();
   try {
-    return { executable: first.executable, region: expected.region, now, session: async () => {
+    return { executable: first.executable, region: expected.region, accountId: expected.accountId, now, session: async () => {
       const current = await read();
       if (current.executable !== first.executable) throw new Error("Discovery transport changed");
       return current.session;

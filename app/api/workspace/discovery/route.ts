@@ -7,6 +7,7 @@ import { projectDiscoveryScope } from "../../../../lib/workspace/cloud-project-d
 import { CloudDiscoveryOperations } from "../../../../lib/workspace/cloud-operations";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+const awsOnly = () => process.env.LOOPLABS_DEPLOYMENT_PROFILE === "isolated-control-demo-1";
 const headers = { "Cache-Control": "no-store" };
 const id = /^[a-zA-Z0-9_-]{1,64}$/;
 export async function GET(r: NextRequest) {
@@ -17,6 +18,7 @@ export async function GET(r: NextRequest) {
       throw new ControlError(400, "Choose one saved discovery connection.");
     const connectionId = params.get("connectionId"), store = new CloudInventoryStore(db);
     if (connectionId !== null && !id.test(connectionId)) throw new ControlError(400, "Choose one saved discovery connection.");
+    if (awsOnly() && params.get("kind") === "project") throw new ControlError(403, "Only AWS discovery is enabled in this installation.");
     if (params.get("kind") === "project") return Response.json(connectionId === null ? await new CloudDiscoveryOperations(store).projectConnections(actor) : await store.latestProject(actor, connectionId), { headers });
     return Response.json(connectionId === null ? await new CloudDiscoveryOperations(store).connections(actor) : await store.latest(actor, connectionId), { headers });
   } catch (e) { return failure(e); }
@@ -25,6 +27,7 @@ export async function POST(r: NextRequest) {
   try {
     sameOrigin(r);
     const { db, actor } = await tenantContext().authenticated(credential(r)), value = await body(r);
+    if (awsOnly() && ["configure-project", "scan-project"].includes(value.operation as string)) throw new ControlError(403, "Only AWS discovery is enabled in this installation.");
     if (value.operation === "configure-project") {
       const keys = Object.keys(value).sort().join();
       if (!(value.provider === "azure-foundry" && keys === "connectionId,directoryId,endpoint,operation,provider"

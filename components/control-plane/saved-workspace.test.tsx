@@ -59,7 +59,7 @@ it("unknown action states do not become a successful empty queue",async()=>mount
 
 it('administrator catalog exposes every product area without granting authority or linking blocked cloud and general chat routes',()=>{
  const h=renderToStaticMarkup(<SavedWorkspace section="policies"/>);
- for(const phrase of ['Workspace administrator','same server permissions apply to both named administrators','self-approval','bypass a hard limit','another workspace','unsupported action','Account invitations','cloud IAM administration','billing management','Chat and workflow planning','Cloud discovery and import','General output enforcement','Unavailable in this deployment'])expect(h).toContain(phrase);
+ for(const phrase of ['Workspace administrator','same server permissions apply to both named administrators','self-approval','bypass a hard limit','another workspace','unsupported action','Account invitations','cloud IAM administration','billing management','Chat and workflow planning','Cloud agent connections','General output enforcement','Unavailable in this deployment'])expect(h).toContain(phrase);
  for(const route of ['discovery','work','settings','records','requests'])expect(h).not.toContain('href="/control-plane/'+route+'"');
  expect(h).not.toContain('super-admin');expect(h).not.toContain('type="submit"');
 });
@@ -93,3 +93,15 @@ it.each(['connections','policies'] as const)('loading %s is not reported as unav
    else await page.getByText('Sample discount up to 15%',{exact:true}).waitFor();
  },undefined,deferred);}finally{release();}
 },15000);
+
+it('explicit AWS installation shows a setup link without claiming controlled execution or enabling other clouds', () => {
+ const html=renderToStaticMarkup(<SavedWorkspace section="connections" awsConnections />);
+ expect(html).toContain('href="/control-plane/discovery"');expect(html).toContain('Set up AWS connection');expect(html).toContain('Execution controls require separate verified onboarding');
+ expect((html.match(/>Coming soon</g)||[]).length).toBe(2);
+});
+
+it.each(['overview','policies'] as const)('AWS availability stays consistent in the installed %s view', section => {
+ const html=renderToStaticMarkup(<SavedWorkspace section={section} awsConnections />);
+ expect(html).not.toContain('Cloud discovery and import are not enabled');
+ if(section==='policies') {expect(html).toContain('AWS · assisted setup');expect(html).toContain('verified checkpoint');}
+});

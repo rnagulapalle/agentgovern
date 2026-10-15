@@ -53,6 +53,14 @@ export async function verifyFixtureInventory(root,manifest){
  await visit();assert.deepEqual(found.sort(),Object.keys(inventory.files).sort());
  return inventory;
 }
+// File-only archives omit empty directories. Git requires refs/ even for a
+// detached HEAD; recreate only that empty structure, then verify the pinned
+// commit from the already authenticated objects. Never synthesize source bytes.
+export async function restoreProviderGitStructure(repository,commit){
+ assert(/^[a-f0-9]{40}$/.test(commit));
+ await mkdir(join(repository,'.git/refs'),{recursive:true});
+ assert.equal(execFileSync('git',['-C',repository,'cat-file','-t',commit],{env:{PATH:process.env.PATH,HOME:process.env.HOME},encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim(),'commit');
+}
 export async function prepareQualityFixtures(archiveArg,outputArg,appArg=process.cwd()){
  const app=await realpath(appArg),archive=await realpath(archiveArg),output=resolve(outputArg);
  assert(!output.includes('\n'));await mkdir(output,{mode:0o700});
@@ -62,9 +70,10 @@ export async function prepareQualityFixtures(archiveArg,outputArg,appArg=process
  validateArchiveListing(tar(['-tzf',archive]),tar(['-tvzf',archive]));
  tar(['-xzf',archive,'--no-same-owner','-C',output]);
  const root=join(output,'fixtures');await verifyFixtureInventory(root,manifest);
+ await restoreProviderGitStructure(join(root,'provider'),manifest.providerCommit);
  // These are exact previously measured bytes, never a synthetic stand-in or a
  // newly generated build asserted to match a historical browser receipt.
- const receipt=JSON.parse(await readFile(join(app,'docs/evidence/discovery-installed-browser-v3-20261014-observation-checkpoint-proof.json')));
+ const receipt=JSON.parse(await readFile(join(app,'docs/evidence/discovery-installed-browser-v3-20261015-aws-connection-journey-current-version-proof.json')));
  for(const [path,expected]of Object.entries(receipt.compiledArtifacts)){
   assert(/^\.next\/server\/app\/(?:api\/workspace\/discovery\/(?:owners\/)?route|control-plane\/discovery\/page)\.js$/.test(path));
   const source=join(root,'measured-discovery',path);assert.equal(sha(await readFile(source)),expected);

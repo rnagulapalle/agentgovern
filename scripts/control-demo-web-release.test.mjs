@@ -55,3 +55,15 @@ describe('bounded existing-installation control demo release',()=>{
   expect(source).toContain("compose(overrideFile,'up','-d','--no-deps','--no-build','--pull','never','--force-recreate','web')");expect(source).toContain("compose(rollbackFile,'up','-d','--no-deps','--no-build','--pull','never','--force-recreate','web')");expect(source).toContain('assert.equal(await readlink(livePointer),liveTarget)');expect(source).toContain('workflowEffectsProved:false');
  });
 });
+
+it('explicit AWS UX release enables only the named flag and preserves exact rollback authority',()=>{
+ const before=['LOOPLABS_DEPLOYMENT_PROFILE=isolated-control-demo-1','SESSION=private-test-session','ROLE=web'];
+ const next=webProfileEnvironment(before,'isolated-control-demo-1',true);
+ expect(next).toEqual({...parseContainerEnvironment(before),LOOPLABS_AWS_CONNECTIONS:'enabled'});
+ expect(()=>assertProfileOnlyChange(before,Object.entries(next).map(([k,v])=>k+'='+v),'isolated-control-demo-1',true)).not.toThrow();
+ expect(()=>assertProfileOnlyChange(before,Object.entries({...next,ROLE:'owner'}).map(([k,v])=>k+'='+v),'isolated-control-demo-1',true)).toThrow();
+ expect(()=>assertProfileOnlyChange(before,Object.entries(next).map(([k,v])=>k+'='+v),'isolated-control-demo-1')).toThrow();
+ expect(webProfileEnvironment(before,'isolated-control-demo-1')).toEqual(parseContainerEnvironment(before));
+ expect(()=>webProfileEnvironment(before,'isolated-control-demo-1','enabled')).toThrow();
+ expect(()=>webProfileEnvironment(before,'isolated-quote-demo-1',true)).toThrow();
+});

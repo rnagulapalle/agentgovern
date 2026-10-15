@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ControlError } from "@/lib/durable/contracts";
 const mocks = vi.hoisted(() => ({ authenticate: vi.fn(), connections: vi.fn(), latest: vi.fn(), configureConnection: vi.fn(), scan: vi.fn(), scanProject: vi.fn(), projectConnections: vi.fn(), latestProject: vi.fn(), configureProjectConnection: vi.fn() }));
 // Route contract unit tests: stub the installed tenant boundary, not a legacy singleton.
@@ -80,4 +80,12 @@ it("refuses an unavailable installed tenant boundary before accessing business d
   expect(response.headers.get("Cache-Control")).toBe("no-store");
   expect(mocks.connections).not.toHaveBeenCalled();
   expect(mocks.latest).not.toHaveBeenCalled();
+});
+
+afterEach(() => vi.unstubAllEnvs());
+it("control installation accepts AWS only and refuses project operations even with a known project ID", async () => {
+  vi.stubEnv("LOOPLABS_DEPLOYMENT_PROFILE", "isolated-control-demo-1");
+  expect((await GET(req(undefined, "?kind=project"))).status).toBe(403);
+  for (const operation of ["configure-project", "scan-project"]) expect((await POST(req(JSON.stringify({operation, connectionId:"project-a"})))).status).toBe(403);
+  expect(mocks.projectConnections).not.toHaveBeenCalled(); expect(mocks.scanProject).not.toHaveBeenCalled(); expect(mocks.configureProjectConnection).not.toHaveBeenCalled();
 });
