@@ -160,3 +160,8 @@ in CI (5.108 seconds). Its bounded timeout now matches the discovery evidence
 suite at 30 seconds; all dependency-drift refusal assertions remain in place.
 The two affected evidence/registry files passed 83 focused tests locally. This
 is separate from the full candidate CI result and the production release.
+
+The next CI attempt stopped before application tests because the fixture loader
+referenced the preceding receipt filename. The loader now uses the measured
+shared-approvals receipt. A direct restore verified all 299 files, the provider
+Git commit and all three compiled hashes; its four focused unit tests passed.
