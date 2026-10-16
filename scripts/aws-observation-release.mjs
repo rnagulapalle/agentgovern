@@ -5,6 +5,8 @@ import {join} from 'node:path';
 import {createHash,X509Certificate} from 'node:crypto';
 const destination='/run/aws-observation';
 export const observationConfig=destination+'/authorization.json';
+// The offline TypeScript loader needs a cache; credentials and root stay read-only.
+export const observationInstallerTmpfs='/tmp:rw,nosuid,nodev,noexec,size=16777216,mode=1777';
 const digest=b=>createHash('sha256').update(b).digest('hex');
 export async function readObservationAttachment(root='/srv/looplabs-production/config'){
  assert.equal(root,'/srv/looplabs-production/config');const pointer=join(root,'aws-observation-current');let link;
