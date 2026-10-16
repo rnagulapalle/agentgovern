@@ -33,11 +33,28 @@ Slack message update and workflow event emission remain the workflow's job.
 its authority interface is deliberately NOT a native quote-agent adapter.
 Its fixture tests do not prove native database concurrency or continuation.
 
-The current inspected quote source has a pending-only atomic decision operation,
-but only a development decision endpoint; that endpoint is NOT used by this
-patch. Review artifacts for AWS runtime version14 are not treated as permission
-to overwrite a separate active workflow checkout. Its canonical source needs
-confirmation before the native authority integration is patched.
+The current production baseline is AWS runtime version14. After Raj selected
+that version, a read-only runtime command verified that the local app,
+orchestrator, store and configuration hashes match its running source. A
+separate customer-workflow patch now adds the native authority integration;
+it is deliberately not copied into the LoopLabs product. Its source changes
+are prepared privately against that measured baseline, not applied to AWS.
+The development decision endpoint is NOT used by either patch.
+
+The native patch freezes reviewed details, quote bytes, policy and connection/
+recovery scope in the EXISTING approval record. Both Slack and the signed hook
+enter the existing orchestrator; one conditional source-table update checks
+pending state, unchanged quote bytes and held run state. The native manager
+mapping, self-review, expiry, policy and recovery checks apply to both surfaces.
+Existing old pending requests are not silently enrolled; they require a fresh
+source review. SQLite/source integration tests and a cross-language client-to-
+ASGI test passed with simulated providers. This is not live AWS acceptance.
+
+The existing source architecture still has a crash window between claiming a
+decision and continuation. The patch reports a claimed-but-still-held run as
+uncertain and never repeats it blindly. A transactional continuation outbox,
+PostgreSQL concurrency/restore tests and production HA remain separate work;
+local duplicate tests do not establish those properties.
 
 The reviewed API Gateway endpoint is exactly
 `https://<api-id>.execute-api.<region>.amazonaws.com/looplabs/approval-bridge`.
@@ -83,3 +100,23 @@ Remote status is authoritative; approval does not assert successful execution.
 Focused synthetic server/browser/helper checks are recorded separately in the
 local patch receipt. No full quality/CI or production/native acceptance has been
 claimed for this patch.
+
+### AgentCore transport patch
+
+`integrations/shared-approvals/agentcore_relay.py` prepares a fixed-target API
+Gateway/Lambda relay. It accepts only POST to the approval-hook path, forwards
+original signed bytes into the existing generic AgentCore HTTP envelope, and
+unwraps the signed response body. The native hook has an opt-in response envelope
+so correctness does not depend on propagation of arbitrary AgentCore response
+headers. The relay cannot choose a runtime/session/native path from browser input,
+read business credentials or decide an approval. Its AWS client uses one attempt;
+a timeout returns uncertain. Deployment must pin the existing workflow session,
+restrict the Lambda invocation role to its exact runtime, apply API Gateway
+throttling and verify the full signed round trip. No relay, IAM grant, signing
+secret or API Gateway endpoint has been created by this patch.
+
+AgentCore version14 remains unchanged; activation of changed source creates a new
+version. Update the reviewed enrollment/version binding deliberately. Runtime-
+local SQLite is not durable across session destruction; do not start an unrelated
+empty session and call it the workflow history. Preserve existing state during
+any later deployment and record that separately from application correctness.
