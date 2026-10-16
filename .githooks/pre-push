@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
-pnpm quality
+git diff --check
+printf "Full quality runs in GitHub CI; no local full-suite rerun.\n"

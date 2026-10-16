@@ -7,10 +7,12 @@ The safety system assumes a contributor may be new to the product and may use an
 | Point | Enforcement | Purpose |
 | --- | --- | --- |
 | Agent/editor opens project | `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor and Copilot instructions | Establish product truth, invariants, and workflow |
-| Local development | `pnpm quality` | Check repository policy, lint, types, adversarial tests, coverage, production build, and rendered internal links |
-| Git push | optional versioned pre-push hook | Give fast feedback before CI |
-| Pull request / main push | GitHub Actions `quality-gates` | Run the clean-room gate independently of the developer's machine |
-| Production deploy | `scripts/release-gate.sh` from `deploy.sh` | Require clean, pushed `main`, rerun the complete gate, and verify current accepted staging-artifact provenance |
+| Local development | Focused relevant tests | Fast feedback on the changed behavior; no repeated full suite |
+| Git push | versioned pre-push hook | Diff hygiene only; full suite belongs in CI |
+| Internal `codex/**` push | GitHub Actions `quality-gates` | Run the full clean-room workflow once; squash merge reuses the identical source tree |
+| Direct main commit | Manual Quality gates workflow on main | Obtain CI evidence before deployment |
+
+| Production deploy | `scripts/release-gate.sh` from `deploy.sh` | Require clean, pushed `main`, verify identical-source GitHub CI and current accepted staging-artifact provenance |
 | Runtime release | candidate container and public health checks in `deploy.sh` | Verify core routes and assets before and after activation, with rollback |
 
 ## What the adversarial suite protects
@@ -39,7 +41,7 @@ The hook is convenience only. CI and the deploy gate remain authoritative becaus
 
 ## Accepted staging artifact boundary
 
-After the full quality gate, `scripts/staging-release-evidence.mjs` reads GitHub
+After GitHub CI source verification, `scripts/staging-release-evidence.mjs` reads GitHub
 run, job and artifact metadata through authenticated, read-only `gh api` calls to
 the fixed private evidence repository. Missing access or incomplete observations
 refuse release. The checker retains the existing successful-origin artifact
@@ -74,3 +76,5 @@ ordering cycle without accepting partial artifacts or claiming old proof is curr
 ## Branch protection
 
 Configure `main` to require the GitHub Actions check named `quality-gates`, require pull requests, dismiss stale approvals, and block force pushes. Keep administrative bypass limited to recovery. The repository workflow remains useful even where the GitHub plan does not support all protection settings.
+
+October 15, 2026 prototype policy: full quality runs once in CI. See `docs/RELEASE_WORKFLOW.md`; revisit when clients/users onboard. Deployment still builds and verifies runtime health, authentication and rollback.

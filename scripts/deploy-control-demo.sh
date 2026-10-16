@@ -10,8 +10,8 @@ cd "$REPO_DIR"
 git fetch --quiet origin main
 commit="$(git rev-parse HEAD)"
 [[ "$commit" =~ ^[a-f0-9]{40}$ && "$commit" == "$(git rev-parse origin/main)" ]] || { echo 'Control demo release requires exact pushed main.' >&2; exit 1; }
-pnpm quality
-[[ "$(git rev-parse HEAD)" == "$commit" && -z "$(git status --porcelain --untracked-files=all)" ]] || { echo 'Source changed during quality verification.' >&2; exit 1; }
+node scripts/release-ci.mjs
+[[ "$(git rev-parse HEAD)" == "$commit" && -z "$(git status --porcelain --untracked-files=all)" ]] || { echo 'Source changed during CI verification.' >&2; exit 1; }
 git fetch --quiet origin main
 [[ "$commit" == "$(git rev-parse origin/main)" ]] || { echo 'Remote main changed during verification.' >&2; exit 1; }
 SSH_KEY="/Users/raj/.codex/looplabs-research/2026-10-11-cloud-staging-provision/looplabs-staging-rsa4096"
