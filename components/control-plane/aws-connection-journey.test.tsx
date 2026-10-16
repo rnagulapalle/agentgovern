@@ -179,6 +179,7 @@ it("guided fixture reviews AWS access, discovers, onboards and renders permitted
  await page.getByRole("button",{name:"Find AWS log sources",exact:true}).click();await page.getByLabel("CloudWatch workflow log group",{exact:true}).fill("/company/agent-events");
  await page.getByRole("checkbox",{name:"I have reviewed that this telemetry source belongs to the selected agent.",exact:true}).check();await page.getByRole("button",{name:"Onboard for observation",exact:true}).click();
  await page.getByText("Completed · agent reported",{exact:true}).waitFor();expect(await page.getByText("Awaiting manager approval",{exact:true}).isVisible()).toBe(true);expect(await page.getByText("Blocked by workflow policy",{exact:true}).isVisible()).toBe(true);
+ await page.getByText("About this history · source-reported",{exact:true}).click();
  expect(await page.getByText("Effects and approver identities have not been independently verified.",{exact:false}).isVisible()).toBe(true);
  expect(calls.find(c=>c.body?.operation==="onboard")?.body).toMatchObject({connectionId:scope.connectionId,resourceArn:arn,version:"1",owner:"owner@example.test",logGroup:"/company/agent-events"});
  expect(calls.some(c=>["approve","execute","invoke"].includes(String(c.body?.operation)))).toBe(false);
@@ -211,15 +212,24 @@ it("stale discovery requires refresh for an unenrolled agent",async()=>mounted(a
  expect(await page.getByRole("button",{name:"Onboard for observation",exact:true}).count()).toBe(0);
 },{guided:true,stale:true}),20000);
 
-it("history shows one collapsed row per execution and filters Slack without changing source runs",async()=>mounted(async(page)=>{
+it("history selects one execution into a separate trace and filters Slack without changing source runs",async()=>mounted(async(page)=>{
  await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
- expect(await page.locator("details.aws-execution").count()).toBe(3);expect(await page.locator("details.aws-execution[open]").count()).toBe(0);
+ expect(await page.locator("button.aws-execution").count()).toBe(3);expect(await page.locator("button.aws-execution[aria-pressed=true]").count()).toBe(0);
  await page.screenshot({path:".local/aws-history-compact-desktop-fixture.png",fullPage:true});
- await page.getByText("25% discount",{exact:true}).click();expect(await page.locator("details.aws-execution[open]").count()).toBe(1);
+ await page.getByText("25% discount",{exact:true}).click();expect(await page.locator("button.aws-execution[aria-pressed=true]").count()).toBe(1);
  await page.getByRole("heading",{name:"Execution steps",exact:true}).waitFor();
- await page.getByLabel("Workflow history channel",{exact:true}).selectOption("email");expect(await page.locator("details.aws-execution").count()).toBe(0);
+ expect(await page.getByLabel("Execution steps for run-1",{exact:true}).isVisible()).toBe(true);
+ expect(await page.getByLabel("Execution steps for run-0",{exact:true}).count()).toBe(0);
+ await page.getByText("5% discount",{exact:true}).first().click();
+ expect(await page.getByLabel("Execution steps for run-0",{exact:true}).isVisible()).toBe(true);
+ expect(await page.getByLabel("Execution steps for run-1",{exact:true}).count()).toBe(0);
+ await page.getByRole("button",{name:"Close trace",exact:true}).click();
+ expect(await page.getByRole("heading",{name:"Select an execution",exact:true}).isVisible()).toBe(true);
+ await page.getByText("25% discount",{exact:true}).click();
+ await page.getByLabel("Workflow history channel",{exact:true}).selectOption("email");expect(await page.locator("button.aws-execution").count()).toBe(0);
  await page.getByText("No executions from this channel were found in the loaded window.",{exact:true}).waitFor();
- await page.getByLabel("Workflow history channel",{exact:true}).selectOption("slack");expect(await page.locator("details.aws-execution").count()).toBe(3);
+ await page.getByLabel("Workflow history channel",{exact:true}).selectOption("slack");expect(await page.locator("button.aws-execution").count()).toBe(3);
+ expect(await page.locator("button.aws-execution[aria-pressed=true]").count()).toBe(0);
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 },{guided:true,enrolled:true}),20000);
 
@@ -228,7 +238,7 @@ it("reload restores the saved agent only after server enrollment readback, witho
  await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
  const before=calls.filter(c=>c.body?.operation==="enrollment").length;await page.reload();await page.getByText("Agent setup saved.",{exact:false}).waitFor();
  expect(calls.filter(c=>c.body?.operation==="enrollment").length).toBeGreaterThan(before);expect(calls.filter(c=>c.body?.operation==="onboard")).toHaveLength(0);
- expect(await page.locator("details.aws-execution").count()).toBe(3);expect(await page.getByText("History connected",{exact:true}).isVisible()).toBe(true);
+ expect(await page.locator("button.aws-execution").count()).toBe(3);expect(await page.getByText("History connected",{exact:true}).isVisible()).toBe(true);
 },{guided:true,enrolled:true}),20000);
 
 it("an inaccessible remembered connection cannot create a connected view or authorize onboarding",async()=>mounted(async(page,calls)=>{
@@ -244,14 +254,14 @@ it("saved onboarding stays collapsed when history fails and approvals are checke
 },{guided:true,enrolled:true,historyUnavailable:true}),20000);
 
 it("a failed history refresh keeps prior rows and approval controls mounted with an explicit stale-read notice",async()=>mounted(async(page,calls)=>{
- await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();await page.getByRole("heading",{name:"Workflow approvals",exact:true}).waitFor();
+ await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();await page.getByRole("button",{name:"Approvals",exact:true}).click();await page.getByRole("heading",{name:"Workflow approvals",exact:true}).waitFor();await page.getByRole("button",{name:"Activity",exact:true}).click();
  await page.getByRole("button",{name:"Refresh workflow history",exact:true}).click();await page.getByRole("alert").filter({hasText:"AWS history identity"}).waitFor();
- expect(await page.locator("details.aws-execution").count()).toBe(3);expect(await page.getByText("Showing the last successful history read",{exact:false}).isVisible()).toBe(true);
- expect(await page.getByRole("heading",{name:"Workflow approvals",exact:true}).count()).toBe(1);expect(calls.some(c=>c.body?.operation==="onboard")).toBe(false);
+ expect(await page.locator("button.aws-execution").count()).toBe(3);expect(await page.getByText("Showing the last successful history read",{exact:false}).isVisible()).toBe(true);
+ expect(await page.getByRole("heading",{name:"Workflow approvals",exact:true,includeHidden:true}).count()).toBe(1);expect(calls.some(c=>c.body?.operation==="onboard")).toBe(false);
 },{guided:true,enrolled:true,historyFailsAfterFirst:true}),20000);
 
 it("guided approval verification stays read-only and explains the required administrator hook",async()=>mounted(async(page,calls)=>{
- await openAgent(page, true);await page.getByRole("heading",{name:"Connect workflow approvals",exact:true}).waitFor();
+ await openAgent(page, true);await page.getByRole("button",{name:"Approvals",exact:true}).click();await page.getByRole("heading",{name:"Connect workflow approvals",exact:true}).waitFor();
  expect(await page.getByRole("link",{name:"Download approval connection guide",exact:true}).getAttribute("href")).toBe("/guides/aws-workflow-approvals.txt");
  await page.getByRole("button",{name:"Verify approval connection",exact:true}).click();expect(calls.filter(c=>c.path.endsWith("/approvals")).every(c=>c.body?.operation==="list")).toBe(true);
  expect(await page.getByText("Administrator-assisted setup is required in this release.",{exact:false}).isVisible()).toBe(true);expect(await page.getByText("Approvals connected",{exact:true}).count()).toBe(0);
@@ -259,10 +269,10 @@ it("guided approval verification stays read-only and explains the required admin
 
 it("related quote filter preserves one row per execution and the connected summary fits desktop and mobile",async()=>mounted(async(page)=>{
  await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();await page.getByText("Approvals connected",{exact:true}).waitFor();
- await page.getByLabel("Reported quote",{exact:true}).selectOption("Q-shared");expect(await page.locator("details.aws-execution").count()).toBe(2);
- await page.getByText("25% discount",{exact:true}).click();expect(await page.locator("details.aws-execution[open]").count()).toBe(1);
- await page.setViewportSize({width:1440,height:1100});await page.evaluate(()=>{window.scrollTo({top:0,left:0,behavior:"instant"});return document.fonts.ready;});await page.screenshot({path:".local/aws-onboarding-p1-desktop.png",fullPage:true});
- await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:".local/aws-onboarding-p1-mobile.png",fullPage:true});
+ await page.getByLabel("Reported quote",{exact:true}).selectOption("Q-shared");expect(await page.locator("button.aws-execution").count()).toBe(2);
+ await page.getByText("25% discount",{exact:true}).click();expect(await page.locator("button.aws-execution[aria-pressed=true]").count()).toBe(1);
+ await page.setViewportSize({width:1440,height:1100});await page.evaluate(()=>{window.scrollTo({top:0,left:0,behavior:"instant"});return document.fonts.ready;});await page.screenshot({path:".local/aws-activity-design-desktop.png",fullPage:true});await page.locator(".aws-execution-browser").screenshot({path:".local/aws-activity-design-trace.png"});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:".local/aws-activity-design-mobile.png",fullPage:true});
 },{guided:true,enrolled:true}),20000);
 
 it("unknown enrollment after a failed read offers retry rather than a new onboarding form",async()=>mounted(async(page,calls)=>{
@@ -276,3 +286,18 @@ it("a saved earlier version never silently onboards a newer deployment or transf
  await page.getByText("You are viewing a saved deployment version",{exact:true}).waitFor();await page.getByRole("button",{name:"Review version 2",exact:true}).click();
  await page.getByRole("heading",{name:"Review recent activity",exact:true}).waitFor();expect(calls.filter(c=>c.body?.operation==="enrollment").at(-1)?.body?.version).toBe("2");expect(calls.some(c=>c.body?.operation==="onboard")).toBe(false);
 },{guided:true,enrolled:true,enrolledVersion:"1",retainedVersion:true}),20000);
+
+it("changing agents clears the selected trace and view switching never sends a decision",async()=>mounted(async(page,calls)=>{
+ await openAgent(page,true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
+ const row=page.getByRole("button",{name:"Review 25% discount · run-1",exact:true});await row.focus();await page.keyboard.press("Enter");
+ expect(await page.getByLabel("Execution steps for run-1",{exact:true}).isVisible()).toBe(true);
+ await page.getByRole("button",{name:"Approvals",exact:true}).click();await page.getByRole("heading",{name:"Workflow approvals",exact:true}).waitFor();
+ expect(await page.getByLabel("Execution trace",{exact:true}).isVisible()).toBe(false);
+ await page.getByRole("button",{name:"Activity",exact:true}).click();expect(await page.getByLabel("Execution steps for run-1",{exact:true}).isVisible()).toBe(true);
+ await page.getByLabel("Selected AWS agent",{exact:true}).selectOption(`${secondArn}|1`);
+ await page.getByText("Agent setup saved.",{exact:false}).waitFor();
+ expect(await page.getByRole("heading",{name:"Select an execution",exact:true}).isVisible()).toBe(true);
+ expect(await page.getByLabel("Execution steps for run-1",{exact:true}).count()).toBe(0);
+ expect(calls.some(c=>c.body?.resourceArn===secondArn&&c.body.operation==="history")).toBe(true);
+ expect(calls.some(c=>["onboard","decide","approve","execute","invoke"].includes(String(c.body?.operation)))).toBe(false);
+},{guided:true,enrolled:true}),20000);
