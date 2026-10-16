@@ -41,3 +41,8 @@ it("keeps source policy decisions separate from manager decisions and execution 
  expect(telemetryDecision([event("approval.approved")],"needs_approval")).toBe("Manager approved");expect(telemetryDecision([event("approval.rejected")],"needs_approval")).toBe("Manager rejected");
  expect(telemetryDecision([],null)).toBe("Decision not reported");
 });
+
+it("links quote references without merging separate executions on the same quote",()=>{
+ const first=event("workflow.started",{event_id:"one",run_id:"run-a",quote_id:"Q-same"}),second=event("workflow.finished",{event_id:"two",run_id:"run-b",quote_id:"Q-same",outcome:"declined"});
+ const runs=telemetryRuns(window([first,second]));expect(runs).toHaveLength(2);expect(runs.every(r=>r.quoteIds.length===1&&r.quoteIds[0]==="Q-same")).toBe(true);
+});

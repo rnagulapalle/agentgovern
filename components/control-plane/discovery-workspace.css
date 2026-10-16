@@ -110,3 +110,14 @@
  .aws-execution-summary>span:first-child { grid-column:1/-1; }
  .aws-execution-summary time { grid-column:1/-1;color:var(--cp-muted,#68665f); }
 }
+
+/* Connection progress and source-reported execution overview. */
+.aws-progress { display:flex;flex-wrap:wrap;gap:10px 22px;list-style:none;padding:0;margin:0 0 20px;font-size:13px;color:var(--cp-muted); }
+.aws-progress [data-complete="true"] { color:var(--aws-accent,#245747); }
+.aws-agent-facts { display:flex;flex-wrap:wrap;gap:8px 24px;padding:16px 0;margin-bottom:16px;border-bottom:1px solid var(--cp-border,#dedbd2); }
+.aws-agent-facts span { color:var(--cp-muted);font-size:13px; }
+.aws-run-scorecard { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0; }
+.aws-run-scorecard>div { padding:16px;border:1px solid var(--cp-border,#dedbd2);display:flex;flex-direction:column;gap:8px; }
+.aws-run-scorecard strong { font-size:24px; }.aws-run-scorecard span { font-size:13px;color:var(--cp-muted); }
+.aws-approval-setup li { margin:12px 0;line-height:1.6; }.aws-reference { overflow-wrap:anywhere; }
+@media(max-width:640px) { .aws-run-scorecard { grid-template-columns:repeat(2,minmax(0,1fr)); }.aws-progress { display:grid;grid-template-columns:1fr 1fr;gap:10px; } }
