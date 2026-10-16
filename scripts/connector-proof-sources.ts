@@ -80,6 +80,7 @@ export const connectorProofSources=Object.freeze([
   "lib/workspace/agents.ts",
   "lib/workspace/auth.ts",
   "lib/workspace/cloud-inventory-schema.sql",
+  "lib/workspace/cloud-observation-schema.sql",
   "lib/workspace/cloud-owner-review-schema.sql",
   "lib/workspace/cloud-project-schema.sql",
   "lib/workspace/identity.ts",

@@ -19,7 +19,9 @@ export async function applyQuoteExecutionMigrations(owner:Pool){
   // Serialize this installation's ledger, not unrelated tenant schemas.
   await client.query("SELECT pg_advisory_xact_lock(hashtextextended(current_database() || ':' || 'll_migrations'::regclass::oid::text, 68391205))");
   const applied=(await client.query('SELECT version,digest FROM ll_migrations')).rows;
-  for(const [version,file] of [...scopedMigrations,[14,'lib/enquiries/worker-admission-schema.sql']] as const){
+  // Quote execution migrations 25–27 depend on their released base, not a later
+  // unrelated observation enrollment. Verify all original prerequisites exactly.
+  for(const [version,file] of [...scopedMigrations.filter(([v])=>v<=24),[14,'lib/enquiries/worker-admission-schema.sql']] as const){
    const old=applied.find(row=>row.version===version);
    if(!old)throw Error(`Apply prerequisite migration ${version} first.`);
    if(old.digest!==createHash('sha256').update(await readFile(file)).digest('hex'))throw Error(`Applied prerequisite migration ${version} changed.`);

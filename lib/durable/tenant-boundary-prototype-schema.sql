@@ -247,3 +247,7 @@ DECLARE global_key text; principal_key text; global_limit integer; global_second
  RETURN g<=global_limit AND p<=principal_limit;
 END $$;
 REVOKE ALL ON FUNCTION __SCHEMA__.ll_login_workspace(text),__SCHEMA__.ll_credential_workspace(text),__SCHEMA__.ll_global_admit(text,text) FROM PUBLIC;
+
+ALTER TABLE __SCHEMA__.ll_cloud_observation_enrollments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE __SCHEMA__.ll_cloud_observation_enrollments FORCE ROW LEVEL SECURITY;
+CREATE POLICY ll_tenant_prototype ON __SCHEMA__.ll_cloud_observation_enrollments USING(org_id=__SCHEMA__.ll_bound_workspace()) WITH CHECK(org_id=__SCHEMA__.ll_bound_workspace());

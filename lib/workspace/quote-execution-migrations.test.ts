@@ -14,7 +14,7 @@ it('real concurrent quote migrations are atomic/idempotent and grant no executio
   const result=await Promise.all([applyQuoteExecutionMigrations(f.owner),applyQuoteExecutionMigrations(f.owner)]);
   expect(result.map(r=>r.installed.length).sort()).toEqual([0,3]);expect(result.every(r=>!r.approved&&!r.executed&&!r.granted)).toBe(true);
   expect((await applyQuoteExecutionMigrations(f.owner)).installed).toEqual([]);
-  expect((await f.owner.query('SELECT version,digest FROM ll_migrations WHERE version<25 ORDER BY version')).rows).toEqual(before);
+  expect((await f.owner.query('SELECT version,digest FROM ll_migrations WHERE version NOT IN (25,26,27) ORDER BY version')).rows).toEqual(before);
   for(const [version,file] of quoteExecutionMigrations)expect((await f.owner.query('SELECT digest FROM ll_migrations WHERE version=$1',[version])).rows).toEqual([{digest:createHash('sha256').update(await readFile(file)).digest('hex')}]);
   for(const table of ['ll_connector_actions','ll_quote_background_routes','ll_quote_workload_roles','ll_temporal_worker_builds'])expect((await f.owner.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n).toBe(0);
   expect((await f.owner.query(roleQuery)).rows).toEqual(roles);
@@ -45,7 +45,7 @@ it('missing and changed prerequisites refuse before any quote schema or history 
   const old=(await f.owner.query('SELECT digest FROM ll_migrations WHERE version=24')).rows[0].digest;
   await f.owner.query('DELETE FROM ll_migrations WHERE version=24');await expect(applyQuoteExecutionMigrations(f.owner)).rejects.toThrow('prerequisite migration 24');
   await f.owner.query('INSERT INTO ll_migrations(version,digest) VALUES(24,$1)',['changed']);await expect(applyQuoteExecutionMigrations(f.owner)).rejects.toThrow('migration 24 changed');
-  expect((await f.owner.query('SELECT count(*)::int n FROM ll_migrations WHERE version>=25')).rows[0].n).toBe(0);
+  expect((await f.owner.query('SELECT count(*)::int n FROM ll_migrations WHERE version IN (25,26,27)')).rows[0].n).toBe(0);
   expect((await f.owner.query("SELECT to_regclass('ll_quote_background_routes') relation")).rows[0].relation).toBeNull();
   await f.owner.query('UPDATE ll_migrations SET digest=$1 WHERE version=24',[old]);
  }finally{await f.close();}
@@ -61,7 +61,7 @@ it('failed second DDL rolls back first schema and both migration records; applie
  const f=await fixture();try{
   await f.owner.query('CREATE TABLE ll_quote_background_routes(blocker int)');
   await expect(applyQuoteExecutionMigrations(f.owner)).rejects.toMatchObject({code:'42P07'});
-  expect((await f.owner.query('SELECT count(*)::int n FROM ll_migrations WHERE version>=25')).rows[0].n).toBe(0);
+  expect((await f.owner.query('SELECT count(*)::int n FROM ll_migrations WHERE version IN (25,26,27)')).rows[0].n).toBe(0);
   expect((await f.owner.query("SELECT to_regprocedure('ll_quote_action_boundary_proposed()') relation")).rows[0].relation).toBeNull();
   await f.owner.query('DROP TABLE ll_quote_background_routes');await applyQuoteExecutionMigrations(f.owner);
   await f.owner.query("UPDATE ll_migrations SET digest='changed' WHERE version=26");
@@ -72,7 +72,7 @@ it('failed second DDL rolls back first schema and both migration records; applie
 it('installed named web and worker roles cannot install or create quote execution authority',async()=>{
  const f=await fixture();try{
   for(const db of [f.web('one'),await f.workload('one','worker')])await expect(applyQuoteExecutionMigrations(db)).rejects.toThrow();
-  expect((await f.owner.query('SELECT count(*)::int n FROM ll_migrations WHERE version>=25')).rows[0].n).toBe(0);
+  expect((await f.owner.query('SELECT count(*)::int n FROM ll_migrations WHERE version IN (25,26,27)')).rows[0].n).toBe(0);
   expect((await f.owner.query("SELECT to_regclass('ll_quote_background_routes') relation")).rows[0].relation).toBeNull();
  }finally{await f.close();}
 },20000);
@@ -84,7 +84,7 @@ it('an unrelated installation cannot starve quote migrations; same ledger retain
   await held.query("SELECT pg_advisory_xact_lock(hashtextextended(current_database() || ':' || 'll_migrations'::regclass::oid::text, 68391205))");
   expect((await applyQuoteExecutionMigrations(second.owner)).installed).toHaveLength(3);
   await expect(applyQuoteExecutionMigrations(first.owner)).rejects.toMatchObject({code:'55P03'});
-  expect((await held.query('SELECT count(*)::int n FROM ll_migrations WHERE version>=25')).rows[0].n).toBe(0);
+  expect((await held.query('SELECT count(*)::int n FROM ll_migrations WHERE version IN (25,26,27)')).rows[0].n).toBe(0);
   await held.query('ROLLBACK');held.release();held=undefined;
   expect((await applyQuoteExecutionMigrations(first.owner)).installed).toHaveLength(3);
  }finally{if(held){await held.query('ROLLBACK');held.release();}await second.close();await first.close();}

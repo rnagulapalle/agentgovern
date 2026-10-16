@@ -1,4 +1,8 @@
-import {test,expect} from "vitest";
+import {test,expect,vi} from "vitest";
+// Provenance checks reconstruct and hash the source graph; this is not a
+// product latency assertion. Coverage measured 5.6–12.4s on the local host.
+// Keep every rejection assertion and give this file a bounded 30s deadline.
+vi.setConfig({testTimeout:30000});
 import{readFile}from"node:fs/promises";import{createHash}from"node:crypto";
 import{discoveryInstalledSources,validateInstalledDiscovery}from"./discovery-installed-evidence.mjs";
 const hash=b=>createHash("sha256").update(b).digest("hex");
@@ -23,9 +27,9 @@ async function fixture(){
 const ASSERTIONS=["threeProviderOwnerReviewSavedThroughUi", "ownerReviewReplayAndChangedDecisionRefused", "ownerReviewSurvivesMobileReload", "revokedOwnerRequiresRenewalWithoutAuthority", "foreignOwnerDirectoryAndReviewDenied", "azureMobile390SavedScanReadable", "azureUiScanPersistsThroughCliHttpFixture", "azureChangedBindingRefusedAndEvidencePreserved", "azureProviderMetadataMinimized", "projectScopesSavedThroughUi", "projectFixtureEvidenceSurvivesReload", "projectNativeScanNotClaimed", "projectMobile390Readable", "projectCrossCompanyAndRevocationDenied", "anonymousDenied", "namedSignIn", "secureHttpOnlyCookie", "configuredIsNotObserved", "actualLocalCliFixtureScanPersisted", "refreshPersistence", "expiredBindingRefusedAndPriorEvidencePreserved", "mobileMenuClosesOnCurrentPageSelection", "mobile390NoOverflow", "mobileInputsAtLeast16px", "technicalReferencesExpandable", "noRawJson", "crossCompanyDenied", "revokedMemberDenied", "noExecutionAuthorityCreated", "ownedResourcesRemoved"];
 async function actual(){
  // Separately named genuine wording/observation execution; prior evidence stays unchanged.
- const bytes=await readFile("docs/evidence/discovery-installed-browser-v3-20261015-aws-connection-journey-current-version-proof.json");
- expect(hash(bytes)).toBe("26b91a9cdfabe6ad30066207e93578503f5be5cd9afc947b4860957041b4633c");
- return{receipt:JSON.parse(bytes),cleanup:JSON.parse(await readFile("docs/evidence/discovery-installed-browser-v3-20261015-aws-connection-journey-current-version-cleanup.json")),pg:JSON.parse(await readFile("docs/evidence/discovery-installed-browser-v3-20261015-aws-connection-journey-current-version-pg-proof.json")),sourceHash:async f=>hash(await readFile(f)),artifactHash:async(kind,f)=>hash(await readFile(kind==="compiled"?f:"docs/evidence/discovery-installed-v3-20261015-aws-connection-journey-current-version-screenshots/"+f))};
+ const bytes=await readFile("docs/evidence/discovery-installed-browser-v3-20261015-aws-observation-final-proof.json");
+ expect(hash(bytes)).toBe("1c45b491e8c4ebe9175e2ed825afe836cbb9b3ff099a167559cc93a0f04cfb9e");
+ return{receipt:JSON.parse(bytes),cleanup:JSON.parse(await readFile("docs/evidence/discovery-installed-browser-v3-20261015-aws-observation-final-cleanup.json")),pg:JSON.parse(await readFile("docs/evidence/discovery-installed-browser-v3-20261015-aws-observation-final-pg-proof.json")),sourceHash:async f=>hash(await readFile(f)),artifactHash:async(kind,f)=>hash(await readFile(kind==="compiled"?f:"docs/evidence/discovery-installed-v3-20261015-aws-observation-final-screenshots/"+f))};
 }
 test("current installed discovery evidence retains exact runtime closure and actual scoped TLS/epoch observations",async()=>{expect(await validateInstalledDiscovery(await actual())).toMatchObject({contract:"installed-discovery-intake-3",sourceCount:syntheticConstruction.families.discovery.length,assertions:30,production:false});expect(discoveryInstalledSources).toContain("instrumentation.ts");expect(discoveryInstalledSources).toContain("lib/workspace/tenant-bootstrap.ts");expect(discoveryInstalledSources).toContain("lib/durable/tenant-boundary-prototype-schema.sql");});
 test.each(["missing","extra","stale"])("refuses %s dependency observations",async kind=>{const v=await fixture(),f="lib/workspace/tenant-bootstrap.ts";if(kind==="missing")delete v.receipt.sourceFingerprints[f];if(kind==="extra")v.receipt.sourceFingerprints["unreviewed.ts"]="a".repeat(64);if(kind==="stale")v.sourceHash=async file=>file===f?"0".repeat(64):hash(await readFile(file));await expect(validateInstalledDiscovery(v)).rejects.toThrow();});

@@ -47,6 +47,7 @@ async function grant(owner:Pick<Pool,'query'>,schema:string,role:string,purpose:
   await owner.query(`GRANT INSERT(org_id,connection_id,id,observed_at,completeness,failures,canonical_sha256) ON ${schema}.ll_cloud_project_scans TO ${role}`);
   await owner.query(`GRANT INSERT(org_id,connection_id,scan_id,resource,provider_version,identity_kind,identity_reference) ON ${schema}.ll_cloud_project_observations TO ${role}`);
   await owner.query(`GRANT INSERT(org_id,id,provider,connection_id,scan_id,scan_sha256,resource,provider_version,owner_email,reviewed_by) ON ${schema}.ll_cloud_owner_reviews TO ${role}`);
+  await owner.query(`GRANT INSERT(org_id,id,connection_id,scan_id,resource_arn,provider_version,owner_review_id,owner_email,display_name,log_group,mapping,epoch,reviewed_by) ON ${schema}.ll_cloud_observation_enrollments TO ${role}`);
   // Existing scoped operator discount/refund consumers only. Pollers unchanged.
   await owner.query(`GRANT UPDATE(discount,version) ON ${schema}.ll_records TO ${role}`);
   await owner.query(`GRANT INSERT(org_id,action_id,before_discount,after_discount,after_version),UPDATE(recovered) ON ${schema}.ll_effects TO ${role}`);

@@ -3,6 +3,7 @@ import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
 import { ControlError, type Actor } from "../durable/contracts";
 import { memberAuthority } from "./identity";
+import { tenantPoolBinding } from "../durable/tenant-pool";
 import { throttle } from "./auth";
 import { preserveRuntimeInventory, type CloudDiscoveryScope, type DiscoveredRuntime, type RuntimeInventoryScan } from "./cloud-discovery";
 import { projectDiscoveryScope, type ProjectDiscoveryScope, type ProjectInventoryScan, type ProjectObservation } from "./cloud-project-discovery";
@@ -47,6 +48,11 @@ async function projectConnection(c: PoolClient, org: string, id: string) {
 }
 export class CloudInventoryStore {
   constructor(private readonly db: Pool) {}
+  epoch(scope: CloudDiscoveryScope) {
+    const binding=tenantPoolBinding(this.db);
+    if (!binding || binding.org!==scope.tenantId || binding.purpose!=="web") throw new ControlError(503,"Scoped AWS authorization context unavailable.");
+    return binding.epoch;
+  }
   async configureProjectConnection(actor: Actor, input: ProjectDiscoveryScope) {
     let scope: ProjectDiscoveryScope;
     try { scope = projectDiscoveryScope(input); } catch { throw new ControlError(400, "Valid project discovery scope required."); }

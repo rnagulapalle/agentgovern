@@ -32,6 +32,8 @@ try {
  const installation=resolve(dir,"installation");
  const first=await bootstrapDatabase(installation,url,true,epoch);
  assert.equal(first.existingActions,0);assert.equal(first.existingRuns,0);
+ assert(!first.migrations.some(m=>m.version===28),"Legacy bootstrap must not install optional AWS observation authority");
+ assert.equal((await owner.query("SELECT to_regclass('ll_cloud_observation_enrollments') present")).rows[0].present,null);
  const revisionDigest=(await migrationDigests()).find(m=>m.version===24);
  assert(revisionDigest,"Current staging requires the saved-plan revision migration");
  assert.deepEqual(first.migrations.find(m=>m.version===24),revisionDigest);

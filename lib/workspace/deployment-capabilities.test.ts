@@ -63,3 +63,11 @@ describe('AWS journey installation switch', () => {
     expect(decide(script, '/api/workspace/discovery/%61ctivity', 'POST', true)).toBe('deny');
   });
 });
+
+it('AWS onboarding RPC permits only POST behind the explicit AWS feature switch',()=>{
+ const profile='isolated-control-demo-1';
+ expect(decide(profile,'/api/workspace/discovery/onboarding','POST',true)).toBe('allow');
+ for(const method of ['GET','PUT','DELETE'])expect(decide(profile,'/api/workspace/discovery/onboarding',method,true)).toBe('deny');
+ expect(decide(profile,'/api/workspace/discovery/onboarding','POST',false)).toBe('deny');
+ expect(decide(profile,'/api/workspace/discovery/onboarding/execute','POST',true)).toBe('deny');
+});

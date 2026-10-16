@@ -16,9 +16,12 @@ export const scopedMigrations=[
  [21,"lib/quotes/plan-v2-schema.sql"],[22,"lib/quotes/membership-schema.sql"],
  [23,"lib/workspace/membership-authority-schema.sql"],
  [24,"lib/enquiries/revision-schema.sql"],
+ [28,"lib/workspace/cloud-observation-schema.sql"],
 ] as const;
 export async function migrationDigests(){
- return Promise.all(scopedMigrations.map(async([version,file])=>({version,digest:createHash("sha256").update(await readFile(file)).digest("hex")})));
+ // Existing staging runtimes retain their released base contract. The optional
+ // observation extension is checked by its separate bound-web-role installer.
+ return Promise.all(scopedMigrations.filter(([version])=>version<=24).map(async([version,file])=>({version,digest:createHash("sha256").update(await readFile(file)).digest("hex")})));
 }
 export function stagingConfiguration(env:Record<string,string|undefined>){
  const blockers:string[]=[];

@@ -9,8 +9,16 @@ const arn = "arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/customer_a
 const secondArn = "arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/service_assistant-0987654321";
 const scanId = "00000000-0000-4000-8000-000000000001";
 const inventory = () => ({ scope, status: "observed", scanId, observedAt: new Date().toISOString(), stale: false, completeness: "complete-api-traversal", failures: [], historyTruncated: false, records: [arn,secondArn].map((resourceArn) => ({ record: { scope, resourceArn, resourceId: resourceArn.split("/").at(-1), version: "1", observedAt: new Date().toISOString(), roleReference: null, workloadIdentityReference: null }, observedInCurrentScan: true, stale: false })) });
+function guidedHistory() {
+  const at=new Date(Date.now()-1000).toISOString(),events=[];
+  for(const [index,outcome]of ["completed","awaiting_approval","declined"].entries()) {
+    const base={runId:`run-${index}`,actionId:null,occurredAt:at,attempt:1,traceId:String(index+1).repeat(32),spanId:"b".repeat(16),triggerChannel:"slack",reportedDeploymentVersion:"1",actionName:null,provider:null,decision:null,reasonCode:null,reportedOutcome:null,ruleId:null,ruleVersion:null,requestedPercent:null,approvalThreshold:null,maximumDiscount:null,evidence:"source-reported",effectVerified:false,approvalIdentityVerified:false};
+    events.push({...base,eventId:`event-${index}-1`,eventName:"workflow.started"},{...base,eventId:`event-${index}-2`,eventName:"policy.evaluated",requestedPercent:[5,25,80][index],decision:["auto_approve","needs_approval","decline"][index],approvalThreshold:20,maximumDiscount:70},{...base,eventId:`event-${index}-3`,eventName:outcome==="awaiting_approval"?"workflow.paused":"workflow.finished",reportedOutcome:outcome});
+  }
+  return {enrollment:{displayName:"Customer service agent",owner:"owner@example.test",logGroup:"/company/agent-events",enrolledAt:at},checkedAt:new Date().toISOString(),source:{runtimeArn:arn,enrolledRuntimeVersion:"1",logGroup:"/company/agent-events",startTime:Date.now()-86400000,endTime:Date.now()},events,completeness:"complete-api-traversal",unsupportedRecords:0,duplicateDeliveries:0,conflictingEventIds:[],failures:[],enforcement:"not-established"};
+}
 type Call = { path: string; method: string; body: Record<string,unknown> | null };
-async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, options: { access?: boolean; activityError?: boolean; delayed?: Promise<void>; stale?: boolean; retainedVersion?: boolean } = {}) {
+async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, options: { access?: boolean; activityError?: boolean; delayed?: Promise<void>; stale?: boolean; retainedVersion?: boolean; guided?: boolean } = {}) {
   const esbuild = requireModule(requireModule.resolve("esbuild", { paths: [requireModule.resolve("@temporalio/worker")] }));
   const bundle = await esbuild.build({ stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {AwsConnectionJourney} from './components/control-plane/aws-connection-journey';createRoot(document.getElementById('app')).render(<AwsConnectionJourney/>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, platform: "browser", format: "iife", write: false, jsx: "automatic", alias: { "@": resolve(".") }, define: { "process.env": "{}", "process.env.NODE_ENV": '"test"' } });
   function snapshot() {
@@ -23,7 +31,7 @@ async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, option
     }
     return value;
   }
-  const browser = await chromium.launch({ headless: true }), calls: Call[] = []; let configured = false, owner: string | null = null;
+  const browser = await chromium.launch({ headless: true }), calls: Call[] = []; let configured = false, owner: string | null = null, onboarded = false;
   try {
     const page = await browser.newPage();
     await page.route("https://aws-journey-fixture.test/**", async route => {
@@ -35,11 +43,18 @@ async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, option
         else result = snapshot();
       } else if (path === "/api/workspace/discovery" && new URL(route.request().url()).searchParams.has("connectionId")) {
         result = options.stale ? { ...snapshot(), stale: true } : snapshot();
-      } else if (path === "/api/workspace/discovery") result = { connections: configured ? [{ scope, status: "configured", scanReady: options.access !== false }] : [], scanningAvailable: configured && options.access !== false };
+      } else if (path === "/api/workspace/discovery") result = { connections: configured ? [{ scope, status: "configured", scanReady: options.access !== false, authorizationAvailable: Boolean(options.guided) }] : [], scanningAvailable: configured && options.access !== false };
       else if (path === "/api/workspace/discovery/activity") {
         if (options.delayed) await options.delayed;
         if (options.activityError) { status = 503; result = { error: "Activity access is not configured for this agent version." }; }
         else result = { reference: { ...body }, checkedAt: new Date().toISOString(), retention: "request-only", completeness: "complete-api-traversal", failures: [], unsupportedRecords: 0, observations: [{ sourceEventId: "event-one", timestamp: Date.now(), observation: { operation: "InvokeAgentRuntime", requestId: "request-one", sessionId: "session-one", effectVerified: false } }], toolActivity: "unknown", enforcement: "unverified" };
+      } else if (path === "/api/workspace/discovery/onboarding") {
+        if(body?.operation === "authorization") result={url:"https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2",roleArn:"arn:aws:iam::123456789012:role/LoopLabsObservation-fixture",expiresAt:new Date(Date.now()+900000).toISOString(),authorityGranted:false};
+        else if(body?.operation === "verify") result={status:"identity-verified",inventory:snapshot(),authorityGranted:false};
+        else if(body?.operation === "sources") result={groups:[{name:"/company/agent-events",retentionDays:30}],truncated:false};
+        else if(body?.operation === "onboard") {onboarded=true;result={mode:"observation-only",enforcement:"not-established",supportedEventsObserved:9};}
+        else if(body?.operation === "history" && onboarded) result=guidedHistory();
+        else {status=409;result={error:"Onboard this agent for observation first."};}
       } else if (path === "/api/workspace/discovery/owners") {
         if (method === "POST") { owner = String(body?.owner); result = { authorityGranted: false }; }
         else if (new URL(route.request().url()).search) result = { ownership: owner ? "reviewed" : "unmapped", owner, authorityGranted: false, enforcement: "unverified" };
@@ -116,3 +131,41 @@ it("retained earlier runtime version cannot shadow the current discovered versio
   await page.getByRole("button", { name: "Continue to control setup", exact: false }).click();
   expect(await page.getByRole("button", { name: "Enable controls · setup required", exact: true }).isDisabled()).toBe(true);
 }, { retainedVersion: true }), 20000);
+
+it("onboarding explains optional telemetry and enforcement gaps without claiming the agent connection failed", async () => mounted(async (page, calls) => {
+  await openAgent(page);
+  await page.getByRole("heading", { name: "Understand your integration coverage", exact: true }).waitFor();
+  expect(await page.getByText("Missing tool events or an execution checkpoint do not mean the agent connection failed.", { exact: false }).isVisible()).toBe(true);
+  expect(await page.getByText("Workflow history requires observation onboarding and a supported telemetry source", { exact: true }).isVisible()).toBe(true);
+  await page.getByText("Recommendations for your workflow builder", { exact: true }).click();
+  expect(await page.getByText("AWS storage alone does not make every format readable.", { exact: false }).isVisible()).toBe(true);
+  const download = page.getByRole("link", { name: "Download workflow builder guidance", exact: true });
+  expect(await download.getAttribute("href")).toBe("/guides/aws-agent-integration.txt");
+  expect(await download.getAttribute("download")).not.toBeNull();
+  const guide = await readFile("public/guides/aws-agent-integration.txt", "utf8");
+  expect(guide).toContain("Observation release and staged extension");
+  expect(guide).toContain("Telemetry is not an enforcement mechanism.");
+  expect(calls.some(c => c.path.endsWith("/activity"))).toBe(false);
+  await page.getByRole("button", { name: "Check last 15 minutes", exact: true }).click();
+  await page.getByRole("alert").waitFor();
+  expect(await page.getByRole("heading", { name: "Understand your integration coverage", exact: true }).isVisible()).toBe(true);
+  expect(await page.getByText("Agent invocation reported", { exact: true }).count()).toBe(0);
+}, { activityError: true }), 20000);
+
+it("guided fixture reviews AWS access, discovers, onboards and renders permitted, held and blocked source runs",async()=>mounted(async(page,calls)=>{
+ page.setDefaultTimeout(4000);
+ await page.getByRole("button",{name:"Open account",exact:false}).click();
+ await page.getByLabel("Custom workflow log group · optional").fill("/company/agent-events");
+ await page.getByRole("button",{name:"Prepare AWS access request",exact:true}).click();
+ const link=page.getByRole("link",{name:"Review access in AWS",exact:true});await link.waitFor();expect(await link.getAttribute("href")).toContain("https://us-west-2.console.aws.amazon.com/cloudformation/home");
+ await page.getByRole("button",{name:"Verify AWS access and discover",exact:true}).click();await page.getByText("AWS account identity verified.",{exact:false}).waitFor();
+ await page.getByRole("button",{name:"Review agent",exact:false}).first().click();await page.getByRole("button",{name:"Continue to onboarding",exact:false}).click();
+ await page.getByLabel("Agent name",{exact:true}).fill("Customer service agent");await page.getByLabel("Accountable owner",{exact:true}).selectOption("owner@example.test");
+ await page.getByRole("button",{name:"Find AWS log sources",exact:true}).click();await page.getByLabel("CloudWatch workflow log group",{exact:true}).fill("/company/agent-events");
+ await page.getByRole("checkbox",{name:"I have reviewed that this telemetry source belongs to the selected agent.",exact:true}).check();await page.getByRole("button",{name:"Onboard for observation",exact:true}).click();
+ await page.getByText("Completed · agent reported",{exact:true}).waitFor();expect(await page.getByText("Awaiting manager approval",{exact:true}).isVisible()).toBe(true);expect(await page.getByText("Blocked by workflow policy",{exact:true}).isVisible()).toBe(true);
+ expect(await page.getByText("Effects and approver identities have not been independently verified.",{exact:false}).isVisible()).toBe(true);
+ expect(calls.find(c=>c.body?.operation==="onboard")?.body).toMatchObject({connectionId:scope.connectionId,resourceArn:arn,version:"1",owner:"owner@example.test",logGroup:"/company/agent-events"});
+ expect(calls.some(c=>["approve","execute","invoke"].includes(String(c.body?.operation)))).toBe(false);
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+},{guided:true}),20000);
