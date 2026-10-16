@@ -14,7 +14,13 @@ export function awsObservationRoleTemplate() {
     Conditions: { HasCustomTelemetry: { "Fn::Not": [{ "Fn::Equals": [{ Ref: "TelemetryLogGroup" }, ""] }] } },
     Resources: { ObservationRole: { Type: "AWS::IAM::Role", Properties: {
       RoleName: { Ref: "ConnectionRoleName" }, MaxSessionDuration: 3600,
-      AssumeRolePolicyDocument: { Version: "2012-10-17", Statement: [{ Effect: "Allow", Principal: { AWS: { Ref: "BrokerPrincipal" } }, Action: ["sts:AssumeRole", "sts:SetSourceIdentity"], Condition: { StringEquals: { "sts:ExternalId": { Ref: "ExternalId" } } } }] },
+      // ExternalId is an AssumeRole condition, not a SetSourceIdentity condition.
+      // Keep the confused-deputy check on assumption; allow only this same
+      // broker to propagate its existing, non-null source identity separately.
+      AssumeRolePolicyDocument: { Version: "2012-10-17", Statement: [
+        { Effect: "Allow", Principal: { AWS: { Ref: "BrokerPrincipal" } }, Action: "sts:AssumeRole", Condition: { StringEquals: { "sts:ExternalId": { Ref: "ExternalId" } } } },
+        { Effect: "Allow", Principal: { AWS: { Ref: "BrokerPrincipal" } }, Action: "sts:SetSourceIdentity", Condition: { Null: { "sts:SourceIdentity": "false" } } },
+      ] },
       Policies: [{ PolicyName: "LoopLabsObservationOnly", PolicyDocument: { Version: "2012-10-17", Statement: [
         { Effect: "Allow", Action: ["bedrock-agentcore:ListAgentRuntimes", "logs:DescribeLogGroups"], Resource: "*", Condition: { StringEquals: { "aws:RequestedRegion": { Ref: "AWS::Region" } } } },
         { Effect: "Allow", Action: "bedrock-agentcore:GetAgentRuntime", Resource: { "Fn::Sub": "arn:aws:bedrock-agentcore:${AWS::Region}:${AWS::AccountId}:runtime/*" } },
