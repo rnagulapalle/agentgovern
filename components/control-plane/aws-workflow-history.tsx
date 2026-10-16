@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { ExternalWorkflowApprovals } from "./external-workflow-approvals";
 import { workspaceJson } from "@/lib/workspace/response";
 import type { ActivityReference } from "@/lib/workspace/cloud-activity";
 import type { WorkflowTelemetryWindow } from "@/lib/workspace/workflow-telemetry";
@@ -37,7 +38,8 @@ export function AwsWorkflowHistory({reference,name}:{reference:ActivityReference
    <label><input type="checkbox" required disabled={busy}/> I have reviewed that this telemetry source belongs to the selected agent.</label>
    <button className="cp-button" disabled={busy||!owner||!logGroup}>{busy?"Checking…":"Onboard for observation"}</button>
   </form></details>
-  <div className="aws-section-heading"><div><h3>Workflow history</h3><p>Source-reported events from CloudWatch. Slack approvals remain in the existing workflow.</p></div></div>
+  {history&&<ExternalWorkflowApprovals reference={reference} onDecision={()=>void loadHistory()}/>}
+  <div className="aws-section-heading"><div><h3>Workflow history</h3><p>Source-reported events from CloudWatch. The AWS workflow records decisions from its connected approval surfaces.</p></div></div>
   <label>History window<select aria-label="History window" value={hours} disabled={busy} onChange={e=>{setHours(Number(e.target.value));setHistory(null);}}><option value={1}>Last hour</option><option value={24}>Last 24 hours</option><option value={168}>Last 7 days</option></select></label>
   <button className="cp-button secondary" disabled={busy} onClick={()=>void loadHistory()}>{busy?"Reading AWS…":"Refresh workflow history"}</button>
   {history&&<div className="aws-activity-results"><h3>{history.enrollment.displayName}</h3><p>Checked {new Date(history.checkedAt).toLocaleString()} · {history.completeness==="partial"?"Partial read · history may be incomplete":"API traversal finished for this window"}</p>
