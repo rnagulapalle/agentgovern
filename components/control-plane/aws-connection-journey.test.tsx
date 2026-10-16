@@ -83,10 +83,11 @@ async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, option
     await run(page, calls);
   } finally { await browser.close(); }
 }
-async function openAgent(page: Page) {
+async function openAgent(page: Page, saved = false) {
   await page.getByRole("button", { name: "Open account", exact: false }).click();
-  await page.waitForFunction(()=>[...document.querySelectorAll("h2")].some(e=>["Agent workspace","Agent connection needs attention"].includes(e.textContent??""))||[...document.querySelectorAll("button")].some(e=>e.textContent?.includes("Review agent")));
-  if(await page.getByRole("button", { name: "Review agent", exact: false }).count()>0)await page.getByRole("button", { name: "Review agent", exact: false }).first().click();
+  // Saved enrollment opens automatically; do not race its transient inventory button.
+  if (saved) { await page.getByRole("heading", { name: "Agent workspace", exact: true }).or(page.getByRole("heading", { name: "Agent connection needs attention", exact: true })).waitFor(); return; }
+  await page.getByRole("button", { name: "Review agent", exact: false }).first().click();
 }
 it("mounted journey saves generated scope, reviews actual API-shaped inventory/activity, assigns owner and never enables execution", async () => mounted(async (page, calls) => {
   await openAgent(page);
@@ -185,7 +186,7 @@ it("guided fixture reviews AWS access, discovers, onboards and renders permitted
 },{guided:true}),20000);
 
 it("returning to an enrolled AWS agent restores its saved source and history without repeating onboarding",async()=>mounted(async(page,calls)=>{
- await openAgent(page);
+ await openAgent(page, true);
  await page.getByText("Agent setup saved.",{exact:false}).waitFor();
  expect(await page.getByText("25% discount",{exact:true}).count()).toBe(1);
  await page.getByText("Review saved history setup",{exact:true}).click();
@@ -195,14 +196,14 @@ it("returning to an enrolled AWS agent restores its saved source and history wit
 },{guided:true,enrolled:true}),20000);
 
 it("failed saved history read is explicit and never invents enrolled status",async()=>mounted(async(page,calls)=>{
- await openAgent(page);
+ await openAgent(page, true);
  await page.getByRole("alert").filter({hasText:"AWS history identity could not be verified"}).waitFor();
  expect(await page.getByText("Agent setup saved.",{exact:false}).count()).toBe(0);
  expect(calls.some(c=>c.body?.operation==="onboard")).toBe(false);
 },{guided:true,enrolled:true,historyUnavailable:true}),20000);
 
 it("stale discovery still opens an existing enrollment without granting new onboarding",async()=>mounted(async(page,calls)=>{
- await openAgent(page);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
+ await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
  expect(calls.filter(c=>c.body?.operation==="onboard")).toHaveLength(0);
 },{guided:true,enrolled:true,stale:true}),20000);
 it("stale discovery requires refresh for an unenrolled agent",async()=>mounted(async page=>{
@@ -211,7 +212,7 @@ it("stale discovery requires refresh for an unenrolled agent",async()=>mounted(a
 },{guided:true,stale:true}),20000);
 
 it("history shows one collapsed row per execution and filters Slack without changing source runs",async()=>mounted(async(page)=>{
- await openAgent(page);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
+ await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
  expect(await page.locator("details.aws-execution").count()).toBe(3);expect(await page.locator("details.aws-execution[open]").count()).toBe(0);
  await page.screenshot({path:".local/aws-history-compact-desktop-fixture.png",fullPage:true});
  await page.getByText("25% discount",{exact:true}).click();expect(await page.locator("details.aws-execution[open]").count()).toBe(1);
@@ -224,7 +225,7 @@ it("history shows one collapsed row per execution and filters Slack without chan
 
 
 it("reload restores the saved agent only after server enrollment readback, without onboarding again",async()=>mounted(async(page,calls)=>{
- await openAgent(page);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
+ await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
  const before=calls.filter(c=>c.body?.operation==="enrollment").length;await page.reload();await page.getByText("Agent setup saved.",{exact:false}).waitFor();
  expect(calls.filter(c=>c.body?.operation==="enrollment").length).toBeGreaterThan(before);expect(calls.filter(c=>c.body?.operation==="onboard")).toHaveLength(0);
  expect(await page.locator("details.aws-execution").count()).toBe(3);expect(await page.getByText("History connected",{exact:true}).isVisible()).toBe(true);
@@ -237,27 +238,27 @@ it("an inaccessible remembered connection cannot create a connected view or auth
 },{guided:true,enrolled:true}),20000);
 
 it("saved onboarding stays collapsed when history fails and approvals are checked independently",async()=>mounted(async(page,calls)=>{
- await openAgent(page);await page.getByRole("alert").filter({hasText:"AWS history identity"}).waitFor();
+ await openAgent(page, true);await page.getByRole("alert").filter({hasText:"AWS history identity"}).waitFor();
  await page.getByText("Approvals connected",{exact:true}).waitFor();expect(await page.getByText("Agent version 1 · onboarding saved",{exact:true}).isVisible()).toBe(true);
  expect(await page.getByLabel("CloudWatch workflow log group",{exact:true}).isVisible()).toBe(false);expect(calls.filter(c=>c.body?.operation==="onboard")).toHaveLength(0);
 },{guided:true,enrolled:true,historyUnavailable:true}),20000);
 
 it("a failed history refresh keeps prior rows and approval controls mounted with an explicit stale-read notice",async()=>mounted(async(page,calls)=>{
- await openAgent(page);await page.getByText("Agent setup saved.",{exact:false}).waitFor();await page.getByRole("heading",{name:"Workflow approvals",exact:true}).waitFor();
+ await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();await page.getByRole("heading",{name:"Workflow approvals",exact:true}).waitFor();
  await page.getByRole("button",{name:"Refresh workflow history",exact:true}).click();await page.getByRole("alert").filter({hasText:"AWS history identity"}).waitFor();
  expect(await page.locator("details.aws-execution").count()).toBe(3);expect(await page.getByText("Showing the last successful history read",{exact:false}).isVisible()).toBe(true);
  expect(await page.getByRole("heading",{name:"Workflow approvals",exact:true}).count()).toBe(1);expect(calls.some(c=>c.body?.operation==="onboard")).toBe(false);
 },{guided:true,enrolled:true,historyFailsAfterFirst:true}),20000);
 
 it("guided approval verification stays read-only and explains the required administrator hook",async()=>mounted(async(page,calls)=>{
- await openAgent(page);await page.getByRole("heading",{name:"Connect workflow approvals",exact:true}).waitFor();
+ await openAgent(page, true);await page.getByRole("heading",{name:"Connect workflow approvals",exact:true}).waitFor();
  expect(await page.getByRole("link",{name:"Download approval connection guide",exact:true}).getAttribute("href")).toBe("/guides/aws-workflow-approvals.txt");
  await page.getByRole("button",{name:"Verify approval connection",exact:true}).click();expect(calls.filter(c=>c.path.endsWith("/approvals")).every(c=>c.body?.operation==="list")).toBe(true);
  expect(await page.getByText("Administrator-assisted setup is required in this release.",{exact:false}).isVisible()).toBe(true);expect(await page.getByText("Approvals connected",{exact:true}).count()).toBe(0);
 },{guided:true,enrolled:true,approvalConnected:false}),20000);
 
 it("related quote filter preserves one row per execution and the connected summary fits desktop and mobile",async()=>mounted(async(page)=>{
- await openAgent(page);await page.getByText("Agent setup saved.",{exact:false}).waitFor();await page.getByText("Approvals connected",{exact:true}).waitFor();
+ await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();await page.getByText("Approvals connected",{exact:true}).waitFor();
  await page.getByLabel("Reported quote",{exact:true}).selectOption("Q-shared");expect(await page.locator("details.aws-execution").count()).toBe(2);
  await page.getByText("25% discount",{exact:true}).click();expect(await page.locator("details.aws-execution[open]").count()).toBe(1);
  await page.setViewportSize({width:1440,height:1100});await page.evaluate(()=>{window.scrollTo({top:0,left:0,behavior:"instant"});return document.fonts.ready;});await page.screenshot({path:".local/aws-onboarding-p1-desktop.png",fullPage:true});
@@ -265,7 +266,7 @@ it("related quote filter preserves one row per execution and the connected summa
 },{guided:true,enrolled:true}),20000);
 
 it("unknown enrollment after a failed read offers retry rather than a new onboarding form",async()=>mounted(async(page,calls)=>{
- await openAgent(page);await page.getByRole("alert").filter({hasText:"Saved enrollment lookup unavailable"}).waitFor();
+ await openAgent(page, true);await page.getByRole("alert").filter({hasText:"Saved enrollment lookup unavailable"}).waitFor();
  expect(await page.getByRole("button",{name:"Retry saved agent check",exact:true}).isVisible()).toBe(true);
  expect(await page.getByLabel("CloudWatch workflow log group",{exact:true}).count()).toBe(0);expect(calls.some(c=>c.body?.operation==="onboard")).toBe(false);
 },{guided:true,enrolled:true,enrollmentFailsAfterFirst:true}),20000);
