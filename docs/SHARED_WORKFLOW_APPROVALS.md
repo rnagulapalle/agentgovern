@@ -165,3 +165,9 @@ The next CI attempt stopped before application tests because the fixture loader
 referenced the preceding receipt filename. The loader now uses the measured
 shared-approvals receipt. A direct restore verified all 299 files, the provider
 Git commit and all three compiled hashes; its four focused unit tests passed.
+
+A subsequent CI run passed 3,224 tests and rejected only the earlier connector
+receipt because the exact source registry had changed. A new isolated connector
+proof then passed all 36 checks with verified owned cleanup. It is retained at
+`docs/evidence/connector-proof-20261016-shared-approvals.json`; the old receipt
+remains unchanged. These provider-twin checks do not prove live Slack delivery.
