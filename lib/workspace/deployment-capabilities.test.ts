@@ -71,3 +71,12 @@ it('AWS onboarding RPC permits only POST behind the explicit AWS feature switch'
  expect(decide(profile,'/api/workspace/discovery/onboarding','POST',false)).toBe('deny');
  expect(decide(profile,'/api/workspace/discovery/onboarding/execute','POST',true)).toBe('deny');
 });
+
+it('shared workflow approvals permit only exact POST in the AWS-enabled control profile',()=>{
+ const route='/api/workspace/discovery/approvals';
+ expect(decide('isolated-control-demo-1',route,'POST',true)).toBe('allow');
+ for(const method of ['GET','HEAD','PUT','PATCH','DELETE','TRACE'])expect(decide('isolated-control-demo-1',route,method,true)).toBe('deny');
+ for(const profile of ['', 'unknown', 'isolated-quote-demo-1'])expect(decide(profile,route,'POST',true)).toBe('deny');
+ expect(decide('isolated-control-demo-1',route,'POST',false)).toBe('deny');
+ for(const path of [route+'/execute',route+'/', '/api/workspace/discovery/%61pprovals'])expect(decide('isolated-control-demo-1',path,'POST',true)).toBe('deny');
+});

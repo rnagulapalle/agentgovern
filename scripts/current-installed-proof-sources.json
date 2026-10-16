@@ -7,6 +7,7 @@
       "app/api/durable/workflows/route.ts",
       "app/api/workspace/agents/route.ts",
       "app/api/workspace/discovery/activity/route.ts",
+      "app/api/workspace/discovery/approvals/route.ts",
       "app/api/workspace/discovery/onboarding/route.ts",
       "app/api/workspace/discovery/owners/route.ts",
       "app/api/workspace/discovery/route.ts",
@@ -154,6 +155,7 @@
       "lib/workspace/cloud-project-evidence.ts",
       "lib/workspace/cloud-project-http.ts",
       "lib/workspace/deployment-capabilities.ts",
+      "lib/workspace/external-approvals.ts",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -668,6 +670,7 @@
     ],
     "discovery": [
       "app/api/workspace/discovery/activity/route.ts",
+      "app/api/workspace/discovery/approvals/route.ts",
       "app/api/workspace/discovery/onboarding/route.ts",
       "app/api/workspace/discovery/owners/route.ts",
       "app/api/workspace/discovery/route.ts",
@@ -683,6 +686,7 @@
       "components/control-plane/cloud-owner-review.tsx",
       "components/control-plane/discovery-workspace.css",
       "components/control-plane/discovery-workspace.tsx",
+      "components/control-plane/external-workflow-approvals.tsx",
       "components/control-plane/project-discovery-workspace.tsx",
       "components/control-plane/provider.tsx",
       "components/control-plane/shell.tsx",
@@ -807,6 +811,7 @@
       "lib/workspace/cloud-project-http.ts",
       "lib/workspace/cloud-project-schema.sql",
       "lib/workspace/deployment-capabilities.ts",
+      "lib/workspace/external-approvals.ts",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -1212,7 +1217,7 @@
   },
   "edges": [
     {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "from": "app/api/workspace/discovery/approvals/route.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
     {
@@ -1292,7 +1297,7 @@
       "to": "lib/workspace/identity.ts"
     },
     {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "from": "app/api/workspace/discovery/approvals/route.ts",
       "to": "lib/durable/http.ts"
     },
     {
@@ -1304,7 +1309,43 @@
       "to": "lib/durable/contracts.ts"
     },
     {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/workspace/cloud-observation-store.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/cloud-activity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-activity.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-activity.ts",
       "to": "lib/workspace/cloud-inventory.ts"
     },
     {
@@ -1342,62 +1383,6 @@
     {
       "from": "lib/workspace/cloud-project-evidence.ts",
       "to": "lib/workspace/cloud-project-discovery.ts"
-    },
-    {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
-      "to": "lib/workspace/cloud-owner-review.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-owner-review.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-owner-review.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-owner-review.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-owner-review.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
-      "to": "lib/workspace/cloud-observation-store.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/workspace/auth.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/workspace/cloud-activity.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-activity.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-activity.ts",
-      "to": "lib/workspace/cloud-inventory.ts"
     },
     {
       "from": "lib/workspace/cloud-activity.ts",
@@ -1458,6 +1443,50 @@
     {
       "from": "lib/workspace/cloud-observation-store.ts",
       "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "lib/workspace/external-approvals.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/durable/http.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-owner-review.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-owner-review.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-owner-review.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-owner-review.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-owner-review.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-observation-store.ts"
     },
     {
       "from": "app/api/workspace/discovery/onboarding/route.ts",
@@ -10993,6 +11022,26 @@
     },
     {
       "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "components/control-plane/external-workflow-approvals.tsx"
+    },
+    {
+      "from": "components/control-plane/external-workflow-approvals.tsx",
+      "to": "lib/workspace/cloud-activity.ts"
+    },
+    {
+      "from": "components/control-plane/external-workflow-approvals.tsx",
+      "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "lib/workspace/external-approvals.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/external-workflow-approvals.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/aws-workflow-history.tsx",
       "to": "lib/workspace/response.ts"
     },
     {
@@ -12202,6 +12251,26 @@
     {
       "from": "lib/workspace/cloud-observation-operations.ts",
       "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/durable/http.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/workspace/cloud-observation-store.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/workspace/external-approvals.ts"
     },
     {
       "from": "scripts/discovery-installed-evidence.mjs",
@@ -17132,6 +17201,7 @@
     "app/api/durable/workflows/route.ts": "2a448b416ad2f70e87bbea03afdffd2dd0d2814fdd64fd40c4bb1660d194ba64",
     "app/api/workspace/agents/route.ts": "29c130f1ea1b824edf9a4a84198d0b3c99559fdb28c7ae7144a7361f3e3b6e81",
     "app/api/workspace/discovery/activity/route.ts": "8b6369914ba33c062c6a80ad14eee0bd8c914124be6fce87be7a6e67e5419fa2",
+    "app/api/workspace/discovery/approvals/route.ts": "4a5021a0bcaa8cacdb90fd321dd24423e6e9d945823f211937fb7fbc54f3d8fc",
     "app/api/workspace/discovery/onboarding/route.ts": "47b36a284f3f0c5276dd0e0a6204dcc748750f466c872e1d6aa05c3b054ccae8",
     "app/api/workspace/discovery/owners/route.ts": "f36ac7a79ab2000e8382851e31c2242b76e5ddd0fda683794e828fa21a51a333",
     "app/api/workspace/discovery/route.ts": "60ad17f7744937d12c65a62d5d88184ba0923476713c727290096bc45ddab1d3",
@@ -17160,7 +17230,7 @@
     "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
     "components/control-plane/agents-workspace.tsx": "57272432e9ab8757a71b1bce43f9489df06c3661d0fbba13b9a1a0260dead7d2",
     "components/control-plane/aws-connection-journey.tsx": "959e759475b0890056d74cb120f8e59dfd462a2a1c4b53875c43f510c6bf6b43",
-    "components/control-plane/aws-workflow-history.tsx": "e1aee156f6529189a0cbeb9473049cfc8de03344c5f8c876b96eeb0d21a9506a",
+    "components/control-plane/aws-workflow-history.tsx": "4fa957816805d8b51c0c66503d972592d1b16f071832f715c395706567370701",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
     "components/control-plane/connector-actions-workspace.tsx": "67053c52bfdda7c2e49426c514defe9ade582f8613c0fff668d49fc9190d385f",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
@@ -17172,6 +17242,7 @@
     "components/control-plane/enquiry-execution.tsx": "127a84fdf2915f275194d8b9096f76318d59fe9446884703da4f1bb193982496",
     "components/control-plane/enquiry-progress.tsx": "d75ce63d60927b6c4f8f8807a642936e427040e4de0b65d3195ee1b7d76d6b36",
     "components/control-plane/enquiry-workspace.tsx": "fc4c0434be27e3dbdb2620eca709cb0dd87994d7d07fd2d56cfe2e4945a175a0",
+    "components/control-plane/external-workflow-approvals.tsx": "bb2088343154d39e16be2fffb537ef143d9947cc37613e7db34c996e818e6520",
     "components/control-plane/project-discovery-workspace.tsx": "687f021a0b6ecaa5ae1aded40c30ed8875c81b6875c9fea1997014d4d5699854",
     "components/control-plane/provider.tsx": "dd9c3ae5b8fcc20a01117f4b293282a42fd7d89d9d93a40f306381d9934d64da",
     "components/control-plane/quote-workflow-view.tsx": "835149a7c08bd9d42826edc7428b76a09c768dbdb526565f531635210e7913af",
@@ -17324,7 +17395,8 @@
     "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
     "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
     "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
-    "lib/workspace/deployment-capabilities.ts": "652040211b5ea7d0be9f3775b872c1dde11e325900a41d7cf1660ea23e1c11ac",
+    "lib/workspace/deployment-capabilities.ts": "74ae1d42548d4f76e3d37fc64222f36d6af3f59e78e0fb59937003b19ddbd4af",
+    "lib/workspace/external-approvals.ts": "8e344de0fd9f1763631fce00502a06b59665f86fc3549467134bc2ec8d0a8d93",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
     "lib/workspace/installed-tenant-fixture.ts": "7e3d9869ccdc2d3ac1229a57d4af24d29c0d658ec9bb7861767f066d2f185ea3",
     "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
@@ -17385,11 +17457,11 @@
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "43b595e4684fe20a8ee06b845ff14c65987b2d677e1a2f9cc47468f76eaf8d96",
+    "scripts/current-proof-source-registry.mjs": "80e972178f11c0b0b7f10d4c893462b03ab37f6b8c86ab25bf834e819b8292b1",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "acb5818ca827703ea9b0edc931dfc3c57b23e7511a36fd4391f7ec344d171f6a",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
-    "scripts/discovery-installed-source-contract.mjs": "a2ff18cee1b2a7d67697d582b2b90b51f6462a967e9298728b70ca0af4a52bf4",
+    "scripts/discovery-installed-source-contract.mjs": "9ddb87a895e6c15c31cd188f4217e8efd5ff46234fe2d17e3bd87b7895b86d39",
     "scripts/gateway-bypass-record.mjs": "1ef2b20fa85cd2c0478885e35a436893f5091e7f9ad30b5a1dbed748c8d3774f",
     "scripts/gateway-installed-bypass-proof.mjs": "c0d65087a214bd8a5e29fc70dd64b4ab9c9a19228406659cc95e32ee6ecf09b8",
     "scripts/gateway-installed-controller.ts": "e96d8e91b0e877ba409963373f809b3cb2a44144aaab450ae99f54f4572ce281",
