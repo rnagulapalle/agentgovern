@@ -30,7 +30,12 @@ export function assertObservationHostChange(before,after,attachment,compare){
  // Compose's long bind syntax must remain a read-only mount, with no implicit
  // host-directory creation and no propagation to another mount namespace.
  const extract=(v,required)=>{assert(!v.Binds?.some(x=>x.split(':')[1]===destination),'Legacy/ambiguous AWS bind refused');const found=(v.Mounts??[]).filter(m=>m.Target===destination);assert.equal(found.length,required?1:0);if(found.length){const m=found[0];assert.deepEqual(Object.keys(m).filter(k=>!['Consistency'].includes(k)).sort(),['BindOptions','ReadOnly','Source','Target','Type']);assert.equal(m.Type,'bind');assert.equal(m.Source,volume.source);assert.equal(m.ReadOnly,true);assert.deepEqual(m.BindOptions,{Propagation:'rprivate'});if(m.Consistency!==undefined)assert.equal(m.Consistency,'');v.Mounts=v.Mounts.filter(m=>m!==found[0]);}};
- const existed=(b.Mounts??[]).some(m=>m.Target===destination);extract(b,existed);extract(a,true);compare(b,a);
+ const existed=(b.Mounts??[]).some(m=>m.Target===destination);extract(b,existed);extract(a,true);
+ // Docker omits HostConfig.Mounts when the original container has only Binds.
+ // Removing our sole long-form mount leaves [], which represents the same
+ // absence of other mounts. Preserve every nonempty mount and other setting.
+ for(const v of [b,a])if(Array.isArray(v.Mounts)&&v.Mounts.length===0)delete v.Mounts;
+ compare(b,a);
 }
 export function assertObservationMounts(before,after,attachment){
  const sort=v=>[...v].sort((a,b)=>a.Destination.localeCompare(b.Destination));
