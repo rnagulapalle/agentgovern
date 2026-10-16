@@ -55,3 +55,9 @@ describe("explicit AWS workflow business-event observation",()=>{
   expect(await collectWorkflowTelemetry(api({events:[],private:"a".repeat(1_048_577)}),runtime(),window())).toMatchObject({failures:["read-unavailable"]});
  });
 });
+
+it("retains only safe quote and approval references for linking executions, without granting authority",()=>{
+ const parsed=projectWorkflowEvent(JSON.stringify({...event(),quote_id:"Q-123",approval_id:"APR-123"}));expect(parsed).toMatchObject({quoteId:"Q-123",approvalId:"APR-123",effectVerified:false});
+ for(const quote_id of ["https://private.example/customer", "private@example.test", "Bearer-secret", {}, "xoxb-private"]){expect(projectWorkflowEvent(JSON.stringify({...event(),quote_id}))).toBeNull();}
+ expect(projectWorkflowEvent(JSON.stringify(event()))).toMatchObject({quoteId:null,approvalId:null});
+});

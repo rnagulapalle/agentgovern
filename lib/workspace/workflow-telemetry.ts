@@ -7,6 +7,7 @@ export interface WorkflowTelemetryEvent {
   reportedDeploymentVersion: string;
   actionName: string | null; provider: string | null; decision: string | null; reasonCode: string | null; reportedOutcome: string | null;
   ruleId: string | null; ruleVersion: string | null; requestedPercent: number | null; approvalThreshold: number | null; maximumDiscount: number | null;
+  quoteId?: string | null; approvalId?: string | null;
   evidence: "source-reported"; effectVerified: false; approvalIdentityVerified: false;
 }
 export interface WorkflowTelemetryApi {
@@ -41,6 +42,7 @@ export function projectWorkflowEvent(raw: string): WorkflowTelemetryEvent | null
       || typeof v.span_id !== "string" || !/^[a-f0-9]{16}$/.test(v.span_id) || /^0+$/.test(v.span_id)
       || typeof v.trigger_channel !== "string" || !["slack", "email", "internal"].includes(v.trigger_channel)) return null;
     const occurredAt = time(v.timestamp); if (!occurredAt) return null;
+    if (["quote_id","approval_id"].some(k=>v[k]!==undefined&&v[k]!==null&&!symbol(v[k]))) return null;
     const optional = ["action_name", "provider", "decision", "reason_code", "outcome", "rule_id", "rule_version"];
     if (optional.some(k => v[k] !== undefined && !symbol(v[k]))) return null;
     for (const k of ["requested_pct", "approval_threshold_pct", "decline_above_pct"])
@@ -50,6 +52,7 @@ export function projectWorkflowEvent(raw: string): WorkflowTelemetryEvent | null
       actionName: v.action_name as string ?? null, provider: v.provider as string ?? null, decision: v.decision as string ?? null,
       reasonCode: v.reason_code as string ?? null, reportedOutcome: v.outcome as string ?? null, ruleId: v.rule_id as string ?? null, ruleVersion: v.rule_version as string ?? null,
       requestedPercent: v.requested_pct as number ?? null, approvalThreshold: v.approval_threshold_pct as number ?? null, maximumDiscount: v.decline_above_pct as number ?? null,
+      quoteId: v.quote_id as string ?? null, approvalId: v.approval_id as string ?? null,
       evidence: "source-reported", effectVerified: false, approvalIdentityVerified: false };
   } catch { return null; }
 }

@@ -17,7 +17,7 @@ export function telemetryRuns(window:WorkflowTelemetryWindow) {
   else if(lifecycle?.eventName==="workflow.finished")status=({completed:"Completed · agent reported",declined:"Blocked by workflow policy",rejected:"Rejected · agent reported",failed:"Failed · agent reported",needs_info:"Waiting for details",triaged:"Waiting for review"} as Record<string,string>)[lifecycle.reportedOutcome??""]??"Outcome reported · unrecognized state";
   else if(lifecycle?.eventName==="workflow.paused")status=lifecycle.reportedOutcome==="awaiting_approval"?"Awaiting manager approval":"Paused · agent reported";
   else if(lifecycle)status="In progress · agent reported";
-  return {id,events,status,policy,trigger:events[0].triggerChannel,lastObservedAt:events.at(-1)!.occurredAt,startedAt:events.find(e=>e.eventName==="workflow.started")?.occurredAt??null,startObserved:events.some(e=>e.eventName==="workflow.started"),conflict};
+  return {id,events,status,policy,quoteIds:[...new Set(events.flatMap(e=>e.quoteId?[e.quoteId]:[]))],trigger:events[0].triggerChannel,lastObservedAt:events.at(-1)!.occurredAt,startedAt:events.find(e=>e.eventName==="workflow.started")?.occurredAt??null,startObserved:events.some(e=>e.eventName==="workflow.started"),conflict};
  }).sort((a,b)=>(b.startedAt??b.events[0].occurredAt).localeCompare(a.startedAt??a.events[0].occurredAt)||a.id.localeCompare(b.id));
 }
 

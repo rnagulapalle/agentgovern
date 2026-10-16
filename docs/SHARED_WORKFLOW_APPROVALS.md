@@ -171,3 +171,40 @@ receipt because the exact source registry had changed. A new isolated connector
 proof then passed all 36 checks with verified owned cleanup. It is retained at
 `docs/evidence/connector-proof-20261016-shared-approvals.json`; the old receipt
 remains unchanged. These provider-twin checks do not prove live Slack delivery.
+
+### October 16 onboarding UX increment — local only
+
+The AWS journey remembers only connection/runtime/version references in a validated
+browser bookmark. It rereads authorized inventory and enrollment before reopening
+an agent. Storage cannot establish connection health, ownership or approval
+permission. Older saved deployments remain explicit; newer versions require a
+fresh server review and never silently inherit enrollment or approval authority.
+
+History, shared approvals and mandatory execution enforcement have separate status
+labels. Failed history reads retain saved onboarding. An unknown saved-state read
+offers retry rather than a new enrollment form. History refresh keeps prior results
+and the approval component mounted, with an explicit stale-read notice on failure.
+All existing server authorization and immutable approval checks remain unchanged.
+
+The history view retains one row per execution, expandable steps, window-wide counts
+and optional filtering by reported quote identifiers. Only safe quote/approval IDs
+from the business-event schema are projected; missing references remain unknown.
+Runs sharing a quote never merge. These fields are source-reported metadata, not
+independent effect or approver verification.
+
+Approval setup includes a builder guide and read-only connection verification.
+It remains PARTIAL against full self-service onboarding: the builder must expose
+the supported approval interface, and an administrator must install the secure
+server binding. This change adds no browser secret entry, credential vault or
+self-service binding installation. A separate engineering increment must establish
+reviewed customer-owned secret references and tenant/epoch/version-bound setup.
+The read-only observation role must not acquire secret-read or tool permissions.
+
+Mounted browser/API fixtures cover reload recovery, inaccessible bookmarks, stale
+evidence, failed saved reads, retained refresh results, independent approval status,
+version review, quote filtering and 390px layout. Their visual captures use the
+shipped global styles and Geist bytes; they are isolated component proofs.
+Separately, read-only CloudWatch inspection found quote references in the completed
+and rejected approval runs, but none in the 78-percent denial. All 90 retrieved
+source events passed the local projector. This does not establish a new deployment
+or production browser acceptance. The earlier production release stays unchanged.
