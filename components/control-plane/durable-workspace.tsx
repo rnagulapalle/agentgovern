@@ -23,7 +23,7 @@ const labels: Record<string, string> = {
   rejected: "Rejected",
   cancelled: "Cancelled",
 };
-export function DurableWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }) {
+export function DurableWorkspace({ scriptDemo = false, selectedActionId }: { scriptDemo?: boolean; selectedActionId?: string }) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -303,7 +303,7 @@ export function DurableWorkspace({ scriptDemo = false }: { scriptDemo?: boolean 
               {snapshot.actions.length === 0 ? (
                 <p>No actions yet. Request a discount change to get started.</p>
               ) : (
-                snapshot.actions.map((a) => (
+                snapshot.actions.filter(a => !selectedActionId || a.id === selectedActionId).map((a) => (
                   <article key={a.id} id={`action-${a.id}`}>
                     <div className="cp-durable-action-head">
                       <h3>

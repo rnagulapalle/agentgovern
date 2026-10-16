@@ -28,7 +28,7 @@ describe('source-owned quote deployment restriction', () => {
 
 describe('bounded control demonstration installation', () => {
   const script = 'isolated-control-demo-1';
-  it.each(['quotes', 'agents', 'actions', 'workflow-runs', 'history', 'workflows', 'approvals', 'policies', 'connectors', 'outputs', 'reconciliation'])('exposes only installed screen %s', section => {
+  it.each(['quotes', 'agents', 'activity', 'actions', 'workflow-runs', 'history', 'workflows', 'approvals', 'policies', 'connectors', 'outputs', 'reconciliation'])('exposes only installed screen %s', section => {
     expect(decide(script, '/control-plane/' + section, 'GET')).toBe('allow');
     expect(decide(script, '/control-plane/' + section, 'HEAD')).toBe('allow');
     expect(decide(script, '/control-plane/' + section, 'POST')).toBe('deny');
@@ -43,6 +43,13 @@ describe('bounded control demonstration installation', () => {
     expect(decide(script, '/api/workspace/quotes', 'POST')).toBe('allow');
     expect(decide(script, '/api/workspace/quotes/setup', 'POST')).toBe('deny');
   });
+});
+
+it('Activity is an authenticated read surface, not a new mutation or quote-profile entry',()=>{
+ expect(decide('isolated-control-demo-1','/control-plane/activity','GET')).toBe('allow');
+ for(const method of ['POST','PUT','DELETE','PATCH'])expect(decide('isolated-control-demo-1','/control-plane/activity',method)).toBe('deny');
+ expect(decide(profile,'/control-plane/activity','GET')).toBe('deny');
+ expect(decide('isolated-control-demo-1','/api/workspace/activity','POST')).toBe('deny');
 });
 
 

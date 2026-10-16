@@ -18,6 +18,7 @@
       "app/api/workspace/session/route.ts",
       "app/control-plane/[section]/page.tsx",
       "app/control-plane/actions/page.tsx",
+      "app/control-plane/activity/page.tsx",
       "app/control-plane/agents/page.tsx",
       "app/control-plane/connectors/page.tsx",
       "app/control-plane/control-plane.css",
@@ -31,14 +32,24 @@
       "components/brand/loop-mark.tsx",
       "components/control-plane/actions-workspace.tsx",
       "components/control-plane/agents-workspace.tsx",
+      "components/control-plane/aws-connection-journey.tsx",
+      "components/control-plane/aws-execution-browser.tsx",
+      "components/control-plane/aws-workflow-history.tsx",
+      "components/control-plane/cloud-owner-review.tsx",
       "components/control-plane/connector-actions-workspace.tsx",
       "components/control-plane/connectors-workspace.tsx",
+      "components/control-plane/control-center.css",
+      "components/control-plane/control-center.tsx",
       "components/control-plane/discount-approval-brief.tsx",
       "components/control-plane/discount-history.tsx",
+      "components/control-plane/discovery-workspace.css",
+      "components/control-plane/discovery-workspace.tsx",
       "components/control-plane/durable-workspace.tsx",
       "components/control-plane/enquiry-execution.tsx",
       "components/control-plane/enquiry-progress.tsx",
       "components/control-plane/enquiry-workspace.tsx",
+      "components/control-plane/external-workflow-approvals.tsx",
+      "components/control-plane/project-discovery-workspace.tsx",
       "components/control-plane/provider.tsx",
       "components/control-plane/quote-workflow-view.tsx",
       "components/control-plane/quote-workspace.tsx",
@@ -133,6 +144,7 @@
       "lib/workspace/auth.ts",
       "lib/workspace/aws-authorization-contract.ts",
       "lib/workspace/aws-guided-access.ts",
+      "lib/workspace/aws-journey.ts",
       "lib/workspace/cloud-activity.ts",
       "lib/workspace/cloud-aws-cli.ts",
       "lib/workspace/cloud-azure-binding.ts",
@@ -165,6 +177,7 @@
       "lib/workspace/tenant-bootstrap.ts",
       "lib/workspace/tenant-context.ts",
       "lib/workspace/web-recovery-deployment.ts",
+      "lib/workspace/workflow-telemetry-view.ts",
       "lib/workspace/workflow-telemetry.ts",
       "middleware.ts",
       "next.config.mjs",
@@ -685,6 +698,7 @@
       "components/control-plane/aws-execution-browser.tsx",
       "components/control-plane/aws-workflow-history.tsx",
       "components/control-plane/cloud-owner-review.tsx",
+      "components/control-plane/control-center.css",
       "components/control-plane/discovery-workspace.css",
       "components/control-plane/discovery-workspace.tsx",
       "components/control-plane/external-workflow-approvals.tsx",
@@ -1218,127 +1232,11 @@
   },
   "edges": [
     {
-      "from": "app/api/workspace/discovery/approvals/route.ts",
-      "to": "lib/workspace/tenant-context.ts"
+      "from": "app/control-plane/activity/page.tsx",
+      "to": "components/control-plane/control-center.tsx"
     },
     {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
-      "from": "lib/durable/tenant-pool.ts",
-      "to": "lib/durable/pg-transport.ts"
-    },
-    {
-      "from": "lib/durable/tenant-pool.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/workspace/identity.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/identity.ts",
-      "to": "lib/durable/recovery.ts"
-    },
-    {
-      "from": "lib/durable/recovery.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
-      "from": "lib/durable/recovery.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/durable/recovery.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/durable/database.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/durable/recovery.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/workspace/auth.ts"
-    },
-    {
-      "from": "lib/workspace/auth.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/auth.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "app/api/workspace/discovery/approvals/route.ts",
-      "to": "lib/durable/http.ts"
-    },
-    {
-      "from": "lib/durable/http.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/durable/http.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "app/api/workspace/discovery/approvals/route.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "app/api/workspace/discovery/approvals/route.ts",
-      "to": "lib/workspace/cloud-observation-store.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
-      "to": "lib/workspace/auth.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-store.ts",
+      "from": "components/control-plane/control-center.tsx",
       "to": "lib/workspace/cloud-activity.ts"
     },
     {
@@ -1354,6 +1252,10 @@
       "to": "lib/durable/database.ts"
     },
     {
+      "from": "lib/durable/database.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/durable/contracts.ts"
     },
@@ -1362,12 +1264,48 @@
       "to": "lib/workspace/identity.ts"
     },
     {
+      "from": "lib/workspace/identity.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/identity.ts",
+      "to": "lib/durable/recovery.ts"
+    },
+    {
+      "from": "lib/durable/recovery.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/durable/tenant-pool.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "lib/durable/tenant-pool.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/durable/recovery.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/durable/recovery.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/durable/tenant-pool.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "lib/workspace/auth.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/auth.ts",
+      "to": "lib/workspace/identity.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
@@ -1442,11 +1380,83 @@
       "to": "lib/workspace/cloud-discovery.ts"
     },
     {
-      "from": "lib/workspace/cloud-observation-store.ts",
+      "from": "components/control-plane/control-center.tsx",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "lib/workspace/workflow-telemetry.ts",
       "to": "lib/workspace/cloud-discovery.ts"
     },
     {
-      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "from": "components/control-plane/control-center.tsx",
+      "to": "lib/workspace/workflow-telemetry-view.ts"
+    },
+    {
+      "from": "lib/workspace/workflow-telemetry-view.ts",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "lib/workspace/presentation.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/ui.tsx",
+      "to": "lib/control-plane/model.ts"
+    },
+    {
+      "from": "lib/control-plane/model.ts",
+      "to": "lib/engine/evaluate.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/registry.ts"
+    },
+    {
+      "from": "lib/engine/registry.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/hash.ts"
+    },
+    {
+      "from": "lib/control-plane/model.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/aws-execution-browser.tsx"
+    },
+    {
+      "from": "components/control-plane/aws-execution-browser.tsx",
+      "to": "lib/workspace/workflow-telemetry-view.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/aws-workflow-history.tsx"
+    },
+    {
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "components/control-plane/external-workflow-approvals.tsx"
+    },
+    {
+      "from": "components/control-plane/external-workflow-approvals.tsx",
+      "to": "lib/workspace/cloud-activity.ts"
+    },
+    {
+      "from": "components/control-plane/external-workflow-approvals.tsx",
       "to": "lib/workspace/external-approvals.ts"
     },
     {
@@ -1454,19 +1464,175 @@
       "to": "lib/durable/contracts.ts"
     },
     {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
-      "to": "lib/workspace/tenant-context.ts"
+      "from": "components/control-plane/external-workflow-approvals.tsx",
+      "to": "lib/workspace/response.ts"
     },
     {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
-      "to": "lib/durable/http.ts"
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "lib/workspace/response.ts"
     },
     {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
-      "to": "lib/workspace/cloud-inventory.ts"
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "lib/workspace/cloud-activity.ts"
     },
     {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "lib/workspace/aws-journey.ts"
+    },
+    {
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "lib/workspace/workflow-telemetry-view.ts"
+    },
+    {
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "components/control-plane/aws-execution-browser.tsx"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/external-workflow-approvals.tsx"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/agents-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/agents-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/agents-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/agents-workspace.tsx",
+      "to": "lib/workspace/presentation.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/saved-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/connectors/content.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/durable/recovery.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/record-scope.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/request.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/request.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/request.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/connectors/request.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "components/control-plane/discovery-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/discovery-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/discovery-workspace.tsx",
+      "to": "components/control-plane/project-discovery-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/project-discovery-workspace.tsx",
+      "to": "components/control-plane/cloud-owner-review.tsx"
+    },
+    {
+      "from": "components/control-plane/cloud-owner-review.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/cloud-owner-review.tsx",
       "to": "lib/workspace/cloud-owner-review.ts"
     },
     {
@@ -1486,27 +1652,11 @@
       "to": "lib/workspace/identity.ts"
     },
     {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
-      "to": "lib/workspace/cloud-observation-store.ts"
+      "from": "components/control-plane/project-discovery-workspace.tsx",
+      "to": "lib/workspace/response.ts"
     },
     {
-      "from": "app/api/workspace/discovery/onboarding/route.ts",
-      "to": "lib/workspace/cloud-observation-operations.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-operations.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-operations.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-operations.ts",
-      "to": "lib/workspace/cloud-inventory.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-observation-operations.ts",
+      "from": "components/control-plane/project-discovery-workspace.tsx",
       "to": "lib/workspace/cloud-operations.ts"
     },
     {
@@ -1548,10 +1698,6 @@
     {
       "from": "lib/workspace/aws-guided-access.ts",
       "to": "lib/workspace/workflow-telemetry.ts"
-    },
-    {
-      "from": "lib/workspace/workflow-telemetry.ts",
-      "to": "lib/workspace/cloud-discovery.ts"
     },
     {
       "from": "lib/workspace/cloud-operations.ts",
@@ -1646,6 +1792,238 @@
       "to": "lib/workspace/cloud-discovery.ts"
     },
     {
+      "from": "components/control-plane/project-discovery-workspace.tsx",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "components/control-plane/discovery-workspace.tsx",
+      "to": "components/control-plane/aws-connection-journey.tsx"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "lib/workspace/aws-journey.ts"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "lib/workspace/cloud-operations.ts"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "lib/workspace/cloud-activity.ts"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "components/control-plane/cloud-owner-review.tsx"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "components/control-plane/aws-workflow-history.tsx"
+    },
+    {
+      "from": "components/control-plane/discovery-workspace.tsx",
+      "to": "components/control-plane/discovery-workspace.css"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "components/control-plane/durable-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/durable-workspace.tsx",
+      "to": "components/control-plane/discount-history.tsx"
+    },
+    {
+      "from": "components/control-plane/discount-history.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/discount-history.tsx",
+      "to": "lib/durable/history-export.ts"
+    },
+    {
+      "from": "lib/durable/history-export.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/discount-history.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/durable-workspace.tsx",
+      "to": "components/control-plane/discount-approval-brief.tsx"
+    },
+    {
+      "from": "components/control-plane/discount-approval-brief.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/durable-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/durable-workspace.tsx",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "components/control-plane/connector-actions-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/connector-actions-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/connector-actions-workspace.tsx",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "components/control-plane/connector-actions-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/saved-workspace.tsx",
+      "to": "components/control-plane/saved-workspace.css"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/durable-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/connector-actions-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/control-center.css"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/discovery-workspace.css"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/durable/http.ts"
+    },
+    {
+      "from": "lib/durable/http.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/durable/http.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/workspace/cloud-observation-store.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/cloud-activity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/approvals/route.ts",
+      "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/durable/http.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-owner-review.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-observation-store.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-observation-operations.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-operations.ts"
+    },
+    {
       "from": "lib/workspace/cloud-observation-operations.ts",
       "to": "lib/workspace/cloud-observation-store.ts"
     },
@@ -1710,120 +2088,8 @@
       "to": "components/control-plane/ui.tsx"
     },
     {
-      "from": "components/control-plane/ui.tsx",
-      "to": "lib/control-plane/model.ts"
-    },
-    {
-      "from": "lib/control-plane/model.ts",
-      "to": "lib/engine/evaluate.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/registry.ts"
-    },
-    {
-      "from": "lib/engine/registry.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/hash.ts"
-    },
-    {
-      "from": "lib/control-plane/model.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
       "from": "app/control-plane/page.tsx",
-      "to": "components/control-plane/saved-workspace.tsx"
-    },
-    {
-      "from": "components/control-plane/saved-workspace.tsx",
-      "to": "lib/workspace/response.ts"
-    },
-    {
-      "from": "components/control-plane/saved-workspace.tsx",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "components/control-plane/saved-workspace.tsx",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/connectors/content.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/connectors/scopes.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/record-scope.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/request.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/request.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/request.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/connectors/request.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "components/control-plane/saved-workspace.tsx",
-      "to": "components/control-plane/ui.tsx"
-    },
-    {
-      "from": "components/control-plane/saved-workspace.tsx",
-      "to": "components/control-plane/saved-workspace.css"
+      "to": "components/control-plane/control-center.tsx"
     },
     {
       "from": "app/control-plane/page.tsx",
@@ -1888,6 +2154,10 @@
     {
       "from": "app/control-plane/[section]/page.tsx",
       "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
+      "from": "app/control-plane/[section]/page.tsx",
+      "to": "components/control-plane/control-center.tsx"
     },
     {
       "from": "middleware.ts",
@@ -2971,6 +3241,10 @@
     },
     {
       "from": "app/control-plane/layout.tsx",
+      "to": "components/control-plane/control-center.css"
+    },
+    {
+      "from": "app/control-plane/layout.tsx",
       "to": "app/sales.css"
     },
     {
@@ -3106,42 +3380,6 @@
       "to": "components/control-plane/durable-workspace.tsx"
     },
     {
-      "from": "components/control-plane/durable-workspace.tsx",
-      "to": "components/control-plane/discount-history.tsx"
-    },
-    {
-      "from": "components/control-plane/discount-history.tsx",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "components/control-plane/discount-history.tsx",
-      "to": "lib/durable/history-export.ts"
-    },
-    {
-      "from": "lib/durable/history-export.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "components/control-plane/discount-history.tsx",
-      "to": "components/control-plane/ui.tsx"
-    },
-    {
-      "from": "components/control-plane/durable-workspace.tsx",
-      "to": "components/control-plane/discount-approval-brief.tsx"
-    },
-    {
-      "from": "components/control-plane/discount-approval-brief.tsx",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "components/control-plane/durable-workspace.tsx",
-      "to": "components/control-plane/ui.tsx"
-    },
-    {
-      "from": "components/control-plane/durable-workspace.tsx",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
       "from": "components/control-plane/actions-workspace.tsx",
       "to": "components/control-plane/refund-workspace.tsx"
     },
@@ -3158,36 +3396,16 @@
       "to": "components/control-plane/connector-actions-workspace.tsx"
     },
     {
-      "from": "components/control-plane/connector-actions-workspace.tsx",
-      "to": "lib/workspace/response.ts"
-    },
-    {
-      "from": "components/control-plane/connector-actions-workspace.tsx",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "components/control-plane/connector-actions-workspace.tsx",
-      "to": "components/control-plane/ui.tsx"
-    },
-    {
       "from": "app/control-plane/agents/page.tsx",
       "to": "components/control-plane/agents-workspace.tsx"
     },
     {
-      "from": "components/control-plane/agents-workspace.tsx",
-      "to": "lib/workspace/response.ts"
-    },
-    {
-      "from": "components/control-plane/agents-workspace.tsx",
-      "to": "components/control-plane/ui.tsx"
-    },
-    {
-      "from": "components/control-plane/agents-workspace.tsx",
-      "to": "lib/workspace/presentation.ts"
+      "from": "app/control-plane/agents/page.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
     },
     {
       "from": "app/control-plane/agents/page.tsx",
-      "to": "lib/workspace/deployment-capabilities.ts"
+      "to": "components/control-plane/control-center.tsx"
     },
     {
       "from": "app/control-plane/workflow-runs/page.tsx",
@@ -11111,6 +11329,10 @@
     },
     {
       "from": "app/control-plane/layout.tsx",
+      "to": "components/control-plane/control-center.css"
+    },
+    {
+      "from": "app/control-plane/layout.tsx",
       "to": "app/sales.css"
     },
     {
@@ -17225,15 +17447,16 @@
     "app/api/workspace/quotes/verification/route.ts": "1386e0ab2f169a7a842258fd19d7d7ebae2842d843017a70cda9701a46a9a7ea",
     "app/api/workspace/records/route.ts": "7c49b2287d84c7cfdb6d4e29bd52b0b2a9fc23ed8a3f4f822040a8cc1684abd6",
     "app/api/workspace/session/route.ts": "5194c1a54bde45b893cb398075b4a625edca806d4b41efc53d824698842b55ce",
-    "app/control-plane/[section]/page.tsx": "5db380f3baafc3e53f7c8416c32dedc7ee77e2833cd5506295a65e769d21a08b",
+    "app/control-plane/[section]/page.tsx": "089fa297acad3a613e60be3a0aaa0b6168289138666b0afe4db3700178e57096",
     "app/control-plane/actions/page.tsx": "d7ed38ab4b0f698f266cfdb4609307cc6f5d3e2d592c376ca3a422e70b90b8d7",
-    "app/control-plane/agents/page.tsx": "1e26531fa126bff611d9c94a75a100b8f2a4ab7c1b3069a8060ded6f44c71dce",
+    "app/control-plane/activity/page.tsx": "fc3be688e95df4cc206bc9df61a361de20a9153b312cd820956a543b52f2bffe",
+    "app/control-plane/agents/page.tsx": "ec10ce3c5a745284691f8abaa712a2394922ef20f5e883499f0f83937e17996a",
     "app/control-plane/connectors/page.tsx": "ff2c3744eae14158c36dc1c38ae473385c51b46d43ea921de00a59e40ba8c2da",
     "app/control-plane/control-plane.css": "2cd5918b34f9675f1ef729369384f8cf9a0bfa61f593c407788342eb60fcd51f",
     "app/control-plane/discovery/page.tsx": "181a8282afe6cc830f76b3f0beead9ebf298fd145e83bcbfd5d53f55fecb4a32",
     "app/control-plane/history/page.tsx": "baeb70147a3557a7f461061f005cacb6a19844e5cf50029e9b4d3d9389b82491",
-    "app/control-plane/layout.tsx": "97efd7aaa6ae58174a4068087991074d80c4111ad60543a2f6da5d2467efde40",
-    "app/control-plane/page.tsx": "4819e63b0c2801184e5dbbaf45d5f11c587dfae9e5533632e6844363cef56936",
+    "app/control-plane/layout.tsx": "7255b1d4c12bd5ff19de2af1ba14331ee713fcd69bc81a85eb11a2a8776cc7e1",
+    "app/control-plane/page.tsx": "573688c4835e539e44b02eb0f64dd82e7525ba8ad6967915cfeb0069b231dd16",
     "app/control-plane/quotes/page.tsx": "959e496795d77d13557b7f6d7f66933cff5701cfe79cf384a2ed2d03d2002cce",
     "app/control-plane/work/page.tsx": "d56f08ebfbfcb7deed94fb1a73de0fd1be9dc1f40f065871b7fcb31a02ceb617",
     "app/control-plane/workflow-runs/page.tsx": "df2bfa6088f195cd1fdd1f31ac4abae07ef1da2b8d168ffdc21cb8ada36e1def",
@@ -17241,22 +17464,24 @@
     "components/brand/loop-mark.tsx": "a520ee6e522a488f2e081d217f219099f48e3eca4cf5c67104eacea7616bdf79",
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
     "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
-    "components/control-plane/agents-workspace.tsx": "57272432e9ab8757a71b1bce43f9489df06c3661d0fbba13b9a1a0260dead7d2",
+    "components/control-plane/agents-workspace.tsx": "60059f9dd43bfa3fc5c04c836899c08da4ddc68b3d631c07df8858385b968b7f",
     "components/control-plane/aws-connection-journey.tsx": "95ac70583e87005c9b26513bc13da7d7080bc2ab504028037953ac62703283c1",
-    "components/control-plane/aws-execution-browser.tsx": "033330197c4798b94bbb09ddecbfde38d87c3025cbc23863423040d6c9078182",
-    "components/control-plane/aws-workflow-history.tsx": "4a5d1150fbafcf590e271ac1a82b11f3467989a7d1a2d051b210d6f99e639572",
+    "components/control-plane/aws-execution-browser.tsx": "1bb31bebd9b75e9b2f87c03ca4fa3e9698339f9935b150f220bc651320bd8d78",
+    "components/control-plane/aws-workflow-history.tsx": "442eebbfe6c35a08584c91bcddf161df57df3fc213c9ff9597a6431937c4d0f2",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
-    "components/control-plane/connector-actions-workspace.tsx": "67053c52bfdda7c2e49426c514defe9ade582f8613c0fff668d49fc9190d385f",
+    "components/control-plane/connector-actions-workspace.tsx": "0e3c49545f9ec160bb7b0acadce0a45907b10040a9f2250a9062dae1920945ff",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
+    "components/control-plane/control-center.css": "5dbc2a11ae6c66ae644cd0444ab987d3516f2fbb9fba9efba0064c778bc0cce8",
+    "components/control-plane/control-center.tsx": "8d327db07dbbb8b91775f3c7aa0961ed4268b1ab4384832a20a60dfd885b8ead",
     "components/control-plane/discount-approval-brief.tsx": "8d44b575118d60b1e6a22cbc07e4fa7b9ba03c90eedacc2d2490e5d0b98f1378",
     "components/control-plane/discount-history.tsx": "c38c42a43b51b8c18d2fb8f8bb77834edc62e523035a4b3cfe8ec65cbf328100",
-    "components/control-plane/discovery-workspace.css": "20fc74cf9ed833869001956baddc8d0cdb35cc192f0b7cd2d224ae9e23cf23a4",
+    "components/control-plane/discovery-workspace.css": "d635a72712321737b3f14be303d81c9cd013ce5965d2afeb762d076d0a31d579",
     "components/control-plane/discovery-workspace.tsx": "aaab1f98f599c47c1514dc38853c31e66f7b20a73e185a69232a9f5ab30abe64",
-    "components/control-plane/durable-workspace.tsx": "8b28f5f6696bd3832817ddf09fc1c9535aef671d329e4f472a7e04f0c635e50a",
+    "components/control-plane/durable-workspace.tsx": "1eb8827f9eaf6c830a0a3007a4e0c6a0040ed5ac6d896e5a14592fdfddb25277",
     "components/control-plane/enquiry-execution.tsx": "127a84fdf2915f275194d8b9096f76318d59fe9446884703da4f1bb193982496",
     "components/control-plane/enquiry-progress.tsx": "d75ce63d60927b6c4f8f8807a642936e427040e4de0b65d3195ee1b7d76d6b36",
     "components/control-plane/enquiry-workspace.tsx": "fc4c0434be27e3dbdb2620eca709cb0dd87994d7d07fd2d56cfe2e4945a175a0",
-    "components/control-plane/external-workflow-approvals.tsx": "a10333870200bdee1b8d2b3510ca2711f1d6e23d40e6f43a350d3fa4e90fe467",
+    "components/control-plane/external-workflow-approvals.tsx": "2b703da25e2c2d451658ec688aba7fc96fa150f7ab3f48e8652793c0a3154b00",
     "components/control-plane/project-discovery-workspace.tsx": "687f021a0b6ecaa5ae1aded40c30ed8875c81b6875c9fea1997014d4d5699854",
     "components/control-plane/provider.tsx": "dd9c3ae5b8fcc20a01117f4b293282a42fd7d89d9d93a40f306381d9934d64da",
     "components/control-plane/quote-workflow-view.tsx": "835149a7c08bd9d42826edc7428b76a09c768dbdb526565f531635210e7913af",
@@ -17265,10 +17490,10 @@
     "components/control-plane/request-planner.tsx": "659a3778dc1e542c264f7814ef655b72eac3542f3a4d34dde8fe440f5e8e32e8",
     "components/control-plane/saved-history-workspace.tsx": "c27650a0a1ef0b17b57c54cd2fa1cfed4a407f9e39d773b97ec4ffe26e4cf7ec",
     "components/control-plane/saved-workspace.css": "ca602c6a14675c99fba6c008115057435f14713a1b0ee5f5509f548053618652",
-    "components/control-plane/saved-workspace.tsx": "479d9705657df8dcb0b9c4270a3235bbfc201a08a419a68f67d3d89a807c9465",
+    "components/control-plane/saved-workspace.tsx": "63be9daa3576fba9049a6fabd5d309a331d124d30e370a1b419a1168632ab841",
     "components/control-plane/screens.tsx": "8012e435d8a2ac823ade4c2e51fefd1891f167c1bb0efcbf6f4be8dd05cdcc1a",
-    "components/control-plane/shell.tsx": "a25735a042aa1f8e9c2f7ff992426a3a75a38824c6895145ca5136ba4f66cfb2",
-    "components/control-plane/ui.tsx": "11f6b237acaf2ed53cb0daa94cca2459774494e78d2ade6cd0155a7911958ee2",
+    "components/control-plane/shell.tsx": "471db12bfd4f3b8fc5046e0f0aa17609f5f3839a524a4c253e765be583edfe10",
+    "components/control-plane/ui.tsx": "c923100ad0cb557532ad432d5e436abbab6a89e7b8ffb9f00652543c32e340e3",
     "components/control-plane/workflow-workspace.tsx": "98922abdd9abaf7b4659ac0897ad3256d584195b643af76f2e8a9de757a4bc91",
     "components/control-plane/workspace-gate.tsx": "a29c737a46790dc6d1b6bf13eb95fc3aac9ba8bf2910e2951b891641327b5466",
     "components/control-plane/workspace-overview.tsx": "a15f1c75b912dddef7a41e1d97d8887a0421a0d32ca13e23f11f50fec82a413e",
@@ -17409,7 +17634,7 @@
     "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
     "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
     "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
-    "lib/workspace/deployment-capabilities.ts": "74ae1d42548d4f76e3d37fc64222f36d6af3f59e78e0fb59937003b19ddbd4af",
+    "lib/workspace/deployment-capabilities.ts": "db3718613f045f796c3e47f4f0fd7da5d6dad38d62932f2af7f83456eca8556e",
     "lib/workspace/external-approvals.ts": "8e344de0fd9f1763631fce00502a06b59665f86fc3549467134bc2ec8d0a8d93",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
     "lib/workspace/installed-tenant-fixture.ts": "7e3d9869ccdc2d3ac1229a57d4af24d29c0d658ec9bb7861767f066d2f185ea3",
@@ -17432,7 +17657,7 @@
     "lib/workspace/tenant-installer.ts": "53c0281769d918cde4b519471b17e158300ee984d63c1fa7d52872a2a98821ce",
     "lib/workspace/tenant-read-inventory.ts": "191962730ba0a45c9959ae1d9505c64fbf78dc2cf63f8139ae8b1d2b4b237261",
     "lib/workspace/web-recovery-deployment.ts": "40a4f402e95fd524414ea10ecd77b916ecd61193cffeedc7f86f9a56dd6c183b",
-    "lib/workspace/workflow-telemetry-view.ts": "74912d3f687edb9416e76e9e53e9fe64a978e0db30b9ec153cf5a7f53f3f0b30",
+    "lib/workspace/workflow-telemetry-view.ts": "62003cb3ca6c627eebe8603e64926d084b7651c064a46de61cc630f357efa7d3",
     "lib/workspace/workflow-telemetry.ts": "34b8e8970f77391330341c0b89413445179f53e6015e409c52bfc23edffd8495",
     "middleware.ts": "b44f47c87927a0088d6e11a41b06282ba098b6670ce2e40a9fbc105bb1f9630f",
     "next.config.mjs": "5746e6fc704bcdf5d09ffacaeb00a0285b2456176516cb5af52faeabf6cd2cb4",
@@ -17471,7 +17696,7 @@
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "80e972178f11c0b0b7f10d4c893462b03ab37f6b8c86ab25bf834e819b8292b1",
+    "scripts/current-proof-source-registry.mjs": "7d5d8c51a2af771c53c3cf38f5f4c94a8bda1bd09b0ee2993ca15127834b516a",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "acb5818ca827703ea9b0edc931dfc3c57b23e7511a36fd4391f7ec344d171f6a",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",

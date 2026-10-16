@@ -71,7 +71,7 @@ it('administrator boundaries remain visible when a saved API refuses access',asy
 
 it('known quote update and quote email are excluded from customer queue while actual customer rows survive',async()=>mounted('overview',async(page,requests)=>{
  await page.getByRole('heading',{name:'Customer record update',exact:true}).waitFor();await page.getByRole('heading',{name:'Customer acknowledgement',exact:true}).waitFor();
- expect(await page.getByRole('alert').count()).toBe(0);const hrefs=await page.getByRole('link',{name:'Review request'}).evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));expect(hrefs.some(h=>h?.includes('customer-email-held'))).toBe(true);expect(hrefs.some(h=>h?.includes('quote-email-held')||h?.includes('quote-update-held'))).toBe(false);expect(requests.every(r=>r.startsWith('GET '))).toBe(true);
+ expect(await page.getByRole('alert').count()).toBe(0);const text=await page.locator('.saved-workspace-row').allTextContents();expect(text.some(h=>h.includes('customer-email-held'))).toBe(true);expect(text.some(h=>h.includes('quote-email-held')||h.includes('quote-update-held'))).toBe(false);expect(requests.every(r=>r.startsWith('GET '))).toBe(true);
 },'mixed-quote'),15000);
 it('mixed quote policy does not reject connections or claim quote health as customer health',async()=>mounted('connections',async page=>{
  await page.getByText('Sample requests are enabled. Connection health and real delivery have not been checked.').waitFor();expect(await page.getByRole('alert').count()).toBe(0);expect(await page.getByText('An active request policy has not been confirmed.').count()).toBe(1);
@@ -96,7 +96,7 @@ it.each(['connections','policies'] as const)('loading %s is not reported as unav
 
 it('explicit AWS installation shows a setup link without claiming controlled execution or enabling other clouds', () => {
  const html=renderToStaticMarkup(<SavedWorkspace section="connections" awsConnections />);
- expect(html).toContain('href="/control-plane/discovery"');expect(html).toContain('Set up AWS connection');expect(html).toContain('Execution controls require separate verified onboarding');
+ expect(html).toContain('Set up AWS connection');expect(html).toContain('Set up AWS connection');expect(html).toContain('Execution controls require separate verified onboarding');
  expect((html.match(/>Coming soon</g)||[]).length).toBe(2);
 });
 

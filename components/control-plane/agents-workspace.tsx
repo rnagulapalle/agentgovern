@@ -24,6 +24,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
   const [busy, setBusy] = useState(false);
   const [key, setKey] = useState("");
   const [connector, setConnector] = useState("discount_record");
+  const [agentId, setAgentId] = useState("");
   const refresh = useCallback(async () => {
     const r = await fetch("/api/workspace/agents", { cache: "no-store" });
     const v = await workspaceJson(r);
@@ -31,6 +32,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
     setData(v);
   }, []);
   useEffect(() => {
+    setAgentId(`agent-${crypto.randomUUID()}`);
     refresh().catch((e) => setError(e.message));
   }, [refresh]);
   return (
@@ -78,6 +80,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
               const v = await workspaceJson(r);
               if (!r.ok) throw new Error(v.error);
               setKey(v.agentToken);
+              setAgentId(`agent-${crypto.randomUUID()}`);
               form.reset();
               await refresh();
             } catch (e) {
@@ -99,9 +102,11 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
             />
           </label>
           <label>
-            Agent ID
+            Agent reference (generated)
             <input
               name="id"
+              value={agentId}
+              readOnly
               required
               pattern="[a-zA-Z0-9_-]{1,64}"
               maxLength={64}
@@ -156,7 +161,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
               required
             />
           </label>
-          <button className="cp-button cp-button-dark" disabled={busy || !data}>
+          <button className="cp-button cp-button-dark" disabled={busy || !data || !agentId}>
             {busy ? "Registering…" : "Register agent"}
           </button>
         </form>
