@@ -3,15 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import { workspaceJson } from "@/lib/workspace/response";
 import type { ActivityReference } from "@/lib/workspace/cloud-activity";
 import type { WorkflowTelemetryWindow } from "@/lib/workspace/workflow-telemetry";
-import { eventLabels, telemetryRuns } from "@/lib/workspace/workflow-telemetry-view";
+import { eventLabels, telemetryRuns, telemetrySteps, telemetryDecision } from "@/lib/workspace/workflow-telemetry-view";
 async function operation(value:object){const r=await fetch("/api/workspace/discovery/onboarding",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(value),cache:"no-store"});const data=await workspaceJson(r);if(!r.ok)throw Object.assign(Error(data.error),{status:r.status});return data;}
 type History=WorkflowTelemetryWindow&{checkedAt:string;enrollment:{displayName:string;owner:string;logGroup:string;enrolledAt:string}};
 export function AwsWorkflowHistory({reference,name}:{reference:ActivityReference;name:string}){
  const [owners,setOwners]=useState<{email:string;name:string}[]>([]),[sources,setSources]=useState<string[]>([]),[truncated,setTruncated]=useState(false);
  const [displayName,setDisplayName]=useState(name),[owner,setOwner]=useState(""),[logGroup,setLogGroup]=useState("");
  const [history,setHistory]=useState<History|null>(null),[hours,setHours]=useState(24),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
+ const [channel,setChannel]=useState("all"),[shown,setShown]=useState(10);
  const generation=useRef(0),request=useRef<{signature:string;id:string}|null>(null);
  const key=JSON.stringify(reference);
+ const allRuns=history?telemetryRuns(history):[],runs=allRuns.filter(r=>channel==="all"||r.trigger===channel);
  useEffect(()=>{const requests=generation;const n=++requests.current;let active=true;setOwners([]);setHistory(null);setError("");setNotice("");setBusy(true);setDisplayName(name);setLogGroup("");setOwner("");setSources([]);setTruncated(false);request.current=null;
   fetch("/api/workspace/discovery/owners",{cache:"no-store"}).then(async r=>{const data=await workspaceJson(r);if(!r.ok)throw Object.assign(Error(data.error),{status:r.status});if(active)setOwners(data.owners);}).catch(e=>{if(active)setError(e.message);});
   operation({operation:"history",connectionId:reference.connectionId,resourceArn:reference.resourceArn,version:reference.version,hours:24}).then((d:History)=>{if(active&&n===generation.current){setHistory(d);setDisplayName(d.enrollment.displayName);setOwner(d.enrollment.owner);setLogGroup(d.enrollment.logGroup);setNotice("Observation onboarding saved. Showing history from the enrolled AWS source. Execution controls remain off.");}}).catch(e=>{if(active&&n===generation.current&&!(e.status===409&&e.message==="Onboard this agent for observation before opening its history."))setError(e instanceof Error?e.message:"Saved observation could not be checked.");}).finally(()=>{if(active&&n===generation.current)setBusy(false);});
@@ -44,12 +46,20 @@ export function AwsWorkflowHistory({reference,name}:{reference:ActivityReference
    {history.failures.length>0&&<p role="status">Some evidence could not be read or validated. Missing events do not prove that work did not happen.</p>}
    {history.duplicateDeliveries>0&&<p>{history.duplicateDeliveries} repeated event deliveries were deduplicated.</p>}
    {!history.events.length&&<p>No supported workflow events were found in this read. This does not establish that the agent was idle.</p>}
-   {telemetryRuns(history).map((run,index)=><article className="cp-panel cp-durable-card" key={run.id}><h3>Workflow run · {run.trigger}{run.policy?.requestedPercent!==null&&run.policy?.requestedPercent!==undefined?` · ${run.policy.requestedPercent}% discount`:""}</h3><span className="aws-status">{run.status}</span>
-    {!run.startObserved&&<p>The start of this run was not observed in this window.</p>}
-    {run.policy&&<p>Existing workflow policy: {run.policy.decision??"Decision not reported"}.{run.policy.approvalThreshold!==null?` Approval threshold: ${run.policy.approvalThreshold}%.`:""}{run.policy.maximumDiscount!==null?` Maximum discount: ${run.policy.maximumDiscount}%.`:""}</p>}
-    <details open={index===0}><summary>View execution timeline · {run.events.length} events</summary><ol aria-label={`Run ${index+1} event timeline`}>{run.events.map(e=><li className="aws-event-row" key={e.eventId}><div><strong>{eventLabels[e.eventName]}</strong>{e.actionName&&<p>{e.actionName.replaceAll("_"," ")}{e.provider?` · ${e.provider}`:""}</p>}{e.reasonCode&&<p>{e.reasonCode.replaceAll("_"," ")}</p>}<p>{new Date(e.occurredAt).toLocaleString()} · Attempt {e.attempt} · Reported deployment {e.reportedDeploymentVersion}</p></div></li>)}</ol></details>
-    <details><summary>Run and trace references</summary><p>Run: {run.id}</p><p>Trace: {run.events[0].traceId}</p><p>Enrolled runtime version: {history.source.enrolledRuntimeVersion}. Event deployment versions are reported by the source.</p></details>
-   </article>)}
+   <div className="aws-history-toolbar"><label>Channel<select aria-label="Workflow history channel" value={channel} onChange={e=>{setChannel(e.target.value);setShown(10);}}><option value="all">All channels</option><option value="slack">Slack</option><option value="email">Email</option><option value="internal">Internal</option></select></label><p>{runs.length} observed executions · newest start first{channel!=="all"?` · ${channel}`:""}</p></div>
+   <div className="aws-execution-columns" aria-hidden="true"><span>Request</span><span>Channel</span><span>Decision</span><span>Outcome</span><span>Started</span></div>
+   {runs.slice(0,shown).map(run=><details className="aws-execution" key={run.id}>
+    <summary className="aws-execution-summary"><span><strong>{run.policy?.requestedPercent!==null&&run.policy?.requestedPercent!==undefined?`${run.policy.requestedPercent}% discount`:"Workflow execution"}</strong><small>{run.events.filter(e=>e.eventName.startsWith("action.")).length?`${telemetrySteps(run.events).filter(s=>s.action).length} tool steps`:"Open steps"}</small></span><span className="aws-channel">{run.trigger}</span><span>{telemetryDecision(run.events,run.policy?.decision)}</span><span>{run.status}</span><time dateTime={run.startedAt??run.events[0].occurredAt}>{new Date(run.startedAt??run.events[0].occurredAt).toLocaleString()}</time></summary>
+    <div className="aws-execution-body"><h4>Execution steps</h4>
+    {!run.startObserved&&<p>The execution start was not observed. The displayed time is its first observed event.</p>}
+    {run.policy&&<p>Policy reported by the agent: {run.policy.approvalThreshold!==null?`manager approval from ${run.policy.approvalThreshold}%.`:"Approval threshold not reported."} {run.policy.maximumDiscount!==null?`Requests above ${run.policy.maximumDiscount}% are denied.`:""}</p>}
+    <ol className="aws-execution-steps" aria-label={`Execution steps for ${run.id}`}>{telemetrySteps(run.events).map(step=><li key={step.key}><div><strong>{step.title}</strong>{step.state&&<span className="aws-status">{step.state}</span>}{step.first.provider&&<p>{step.first.provider}</p>}{step.last.reasonCode&&<p>{step.last.reasonCode.replaceAll("_"," ")}</p>}<time dateTime={step.first.occurredAt}>{new Date(step.first.occurredAt).toLocaleTimeString()}</time>{step.first.attempt>1&&<span> · Attempt {step.first.attempt}</span>}</div></li>)}</ol>
+    <details><summary>Technical details · {run.events.length} source events</summary><p>Execution reference: {run.id}</p><p>Trace: {run.events[0].traceId}</p><p>Enrolled runtime version: {history.source.enrolledRuntimeVersion}. Deployment versions are reported by the source.</p><ol>{run.events.map(e=><li key={e.eventId}>{eventLabels[e.eventName]}{e.actionName?` · ${e.actionName.replaceAll("_"," ")}`:""} · {e.occurredAt} · Attempt {e.attempt}</li>)}</ol></details>
+    </div>
+   </details>)}
+   {runs.length===0&&history.events.length>0&&<p>No executions from this channel were found in the loaded window.</p>}
+   {runs.length>shown&&<button className="cp-button secondary" onClick={()=>setShown(n=>n+10)}>Show 10 more executions</button>}
+
   </div>}
  </section>;
 }

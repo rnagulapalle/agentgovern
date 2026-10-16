@@ -17,6 +17,34 @@ export function telemetryRuns(window:WorkflowTelemetryWindow) {
   else if(lifecycle?.eventName==="workflow.finished")status=({completed:"Completed · agent reported",declined:"Blocked by workflow policy",rejected:"Rejected · agent reported",failed:"Failed · agent reported",needs_info:"Waiting for details",triaged:"Waiting for review"} as Record<string,string>)[lifecycle.reportedOutcome??""]??"Outcome reported · unrecognized state";
   else if(lifecycle?.eventName==="workflow.paused")status=lifecycle.reportedOutcome==="awaiting_approval"?"Awaiting manager approval":"Paused · agent reported";
   else if(lifecycle)status="In progress · agent reported";
-  return {id,events,status,policy,trigger:events[0].triggerChannel,lastObservedAt:events.at(-1)!.occurredAt,startObserved:events.some(e=>e.eventName==="workflow.started"),conflict};
- }).sort((a,b)=>b.lastObservedAt.localeCompare(a.lastObservedAt)||a.id.localeCompare(b.id));
+  return {id,events,status,policy,trigger:events[0].triggerChannel,lastObservedAt:events.at(-1)!.occurredAt,startedAt:events.find(e=>e.eventName==="workflow.started")?.occurredAt??null,startObserved:events.some(e=>e.eventName==="workflow.started"),conflict};
+ }).sort((a,b)=>(b.startedAt??b.events[0].occurredAt).localeCompare(a.startedAt??a.events[0].occurredAt)||a.id.localeCompare(b.id));
+}
+
+/** Collapse lifecycle reports only for the same action ID and attempt. Never
+ * merge separate runs, parallel calls, or retries because their names match. */
+export function telemetrySteps(events:WorkflowTelemetryEvent[]) {
+ const steps:{key:string;events:WorkflowTelemetryEvent[];action:boolean}[]=[],actions=new Map<string,typeof steps[number]>();
+ for(const event of events){
+  if(event.eventName.startsWith("action.")&&event.actionId){
+   const key=JSON.stringify([event.runId,event.actionId,event.attempt]);let step=actions.get(key);
+   if(!step){step={key,events:[],action:true};actions.set(key,step);steps.push(step);}step.events.push(event);
+  }else steps.push({key:event.eventId,events:[event],action:false});
+ }
+ return steps.map(step=>{
+  const first=step.events[0],last=step.events.at(-1)!;
+  const uncertain=step.events.some(e=>e.eventName==="action.uncertain"),failed=step.events.some(e=>e.eventName==="action.failed");
+  const state=uncertain?"Outcome uncertain":failed?"Failed":last.eventName==="action.completed"?"Completed":last.eventName==="action.withheld"?"Withheld":last.eventName==="action.started"?"In progress":"Proposed";
+  return {...step,first,last,title:step.action?(first.actionName??"Tool action").replaceAll("_"," "):eventLabels[first.eventName],state:step.action?state:null};
+ });
+}
+export function telemetryDecision(events:WorkflowTelemetryEvent[],decision:string|null|undefined){
+ if(events.some(e=>e.eventName==="approval.rejected"))return "Manager rejected";
+ if(events.some(e=>e.eventName==="approval.expired"))return "Approval expired";
+ if(events.some(e=>e.eventName==="approval.approved"))return "Manager approved";
+ if(decision==="decline")return "Denied by policy";
+ if(decision==="needs_approval")return "Manager approval required";
+ if(decision==="auto_approve")return "Automatically approved";
+ if(decision==="invalid")return "More details needed";
+ return "Decision not reported";
 }

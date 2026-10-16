@@ -176,7 +176,7 @@ it("guided fixture reviews AWS access, discovers, onboards and renders permitted
 it("returning to an enrolled AWS agent restores its saved source and history without repeating onboarding",async()=>mounted(async(page,calls)=>{
  await openAgent(page);
  await page.getByText("Observation onboarding saved.",{exact:false}).waitFor();
- expect(await page.getByRole("heading",{name:"Workflow run · slack · 25% discount",exact:true}).count()).toBe(1);
+ expect(await page.getByText("25% discount",{exact:true}).count()).toBe(1);
  await page.getByText("Observation onboarding",{exact:true}).click();
  expect(await page.getByLabel("CloudWatch workflow log group",{exact:true}).inputValue()).toBe("/company/agent-events");
  expect(await page.getByLabel("Accountable owner",{exact:true}).inputValue()).toBe("owner@example.test");
@@ -198,3 +198,15 @@ it("stale discovery requires refresh for an unenrolled agent",async()=>mounted(a
  await openAgent(page);await page.getByRole("alert").filter({hasText:"Refresh the agent list before setting up observation"}).waitFor();
  expect(await page.getByRole("button",{name:"Onboard for observation",exact:true}).count()).toBe(0);
 },{guided:true,stale:true}),20000);
+
+it("history shows one collapsed row per execution and filters Slack without changing source runs",async()=>mounted(async(page)=>{
+ await openAgent(page);await page.getByText("Observation onboarding saved.",{exact:false}).waitFor();
+ expect(await page.locator("details.aws-execution").count()).toBe(3);expect(await page.locator("details.aws-execution[open]").count()).toBe(0);
+ await page.screenshot({path:".local/aws-history-compact-desktop-fixture.png",fullPage:true});
+ await page.getByText("25% discount",{exact:true}).click();expect(await page.locator("details.aws-execution[open]").count()).toBe(1);
+ await page.getByRole("heading",{name:"Execution steps",exact:true}).waitFor();
+ await page.getByLabel("Workflow history channel",{exact:true}).selectOption("email");expect(await page.locator("details.aws-execution").count()).toBe(0);
+ await page.getByText("No executions from this channel were found in the loaded window.",{exact:true}).waitFor();
+ await page.getByLabel("Workflow history channel",{exact:true}).selectOption("slack");expect(await page.locator("details.aws-execution").count()).toBe(3);
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+},{guided:true,enrolled:true}),20000);
