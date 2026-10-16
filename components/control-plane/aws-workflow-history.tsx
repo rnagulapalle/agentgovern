@@ -4,7 +4,7 @@ import { workspaceJson } from "@/lib/workspace/response";
 import type { ActivityReference } from "@/lib/workspace/cloud-activity";
 import type { WorkflowTelemetryWindow } from "@/lib/workspace/workflow-telemetry";
 import { eventLabels, telemetryRuns } from "@/lib/workspace/workflow-telemetry-view";
-async function operation(value:object){const r=await fetch("/api/workspace/discovery/onboarding",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(value),cache:"no-store"});const data=await workspaceJson(r);if(!r.ok)throw Error(data.error);return data;}
+async function operation(value:object){const r=await fetch("/api/workspace/discovery/onboarding",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(value),cache:"no-store"});const data=await workspaceJson(r);if(!r.ok)throw Object.assign(Error(data.error),{status:r.status});return data;}
 type History=WorkflowTelemetryWindow&{checkedAt:string;enrollment:{displayName:string;owner:string;logGroup:string;enrolledAt:string}};
 export function AwsWorkflowHistory({reference,name}:{reference:ActivityReference;name:string}){
  const [owners,setOwners]=useState<{email:string;name:string}[]>([]),[sources,setSources]=useState<string[]>([]),[truncated,setTruncated]=useState(false);
@@ -12,10 +12,11 @@ export function AwsWorkflowHistory({reference,name}:{reference:ActivityReference
  const [history,setHistory]=useState<History|null>(null),[hours,setHours]=useState(24),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const generation=useRef(0),request=useRef<{signature:string;id:string}|null>(null);
  const key=JSON.stringify(reference);
- useEffect(()=>{const requests=generation;++requests.current;let active=true;setOwners([]);setHistory(null);setError("");setNotice("");setBusy(false);setDisplayName(name);setLogGroup("");setOwner("");setSources([]);setTruncated(false);request.current=null;
-  fetch("/api/workspace/discovery/owners",{cache:"no-store"}).then(async r=>{const data=await workspaceJson(r);if(!r.ok)throw Error(data.error);if(active)setOwners(data.owners);}).catch(e=>{if(active)setError(e.message);});
+ useEffect(()=>{const requests=generation;const n=++requests.current;let active=true;setOwners([]);setHistory(null);setError("");setNotice("");setBusy(true);setDisplayName(name);setLogGroup("");setOwner("");setSources([]);setTruncated(false);request.current=null;
+  fetch("/api/workspace/discovery/owners",{cache:"no-store"}).then(async r=>{const data=await workspaceJson(r);if(!r.ok)throw Object.assign(Error(data.error),{status:r.status});if(active)setOwners(data.owners);}).catch(e=>{if(active)setError(e.message);});
+  operation({operation:"history",connectionId:reference.connectionId,resourceArn:reference.resourceArn,version:reference.version,hours:24}).then((d:History)=>{if(active&&n===generation.current){setHistory(d);setDisplayName(d.enrollment.displayName);setOwner(d.enrollment.owner);setLogGroup(d.enrollment.logGroup);setNotice("Observation onboarding saved. Showing history from the enrolled AWS source. Execution controls remain off.");}}).catch(e=>{if(active&&n===generation.current&&!(e.status===409&&e.message==="Onboard this agent for observation before opening its history."))setError(e instanceof Error?e.message:"Saved observation could not be checked.");}).finally(()=>{if(active&&n===generation.current)setBusy(false);});
   return()=>{active=false;requests.current++;};
- },[key,name]);
+ },[key,name,reference.connectionId,reference.resourceArn,reference.version]);
  async function loadSources(){const n=++generation.current;setBusy(true);setError("");try{const d=await operation({operation:"sources",connectionId:reference.connectionId});if(n===generation.current){setSources(d.groups.map((g:{name:string})=>g.name));setTruncated(d.truncated);}}catch(e){if(n===generation.current)setError(e instanceof Error?e.message:"AWS sources unavailable.");}finally{if(n===generation.current)setBusy(false);}}
  async function loadHistory(){const n=++generation.current;setBusy(true);setError("");setHistory(null);try{const d=await operation({operation:"history",connectionId:reference.connectionId,resourceArn:reference.resourceArn,version:reference.version,hours});if(n===generation.current)setHistory(d);}catch(e){if(n===generation.current)setError(e instanceof Error?e.message:"History could not be read.");}finally{if(n===generation.current)setBusy(false);}}
  async function onboard(){const n=++generation.current;setBusy(true);setError("");setNotice("");setHistory(null);

@@ -18,7 +18,7 @@ function guidedHistory() {
   return {enrollment:{displayName:"Customer service agent",owner:"owner@example.test",logGroup:"/company/agent-events",enrolledAt:at},checkedAt:new Date().toISOString(),source:{runtimeArn:arn,enrolledRuntimeVersion:"1",logGroup:"/company/agent-events",startTime:Date.now()-86400000,endTime:Date.now()},events,completeness:"complete-api-traversal",unsupportedRecords:0,duplicateDeliveries:0,conflictingEventIds:[],failures:[],enforcement:"not-established"};
 }
 type Call = { path: string; method: string; body: Record<string,unknown> | null };
-async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, options: { access?: boolean; activityError?: boolean; delayed?: Promise<void>; stale?: boolean; retainedVersion?: boolean; guided?: boolean } = {}) {
+async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, options: { access?: boolean; activityError?: boolean; delayed?: Promise<void>; stale?: boolean; retainedVersion?: boolean; guided?: boolean; enrolled?: boolean; historyUnavailable?: boolean } = {}) {
   const esbuild = requireModule(requireModule.resolve("esbuild", { paths: [requireModule.resolve("@temporalio/worker")] }));
   const bundle = await esbuild.build({ stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {AwsConnectionJourney} from './components/control-plane/aws-connection-journey';createRoot(document.getElementById('app')).render(<AwsConnectionJourney/>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, platform: "browser", format: "iife", write: false, jsx: "automatic", alias: { "@": resolve(".") }, define: { "process.env": "{}", "process.env.NODE_ENV": '"test"' } });
   function snapshot() {
@@ -31,7 +31,7 @@ async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, option
     }
     return value;
   }
-  const browser = await chromium.launch({ headless: true }), calls: Call[] = []; let configured = false, owner: string | null = null, onboarded = false;
+  const browser = await chromium.launch({ headless: true }), calls: Call[] = []; let configured = false, owner: string | null = null, onboarded = Boolean(options.enrolled);
   try {
     const page = await browser.newPage();
     await page.route("https://aws-journey-fixture.test/**", async route => {
@@ -53,8 +53,9 @@ async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, option
         else if(body?.operation === "verify") result={status:"identity-verified",inventory:snapshot(),authorityGranted:false};
         else if(body?.operation === "sources") result={groups:[{name:"/company/agent-events",retentionDays:30}],truncated:false};
         else if(body?.operation === "onboard") {onboarded=true;result={mode:"observation-only",enforcement:"not-established",supportedEventsObserved:9};}
+        else if(body?.operation === "history" && options.historyUnavailable) {status=503;result={error:"AWS history identity could not be verified. No history was accepted."};}
         else if(body?.operation === "history" && onboarded) result=guidedHistory();
-        else {status=409;result={error:"Onboard this agent for observation first."};}
+        else {status=409;result={error:"Onboard this agent for observation before opening its history."};}
       } else if (path === "/api/workspace/discovery/owners") {
         if (method === "POST") { owner = String(body?.owner); result = { authorityGranted: false }; }
         else if (new URL(route.request().url()).search) result = { ownership: owner ? "reviewed" : "unmapped", owner, authorityGranted: false, enforcement: "unverified" };
@@ -169,3 +170,20 @@ it("guided fixture reviews AWS access, discovers, onboards and renders permitted
  expect(calls.some(c=>["approve","execute","invoke"].includes(String(c.body?.operation)))).toBe(false);
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 },{guided:true}),20000);
+
+it("returning to an enrolled AWS agent restores its saved source and history without repeating onboarding",async()=>mounted(async(page,calls)=>{
+ await openAgent(page);await page.getByRole("button",{name:"Continue to onboarding",exact:false}).click();
+ await page.getByText("Observation onboarding saved.",{exact:false}).waitFor();
+ expect(await page.getByRole("heading",{name:"Workflow run · slack · 25% discount",exact:true}).count()).toBe(1);
+ await page.getByText("Observation onboarding",{exact:true}).click();
+ expect(await page.getByLabel("CloudWatch workflow log group",{exact:true}).inputValue()).toBe("/company/agent-events");
+ expect(await page.getByLabel("Accountable owner",{exact:true}).inputValue()).toBe("owner@example.test");
+ expect(calls.filter(c=>c.body?.operation==="onboard")).toHaveLength(0);
+},{guided:true,enrolled:true}),20000);
+
+it("failed saved history read is explicit and never invents enrolled status",async()=>mounted(async(page,calls)=>{
+ await openAgent(page);await page.getByRole("button",{name:"Continue to onboarding",exact:false}).click();
+ await page.getByRole("alert").filter({hasText:"AWS history identity could not be verified"}).waitFor();
+ expect(await page.getByText("Observation onboarding saved.",{exact:false}).count()).toBe(0);
+ expect(calls.some(c=>c.body?.operation==="onboard")).toBe(false);
+},{guided:true,enrolled:true,historyUnavailable:true}),20000);
