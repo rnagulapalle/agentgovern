@@ -25,4 +25,4 @@ it('actual quote observer refuses missing wrong and insecure selector at inputs 
   await chmod(attachment.file,0o600);expect(JSON.parse((await readOwnedPrivateFile(attachment.file,16384)).bytes.toString())).toEqual(target);
   const wrong=join(parent,'wrong.json');await writeFile(wrong,'{}',{mode:0o600});await expect(readOwnedPrivateFile(join(parent,'missing.json'),16384)).rejects.toThrow();
  }finally{await rm(parent,{recursive:true,force:true});}
-});
+},50000); // Three isolated child processes each have a bounded 15-second startup.

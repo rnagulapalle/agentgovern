@@ -26,7 +26,10 @@ RUN pnpm build
 RUN node scripts/build-enquiry-worker.mjs
 
 # ---- runner: minimal production image ----
+# Official AWS Roles Anywhere helper needs the glibc loader; system CA roots
+# remain verified. No cloud credentials are copied into the image.
 FROM node:22-alpine AS runner
+RUN apk add --no-cache gcompat ca-certificates
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000

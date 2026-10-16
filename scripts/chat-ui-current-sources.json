@@ -51,7 +51,8 @@
     "lib/quotes/membership-schema.sql",
     "lib/workspace/membership-authority-schema.sql",
     "lib/enquiries/revision-schema.sql",
-    "scripts/chat-ui-proof-sources.ts"
+    "scripts/chat-ui-proof-sources.ts",
+    "lib/workspace/cloud-observation-schema.sql"
   ],
   "files": [
     "Dockerfile.temporal",
@@ -176,6 +177,7 @@
     "lib/workspace/agents.ts",
     "lib/workspace/auth.ts",
     "lib/workspace/cloud-inventory-schema.sql",
+    "lib/workspace/cloud-observation-schema.sql",
     "lib/workspace/cloud-owner-review-schema.sql",
     "lib/workspace/cloud-project-schema.sql",
     "lib/workspace/deployment-capabilities.ts",

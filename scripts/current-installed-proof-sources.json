@@ -7,6 +7,7 @@
       "app/api/durable/workflows/route.ts",
       "app/api/workspace/agents/route.ts",
       "app/api/workspace/discovery/activity/route.ts",
+      "app/api/workspace/discovery/onboarding/route.ts",
       "app/api/workspace/discovery/owners/route.ts",
       "app/api/workspace/discovery/route.ts",
       "app/api/workspace/enquiries/route.ts",
@@ -129,6 +130,8 @@
       "lib/workflows/service.ts",
       "lib/workspace/agents.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/aws-authorization-contract.ts",
+      "lib/workspace/aws-guided-access.ts",
       "lib/workspace/cloud-activity.ts",
       "lib/workspace/cloud-aws-cli.ts",
       "lib/workspace/cloud-azure-binding.ts",
@@ -141,6 +144,8 @@
       "lib/workspace/cloud-inventory.ts",
       "lib/workspace/cloud-invocation-observation.ts",
       "lib/workspace/cloud-invocation-reader.ts",
+      "lib/workspace/cloud-observation-operations.ts",
+      "lib/workspace/cloud-observation-store.ts",
       "lib/workspace/cloud-operations.ts",
       "lib/workspace/cloud-owner-review.ts",
       "lib/workspace/cloud-private-binding.ts",
@@ -158,6 +163,7 @@
       "lib/workspace/tenant-bootstrap.ts",
       "lib/workspace/tenant-context.ts",
       "lib/workspace/web-recovery-deployment.ts",
+      "lib/workspace/workflow-telemetry.ts",
       "middleware.ts",
       "next.config.mjs",
       "package.json",
@@ -662,6 +668,7 @@
     ],
     "discovery": [
       "app/api/workspace/discovery/activity/route.ts",
+      "app/api/workspace/discovery/onboarding/route.ts",
       "app/api/workspace/discovery/owners/route.ts",
       "app/api/workspace/discovery/route.ts",
       "app/api/workspace/session/route.ts",
@@ -672,6 +679,7 @@
       "components/brand/loop-mark.tsx",
       "components/control-plane/access.tsx",
       "components/control-plane/aws-connection-journey.tsx",
+      "components/control-plane/aws-workflow-history.tsx",
       "components/control-plane/cloud-owner-review.tsx",
       "components/control-plane/discovery-workspace.css",
       "components/control-plane/discovery-workspace.tsx",
@@ -770,6 +778,8 @@
       "lib/workflows/service.ts",
       "lib/workspace/agents.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/aws-authorization-contract.ts",
+      "lib/workspace/aws-guided-access.ts",
       "lib/workspace/aws-journey.ts",
       "lib/workspace/cloud-activity.ts",
       "lib/workspace/cloud-aws-cli.ts",
@@ -784,6 +794,9 @@
       "lib/workspace/cloud-inventory.ts",
       "lib/workspace/cloud-invocation-observation.ts",
       "lib/workspace/cloud-invocation-reader.ts",
+      "lib/workspace/cloud-observation-operations.ts",
+      "lib/workspace/cloud-observation-schema.sql",
+      "lib/workspace/cloud-observation-store.ts",
       "lib/workspace/cloud-operations.ts",
       "lib/workspace/cloud-owner-review-schema.sql",
       "lib/workspace/cloud-owner-review.ts",
@@ -808,6 +821,8 @@
       "lib/workspace/tenant-installer.ts",
       "lib/workspace/tenant-read-inventory.ts",
       "lib/workspace/web-recovery-deployment.ts",
+      "lib/workspace/workflow-telemetry-view.ts",
+      "lib/workspace/workflow-telemetry.ts",
       "next.config.mjs",
       "package.json",
       "pnpm-lock.yaml",
@@ -1017,6 +1032,8 @@
       "lib/workflows/service.ts",
       "lib/workspace/agents.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/aws-authorization-contract.ts",
+      "lib/workspace/aws-guided-access.ts",
       "lib/workspace/cloud-aws-cli.ts",
       "lib/workspace/cloud-azure-binding.ts",
       "lib/workspace/cloud-azure-cli.ts",
@@ -1048,6 +1065,7 @@
       "lib/workspace/tenant-installer.ts",
       "lib/workspace/tenant-read-inventory.ts",
       "lib/workspace/web-recovery-deployment.ts",
+      "lib/workspace/workflow-telemetry.ts",
       "next.config.mjs",
       "package.json",
       "pnpm-lock.yaml",
@@ -1194,7 +1212,7 @@
   },
   "edges": [
     {
-      "from": "app/api/workspace/discovery/activity/route.ts",
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
     {
@@ -1274,7 +1292,7 @@
       "to": "lib/workspace/identity.ts"
     },
     {
-      "from": "app/api/workspace/discovery/activity/route.ts",
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
       "to": "lib/durable/http.ts"
     },
     {
@@ -1286,7 +1304,7 @@
       "to": "lib/durable/contracts.ts"
     },
     {
-      "from": "app/api/workspace/discovery/activity/route.ts",
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
       "to": "lib/workspace/cloud-inventory.ts"
     },
     {
@@ -1300,6 +1318,10 @@
     {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-inventory.ts",
+      "to": "lib/durable/tenant-pool.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
@@ -1322,7 +1344,51 @@
       "to": "lib/workspace/cloud-project-discovery.ts"
     },
     {
-      "from": "app/api/workspace/discovery/activity/route.ts",
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-owner-review.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-owner-review.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-owner-review.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-owner-review.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-owner-review.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-observation-store.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
       "to": "lib/workspace/cloud-activity.ts"
     },
     {
@@ -1388,6 +1454,206 @@
     {
       "from": "lib/workspace/cloud-activity.ts",
       "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-observation-operations.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-operations.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-operations.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-operations.ts",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-operations.ts",
+      "to": "lib/workspace/cloud-binding.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-operations.ts",
+      "to": "lib/workspace/aws-guided-access.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/aws-authorization-contract.ts"
+    },
+    {
+      "from": "lib/workspace/aws-authorization-contract.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/cloud-aws-cli.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/cloud-private-binding.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "lib/workspace/workflow-telemetry.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-operations.ts",
+      "to": "lib/workspace/cloud-project-binding.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-project-binding.ts",
+      "to": "lib/workspace/cloud-project-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-project-binding.ts",
+      "to": "lib/workspace/cloud-azure-binding.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-binding.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-binding.ts",
+      "to": "lib/workspace/cloud-private-binding.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-binding.ts",
+      "to": "lib/workspace/cloud-azure-cli.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-cli.ts",
+      "to": "lib/workspace/cloud-project-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-cli.ts",
+      "to": "lib/workspace/cloud-project-http.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-cli.ts",
+      "to": "lib/workspace/cloud-azure-http.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-http.ts",
+      "to": "lib/workspace/cloud-project-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-http.ts",
+      "to": "lib/workspace/cloud-project-http.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-binding.ts",
+      "to": "lib/workspace/cloud-azure-http.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-azure-binding.ts",
+      "to": "lib/workspace/cloud-project-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-project-binding.ts",
+      "to": "lib/workspace/cloud-google-binding.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-google-binding.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-google-binding.ts",
+      "to": "lib/workspace/cloud-private-binding.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-google-binding.ts",
+      "to": "lib/workspace/cloud-google-http.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-google-http.ts",
+      "to": "lib/workspace/cloud-project-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-google-http.ts",
+      "to": "lib/workspace/cloud-project-http.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-google-http.ts",
+      "to": "lib/workspace/cloud-project-http.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-google-binding.ts",
+      "to": "lib/workspace/cloud-project-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-operations.ts",
+      "to": "lib/workspace/cloud-project-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-operations.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-observation-store.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-owner-review.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-activity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/aws-guided-access.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/activity/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/activity/route.ts",
+      "to": "lib/durable/http.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/activity/route.ts",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/activity/route.ts",
+      "to": "lib/workspace/cloud-activity.ts"
     },
     {
       "from": "app/control-plane/page.tsx",
@@ -3314,110 +3580,6 @@
       "to": "lib/workspace/cloud-operations.ts"
     },
     {
-      "from": "lib/workspace/cloud-operations.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-operations.ts",
-      "to": "lib/workspace/cloud-inventory.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-operations.ts",
-      "to": "lib/workspace/cloud-binding.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-operations.ts",
-      "to": "lib/workspace/cloud-project-binding.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-project-binding.ts",
-      "to": "lib/workspace/cloud-project-discovery.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-project-binding.ts",
-      "to": "lib/workspace/cloud-azure-binding.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-binding.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-binding.ts",
-      "to": "lib/workspace/cloud-private-binding.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-binding.ts",
-      "to": "lib/workspace/cloud-azure-cli.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-cli.ts",
-      "to": "lib/workspace/cloud-project-discovery.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-cli.ts",
-      "to": "lib/workspace/cloud-project-http.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-cli.ts",
-      "to": "lib/workspace/cloud-azure-http.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-http.ts",
-      "to": "lib/workspace/cloud-project-discovery.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-http.ts",
-      "to": "lib/workspace/cloud-project-http.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-binding.ts",
-      "to": "lib/workspace/cloud-azure-http.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-azure-binding.ts",
-      "to": "lib/workspace/cloud-project-discovery.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-project-binding.ts",
-      "to": "lib/workspace/cloud-google-binding.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-google-binding.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-google-binding.ts",
-      "to": "lib/workspace/cloud-private-binding.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-google-binding.ts",
-      "to": "lib/workspace/cloud-google-http.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-google-http.ts",
-      "to": "lib/workspace/cloud-project-discovery.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-google-http.ts",
-      "to": "lib/workspace/cloud-project-http.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-google-http.ts",
-      "to": "lib/workspace/cloud-project-http.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-google-binding.ts",
-      "to": "lib/workspace/cloud-project-discovery.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-operations.ts",
-      "to": "lib/workspace/cloud-project-discovery.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-operations.ts",
-      "to": "lib/workspace/cloud-discovery.ts"
-    },
-    {
       "from": "app/api/workspace/discovery/owners/route.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
@@ -3432,22 +3594,6 @@
     {
       "from": "app/api/workspace/discovery/owners/route.ts",
       "to": "lib/workspace/cloud-owner-review.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-owner-review.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-owner-review.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-owner-review.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-owner-review.ts",
-      "to": "lib/workspace/identity.ts"
     },
     {
       "from": "scripts/current-proof-source-registry.mjs",
@@ -10203,6 +10349,10 @@
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/auth.ts"
     },
     {
@@ -10356,6 +10506,38 @@
     {
       "from": "lib/workspace/cloud-operations.ts",
       "to": "lib/workspace/cloud-binding.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-operations.ts",
+      "to": "lib/workspace/aws-guided-access.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/aws-authorization-contract.ts"
+    },
+    {
+      "from": "lib/workspace/aws-authorization-contract.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/cloud-aws-cli.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/cloud-private-binding.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "lib/workspace/workflow-telemetry.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
     },
     {
       "from": "lib/workspace/cloud-operations.ts",
@@ -10804,6 +10986,30 @@
     {
       "from": "components/control-plane/aws-connection-journey.tsx",
       "to": "components/control-plane/cloud-owner-review.tsx"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "components/control-plane/aws-workflow-history.tsx"
+    },
+    {
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "lib/workspace/cloud-activity.ts"
+    },
+    {
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "lib/workspace/workflow-telemetry-view.ts"
+    },
+    {
+      "from": "lib/workspace/workflow-telemetry-view.ts",
+      "to": "lib/workspace/workflow-telemetry.ts"
     },
     {
       "from": "components/control-plane/discovery-workspace.tsx",
@@ -11904,6 +12110,98 @@
     {
       "from": "lib/durable/workload-pool.ts",
       "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/durable/http.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-owner-review.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-observation-store.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/cloud-activity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-store.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "app/api/workspace/discovery/onboarding/route.ts",
+      "to": "lib/workspace/cloud-observation-operations.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-inventory.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-operations.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-observation-store.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-owner-review.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-activity.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/aws-guided-access.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-observation-operations.ts",
+      "to": "lib/workspace/workflow-telemetry.ts"
     },
     {
       "from": "scripts/discovery-installed-evidence.mjs",
@@ -14835,6 +15133,10 @@
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/auth.ts"
     },
     {
@@ -14911,6 +15213,38 @@
     },
     {
       "from": "lib/workspace/cloud-binding.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-operations.ts",
+      "to": "lib/workspace/aws-guided-access.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/aws-authorization-contract.ts"
+    },
+    {
+      "from": "lib/workspace/aws-authorization-contract.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/cloud-aws-cli.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/cloud-private-binding.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/aws-guided-access.ts",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "lib/workspace/workflow-telemetry.ts",
       "to": "lib/workspace/cloud-discovery.ts"
     },
     {
@@ -16798,6 +17132,7 @@
     "app/api/durable/workflows/route.ts": "2a448b416ad2f70e87bbea03afdffd2dd0d2814fdd64fd40c4bb1660d194ba64",
     "app/api/workspace/agents/route.ts": "29c130f1ea1b824edf9a4a84198d0b3c99559fdb28c7ae7144a7361f3e3b6e81",
     "app/api/workspace/discovery/activity/route.ts": "8b6369914ba33c062c6a80ad14eee0bd8c914124be6fce87be7a6e67e5419fa2",
+    "app/api/workspace/discovery/onboarding/route.ts": "47b36a284f3f0c5276dd0e0a6204dcc748750f466c872e1d6aa05c3b054ccae8",
     "app/api/workspace/discovery/owners/route.ts": "f36ac7a79ab2000e8382851e31c2242b76e5ddd0fda683794e828fa21a51a333",
     "app/api/workspace/discovery/route.ts": "60ad17f7744937d12c65a62d5d88184ba0923476713c727290096bc45ddab1d3",
     "app/api/workspace/enquiries/execution/route.ts": "497b02a80cceb27fea7e694d8772a5ba7c17a2e2f2c43c1deccd8ea0d5184935",
@@ -16824,7 +17159,8 @@
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
     "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
     "components/control-plane/agents-workspace.tsx": "57272432e9ab8757a71b1bce43f9489df06c3661d0fbba13b9a1a0260dead7d2",
-    "components/control-plane/aws-connection-journey.tsx": "67633135f1de91ff43102df8c14873b40b8162086c5d687f16b151a331e9c628",
+    "components/control-plane/aws-connection-journey.tsx": "2c0a650e90ec2257411fc4bc26a5a492ef1c5f6f124a5d09caf93e2101945427",
+    "components/control-plane/aws-workflow-history.tsx": "497fb8a4f0961ec2b7c3dec9f55987ff8ad43fec4e5e67ae92e871c31f513bf7",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
     "components/control-plane/connector-actions-workspace.tsx": "67053c52bfdda7c2e49426c514defe9ade582f8613c0fff668d49fc9190d385f",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
@@ -16855,7 +17191,7 @@
     "components/marketing/product-overview.tsx": "2211c7d2eacba47c5ef3da9399813bb72e9c429cc43c77863448ab293c82efab",
     "current-profile-image-bytes-component.mjs": "d9612f5d505a9e957b859be6010a352270e2ed389d150bb1779f6386de491e59",
     "docs/evidence/historical-chat-artifact-sources-v1.json.gz": "98cdb5fa86b3ca17d5523e95e1479251f05293a2f0a0c1452ed2f3ecf3a59cb1",
-    "install-order.json": "63ea4ac05ffc1b3052cd932723a25fe980e474f54bddba30f55ff9b724cd2c7e",
+    "install-order.json": "cf7830c6f8ac1a6ceeac3de445864a7ca2f41e9fe91daddcae8568055beb33cd",
     "instrumentation.ts": "de978ea9fdb19208b48df6b454989dfc9f064c87397eb07769230bad3813e7fc",
     "lib/analytics.ts": "4e0970fca48cd652730ad5c1ebef97181e44e1f98849185479bb8ed1244b480c",
     "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
@@ -16886,7 +17222,7 @@
     "lib/durable/recovery.ts": "4d5bd461564e6273e7a512826d30692e660a2621049d6562ce08bebff0ce5240",
     "lib/durable/schema.sql": "1443e0d0ed90ab054d30d8c6ae1359a18e7fd104408ba305f2d6abe96f304d05",
     "lib/durable/service.ts": "514c156ce2861f2df0043c861319872c90fcb95aa126d309ff11df60b470f17f",
-    "lib/durable/tenant-boundary-prototype-schema.sql": "df5ebc3a8200b0ef03926d7a745fbe714889bf1c7bd63bde712bae34e1596ae6",
+    "lib/durable/tenant-boundary-prototype-schema.sql": "cebcd1d5cecf50e195ce30baff9367ef6587560ec4b0de681d3440e8d9c82c9c",
     "lib/durable/tenant-boundary-prototype.test.ts": "9e6a26d989d54e007f693634328e9abfb8f831b36b7af2cff9cc9fcdc5829d06",
     "lib/durable/tenant-pool.ts": "f5f4fedca20ceea7323c9c93e74b55f5a41d9ca44222d609b14f4487e009595b",
     "lib/durable/test-fixtures/tenant-base-table-inventory.json": "ee1287418dc702f4cd0abc1cb1005783837a524a830dbe433ac67270c3a8c3c2",
@@ -16960,7 +17296,9 @@
     "lib/workflows/service.ts": "fc27db88a101a5874b6560e3e4088c6f1dce73b9b8b0a609844eb9dc3c1491e6",
     "lib/workspace/agents.ts": "a7dc16a213f2699679593dc11a2e8aead7533d4832df6180372a9133ea810fe2",
     "lib/workspace/auth.ts": "c76a1d2373604da598bb9195e16a001a4e09fccd8e5d7adc8f7b8c04a0d00604",
-    "lib/workspace/aws-journey.ts": "d8923c108cedfe831f87b54325e8607fd94407a611d5e2b764c94b3a6ad1fca2",
+    "lib/workspace/aws-authorization-contract.ts": "17433cbf48ae7e58c03a72cd2a6e023fbcacce91e2476dba5ed4880533e39294",
+    "lib/workspace/aws-guided-access.ts": "faf94eaa55607db84c4500ed34f3179186dd545975263ecd2134440404fce5cb",
+    "lib/workspace/aws-journey.ts": "5db5c71fbfcf329654edb547b08277ada4c87dc42bfbb5714623ffdbbf4aed87",
     "lib/workspace/cloud-activity.ts": "7df8d7ef9e73fd374a57a40b9ce203e8dc077728b599286a6f01e42b3d4fc50d",
     "lib/workspace/cloud-aws-cli.ts": "3aad5fe6b3e8b44559fe8e87fee2adde4dfff6d7382049c4362b785b0daa90cb",
     "lib/workspace/cloud-azure-binding.ts": "9147b0bc4dac0570e0a3b4d076788b1ab35cd05705fd2a90eceeb56127ef19b5",
@@ -16971,10 +17309,13 @@
     "lib/workspace/cloud-google-binding.ts": "0dab7008942f8bec744bbfe90a32dff28173e182f5dfc9e1695d26471b81e33a",
     "lib/workspace/cloud-google-http.ts": "ddee4cb1d4dd4730f4ca6a07bc945e3383574013b521866b7fa7a9ca7523dc63",
     "lib/workspace/cloud-inventory-schema.sql": "aceb85a2cf7bf8f4c8d29a110904233267847ce64d7f26eca9f5ce210730dd49",
-    "lib/workspace/cloud-inventory.ts": "e3515267dbdc81e74eb6834250370a4fb550f666ce60f18f8fef6675df4197d0",
+    "lib/workspace/cloud-inventory.ts": "88a9a9574f51cdbf932b96c13532a68ce1942235e108aeda7f211d4dd57e37d0",
     "lib/workspace/cloud-invocation-observation.ts": "3b1eab4b85d5ec1c8a0733048fdf1b574cb789909b4ebb2fa1a8fadd3b373d20",
     "lib/workspace/cloud-invocation-reader.ts": "52d4217bea73142317fd185f557d1e8807e6ee96807287df27b6770d43067f49",
-    "lib/workspace/cloud-operations.ts": "656b4751764f5ddda98db8bf70d90277d815f298e59b0326f2d49432569eed61",
+    "lib/workspace/cloud-observation-operations.ts": "9737e376fdb75d0541f844edef2ff15e6a80db7320350708a260b3543ec4b36b",
+    "lib/workspace/cloud-observation-schema.sql": "51827e2721bf6c5ef77997fb5f57a8650b9b999b976df779d9b1228fe37c7e93",
+    "lib/workspace/cloud-observation-store.ts": "1d0e3e3ccdc8e91215478fc3946d8dac2d1e2b3d8a2124ccd35de2061476afdd",
+    "lib/workspace/cloud-operations.ts": "82b609c8ee1eb60d00462db4302c3344ad812924e2ab29376646644f46807dcb",
     "lib/workspace/cloud-owner-review-schema.sql": "336f33a43ba22b5b6e9bb5f93e75bd5101267328184821fb76c6df93371c05c6",
     "lib/workspace/cloud-owner-review.ts": "3849c978ec47f30d110d6ba0c8b0eec3121e39c98bc086a874a56006613c8697",
     "lib/workspace/cloud-private-binding.ts": "4a616cb479b10ec112f70edbb0c7ad147714c3df64e011f18b325ed4b8c7264d",
@@ -16983,7 +17324,7 @@
     "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
     "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
     "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
-    "lib/workspace/deployment-capabilities.ts": "133a190b74d58c6a9175d6898de04774ab6ad00c4bba10d74aeb11711b259628",
+    "lib/workspace/deployment-capabilities.ts": "652040211b5ea7d0be9f3775b872c1dde11e325900a41d7cf1660ea23e1c11ac",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
     "lib/workspace/installed-tenant-fixture.ts": "7e3d9869ccdc2d3ac1229a57d4af24d29c0d658ec9bb7861767f066d2f185ea3",
     "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
@@ -16991,7 +17332,7 @@
     "lib/workspace/navigation.ts": "1cf72ddc34e3b4d530fc41d521adb409be1eabafbf70689e6222c89c92fbab26",
     "lib/workspace/owned-private-file.ts": "c568195f2dff56091f4713e58cc8dd3f151773541878886add698b8a8c8075ad",
     "lib/workspace/presentation.ts": "fd6b7d053efdf973473b0d9b87735967d5b6f25f32923c390ed8080f1341f47b",
-    "lib/workspace/quote-execution-migrations.ts": "01bb2a3af7aae129de399f3d57062991f33c9c262b01bb5c71f756847d432a9e",
+    "lib/workspace/quote-execution-migrations.ts": "666d756452f6f902f691d555fdc5902de75c00287d7e9d3e496246ebd9fa7f79",
     "lib/workspace/quote-recovery-inventory.ts": "88b20b3439e97a23b2a281353b295207747d088dc7f7b72e566d3c999a224a48",
     "lib/workspace/quote-worker-publication.ts": "0ff247c498cc3b9f47735a4cf3a4fefe1a92887e3a7f9fa0447ed59b0aa06eaf",
     "lib/workspace/quote-workload-installation.ts": "d7b76e3d524bc285382b28f91862681297ffb07765eefad1a067f000f1428a58",
@@ -17002,13 +17343,15 @@
     "lib/workspace/schema.sql": "5efa86906dd872f6eb059cb4be7c73a1790b5fd4b5910dc480f7e1b4e231725e",
     "lib/workspace/tenant-bootstrap.ts": "b2b4e85ee7d5a4409bcc04a3dc6a0b46c839ac3acd4f9d5f26e686c055fb2ee3",
     "lib/workspace/tenant-context.ts": "09e7b6c172663fdf59c74289715df64b6099c07ea275a7429ee6c7c66671f7a2",
-    "lib/workspace/tenant-installer.ts": "6a46811062d6e82a282263d414dbc590d9b9b3739040f3337c8744eb3594db43",
-    "lib/workspace/tenant-read-inventory.ts": "64f5e0e4ec8981c0612a2fda85f51947fe0305f3e5d0d6180a1f408bd94a36f8",
+    "lib/workspace/tenant-installer.ts": "53c0281769d918cde4b519471b17e158300ee984d63c1fa7d52872a2a98821ce",
+    "lib/workspace/tenant-read-inventory.ts": "191962730ba0a45c9959ae1d9505c64fbf78dc2cf63f8139ae8b1d2b4b237261",
     "lib/workspace/web-recovery-deployment.ts": "40a4f402e95fd524414ea10ecd77b916ecd61193cffeedc7f86f9a56dd6c183b",
+    "lib/workspace/workflow-telemetry-view.ts": "35e01bc8715c61d5ac911d225ac19686b2a5c37345efab96fddfe65550038040",
+    "lib/workspace/workflow-telemetry.ts": "d6826e83be6be4be73c3546224754a7330962cafd8eee6945846dd1c79838ba5",
     "middleware.ts": "b44f47c87927a0088d6e11a41b06282ba098b6670ce2e40a9fbc105bb1f9630f",
     "next.config.mjs": "5746e6fc704bcdf5d09ffacaeb00a0285b2456176516cb5af52faeabf6cd2cb4",
-    "package.json": "ee468b27483d24aecb2df0aeb5a50e790a8fc0fac3e073e5158caee68a66645d",
-    "pnpm-lock.yaml": "6b49ac11c789339af815e0c08193ec0cad25e85557b53240ffd7b8909fb936bc",
+    "package.json": "87e746156e7152e5e5426a8472f8cc7cd77d9fdd7304bda25752a5b75b0c527f",
+    "pnpm-lock.yaml": "3f9fe9d8a46f3f5dd96b64f112da2494e4ef6e415424161a42a464b73864f280",
     "runtime/temporal/activities.ts": "9be7fd957c81efbfdc6d365ad583c89fe7cdfe9ed931627ec8690aa65e5d8ab0",
     "runtime/temporal/admission.ts": "77348e8c27f69fd2d5e765401c62ca9492473db5f050580151c4f564d97ddeb8",
     "runtime/temporal/operations.ts": "d0ee8ece790da73b7e4eebb8cad351631df7853fabc29a2ad799656312dfadc6",
@@ -17019,11 +17362,11 @@
     "runtime/temporal/quote-routing.ts": "1180a2ff0ebfb30a06f0f98fac63072e63a5c7f24fa30b9355e30cf0be3002df",
     "runtime/temporal/record-routing.ts": "eb80b015ba2684da22c9ae4456e45a965497e8dda952e7b1354f34397b146a7d",
     "runtime/temporal/staging-host.ts": "4a8b028272874f638361c7a5a74186884174f6123f13e90672a7ea0e9ed876cc",
-    "runtime/temporal/staging-preflight.ts": "08ac1336369bccb8fb151a29f7745d45c49da155893d1255b9a717ccf017a774",
+    "runtime/temporal/staging-preflight.ts": "df7effb64d5f8793b5b9ca9ef086e5efa0a63574fec3f77db9c615daacec6802",
     "runtime/temporal/version-contract.ts": "318bacf1f4a4549275e2f399256fc27436d48ed8c8232e3bd53fc9160d3fd9b8",
     "scripts/authenticated-ui-recording.mjs": "570bed5ae1d7e2201e6cec74be2410b6add7407f5b666f455291c86207bb7e74",
     "scripts/build-temporal-worker.mjs": "8acc8392c4d8cdd1c222481af89fa1ef11ee49c0991cf414e5dc20b11ddb2629",
-    "scripts/chat-ui-current-sources.json": "e651164ac1f43c0dfff314b01f88225bb00789d2b4b7c8ff24d821e212d8e77c",
+    "scripts/chat-ui-current-sources.json": "e4cbf1a9edf2845a4bdde1d1a834235bf7e4d35ea5493ef73f1142a929d6a110",
     "scripts/chat-ui-extracted-admission.mjs": "e3a077db7c94f42b98c883e5fae08bfc40b14c649ba1bc4385b29e713449d17d",
     "scripts/chat-ui-installed-fixture.ts": "638aa49142498bc5eb7a3b2a33671419e1c8ded5d8721d2c1f0270db43c7633e",
     "scripts/chat-ui-model-session.mjs": "55bf6e71cdc87368c4fee254b6d0ceb75ad6ca1b9b5965df903517e029dc540a",
@@ -17036,17 +17379,17 @@
     "scripts/check-quote-email-health.py": "23c3343deff113cd3823b76f5c231915901307f7bb11be4945e9da03b690c39b",
     "scripts/connector-proof-diagnostic.ts": "d9d999b495c00138a0f01053331003031e6cbe40710b0a76291a2f996c3ca84c",
     "scripts/connector-proof-installation.ts": "c5081c3b7818502f0978811c4b3420b13b13aefc56fc5ad6b1e720fa59e4509d",
-    "scripts/connector-proof-sources.ts": "5314464a1f5a682e20262b2e5cbcc7769b987b5f9f9860d7917e53b47e6ac556",
+    "scripts/connector-proof-sources.ts": "620b7d8ff450031cd7f46a91e3e004fb168d17d2e9ca5e29457bfa60606b066b",
     "scripts/connector-proof-worker.ts": "6a580f6996343c492306cfeb9bf5c61386b2f4ef8988a2dcfafd6619941563a5",
     "scripts/connector-proof.ts": "9c79e9199789ca07d8e93b64f7bf256a734c4fbf9e4383b6a93d4e58317fd4d3",
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "7bb472e832a4a92ca70a8912f664092dac27a5be61ad010589301edfc4af3297",
+    "scripts/current-proof-source-registry.mjs": "43b595e4684fe20a8ee06b845ff14c65987b2d677e1a2f9cc47468f76eaf8d96",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "18e2202eebb71ee109120f61c0e07203b3aefe7d7ba469002ddd57ba35f9c2fb",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
-    "scripts/discovery-installed-source-contract.mjs": "c933255ffa70e54bddb27d9b37421d49ace047771f509626fe63e334d5e4aa2a",
+    "scripts/discovery-installed-source-contract.mjs": "a2ff18cee1b2a7d67697d582b2b90b51f6462a967e9298728b70ca0af4a52bf4",
     "scripts/gateway-bypass-record.mjs": "1ef2b20fa85cd2c0478885e35a436893f5091e7f9ad30b5a1dbed748c8d3774f",
     "scripts/gateway-installed-bypass-proof.mjs": "c0d65087a214bd8a5e29fc70dd64b4ab9c9a19228406659cc95e32ee6ecf09b8",
     "scripts/gateway-installed-controller.ts": "e96d8e91b0e877ba409963373f809b3cb2a44144aaab450ae99f54f4572ce281",

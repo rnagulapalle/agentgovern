@@ -5,7 +5,9 @@ import { scopedMigrations, stagingConfiguration, stagingDatabase } from "./stagi
 
 // Read-only installation prerequisites. No enrollment, dispatch or execution authority.
 export const persistentMigrations = [
-  ...scopedMigrations,
+  // Observation is installed for the web separately. Existing workers keep
+  // their released migration contract and receive no observation privileges.
+  ...scopedMigrations.filter(([version]) => version <= 24),
   [14, "lib/enquiries/worker-admission-schema.sql"],
   [15, "lib/enquiries/reset-intent-schema.sql"],
   [16, "lib/workspace/cloud-inventory-schema.sql"],

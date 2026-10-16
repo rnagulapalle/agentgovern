@@ -27,7 +27,7 @@ export function deploymentRouteDecision(profile: string | undefined, pathname: s
   if (!pathname.startsWith('/') || /[%\\\u0000-\u0020]/.test(pathname) || pathname.includes('//') || pathname.split('/').some(p => p === '.' || p === '..')) return 'deny';
   if (profile === scriptDemoProfile && awsConnections === true) {
     if (pathname === '/control-plane/discovery') return ['GET', 'HEAD'].includes(method) ? 'allow' : 'deny';
-    if (pathname === '/api/workspace/discovery/activity') return method === 'POST' ? 'allow' : 'deny';
+    if (['/api/workspace/discovery/activity', '/api/workspace/discovery/onboarding'].includes(pathname)) return method === 'POST' ? 'allow' : 'deny';
     if (['/api/workspace/discovery', '/api/workspace/discovery/owners'].includes(pathname)) return ['GET', 'POST'].includes(method) ? 'allow' : 'deny';
   }
   if (pathname.startsWith('/api/') || pathname === '/api') return (profile === scriptDemoProfile ? scriptApiMethods : apiMethods)[pathname]?.includes(method) ? 'allow' : 'deny';

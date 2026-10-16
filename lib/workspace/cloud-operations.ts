@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { ControlError, type Actor } from "../durable/contracts";
 import { CloudInventoryStore } from "./cloud-inventory";
 import { cloudDiscoveryBinding } from "./cloud-binding";
+import { createAwsGuidedAccess } from "./aws-guided-access";
 import { cloudProjectDiscoveryBinding } from "./cloud-project-binding";
 import { collectProjectInventory, type ProjectDiscoveryScope, type ProjectInventoryApi } from "./cloud-project-discovery";
 import { collectAwsRuntimeInventory, type AwsRuntimeInventoryApi, type CloudDiscoveryScope } from "./cloud-discovery";
@@ -15,14 +16,14 @@ function scanBudget(started: number, now: () => number) {
   };
 }
 export class CloudDiscoveryOperations {
-  constructor(private readonly store: CloudInventoryStore, private readonly binding: (scope: CloudDiscoveryScope) => Promise<AwsRuntimeInventoryApi> = cloudDiscoveryBinding, private readonly now = Date.now, private readonly projectBinding: (scope: ProjectDiscoveryScope) => Promise<ProjectInventoryApi> = cloudProjectDiscoveryBinding) {}
+  constructor(private readonly store: CloudInventoryStore, private readonly binding: (scope: CloudDiscoveryScope) => Promise<AwsRuntimeInventoryApi> = async scope => process.env.LOOPLABS_AWS_AUTHORIZATION_CONFIG ? (await createAwsGuidedAccess(scope,this.store.epoch(scope))).inventory() : cloudDiscoveryBinding(scope), private readonly now = Date.now, private readonly projectBinding: (scope: ProjectDiscoveryScope) => Promise<ProjectInventoryApi> = cloudProjectDiscoveryBinding) {}
   async connections(actor: Actor) {
     const data = await this.store.connections(actor);
     const connections = [];
     for (const c of data.connections) {
       let scanReady = false;
       try { await this.binding(c.scope); scanReady = true; } catch { /* Unconfigured is not connected. No cloud read occurs. */ }
-      connections.push({ ...c, scanReady });
+      connections.push({ ...c, scanReady, authorizationAvailable: Boolean(process.env.LOOPLABS_AWS_AUTHORIZATION_CONFIG) });
     }
     return { ...data, connections, scanningAvailable: connections.some(c => c.scanReady) };
   }
