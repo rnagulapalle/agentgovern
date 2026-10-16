@@ -20,6 +20,7 @@ export function awsObservationRoleTemplate() {
       AssumeRolePolicyDocument: { Version: "2012-10-17", Statement: [
         { Effect: "Allow", Principal: { AWS: { Ref: "BrokerPrincipal" } }, Action: "sts:AssumeRole", Condition: { StringEquals: { "sts:ExternalId": { Ref: "ExternalId" } } } },
         { Effect: "Allow", Principal: { AWS: { Ref: "BrokerPrincipal" } }, Action: "sts:SetSourceIdentity", Condition: { Null: { "sts:SourceIdentity": "false" } } },
+        { Effect: "Allow", Principal: { AWS: { Ref: "BrokerPrincipal" } }, Action: "sts:TagSession", Condition: { "ForAllValues:StringLike": { "aws:TagKeys": ["x509Subject/*", "x509Issuer/*", "x509SAN/*"] } } },
       ] },
       Policies: [{ PolicyName: "LoopLabsObservationOnly", PolicyDocument: { Version: "2012-10-17", Statement: [
         { Effect: "Allow", Action: ["bedrock-agentcore:ListAgentRuntimes", "logs:DescribeLogGroups"], Resource: "*", Condition: { StringEquals: { "aws:RequestedRegion": { Ref: "AWS::Region" } } } },

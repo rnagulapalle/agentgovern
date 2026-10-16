@@ -27,6 +27,7 @@ describe("customer-reviewed observation-only AWS authorization",()=>{
   expect(role.AssumeRolePolicyDocument.Statement).toEqual([
    {Effect:"Allow",Principal:{AWS:{Ref:"BrokerPrincipal"}},Action:"sts:AssumeRole",Condition:{StringEquals:{"sts:ExternalId":{Ref:"ExternalId"}}}},
    {Effect:"Allow",Principal:{AWS:{Ref:"BrokerPrincipal"}},Action:"sts:SetSourceIdentity",Condition:{Null:{"sts:SourceIdentity":"false"}}},
+   {Effect:"Allow",Principal:{AWS:{Ref:"BrokerPrincipal"}},Action:"sts:TagSession",Condition:{"ForAllValues:StringLike":{"aws:TagKeys":["x509Subject/*","x509Issuer/*","x509SAN/*"]}}},
   ]);
   expect(policy).toContain("bedrock-agentcore:ListAgentRuntimes");expect(policy).toContain("logs:FilterLogEvents");
   expect(policy).not.toMatch(/Invoke|Secret|Put|Delete|Send|Update|Create|iam:|sts:/);
