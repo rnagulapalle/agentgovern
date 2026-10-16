@@ -120,3 +120,18 @@ version. Update the reviewed enrollment/version binding deliberately. Runtime-
 local SQLite is not durable across session destruction; do not start an unrelated
 empty session and call it the workflow history. Preserve existing state during
 any later deployment and record that separately from application correctness.
+
+### Explicit quote-demo exception and deployment attachment
+
+Raj selected preserving requester self-approval in this demo on October16. Both
+native authority and LoopLabs require explicit `allowSelfReview: true` for this
+exact configured connection; the default remains independent reviewer required.
+Native policy version binds that option. The UI identifies the demo exception.
+Named reviewer membership, exact revision, policy, expiry and source CAS checks
+remain required. This is not a general enterprise self-approval policy.
+
+Current-host attachment: `control-demo` reads an optional owner-only directory
+through `/srv/looplabs-production/config/shared-approvals-current`. Binding
+metadata becomes the bridge environment setting and signing files are mounted
+read-only at `/run/looplabs-approvals`. Exact prior environment and mounts are
+retained for rollback; unrelated host security and services remain checked.

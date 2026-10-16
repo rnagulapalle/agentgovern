@@ -22,6 +22,6 @@ export async function POST(request:NextRequest){
   const current=await store.enrollment(actor,reference);
   if(JSON.stringify(current)!==JSON.stringify(enrolled))throw new ControlError(409,"Workflow access changed. Refresh approvals.");
   const requests=v.operation==="list"?await bridge.list():await bridge.decide(actor,{id:v.id,revision:v.revision,decision:v.decision});
-  return Response.json({connected:true,requests,reviewer:actor.subject,canReview:binding.reviewers.includes(actor.subject)},{headers:{"Cache-Control":"no-store"}});
+  return Response.json({connected:true,requests,reviewer:actor.subject,canReview:binding.reviewers.includes(actor.subject),selfReviewAllowed:binding.allowSelfReview===true},{headers:{"Cache-Control":"no-store"}});
  }catch(e){return failure(e);}
 }

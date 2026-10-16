@@ -35,4 +35,6 @@ describe("shared approval authority",()=>{
  it.each([null,{}, {...request(),revision:"f".repeat(64)},{...request(),status:"pending",executionStatus:"running"},{...request(),status:"approved"}])("rejects malformed or contradictory records",value=>expect(()=>externalApproval(value)).toThrow());
  it("expiry during access recheck prevents mutation",async()=>{const s=source();let now=Date.parse("2029-12-31T23:59:59Z");const auth=async()=>{now=Date.parse("2030-01-01T00:00:01Z");};await expect(new ExternalApprovalBridge(binding,s.send as typeof fetch,()=>now,auth).decide(actor,{id:request().id,revision:request().revision,decision:"approved"})).rejects.toMatchObject({status:409});expect(s.commands.filter(c=>c.operation==="decide")).toHaveLength(0);});
 
+ it("explicit demo binding allows named reviewer self-approval without expanding signed scope",async()=>{const s=source(),a=request();a.requestedBy=actor.subject;a.revision=approvalHash(a);s.set(a);const b=new ExternalApprovalBridge({...binding,allowSelfReview:true},s.send as typeof fetch);expect((await b.decide(actor,{id:a.id,revision:a.revision,decision:"approved"}))[0].status).toBe("approved");expect(s.effects()).toBe(1);expect(s.commands[0].scope).not.toHaveProperty("allowSelfReview");});
+
 });
