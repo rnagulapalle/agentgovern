@@ -24,7 +24,11 @@ describe("customer-reviewed observation-only AWS authorization",()=>{
  });
  it("templates only the required read APIs and an exact principal plus external ID trust condition",()=>{
   const t=awsObservationRoleTemplate(),role=t.Resources.ObservationRole.Properties,policy=JSON.stringify(role.Policies);
-  expect(role.AssumeRolePolicyDocument.Statement[0]).toEqual({Effect:"Allow",Principal:{AWS:{Ref:"BrokerPrincipal"}},Action:["sts:AssumeRole","sts:SetSourceIdentity"],Condition:{StringEquals:{"sts:ExternalId":{Ref:"ExternalId"}}}});
+  expect(role.AssumeRolePolicyDocument.Statement).toEqual([
+   {Effect:"Allow",Principal:{AWS:{Ref:"BrokerPrincipal"}},Action:"sts:AssumeRole",Condition:{StringEquals:{"sts:ExternalId":{Ref:"ExternalId"}}}},
+   {Effect:"Allow",Principal:{AWS:{Ref:"BrokerPrincipal"}},Action:"sts:SetSourceIdentity",Condition:{Null:{"sts:SourceIdentity":"false"}}},
+   {Effect:"Allow",Principal:{AWS:{Ref:"BrokerPrincipal"}},Action:"sts:TagSession",Condition:{"ForAllValues:StringLike":{"aws:TagKeys":["x509Subject/*","x509Issuer/*","x509SAN/*"]}}},
+  ]);
   expect(policy).toContain("bedrock-agentcore:ListAgentRuntimes");expect(policy).toContain("logs:FilterLogEvents");
   expect(policy).not.toMatch(/Invoke|Secret|Put|Delete|Send|Update|Create|iam:|sts:/);
   expect(t.Parameters.TelemetryLogGroup.AllowedPattern).not.toContain(".*");

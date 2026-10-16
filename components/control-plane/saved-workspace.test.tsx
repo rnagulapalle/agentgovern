@@ -36,7 +36,7 @@ async function mounted(section:SavedWorkspaceSection,run:(page:Page,requests:str
 it('mounted overview uses only installed read APIs and preserves exact-action deep links',async()=>mounted('overview',async(page,requests)=>{
  await page.getByRole('heading',{name:'25% pricing request'}).waitFor();await page.getByRole('heading',{name:'Customer record update'}).waitFor();
  expect(await page.getByRole('link',{name:'Review request'}).getAttribute('href')).toContain('#action-'+pricing.actions[0].id);
- expect(await page.getByRole('link',{name:'View outcome'}).getAttribute('href')).toContain('workflow=crm#action-source-uncertain');
+ expect(await page.getByRole('link',{name:'View outcome',exact:true}).getAttribute('href')).toContain('workflow=crm#action-source-uncertain');
  await page.getByRole('button',{name:'Refresh saved status'}).click();await page.getByRole('heading',{name:'25% pricing request'}).waitFor();
  expect(await page.getByText('Showing up to the latest 100 pricing actions and the customer actions within the latest 100 connector actions. Quote-plan actions are reviewed separately. Older pending work may be outside this view.').count()).toBe(2);
  expect(requests).toEqual(['GET /api/durable','GET /api/durable/connectors','GET /api/durable','GET /api/durable/connectors']);
@@ -57,15 +57,15 @@ it('connection view does not equate policy availability with live provider healt
 
 it("unknown action states do not become a successful empty queue",async()=>mounted("overview",async page=>{await page.getByRole("alert").first().waitFor();expect(await page.getByText("No held requests",{exact:false}).count()).toBe(0);expect(await page.getByRole("link",{name:"Review request"}).count()).toBe(0);},"unknown-state"),15000);
 
-it('administrator catalog exposes every product area without granting authority or linking blocked cloud and general chat routes',()=>{
+it('policies retains administrator boundaries without repeating the capability overview',()=>{
  const h=renderToStaticMarkup(<SavedWorkspace section="policies"/>);
- for(const phrase of ['Workspace administrator','same server permissions apply to both named administrators','self-approval','bypass a hard limit','another workspace','unsupported action','Account invitations','cloud IAM administration','billing management','Chat and workflow planning','Cloud agent connections','General output enforcement','Unavailable in this deployment'])expect(h).toContain(phrase);
+ for(const phrase of ['Workspace administrator','same server permissions apply to both named administrators','self-approval','bypass a hard limit','another workspace','unsupported action','Account invitations','cloud IAM administration','billing management'])expect(h).toContain(phrase);
  for(const route of ['discovery','work','settings','records','requests'])expect(h).not.toContain('href="/control-plane/'+route+'"');
- expect(h).not.toContain('super-admin');expect(h).not.toContain('type="submit"');
+ expect(h).not.toContain('Capabilities and availability');expect(h).not.toContain('super-admin');expect(h).not.toContain('type="submit"');
 });
-it('catalog remains visible when a saved API refuses access without claiming granted privileges',async()=>mounted('policies',async(page,requests)=>{
+it('administrator boundaries remain visible when a saved API refuses access',async()=>mounted('policies',async(page,requests)=>{
  await page.getByRole('alert').waitFor();await page.getByRole('heading',{name:'Workspace administrator',exact:true}).waitFor();
- await page.getByText('Availability describes this deployment; it grants no new authority.',{exact:false}).waitFor();
+ expect(await page.getByRole('heading',{name:'Capabilities and availability'}).count()).toBe(0);
  expect(requests.every(r=>r.startsWith('GET '))).toBe(true);
 },'pricing'),15000);
 
@@ -103,5 +103,18 @@ it('explicit AWS installation shows a setup link without claiming controlled exe
 it.each(['overview','policies'] as const)('AWS availability stays consistent in the installed %s view', section => {
  const html=renderToStaticMarkup(<SavedWorkspace section={section} awsConnections />);
  expect(html).not.toContain('Cloud discovery and import are not enabled');
- if(section==='policies') {expect(html).toContain('AWS · assisted setup');expect(html).toContain('verified checkpoint');}
+ if(section==='policies') expect(html).not.toContain('Capabilities and availability');
+});
+
+// Presentation only: the saved discovery journey remains the source of inventory.
+it('connections prioritizes platforms and agents without a model planning panel',()=>{
+ const html=renderToStaticMarkup(<SavedWorkspace section="connections" awsConnections />);
+ const headings=[...html.matchAll(/<h2[^>]*>(.*?)<\/h2>/g)].map(m=>m[1]);
+ expect(headings).toEqual(['Agent platforms','Discovered agents','Business systems']);
+ expect(html).not.toContain('<h2>Model planning</h2>');expect(html).toContain('View discovered agents');expect(html).toContain('Discovery does not enable execution controls');
+ expect(html).not.toContain('Capabilities and availability');
+});
+it('the product capability overview appears on the workspace overview only',()=>{
+ expect(renderToStaticMarkup(<SavedWorkspace section="overview"/>)).toContain('Capabilities and availability');
+ for(const section of ['policies','connections'] as const)expect(renderToStaticMarkup(<SavedWorkspace section={section}/>)).not.toContain('Capabilities and availability');
 });

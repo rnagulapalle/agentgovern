@@ -82,3 +82,31 @@
 @media (max-width: 640px) { .aws-journey .cp-durable-form { grid-template-columns: minmax(0, 1fr); } }
 
 .aws-agent-summary select { width: 100%; min-height: 48px; padding: 12px; border: 1px solid var(--cp-border, #ddd9d1); background: #fff; font: inherit; font-size: 16px; }
+
+.aws-history-toolbar { display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:1.25rem 0; }
+.aws-history-toolbar label { display:flex;align-items:center;gap:.75rem; }
+.aws-history-toolbar select { padding:.6rem;min-height:44px;font:inherit; }
+.aws-execution-columns,.aws-execution-summary { display:grid;grid-template-columns:1.1fr .55fr 1.1fr 1.25fr 1fr;gap:1rem;align-items:center; }
+.aws-execution-columns { padding:.75rem 1rem;color:var(--cp-muted,#68665f);font-size:.8rem; }
+.aws-execution { border-top:1px solid var(--cp-border,#dedbd2); }
+.aws-execution-summary { padding:1rem;cursor:pointer;list-style:none;min-height:76px; }
+.aws-execution-summary::-webkit-details-marker { display:none; }
+.aws-execution-summary:focus-visible { outline:2px solid #245747;outline-offset:-2px; }
+.aws-execution-summary:hover { background:rgba(36,87,71,.04); }
+.aws-execution-summary small { display:block;color:var(--cp-muted,#68665f);margin-top:.35rem; }
+.aws-execution-summary strong::before { content:'▸';margin-right:.5rem; }
+.aws-execution[open]>.aws-execution-summary strong::before { content:'▾'; }
+.aws-channel { text-transform:capitalize; }
+.aws-execution-body { padding:0 1.25rem 1.25rem;border-top:1px solid var(--cp-border,#dedbd2); }
+.aws-execution-steps { padding-left:1.5rem; }
+.aws-execution-steps>li { padding:.65rem .5rem;border-bottom:1px solid var(--cp-border,#dedbd2); }
+.aws-execution-steps .aws-status { margin-left:.75rem; }
+.aws-execution-steps p { margin:.25rem 0; }
+.aws-execution-steps time { color:var(--cp-muted,#68665f);font-size:.85rem; }
+@media(max-width:700px) {
+ .aws-history-toolbar { align-items:flex-start;flex-direction:column; }
+ .aws-execution-columns { display:none; }
+ .aws-execution-summary { grid-template-columns:1fr 1fr;gap:.6rem; }
+ .aws-execution-summary>span:first-child { grid-column:1/-1; }
+ .aws-execution-summary time { grid-column:1/-1;color:var(--cp-muted,#68665f); }
+}

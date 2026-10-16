@@ -19,6 +19,10 @@ export class CloudObservationOperations {
   if(typeof v.connectionId!=="string"||!/^[A-Za-z0-9_-]{1,64}$/.test(v.connectionId))throw new ControlError(400,"Choose a saved AWS account.");
   const context=await this.store.context(actor,v.connectionId);
   if(!await this.store.admit(actor,v.connectionId))throw new ControlError(429,"Too many AWS observation requests. Try again in a minute.");
+  if(v.operation==="enrollment"&&keys(v,"connectionId,operation,resourceArn,scanId,version")){
+   const reference=activityReference({connectionId:v.connectionId,scanId:v.scanId,resourceArn:v.resourceArn,version:v.version});
+   try{return {enrollment:await this.store.enrollment(actor,reference)};}catch(e){if(e instanceof ControlError&&e.status===409&&e.message==="Onboard this agent for observation before opening its history.")return {enrollment:null};throw e;}
+  }
   let api:Access;
   try{api=await this.access(context.scope,context.epoch);}catch{throw new ControlError(503,"AWS authorization is not configured on the LoopLabs server. Ask your administrator to finish the renewable observation identity setup.");}
   const recheck=async()=>{if(JSON.stringify(await this.store.context(actor,v.connectionId as string))!==JSON.stringify(context))throw new ControlError(409,"AWS connection authority changed. Start again.");};
