@@ -682,6 +682,7 @@
       "components/brand/loop-mark.tsx",
       "components/control-plane/access.tsx",
       "components/control-plane/aws-connection-journey.tsx",
+      "components/control-plane/aws-execution-browser.tsx",
       "components/control-plane/aws-workflow-history.tsx",
       "components/control-plane/cloud-owner-review.tsx",
       "components/control-plane/discovery-workspace.css",
@@ -11065,6 +11066,14 @@
       "to": "lib/workspace/workflow-telemetry.ts"
     },
     {
+      "from": "components/control-plane/aws-workflow-history.tsx",
+      "to": "components/control-plane/aws-execution-browser.tsx"
+    },
+    {
+      "from": "components/control-plane/aws-execution-browser.tsx",
+      "to": "lib/workspace/workflow-telemetry-view.ts"
+    },
+    {
       "from": "components/control-plane/discovery-workspace.tsx",
       "to": "components/control-plane/discovery-workspace.css"
     },
@@ -17233,14 +17242,15 @@
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
     "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
     "components/control-plane/agents-workspace.tsx": "57272432e9ab8757a71b1bce43f9489df06c3661d0fbba13b9a1a0260dead7d2",
-    "components/control-plane/aws-connection-journey.tsx": "828ec2ece4aeb68a4b0ee165cbff867d4f2ac5d7d1bd974b32ee54ead2b048ec",
-    "components/control-plane/aws-workflow-history.tsx": "ed755e168f7524e49ff7cb27b92a56846cb4a1b1cc16d91152e4faf4fcec1e3f",
+    "components/control-plane/aws-connection-journey.tsx": "95ac70583e87005c9b26513bc13da7d7080bc2ab504028037953ac62703283c1",
+    "components/control-plane/aws-execution-browser.tsx": "033330197c4798b94bbb09ddecbfde38d87c3025cbc23863423040d6c9078182",
+    "components/control-plane/aws-workflow-history.tsx": "4a5d1150fbafcf590e271ac1a82b11f3467989a7d1a2d051b210d6f99e639572",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
     "components/control-plane/connector-actions-workspace.tsx": "67053c52bfdda7c2e49426c514defe9ade582f8613c0fff668d49fc9190d385f",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
     "components/control-plane/discount-approval-brief.tsx": "8d44b575118d60b1e6a22cbc07e4fa7b9ba03c90eedacc2d2490e5d0b98f1378",
     "components/control-plane/discount-history.tsx": "c38c42a43b51b8c18d2fb8f8bb77834edc62e523035a4b3cfe8ec65cbf328100",
-    "components/control-plane/discovery-workspace.css": "1fe00a33cc80f1c9d3e11f7fe4098d2e40ec3b017c37fae0d2c85171fea3fa81",
+    "components/control-plane/discovery-workspace.css": "20fc74cf9ed833869001956baddc8d0cdb35cc192f0b7cd2d224ae9e23cf23a4",
     "components/control-plane/discovery-workspace.tsx": "aaab1f98f599c47c1514dc38853c31e66f7b20a73e185a69232a9f5ab30abe64",
     "components/control-plane/durable-workspace.tsx": "8b28f5f6696bd3832817ddf09fc1c9535aef671d329e4f472a7e04f0c635e50a",
     "components/control-plane/enquiry-execution.tsx": "127a84fdf2915f275194d8b9096f76318d59fe9446884703da4f1bb193982496",
