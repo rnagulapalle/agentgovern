@@ -135,3 +135,28 @@ through `/srv/looplabs-production/config/shared-approvals-current`. Binding
 metadata becomes the bridge environment setting and signing files are mounted
 read-only at `/run/looplabs-approvals`. Exact prior environment and mounts are
 retained for rollback; unrelated host security and services remain checked.
+
+
+### October 16 release candidate and measured evidence
+
+The customer workflow was subsequently activated as AgentCore version 15. Its
+signed API Gateway read returned HTTP 200 with a verified response signature and
+nonce. An expired approval remained held; it was not approved or retried. The
+version-15 observation enrollment is saved in LoopLabs. These reads do not prove
+live decision continuation. The LoopLabs web release remains pending until PR
+#102 passes CI and the authenticated production approval route is verified.
+
+The changed source closure has a new, separately retained installed discovery
+receipt: `docs/evidence/discovery-installed-browser-v3-20261016-shared-approvals-proof.json`.
+All 30 discovery assertions were measured against a fresh compiled app and an
+owned TLS PostgreSQL instance, which was removed afterward. This uses provider
+fixtures and does not establish native AWS approval acceptance. The CI fixture
+archive preserves all provider bytes and replaces only the three measured
+compiled discovery files. A fresh Slack request and its actual LoopLabs decision,
+continuation and provider-effect readback remain the native acceptance task.
+
+The source-registry provenance test exceeded its former five-second deadline
+in CI (5.108 seconds). Its bounded timeout now matches the discovery evidence
+suite at 30 seconds; all dependency-drift refusal assertions remain in place.
+The two affected evidence/registry files passed 83 focused tests locally. This
+is separate from the full candidate CI result and the production release.
