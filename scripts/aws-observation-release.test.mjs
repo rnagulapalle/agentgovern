@@ -19,6 +19,16 @@ it('checks actual Docker mounts separately from configuration and preserves exac
  expect(()=>assertObservationMounts(before,[mount],attachment)).toThrow();expect(()=>assertObservationMounts(before,before,null)).not.toThrow();
  expect(()=>observationVolume({...attachment,source:'/tmp/unsafe'})).toThrow();expect(observationVolume(attachment).bind.create_host_path).toBe(false);
 });
+it('compares an omitted legacy Mounts field with the empty remainder after the AWS mount',()=>{
+ const before={ReadonlyRootfs:true,CapDrop:['ALL'],Memory:2048,Binds:['/old:/old:ro']};
+ const after={...before,Mounts:[hostMount()]};
+ expect(()=>assertObservationHostChange(before,after,attachment,assertHostConfigurationUnchanged)).not.toThrow();
+ expect(before).not.toHaveProperty('Mounts');expect(after.Mounts).toHaveLength(1);
+ expect(()=>assertObservationHostChange({...before,Mounts:[]},after,attachment,assertHostConfigurationUnchanged)).not.toThrow();
+ for(const change of [{ReadonlyRootfs:false},{Memory:0},{CapDrop:[]},{Binds:[]}])expect(()=>assertObservationHostChange(before,{...after,...change},attachment,assertHostConfigurationUnchanged)).toThrow();
+ expect(()=>assertObservationHostChange(before,{...after,Mounts:[hostMount(),{Type:'bind',Source:'/extra',Target:'/extra',ReadOnly:true}]},attachment,assertHostConfigurationUnchanged)).toThrow();
+ expect(()=>assertObservationHostChange(before,{...after,Mounts:[{...hostMount(),ReadOnly:false}]},attachment,assertHostConfigurationUnchanged)).toThrow();
+});
 it('adds only the exact private config path and refuses unrelated environment changes',()=>{
  const before=['LOOPLABS_DEPLOYMENT_PROFILE=isolated-control-demo-1','ROLE=web'],next=webProfileEnvironment(before,'isolated-control-demo-1',true,true);expect(next.LOOPLABS_AWS_AUTHORIZATION_CONFIG).toBe(observationConfig);
  expect(()=>assertProfileOnlyChange(before,Object.entries(next).map(([k,v])=>k+'='+v),'isolated-control-demo-1',true,true)).not.toThrow();
