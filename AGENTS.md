@@ -23,9 +23,9 @@ The managed customer acknowledgement in `/control-plane/work` automatically assi
 1. Inspect the affected route, its tests, and the relevant docs before editing.
 2. Keep changes small and preserve the shared site system: Geist, `lib/site.ts`, common navigation, and existing responsive behavior.
 3. Add or update meaningful tests whenever behavior, permissions, policy, state transitions, data handling, or public claims change. Test failure paths and replays, not only the happy path.
-4. Run `pnpm quality` before committing. A change is unfinished until it passes.
+4. Run focused relevant checks locally. The full `pnpm quality` suite runs once in GitHub CI for each candidate source revision; do not repeat it before commit, push, merge or deployment. Raj authorized this prototype-stage policy on October 15, 2026; revisit when clients/users onboard.
 5. Do not bypass, weaken, skip, or delete a gate to make a change pass. Fix the change or explain why the gate itself is wrong and update the test with evidence.
-6. Production deployment must use `./deploy.sh`; it requires a clean `main` commit already pushed to `origin/main` and reruns all gates.
+6. Production deployment must use `./deploy.sh`; it requires a clean `main` commit already pushed to `origin/main` and verifies successful GitHub CI for identical source (including a merged internal PR head). Deployment performs only build, activation and focused health/authentication checks; it does not rerun the full suite.
 
 ## Security and correctness invariants
 

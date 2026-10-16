@@ -1,11 +1,13 @@
 name: Quality gates
 
 on:
+  # Direct main commits need an explicit CI run; merged PRs reuse identical-tree proof.
+  workflow_dispatch:
   push:
     # Private provider fixtures are available only to repository writers on
     # these branches. A fork must be reviewed and admitted to an internal branch;
     # an absent required check remains blocked, never a skipped/passed proof.
-    branches: [main, 'codex/**']
+    branches: ['codex/**']
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}

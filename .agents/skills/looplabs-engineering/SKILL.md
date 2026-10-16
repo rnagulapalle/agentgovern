@@ -29,14 +29,10 @@ Keep product language exact: original prepared demos remain browser-local. The i
 
 ## 4. Verify
 
-During development, run the smallest relevant test. Before completion run:
-
-```bash
-pnpm quality
-```
+During development, run the smallest relevant tests. The full `pnpm quality` suite runs once in GitHub CI per candidate source revision. Do not repeat it locally, in pre-push, after squash merge or during deployment. This prototype-stage policy follows Raj’s October 15, 2026 instruction; revisit when clients/users onboard.
 
 Inspect the change with `git diff --check` and `git diff`. Do not silence a failure by reducing coverage, excluding the changed file, weakening a rule, or deleting a test.
 
 ## 5. Release
 
-Commits must be reviewable and contain no credentials or generated build output. Pull requests must pass the `quality-gates` check. Production releases use `./deploy.sh`, which only accepts a clean `main` commit that exactly matches `origin/main`.
+Commits must be reviewable and contain no credentials or generated build output. Pull requests must pass the `quality-gates` check. Production releases use `./deploy.sh`, which only accepts a clean `main` commit that exactly matches `origin/main`. They verify successful GitHub CI for the identical tracked source tree, including a merged internal PR head, then build/activate and run focused production checks.

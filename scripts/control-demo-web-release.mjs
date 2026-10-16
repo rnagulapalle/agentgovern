@@ -1,5 +1,5 @@
 // Reviewed narrow control-demo web selection: web image, profile and AWS UX flag.
-// ./deploy.sh --profile control-demo supplies only clean pushed main after full quality.
+// ./deploy.sh --profile control-demo supplies only clean pushed main after identical-source CI verification.
 // This bounded profile is not general enterprise release eligibility.
 import assert from 'node:assert/strict';
 import {readFile,writeFile,lstat,mkdir,realpath,readlink,symlink,rename,unlink,rm} from 'node:fs/promises';
