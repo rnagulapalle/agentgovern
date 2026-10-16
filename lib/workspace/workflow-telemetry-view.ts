@@ -48,3 +48,49 @@ export function telemetryDecision(events:WorkflowTelemetryEvent[],decision:strin
  if(decision==="invalid")return "More details needed";
  return "Decision not reported";
 }
+
+const actionCopy: Record<string, [string, string]> = {
+ classify: ["Understand the request", "Identify what the customer is asking for."],
+ resolve_customer: ["Find the customer", "Look up the customer in the connected CRM."],
+ price: ["Calculate pricing", "Prepare pricing for the requested products."],
+ record_crm: ["Update the customer record", "Save the quote information in the connected CRM."],
+ send_quote: ["Send the quote", "Deliver the quote through the connected channel."],
+ request_approval: ["Ask for approval", "Hold the request for a manager’s decision."],
+ update_approval_message: ["Update the approval conversation", "Reflect the decision in the connected approval channel."],
+ notify_manager_declined: ["Notify the manager", "Report that the policy declined the request."],
+ triage: ["Request human review", "Route the request to a person for review."],
+};
+export function telemetryStepCopy(step: ReturnType<typeof telemetrySteps>[number]) {
+ const known=step.action&&step.first.actionName?actionCopy[step.first.actionName]:null;
+ const lifecycleTitle=step.first.eventName==="workflow.started"?"Request received":step.first.eventName==="workflow.finished"?({completed:"Request completed",declined:"Request blocked by policy",rejected:"Request rejected",failed:"Request failed"} as Record<string,string>)[step.first.reportedOutcome??""]??"Review the reported outcome":step.first.eventName==="policy.evaluated"?"Check the approval rules":null;
+ const title=known?.[0]??lifecycleTitle??step.title;
+ const detail=known?.[1]??(step.first.eventName==="workflow.started"?"The workflow received the request.":step.first.eventName==="workflow.finished"?"The workflow reported its final outcome.":step.first.eventName==="workflow.paused"?"The workflow is waiting before it continues.":null);
+ const provider=step.first.provider?({hubspot:"HubSpot",slack:"Slack",gmail:"Gmail",anthropic:"Anthropic",pricing:"Pricing service"} as Record<string,string>)[step.first.provider]??step.first.provider:null;
+ const tone=step.first.eventName==="workflow.finished"&&step.first.reportedOutcome==="failed"?"attention":step.first.eventName==="workflow.finished"&&["declined","rejected"].includes(step.first.reportedOutcome??"")?"blocked":step.first.eventName==="workflow.finished"&&step.first.reportedOutcome==="completed"?"done":step.state==="Outcome uncertain"||step.state==="Failed"||step.first.eventName==="customer_output.failed"?"attention":step.state==="Withheld"||step.first.eventName==="approval.rejected"||step.first.eventName==="customer_output.withheld"?"blocked":step.state==="Completed"||["customer_output.sent","approval.approved"].includes(step.first.eventName)?"done":"neutral";
+ return {title,detail,provider,tone};
+}
+export function telemetryRequestLabel(run: ReturnType<typeof telemetryRuns>[number]) {
+ if(run.policy?.requestedPercent!=null)return `${run.policy.requestedPercent}% discount`;
+ if(run.events.some(e=>e.actionName==="send_quote"||e.actionName==="price"))return "Prepare a quote";
+ return "Workflow execution";
+}
+export function telemetryOutcomeGroup(run: ReturnType<typeof telemetryRuns>[number]) {
+ if(run.conflict||run.events.some(e=>e.eventName==="action.uncertain"))return "attention";
+ if(run.status==="Completed · agent reported")return "completed";
+ if(run.status==="Awaiting manager approval")return "waiting";
+ if(run.status==="Blocked by workflow policy"||run.status==="Rejected · agent reported")return "blocked";
+ return "attention";
+}
+
+/** Summary of observed fields, not a reconstruction of the original message. */
+export function telemetryRequestContext(run: ReturnType<typeof telemetryRuns>[number]) {
+ const description=run.policy?.requestedPercent!=null
+  ? `A ${run.policy.requestedPercent}% discount was requested.`
+  :run.events.some(event=>event.actionName==="price")&&run.events.some(event=>event.actionName==="send_quote")
+   ?"The workflow reports steps to prepare pricing and send a quote."
+   :run.events.some(event=>event.actionName==="price")?"The workflow reports a request involving pricing."
+   :run.events.some(event=>event.actionName==="send_quote")?"The workflow reports a request to send a quote."
+   :"The workflow has not shared a description of this request.";
+ const started=run.events.find(event=>event.eventName==="workflow.started");
+ return {description,channel:run.trigger,startedAt:started?.occurredAt??null,version:started?.reportedDeploymentVersion??null,messageAvailable:false as const};
+}

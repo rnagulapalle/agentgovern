@@ -17,8 +17,10 @@ interface Data {
 }
 export function ConnectorActionsWorkspace({
   connector,
+  selectedActionId,
 }: {
   connector: Connector;
+  selectedActionId?: string;
 }) {
   const [data, setData] = useState<Data | null>(null),
     [agents, setAgents] = useState<
@@ -188,7 +190,7 @@ export function ConnectorActionsWorkspace({
           provider; it never sends the action again.
         </p>
         {data?.actions
-          .filter((a) => a.connector === connector)
+          .filter((a) => a.connector === connector && (!selectedActionId || a.id === selectedActionId))
           .map((a) => (
             <article className="cp-durable-scope" key={a.id} id={`action-${a.id}`}>
               <h3>

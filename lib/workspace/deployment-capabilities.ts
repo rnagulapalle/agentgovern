@@ -3,7 +3,7 @@
  * default-denies other protected entry points, independently of client input. */
 export const quoteDemoProfile = 'isolated-quote-demo-1';
 export const scriptDemoProfile = 'isolated-control-demo-1';
-export const scriptDemoSections = Object.freeze(['quotes', 'agents', 'actions', 'workflow-runs', 'history', 'workflows', 'approvals', 'policies', 'connectors', 'outputs', 'reconciliation']);
+export const scriptDemoSections = Object.freeze(['quotes', 'agents', 'activity', 'actions', 'workflow-runs', 'history', 'workflows', 'approvals', 'policies', 'connectors', 'outputs', 'reconciliation']);
 const apiMethods: Readonly<Record<string, readonly string[]>> = Object.freeze({
   '/api/workspace/session': Object.freeze(['GET', 'POST', 'DELETE']),
   '/api/workspace/quotes': Object.freeze(['GET', 'POST']),

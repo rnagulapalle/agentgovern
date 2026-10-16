@@ -17,16 +17,24 @@ const arn = "arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/customer_a
 const secondArn = "arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/service_assistant-0987654321";
 const scanId = "00000000-0000-4000-8000-000000000001";
 const inventory = () => ({ scope, status: "observed", scanId, observedAt: new Date().toISOString(), stale: false, completeness: "complete-api-traversal", failures: [], historyTruncated: false, records: [arn,secondArn].map((resourceArn) => ({ record: { scope, resourceArn, resourceId: resourceArn.split("/").at(-1), version: "1", observedAt: new Date().toISOString(), roleReference: null, workloadIdentityReference: null }, observedInCurrentScan: true, stale: false })) });
-function guidedHistory() {
+function guidedHistory(toolSteps=false) {
   const at=new Date(Date.now()-1000).toISOString(),events=[];
   for(const [index,outcome]of ["completed","awaiting_approval","declined"].entries()) {
     const base={runId:`run-${index}`,actionId:null,occurredAt:at,attempt:1,traceId:String(index+1).repeat(32),spanId:"b".repeat(16),triggerChannel:"slack",reportedDeploymentVersion:"1",actionName:null,provider:null,decision:null,reasonCode:null,reportedOutcome:null,ruleId:null,ruleVersion:null,requestedPercent:null,approvalThreshold:null,maximumDiscount:null,quoteId:index===0?"Q-original":"Q-shared",evidence:"source-reported",effectVerified:false,approvalIdentityVerified:false};
     events.push({...base,eventId:`event-${index}-1`,eventName:"workflow.started"},{...base,eventId:`event-${index}-2`,eventName:"policy.evaluated",requestedPercent:[5,25,80][index],decision:["auto_approve","needs_approval","decline"][index],approvalThreshold:20,maximumDiscount:70},{...base,eventId:`event-${index}-3`,eventName:outcome==="awaiting_approval"?"workflow.paused":"workflow.finished",reportedOutcome:outcome});
   }
+  if(toolSteps){
+    const first=events.find(e=>e.runId==="run-0")!;
+    for(const [index,action_name]of ["classify","resolve_customer","price","record_crm","send_quote"].entries()){
+      events.push({...first,eventId:`tool-${index}`,eventName:"action.completed",actionId:`action-${index}`,actionName:action_name,provider:index===0?"anthropic":index===2?"pricing":index===4?"slack":"hubspot",occurredAt:new Date(Date.parse(at)+(index>=3?index+2:index+1)).toISOString()});
+    }
+    const policy=events.find(e=>e.runId==="run-0"&&e.eventName==="policy.evaluated")!;policy.occurredAt=new Date(Date.parse(at)+4).toISOString();
+    const finish=events.find(e=>e.runId==="run-0"&&e.eventName==="workflow.finished")!;finish.occurredAt=new Date(Date.parse(at)+10).toISOString();
+  }
   return {enrollment:{displayName:"Customer service agent",owner:"owner@example.test",logGroup:"/company/agent-events",enrolledAt:at},checkedAt:new Date().toISOString(),source:{runtimeArn:arn,enrolledRuntimeVersion:"1",logGroup:"/company/agent-events",startTime:Date.now()-86400000,endTime:Date.now()},events,completeness:"complete-api-traversal",unsupportedRecords:0,duplicateDeliveries:0,conflictingEventIds:[],failures:[],enforcement:"not-established"};
 }
 type Call = { path: string; method: string; body: Record<string,unknown> | null };
-async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, options: { access?: boolean; activityError?: boolean; delayed?: Promise<void>; stale?: boolean; retainedVersion?: boolean; guided?: boolean; enrolled?: boolean; historyUnavailable?: boolean; historyFailsAfterFirst?:boolean; enrollmentFailsAfterFirst?:boolean; enrolledVersion?:string; approvalConnected?:boolean } = {}) {
+async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, options: { access?: boolean; activityError?: boolean; delayed?: Promise<void>; stale?: boolean; retainedVersion?: boolean; guided?: boolean; enrolled?: boolean; historyUnavailable?: boolean; historyFailsAfterFirst?:boolean; enrollmentFailsAfterFirst?:boolean; enrolledVersion?:string; approvalConnected?:boolean; toolSteps?:boolean } = {}) {
   const esbuild = requireModule(requireModule.resolve("esbuild", { paths: [requireModule.resolve("@temporalio/worker")] }));
   const bundle = await esbuild.build({ stdin: { contents: `import React from 'react';import {createRoot} from 'react-dom/client';import {AwsConnectionJourney} from './components/control-plane/aws-connection-journey';createRoot(document.getElementById('app')).render(<AwsConnectionJourney/>);`, resolveDir: process.cwd(), loader: "tsx" }, bundle: true, platform: "browser", format: "iife", write: false, jsx: "automatic", alias: { "@": resolve(".") }, define: { "process.env": "{}", "process.env.NODE_ENV": '"test"' } });
   function snapshot() {
@@ -64,7 +72,7 @@ async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, option
         else if(body?.operation === "sources") result={groups:[{name:"/company/agent-events",retentionDays:30}],truncated:false};
         else if(body?.operation === "onboard") {onboarded=true;result={mode:"observation-only",enforcement:"not-established",supportedEventsObserved:9};}
         else if(body?.operation === "history" && (options.historyUnavailable||options.historyFailsAfterFirst&&++historyReads>1)) {status=503;result={error:"AWS history identity could not be verified. No history was accepted."};}
-        else if(body?.operation === "history" && onboarded) result=guidedHistory();
+        else if(body?.operation === "history" && onboarded) result=guidedHistory(options.toolSteps);
         else {status=409;result={error:"Onboard this agent for observation before opening its history."};}
       } else if(path === "/api/workspace/discovery/approvals") result={connected:options.approvalConnected!==false,requests:[],reviewer:"owner@example.test",canReview:true};
       else if (path === "/api/workspace/discovery/owners") {
@@ -227,7 +235,7 @@ it("history selects one execution into a separate trace and filters Slack withou
  expect(await page.getByRole("heading",{name:"Select an execution",exact:true}).isVisible()).toBe(true);
  await page.getByText("25% discount",{exact:true}).click();
  await page.getByLabel("Workflow history channel",{exact:true}).selectOption("email");expect(await page.locator("button.aws-execution").count()).toBe(0);
- await page.getByText("No executions from this channel were found in the loaded window.",{exact:true}).waitFor();
+ await page.getByText("No requests match these filters. Try a different search or clear the filters.",{exact:true}).waitFor();
  await page.getByLabel("Workflow history channel",{exact:true}).selectOption("slack");expect(await page.locator("button.aws-execution").count()).toBe(3);
  expect(await page.locator("button.aws-execution[aria-pressed=true]").count()).toBe(0);
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -271,8 +279,8 @@ it("related quote filter preserves one row per execution and the connected summa
  await openAgent(page, true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();await page.getByText("Approvals connected",{exact:true}).waitFor();
  await page.getByLabel("Reported quote",{exact:true}).selectOption("Q-shared");expect(await page.locator("button.aws-execution").count()).toBe(2);
  await page.getByText("25% discount",{exact:true}).click();expect(await page.locator("button.aws-execution[aria-pressed=true]").count()).toBe(1);
- await page.setViewportSize({width:1440,height:1100});await page.evaluate(()=>{window.scrollTo({top:0,left:0,behavior:"instant"});return document.fonts.ready;});await page.screenshot({path:".local/aws-activity-design-desktop.png",fullPage:true});await page.locator(".aws-execution-browser").screenshot({path:".local/aws-activity-design-trace.png"});
- await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:".local/aws-activity-design-mobile.png",fullPage:true});
+ await page.setViewportSize({width:1440,height:1100});await page.evaluate(()=>{window.scrollTo({top:0,left:0,behavior:"instant"});return document.fonts.ready;});await page.screenshot({path:".local/aws-readable-timeline-desktop.png",fullPage:true});await page.locator(".aws-execution-browser").screenshot({path:".local/aws-readable-timeline-trace.png"});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:".local/aws-readable-timeline-mobile.png",fullPage:true});
 },{guided:true,enrolled:true}),20000);
 
 it("unknown enrollment after a failed read offers retry rather than a new onboarding form",async()=>mounted(async(page,calls)=>{
@@ -301,3 +309,28 @@ it("changing agents clears the selected trace and view switching never sends a d
  expect(calls.some(c=>c.body?.resourceArn===secondArn&&c.body.operation==="history")).toBe(true);
  expect(calls.some(c=>["onboard","decide","approve","execute","invoke"].includes(String(c.body?.operation)))).toBe(false);
 },{guided:true,enrolled:true}),20000);
+
+it("shows readable tool stages, honest missing business data and outcome/search filters",async()=>mounted(async(page,calls)=>{
+ await openAgent(page,true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
+ await page.setViewportSize({width:1440,height:1100});await page.getByRole("button",{name:"Review 5% discount · run-0",exact:true}).click();
+ for(const title of ["Request received","Understand the request","Find the customer","Calculate pricing","Update the customer record","Send the quote"]){expect(await page.getByLabel("Execution trace",{exact:true}).getByText(title,{exact:true}).isVisible()).toBe(true);}
+ expect(await page.getByText("A 5% discount was requested.",{exact:true}).isVisible()).toBe(true);
+ expect(await page.getByText("Original request text wasn’t shared by this workflow. Time shown is when processing started.",{exact:true}).isVisible()).toBe(true);
+ expect(await page.getByText("Not shared by workflow",{exact:true}).isVisible()).toBe(true);
+ expect(await page.locator(".aws-trace-technical[open]").count()).toBe(0);
+ await page.evaluate(()=>document.fonts.ready);
+ await page.locator(".aws-run-scorecard").screenshot({path:".local/aws-activity-summary-cards.png"});
+ await page.locator(".aws-history-toolbar").screenshot({path:".local/aws-activity-filters.png"});
+ await page.locator(".aws-workspace-views").screenshot({path:".local/aws-activity-approval-views.png"});
+ await page.locator(".aws-execution-browser").screenshot({path:".local/aws-human-timeline-preview.png"});
+ // Expanded only for this review image; the shipped desktop trace remains scrollable.
+ const reviewStyle=await page.addStyleTag({content:".aws-run-trace { max-height:none !important; overflow:visible !important; position:static !important; }"});
+ await page.getByLabel("Execution trace",{exact:true}).screenshot({path:".local/aws-human-timeline-all-steps.png"});
+ await reviewStyle.evaluate(element=>element.parentNode?.removeChild(element));
+ await page.getByLabel("Execution outcome",{exact:true}).selectOption("waiting");expect(await page.locator("button.aws-execution").count()).toBe(1);expect(await page.getByRole("button",{name:"Review 25% discount · run-1",exact:true}).isVisible()).toBe(true);
+ await page.getByLabel("Find a request",{exact:true}).fill("run-0");expect(await page.locator("button.aws-execution").count()).toBe(0);
+ await page.getByRole("button",{name:"Clear filters",exact:true}).click();expect(await page.locator("button.aws-execution").count()).toBe(3);
+ await page.getByLabel("Find a request",{exact:true}).fill("run-0");expect(await page.locator("button.aws-execution").count()).toBe(1);
+ await page.screenshot({path:".local/aws-human-activity-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:".local/aws-human-activity-mobile.png",fullPage:true});
+ expect(calls.some(c=>["onboard","decide","approve","execute","invoke"].includes(String(c.body?.operation)))).toBe(false);
+},{guided:true,enrolled:true,toolSteps:true}),20000);

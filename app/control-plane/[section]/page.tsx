@@ -3,6 +3,7 @@ import { ControlScreen } from "@/components/control-plane/screens";
 import type { Section } from "@/lib/control-plane/model";
 import { SavedWorkspace } from "@/components/control-plane/saved-workspace";
 import { scriptDemoProfile } from "@/lib/workspace/deployment-capabilities";
+import { ControlCenter } from "@/components/control-plane/control-center";
 const sections = [
   "workflows",
   "agents",
@@ -24,6 +25,7 @@ export default async function ControlPage({
 }) {
   const { section } = await params;
   if (!sections.includes(section)) notFound();
+  if (process.env.LOOPLABS_DEPLOYMENT_PROFILE === scriptDemoProfile && section === "approvals") return <ControlCenter page="approvals" awsEnabled={process.env.LOOPLABS_AWS_CONNECTIONS === "enabled"}/>;
   if (process.env.LOOPLABS_DEPLOYMENT_PROFILE === scriptDemoProfile && (section === "workflows" || section === "approvals" || section === "policies" || section === "outputs" || section === "reconciliation")) return <SavedWorkspace section={section} awsConnections={process.env.LOOPLABS_AWS_CONNECTIONS === "enabled"} />;
   const { inspect } = await searchParams;
   return (

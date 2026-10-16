@@ -1,5 +1,5 @@
 import {it,expect} from "vitest";
-import {telemetryRuns,eventLabels,telemetrySteps,telemetryDecision} from "./workflow-telemetry-view";
+import {telemetryRuns,eventLabels,telemetrySteps,telemetryDecision,telemetryStepCopy,telemetryRequestLabel,telemetryOutcomeGroup,telemetryRequestContext} from "./workflow-telemetry-view";
 import {projectWorkflowEvent,workflowEventNames,type WorkflowTelemetryWindow} from "./workflow-telemetry";
 function event(event_name:string,extra:Record<string,unknown>={}){return projectWorkflowEvent(JSON.stringify({schema_version:"1.0",event_name,event_id:"event-1",run_id:"run-1",action_id:null,timestamp:"2026-10-15T12:00:00.000001Z",attempt:1,trace_id:"a".repeat(32),span_id:"b".repeat(16),trigger_channel:"slack",agent_deployment_version:"10",...extra}))!;}
 function window(events:WorkflowTelemetryWindow['events'],conflictingEventIds:string[]=[]):WorkflowTelemetryWindow{return{source:{runtimeArn:"arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/agent-1234567890",enrolledRuntimeVersion:"10",logGroup:"/company/events",startTime:1,endTime:2},events,completeness:"partial",unsupportedRecords:0,duplicateDeliveries:0,conflictingEventIds,failures:[],enforcement:"not-established"};}
@@ -45,4 +45,28 @@ it("keeps source policy decisions separate from manager decisions and execution 
 it("links quote references without merging separate executions on the same quote",()=>{
  const first=event("workflow.started",{event_id:"one",run_id:"run-a",quote_id:"Q-same"}),second=event("workflow.finished",{event_id:"two",run_id:"run-b",quote_id:"Q-same",outcome:"declined"});
  const runs=telemetryRuns(window([first,second]));expect(runs).toHaveLength(2);expect(runs.every(r=>r.quoteIds.length===1&&r.quoteIds[0]==="Q-same")).toBe(true);
+});
+
+it("uses readable action labels while preserving failed and uncertain tool states",()=>{
+ const failed=telemetrySteps([event("action.failed",{action_id:"a",action_name:"record_crm",provider:"hubspot"})])[0];
+ expect(telemetryStepCopy(failed)).toMatchObject({title:"Update the customer record",provider:"HubSpot",tone:"attention"});expect(failed.state).toBe("Failed");
+ const uncertain=telemetrySteps([event("action.uncertain",{action_id:"b",action_name:"send_quote",provider:"slack"})])[0];
+ expect(telemetryStepCopy(uncertain)).toMatchObject({title:"Send the quote",provider:"Slack",tone:"attention"});expect(uncertain.state).toBe("Outcome uncertain");
+ const unknown=telemetrySteps([event("action.started",{action_id:"c",action_name:"custom_task",provider:"other"})])[0];expect(telemetryStepCopy(unknown)).toMatchObject({title:"custom task",provider:"other",tone:"neutral"});
+});
+it("names quote preparation only from observed tools and does not invent a policy decision",()=>{
+ const run=telemetryRuns(window([event("action.completed",{action_id:"tool",action_name:"price"})]))[0];
+ expect(telemetryRequestLabel(run)).toBe("Prepare a quote");expect(telemetryDecision(run.events,null)).toBe("Decision not reported");expect(telemetryOutcomeGroup(run)).toBe("attention");
+});
+it("keeps conflicts and uncertain effects in needs-attention filters even with reported completion",()=>{
+ const end=event("workflow.finished",{event_id:"end",outcome:"completed"});
+ const conflict=telemetryRuns(window([end],["end"]))[0];expect(telemetryOutcomeGroup(conflict)).toBe("attention");
+ const unknown=event("action.uncertain",{event_id:"unknown",action_id:"tool"});expect(telemetryOutcomeGroup(telemetryRuns(window([unknown,end]))[0])).toBe("attention");
+});
+
+it("describes request metadata from its own reported fields without inventing message text or receipt time",()=>{
+ const start=event("workflow.started",{event_id:"start",agent_deployment_version:"15"}),policy=event("policy.evaluated",{event_id:"policy",requested_pct:25});
+ const run=telemetryRuns(window([start,policy]))[0];expect(telemetryRequestContext(run)).toMatchObject({description:"A 25% discount was requested.",channel:"slack",version:"15",startedAt:start.occurredAt,messageAvailable:false});
+ const missing=telemetryRuns(window([event("action.started",{action_id:"tool"})]))[0];expect(telemetryRequestContext(missing)).toMatchObject({description:"The workflow has not shared a description of this request.",startedAt:null,version:null,messageAvailable:false});
+ const quote=telemetryRuns(window([event("action.started",{action_id:"tool",action_name:"price"})]))[0];expect(telemetryRequestContext(quote).description).toBe("The workflow reports a request involving pricing.");
 });

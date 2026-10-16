@@ -3,6 +3,7 @@ import { quoteDemoProfile, scriptDemoProfile } from "../../lib/workspace/deploym
 import { ControlProvider } from "../../components/control-plane/provider";
 import { ControlShell } from "../../components/control-plane/shell";
 import "./control-plane.css";
+import "../../components/control-plane/control-center.css";
 import "../sales.css";
 import {
   workspaceContext,

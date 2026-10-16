@@ -118,22 +118,19 @@ export function ControlShell({
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
   }, [durable]);
-  const savedNavigation = [{ name: "CONTROL WORKSPACE", items: [
+  const savedNavigation = [{ name: "OPERATE", items: [
     { key: "overview", label: "Overview", icon: LayoutGrid },
-    { key: "workflows", label: "Workflows", icon: GitBranch },
-    { key: "workflow-runs", label: "Workflow runs", icon: Activity },
-    { key: "approvals", label: "Approvals", icon: ShieldCheck },
     { key: "agents", label: "Agents", icon: Bot },
+    { key: "activity", label: "Activity", icon: Activity },
+    { key: "approvals", label: "Approvals", icon: ShieldCheck },
+  ] }, { name: "CONFIGURE", items: [
     { key: "connectors", label: "Connections", icon: Database },
-    { key: "policies", label: "Policies & access", icon: SlidersHorizontal },
-    { key: "outputs", label: "Output controls", icon: ShieldCheck },
-    { key: "reconciliation", label: "Reconciliation", icon: Undo2 },
-    { key: "history", label: "Decision history", icon: History },
+    { key: "policies", label: "Policies", icon: SlidersHorizontal },
   ] }];
   const navigation = quoteOnly ? [{ name: "QUOTE WORKSPACE", items: groups[0].items.filter(item => item.key === "quotes") }] : scriptDemo ? savedNavigation : groups;
   const title =
     navigation.flatMap((g) => g.items).find((i) => i.key === section)?.label ||
-    (scriptDemo && section === "quotes" ? "Distributor quote" : scriptDemo && section === "actions" ? "Action details" : "Example settings");
+    (scriptDemo ? ({ quotes: "Quote workspace", actions: "Action details", discovery: "AWS connection", workflows: "Sample workflows", "workflow-runs": "Customer handoffs", history: "Saved decisions", reconciliation: "Outcome review", outputs: "Output controls" } as Record<string,string>)[section] || "Workspace" : "Example settings");
   const results = [
     ...state.agents.map((a) => ({
       name: a.name,
@@ -159,7 +156,7 @@ export function ControlShell({
     )
     .slice(0, 8);
   return (
-    <div className="cp-app ph-no-capture" data-private>
+    <div className={`cp-app ph-no-capture${scriptDemo ? " cc-brand-system" : ""}`} data-private>
       <a href="#control-content" className="cp-skip">
         Skip to content
       </a>
