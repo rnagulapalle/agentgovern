@@ -23,7 +23,7 @@ export function AwsWorkflowHistory({reference,name}:{reference:ActivityReference
   const signature=JSON.stringify([reference,displayName.trim(),owner,logGroup]);if(request.current?.signature!==signature)request.current={signature,id:crypto.randomUUID()};
   try{const d=await operation({...reference,operation:"onboard",id:request.current.id,owner,displayName:displayName.trim(),logGroup});if(n===generation.current){setNotice(`Agent onboarded for observation. ${d.supportedEventsObserved} supported events found in the source check. Execution controls remain off.`);await loadHistory();}}catch(e){if(n===generation.current)setError(e instanceof Error?e.message:"Onboarding could not be saved.");}finally{if(n===generation.current)setBusy(false);}
  }
- return <section className="cp-panel cp-durable-card" aria-label="AWS workflow observation"><h2>Onboard and observe this agent</h2><p>Keep the workflow and approvals in AWS. Save its owner and reviewed telemetry source, then follow its reported history here.</p>
+ return <section className="cp-panel cp-durable-card" aria-label="AWS workflow observation"><h2>{history ? "Agent observation" : "Onboard and observe this agent"}</h2><p>Keep the workflow and approvals in AWS. Save its owner and reviewed telemetry source, then follow its reported history here.</p>
   {error&&<p role="alert" className="cp-durable-message is-error">{error}</p>}{notice&&<p role="status" className="cp-durable-message">{notice}</p>}
   <details open={!history}><summary>Observation onboarding</summary><form className="cp-durable-form" onSubmit={e=>{e.preventDefault();void onboard();}}>
    <label>Agent name<input value={displayName} onChange={e=>setDisplayName(e.target.value)} maxLength={100} required disabled={busy}/></label>

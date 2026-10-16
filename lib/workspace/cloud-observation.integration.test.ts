@@ -38,6 +38,7 @@ it("genuine scoped cookie API prepares read-only authorization and lists source 
 });
 it("onboards an exact source idempotently, persists its owner and reads redacted source history",async()=>{
  const input=onboard();for(let n=0;n<2;n++){const response=await post(input);expect(response.status).toBe(200);expect(await response.json()).toMatchObject({repeated:n===1,mode:"observation-only",enforcement:"not-established",sourceRead:"verified"});}
+ const saved=await post({operation:"enrollment",connectionId:"aws",scanId:input.scanId,resourceArn:arn,version:"10"});expect(saved.status).toBe(200);expect(await saved.json()).toMatchObject({enrollment:{displayName:input.displayName,owner:input.owner,logGroup:input.logGroup}});
  const history=await post({operation:"history",connectionId:"aws",resourceArn:arn,version:"10",hours:24});expect(history.status).toBe(200);const value=await history.json();expect(value).toMatchObject({enrollment:{displayName:input.displayName,owner:input.owner,logGroup:input.logGroup},enforcement:"not-established",events:[{runId:"run-one",effectVerified:false,evidence:"source-reported"}]});expect(JSON.stringify(value)).not.toContain("never-import");
  expect((await fixture.web("two").query("SELECT * FROM ll_cloud_observation_enrollments")).rows).toEqual([]);
  await expect(fixture.web("one").query("UPDATE ll_cloud_observation_enrollments SET log_group='/other'")).rejects.toThrow();

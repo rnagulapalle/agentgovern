@@ -49,7 +49,8 @@ async function mounted(run: (page: Page, calls: Call[]) => Promise<void>, option
         if (options.activityError) { status = 503; result = { error: "Activity access is not configured for this agent version." }; }
         else result = { reference: { ...body }, checkedAt: new Date().toISOString(), retention: "request-only", completeness: "complete-api-traversal", failures: [], unsupportedRecords: 0, observations: [{ sourceEventId: "event-one", timestamp: Date.now(), observation: { operation: "InvokeAgentRuntime", requestId: "request-one", sessionId: "session-one", effectVerified: false } }], toolActivity: "unknown", enforcement: "unverified" };
       } else if (path === "/api/workspace/discovery/onboarding") {
-        if(body?.operation === "authorization") result={url:"https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2",roleArn:"arn:aws:iam::123456789012:role/LoopLabsObservation-fixture",expiresAt:new Date(Date.now()+900000).toISOString(),authorityGranted:false};
+        if(body?.operation === "enrollment") result={enrollment:onboarded?guidedHistory().enrollment:null};
+        else if(body?.operation === "authorization") result={url:"https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2",roleArn:"arn:aws:iam::123456789012:role/LoopLabsObservation-fixture",expiresAt:new Date(Date.now()+900000).toISOString(),authorityGranted:false};
         else if(body?.operation === "verify") result={status:"identity-verified",inventory:snapshot(),authorityGranted:false};
         else if(body?.operation === "sources") result={groups:[{name:"/company/agent-events",retentionDays:30}],truncated:false};
         else if(body?.operation === "onboard") {onboarded=true;result={mode:"observation-only",enforcement:"not-established",supportedEventsObserved:9};}
@@ -156,6 +157,7 @@ it("onboarding explains optional telemetry and enforcement gaps without claiming
 it("guided fixture reviews AWS access, discovers, onboards and renders permitted, held and blocked source runs",async()=>mounted(async(page,calls)=>{
  page.setDefaultTimeout(4000);
  await page.getByRole("button",{name:"Open account",exact:false}).click();
+ await page.getByText("Manage AWS access",{exact:true}).click();
  await page.getByLabel("Custom workflow log group · optional").fill("/company/agent-events");
  await page.getByRole("button",{name:"Prepare AWS access request",exact:true}).click();
  const link=page.getByRole("link",{name:"Review access in AWS",exact:true});await link.waitFor();expect(await link.getAttribute("href")).toContain("https://us-west-2.console.aws.amazon.com/cloudformation/home");
@@ -172,7 +174,7 @@ it("guided fixture reviews AWS access, discovers, onboards and renders permitted
 },{guided:true}),20000);
 
 it("returning to an enrolled AWS agent restores its saved source and history without repeating onboarding",async()=>mounted(async(page,calls)=>{
- await openAgent(page);await page.getByRole("button",{name:"Continue to onboarding",exact:false}).click();
+ await openAgent(page);
  await page.getByText("Observation onboarding saved.",{exact:false}).waitFor();
  expect(await page.getByRole("heading",{name:"Workflow run · slack · 25% discount",exact:true}).count()).toBe(1);
  await page.getByText("Observation onboarding",{exact:true}).click();
@@ -182,7 +184,7 @@ it("returning to an enrolled AWS agent restores its saved source and history wit
 },{guided:true,enrolled:true}),20000);
 
 it("failed saved history read is explicit and never invents enrolled status",async()=>mounted(async(page,calls)=>{
- await openAgent(page);await page.getByRole("button",{name:"Continue to onboarding",exact:false}).click();
+ await openAgent(page);
  await page.getByRole("alert").filter({hasText:"AWS history identity could not be verified"}).waitFor();
  expect(await page.getByText("Observation onboarding saved.",{exact:false}).count()).toBe(0);
  expect(calls.some(c=>c.body?.operation==="onboard")).toBe(false);
