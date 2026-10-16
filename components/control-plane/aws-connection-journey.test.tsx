@@ -189,3 +189,12 @@ it("failed saved history read is explicit and never invents enrolled status",asy
  expect(await page.getByText("Observation onboarding saved.",{exact:false}).count()).toBe(0);
  expect(calls.some(c=>c.body?.operation==="onboard")).toBe(false);
 },{guided:true,enrolled:true,historyUnavailable:true}),20000);
+
+it("stale discovery still opens an existing enrollment without granting new onboarding",async()=>mounted(async(page,calls)=>{
+ await openAgent(page);await page.getByText("Observation onboarding saved.",{exact:false}).waitFor();
+ expect(calls.filter(c=>c.body?.operation==="onboard")).toHaveLength(0);
+},{guided:true,enrolled:true,stale:true}),20000);
+it("stale discovery requires refresh for an unenrolled agent",async()=>mounted(async page=>{
+ await openAgent(page);await page.getByRole("alert").filter({hasText:"Refresh the agent list before setting up observation"}).waitFor();
+ expect(await page.getByRole("button",{name:"Onboard for observation",exact:true}).count()).toBe(0);
+},{guided:true,stale:true}),20000);

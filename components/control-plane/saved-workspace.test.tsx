@@ -107,11 +107,11 @@ it.each(['overview','policies'] as const)('AWS availability stays consistent in 
 });
 
 // Presentation only: the saved discovery journey remains the source of inventory.
-it('connections puts platforms and discovered agents before business systems and model planning',()=>{
+it('connections prioritizes platforms and agents without a model planning panel',()=>{
  const html=renderToStaticMarkup(<SavedWorkspace section="connections" awsConnections />);
  const headings=[...html.matchAll(/<h2[^>]*>(.*?)<\/h2>/g)].map(m=>m[1]);
- expect(headings).toEqual(['Agent platforms','Discovered agents','Business systems','Model planning']);
- expect(html).toContain('View discovered agents');expect(html).toContain('Discovery does not enable execution controls');
+ expect(headings).toEqual(['Agent platforms','Discovered agents','Business systems']);
+ expect(html).not.toContain('<h2>Model planning</h2>');expect(html).toContain('View discovered agents');expect(html).toContain('Discovery does not enable execution controls');
  expect(html).not.toContain('Capabilities and availability');
 });
 it('the product capability overview appears on the workspace overview only',()=>{
