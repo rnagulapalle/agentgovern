@@ -18326,7 +18326,7 @@
     "lib/workspace/cloud-inventory.ts": "41decf5cfd37741c94d66f02cbdea8c0f84b4f732b8b1011c9aa261afa0c0d5a",
     "lib/workspace/cloud-invocation-observation.ts": "3b1eab4b85d5ec1c8a0733048fdf1b574cb789909b4ebb2fa1a8fadd3b373d20",
     "lib/workspace/cloud-invocation-reader.ts": "52d4217bea73142317fd185f557d1e8807e6ee96807287df27b6770d43067f49",
-    "lib/workspace/cloud-observation-operations.ts": "1cd336ce857bb832e0f6c74b4c1608a1f27931254092d2ff1d7548d66fc602df",
+    "lib/workspace/cloud-observation-operations.ts": "670cc965fbefb38e829ea9e1db3e20ce2c7dea6f2f46a7c22e4c66ab625ec70e",
     "lib/workspace/cloud-observation-schema.sql": "51827e2721bf6c5ef77997fb5f57a8650b9b999b976df779d9b1228fe37c7e93",
     "lib/workspace/cloud-observation-store.ts": "1d0e3e3ccdc8e91215478fc3946d8dac2d1e2b3d8a2124ccd35de2061476afdd",
     "lib/workspace/cloud-operations.ts": "82b609c8ee1eb60d00462db4302c3344ad812924e2ab29376646644f46807dcb",

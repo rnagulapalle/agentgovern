@@ -68,3 +68,13 @@ explicit labels from SDK `environmentVariables` after matching account, ARN and
 version. All other environment values remain discarded. A native JavaScript SDK
 read through this collector measured V16's six declarations; that read is separate
 from production persistence/rendering acceptance. Migration 30 is unchanged.
+
+## Saved onboarding and the observation request budget (October 16)
+
+Saved onboarding lookups read authenticated, workspace-scoped PostgreSQL state;
+they do not contact AWS and no longer spend the live observation allowance.
+Current membership, connection scope, enrolled owner and recovery epoch are still
+checked on every lookup. Live observation operations retain the existing
+12-request allowance per named member, workspace and connection per minute.
+This prevents repeated Agents-page loads from starving history or discovery reads.
+Approval bridge calls retain their existing checks and limits.
