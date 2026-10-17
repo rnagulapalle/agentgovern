@@ -67,3 +67,22 @@ it("inactive ownership stops saved observation reads",async()=>{
  await fixture.owner.query("UPDATE ll_members SET active=false WHERE email='owner@example.test'");
  try{expect((await post({operation:"history",connectionId:"aws",resourceArn:arn,version:"10",hours:24})).status).toBe(409);}finally{await fixture.owner.query("UPDATE ll_members SET active=true WHERE email='owner@example.test'");}
 });
+
+it("repeated saved onboarding reads remain available without spending the live AWS allowance",async()=>{
+ const input=onboard();expect((await post(input)).status).toBe(200);
+ const saved={operation:"enrollment",connectionId:"aws",scanId,resourceArn:arn,version:"10"};
+ const reads=state.reads;
+ for(let n=0;n<20;n++){
+  const response=await post(saved);expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({enrollment:{displayName:input.displayName}});
+ }
+ expect(state.reads).toBe(reads);
+ // Onboarding used one live read; eleven further live requests fit the unchanged limit.
+ for(let n=0;n<11;n++)expect((await post({operation:"sources",connectionId:"aws"})).status).toBe(200);
+ expect((await post({operation:"sources",connectionId:"aws"})).status).toBe(429);
+ expect((await post(saved)).status).toBe(200);
+ expect((await post(saved,other)).status).toBe(404);
+ await fixture.owner.query("UPDATE ll_members SET active=false WHERE email='reviewer@example.test'");
+ try{expect((await post(saved)).status).toBe(401);}finally{await fixture.owner.query("UPDATE ll_members SET active=true WHERE email='reviewer@example.test'");}
+ expect(state.reads).toBe(reads);
+});
