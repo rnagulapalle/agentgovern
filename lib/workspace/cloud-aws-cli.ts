@@ -78,7 +78,7 @@ export function awsCliInventoryApi(options: AwsReadOptions): AwsRuntimeInventory
         || typeof input.agentRuntimeVersion !== "string" || !/^[1-9][0-9]{0,4}$/.test(input.agentRuntimeVersion))
         return Promise.reject(new Error("Invalid discovery runtime request"));
       return read("bedrock-agentcore-control", "get-agent-runtime", { ...input },
-        "{agentRuntimeId:agentRuntimeId,agentRuntimeArn:agentRuntimeArn,agentRuntimeVersion:agentRuntimeVersion,roleArn:roleArn,workloadIdentityDetails:{workloadIdentityArn:workloadIdentityDetails.workloadIdentityArn}}");
+        "{agentRuntimeId:agentRuntimeId,agentRuntimeArn:agentRuntimeArn,agentRuntimeVersion:agentRuntimeVersion,roleArn:roleArn,workflowMetadata:{metadataVersion:environmentVariables.WORKFLOW_METADATA_VERSION,organization:environmentVariables.WORKFLOW_ORGANIZATION,ownerOrganization:environmentVariables.WORKFLOW_OWNER_ORGANIZATION,ownerTeam:environmentVariables.WORKFLOW_OWNER_TEAM,environment:environmentVariables.WORKFLOW_ENVIRONMENT,onCallStatus:environmentVariables.WORKFLOW_ONCALL_STATUS},workloadIdentityDetails:{workloadIdentityArn:workloadIdentityDetails.workloadIdentityArn}}");
     },
   };
 }

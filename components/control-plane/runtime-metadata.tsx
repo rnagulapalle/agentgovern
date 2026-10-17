@@ -1,0 +1,5 @@
+import type { CloudRuntimeMetadata } from "@/lib/workspace/cloud-runtime-metadata";
+
+export function RuntimeMetadata({metadata,version}:{metadata?:CloudRuntimeMetadata|null;version:string}) {
+  return <section className="cc-section"><h3>AWS-reported business details</h3><p>Declared by runtime version {version}. These labels do not assign company teams, change the accountable owner or grant permissions.</p>{metadata ? <dl className="cc-facts">{[["Organization",metadata.organization],["Owner organization",metadata.ownerOrganization],["Owner team",metadata.ownerTeam],["Environment",metadata.environment],["On-call coverage",metadata.onCallStatus],["Metadata version",metadata.metadataVersion]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value||"Not shared by AWS"}</dd></div>)}</dl>:<p>No supported business metadata in this saved discovery. Refresh discovery in Connections to check the current deployment.</p>}</section>;
+}

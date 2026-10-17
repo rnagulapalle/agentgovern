@@ -18,7 +18,7 @@ it("only exposes signed read commands with exact inputs, stripped outputs and is
     expect(opts).toMatchObject({ timeout: 15000, maxBuffer: 1048576, killSignal: "SIGKILL" });
     expect(Object.keys(opts.env).sort()).toEqual(["PATH", "HOME", "LANG", "NODE_ENV", "AWS_CONFIG_FILE", "AWS_SHARED_CREDENTIALS_FILE", "AWS_EC2_METADATA_DISABLED", "AWS_IGNORE_CONFIGURED_ENDPOINT_URLS", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN", "AWS_MAX_ATTEMPTS", "AWS_PAGER"].sort());
     expect(opts.env.AWS_CONFIG_FILE).toBe("/dev/null"); expect(JSON.stringify(args)).not.toContain(session().secretAccessKey);
-    expect(args.at(-1)).not.toMatch(/environmentVariables|description/);
+    expect(args.at(-1)).not.toMatch(/description|QUOTE_AGENT_CONFIG_SECRET_ARN|environmentVariables:environmentVariables/);
   }
   expect(JSON.parse(execute.mock.calls[1][1][execute.mock.calls[1][1].indexOf("--cli-input-json") + 1])).toEqual({ maxResults: 100, nextToken: "opaque+/=" });
 });
@@ -81,4 +81,13 @@ it("observation requires a fixed account and cannot accept a browser-chosen log-
  const api=awsCliInvocationApi(config());
  await expect(api.listEvents({logGroupName:"/aws/bedrock-agentcore/runtimes/service-1234567890-DEFAULT",startTime:1,endTime:2,limit:100,logGroupIdentifier:"arn:aws:logs:us-west-2:999999999999:log-group:other"} as never)).rejects.toThrow("Invalid bounded observation");
  expect(execute).not.toHaveBeenCalled();
+});
+
+it("projects only the six reviewed AWS business labels, never the environment map or config secret", async () => {
+  execute.mockImplementation((_p,_a,_o,cb)=>cb(null,"{}"));
+  await awsCliInventoryApi(config()).getRuntime({agentRuntimeId:id,agentRuntimeVersion:"16"});
+  const query=execute.mock.calls[0][1].at(-1);
+  expect(query).toContain("workflowMetadata:{metadataVersion:environmentVariables.WORKFLOW_METADATA_VERSION");
+  expect(query.match(/environmentVariables\./g)).toHaveLength(6);
+  expect(query).not.toContain("QUOTE_AGENT_CONFIG_SECRET_ARN");
 });

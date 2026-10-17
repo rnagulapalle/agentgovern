@@ -53,7 +53,8 @@
     "lib/enquiries/revision-schema.sql",
     "scripts/chat-ui-proof-sources.ts",
     "lib/workspace/cloud-observation-schema.sql",
-    "lib/workspace/company-profile-schema.sql"
+    "lib/workspace/company-profile-schema.sql",
+    "lib/workspace/cloud-runtime-metadata-schema.sql"
   ],
   "files": [
     "Dockerfile.temporal",
@@ -182,6 +183,7 @@
     "lib/workspace/cloud-observation-schema.sql",
     "lib/workspace/cloud-owner-review-schema.sql",
     "lib/workspace/cloud-project-schema.sql",
+    "lib/workspace/cloud-runtime-metadata-schema.sql",
     "lib/workspace/company-profile-contract.ts",
     "lib/workspace/company-profile-schema.sql",
     "lib/workspace/deployment-capabilities.ts",

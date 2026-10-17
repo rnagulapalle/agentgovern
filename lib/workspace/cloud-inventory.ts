@@ -1,3 +1,4 @@
+import { validStoredRuntimeMetadata, type CloudRuntimeMetadata } from "./cloud-runtime-metadata";
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
@@ -29,7 +30,7 @@ function canonicalScan(input: RuntimeInventoryScan): RuntimeInventoryScan {
     keys.add(key);
   }
   return { scope: validated.scope, observedAt: validated.observedAt, completeness: validated.completeness,
-    records: records.map(r => ({ scope: { ...validated.scope }, source: r.source, resourceId: r.resourceId, resourceArn: r.resourceArn, version: r.version, observedAt: r.observedAt, roleReference: r.roleReference, workloadIdentityReference: r.workloadIdentityReference, gaps: [...r.gaps], coverage: { ownership: "unmapped", activity: "unconnected", enforcement: "unverified" } })), failures: [...input.failures] };
+    records: records.map(r => ({ scope: { ...validated.scope }, source: r.source, resourceId: r.resourceId, resourceArn: r.resourceArn, version: r.version, observedAt: r.observedAt, ...(r.declaredMetadata ? { declaredMetadata: Object.fromEntries(Object.entries(r.declaredMetadata).sort(([a],[b])=>a.localeCompare(b))) as unknown as CloudRuntimeMetadata } : {}), roleReference: r.roleReference, workloadIdentityReference: r.workloadIdentityReference, gaps: [...r.gaps], coverage: { ownership: "unmapped", activity: "unconnected", enforcement: "unverified" } })), failures: [...input.failures] };
 }
 async function connection(c: PoolClient, org: string, id: string): Promise<CloudDiscoveryScope> {
   const row = (await c.query("SELECT account_id,region FROM ll_cloud_connections WHERE org_id=$1 AND id=$2", [org, id])).rows[0];
@@ -160,7 +161,13 @@ export class CloudInventoryStore {
         return { scanId, repeated: true, authorityGranted: false as const };
       }
       await c.query("INSERT INTO ll_cloud_scans(org_id,connection_id,id,observed_at,completeness,failures,canonical_sha256) VALUES($1,$2,$3,$4,$5,$6,$7)", [actor.orgId, scope.connectionId, scanId, scan.observedAt, scan.completeness, scan.failures, hash]);
-      for (const record of scan.records) await c.query("INSERT INTO ll_cloud_runtime_observations(org_id,connection_id,scan_id,resource_id,resource_arn,version,role_reference,workload_identity_reference) VALUES($1,$2,$3,$4,$5,$6,$7,$8)", [actor.orgId, scope.connectionId, scanId, record.resourceId, record.resourceArn, record.version, record.roleReference, record.workloadIdentityReference]);
+      for (const record of scan.records) {
+        const values = [actor.orgId, scope.connectionId, scanId, record.resourceId, record.resourceArn, record.version, record.roleReference, record.workloadIdentityReference];
+        if (record.declaredMetadata) {
+          if (!(await c.query("SELECT 1 FROM pg_attribute WHERE attrelid='ll_cloud_runtime_observations'::regclass AND attname='declared_metadata' AND NOT attisdropped")).rows.length) throw new ControlError(503,"AWS business metadata storage upgrade is required before refreshing this deployment.");
+          await c.query("INSERT INTO ll_cloud_runtime_observations(org_id,connection_id,scan_id,resource_id,resource_arn,version,role_reference,workload_identity_reference,declared_metadata) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)",[...values,JSON.stringify(record.declaredMetadata)]);
+        } else await c.query("INSERT INTO ll_cloud_runtime_observations(org_id,connection_id,scan_id,resource_id,resource_arn,version,role_reference,workload_identity_reference) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",values);
+      }
       return { scanId, repeated: false, authorityGranted: false as const };
     });
   }
@@ -172,7 +179,8 @@ export class CloudInventoryStore {
       if (!latest) return { scope, status: "no-scan" as const, records: [], enforcement: "unverified" as const };
       const rows = (await c.query("SELECT DISTINCT ON(o.resource_id,o.version) o.*,s.observed_at FROM ll_cloud_runtime_observations o JOIN ll_cloud_scans s ON s.org_id=o.org_id AND s.connection_id=o.connection_id AND s.id=o.scan_id WHERE o.org_id=$1 AND o.connection_id=$2 ORDER BY o.resource_id,o.version,s.observed_at DESC,s.recorded_at DESC,s.id DESC LIMIT 2001", [actor.orgId, connectionId])).rows;
       const records = rows.slice(0, 2000).map(row => {
-        const record: DiscoveredRuntime = { scope: { ...scope }, source: "aws-agentcore-runtime", resourceId: row.resource_id, resourceArn: row.resource_arn, version: row.version, observedAt: row.observed_at.toISOString(), roleReference: row.role_reference, workloadIdentityReference: row.workload_identity_reference,
+        if (row.declared_metadata !== undefined && !validStoredRuntimeMetadata(row.declared_metadata)) throw new ControlError(503,"Saved AWS business metadata could not be validated.");
+        const record: DiscoveredRuntime = { scope: { ...scope }, source: "aws-agentcore-runtime", resourceId: row.resource_id, resourceArn: row.resource_arn, version: row.version, observedAt: row.observed_at.toISOString(), ...(row.declared_metadata ? {declaredMetadata: row.declared_metadata as CloudRuntimeMetadata} : {}), roleReference: row.role_reference, workloadIdentityReference: row.workload_identity_reference,
           gaps: [...(!row.role_reference || !row.workload_identity_reference ? ["runtime-identity-unavailable" as const] : []), "effective-permissions-unknown", "declared-tools-unknown"], coverage: { ownership: "unmapped", activity: "unconnected", enforcement: "unverified" } };
         return { record, observedInCurrentScan: row.scan_id === latest.id, stale: Date.now() - row.observed_at.getTime() > 900_000 };
       });
