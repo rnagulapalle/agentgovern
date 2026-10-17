@@ -409,9 +409,9 @@ export function ControlShell({
               ["03", "Verify the quote first", "Check the observed quote result. The customer confirmation stays held until the quote is verified and separately approved."],
               ["04", "Review the saved result", "Check the full result and reopen the saved request. Confirmation acceptance is simulated; it is not customer delivery."],
             ] : scriptDemo ? [
-              ["01", "Define the agent’s scope", "An agent is an identified worker. A connection is the system it may use. Assign an owner, one supported action and a lifetime request allowance. Keep its key private."],
-              ["02", "Review the action", "An action is one exact proposed change. Policy allows it, requires independent approval, or blocks it. Approval does not execute the action."],
-              ["03", "Follow workflow execution", "A workflow links actions in order. Each action must meet its rules before execution. Dependent steps wait for verified results."],
+              ["01", "Define the agent’s scope", "For AWS agents, review the discovered identity and declared business ownership, then connect history and any supported approval interface. Prepared sample agents use a separately assigned action and request allowance."],
+              ["02", "Review the action", "Review the exact proposed change and the rule holding it. A connected approval authorizes the workflow to continue; it does not prove execution or delivery completed."],
+              ["03", "Follow workflow execution", "Inspect the workflow-reported steps and current approval readback. Mandatory execution checkpoints and independent effect verification are separate capabilities; history alone does not enforce them."],
               ["04", "Reconcile uncertain outcomes", "Reconciliation checks whether a change happened. Verify the saved result before trying again. Containment stops new work; it does not undo a change already accepted."],
             ] : durable
               ? [

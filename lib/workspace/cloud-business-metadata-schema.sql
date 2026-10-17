@@ -10,5 +10,5 @@ ALTER TABLE ll_cloud_runtime_observations ADD CONSTRAINT ll_cloud_runtime_metada
    OR (declared_metadata->>'schemaVersion'='2'
     AND declared_metadata ?& ARRAY['owner','department','purpose']
     AND declared_metadata - ARRAY['schemaVersion','source','metadataVersion','organization','ownerOrganization','ownerTeam','environment','onCallStatus','owner','department','purpose']='{}'::jsonb))
- )
+ ) IS TRUE
 );
