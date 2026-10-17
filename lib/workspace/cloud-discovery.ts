@@ -70,7 +70,15 @@ function identityReferences(value: unknown, listed: { id: string; arn: string; v
   const prefix = `arn:aws:bedrock-agentcore:${scope.region}:${scope.accountId}:workload-identity-directory/`;
   const workload = typeof identity === "string" && identity.startsWith(prefix)
     && /^[a-zA-Z0-9_:/.-]{1,1024}$/.test(identity) ? identity : null;
-  return { roleReference: role, workloadIdentityReference: workload, declaredMetadata: projectRuntimeMetadata(row.workflowMetadata) };
+  // The guided connection uses the native SDK response; CLI reads already
+  // return this minimized declaration. Both paths select the same six fields.
+  const env = object(row.environmentVariables);
+  const declaration = row.workflowMetadata === undefined && env ? {
+    metadataVersion: env.WORKFLOW_METADATA_VERSION, organization: env.WORKFLOW_ORGANIZATION,
+    ownerOrganization: env.WORKFLOW_OWNER_ORGANIZATION, ownerTeam: env.WORKFLOW_OWNER_TEAM,
+    environment: env.WORKFLOW_ENVIRONMENT, onCallStatus: env.WORKFLOW_ONCALL_STATUS,
+  } : row.workflowMetadata;
+  return { roleReference: role, workloadIdentityReference: workload, declaredMetadata: projectRuntimeMetadata(declaration) };
 }
 export async function collectAwsRuntimeInventory(api: AwsRuntimeInventoryApi, input: CloudDiscoveryScope, at: string): Promise<RuntimeInventoryScan> {
   // Copy before awaiting: caller mutation cannot redirect an enrolled scan.

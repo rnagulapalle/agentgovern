@@ -56,3 +56,13 @@ events for versions 12–15 and no V16 events. That read proves neither V16 busi
 amount/summary ingestion nor a new V16 Slack execution. Runtime labels alone do
 not fill execution amounts or request text. Native inspection, parser projection,
 PostgreSQL persistence, mounted UI tests and deployment are distinct evidence.
+
+### SDK response correction
+
+The first production verification of the V16 metadata release found that guided
+AWS discovery uses native SDK details, while the initial mapping consumed only
+the CLI-minimized `workflowMetadata` shape. The collector now selects the same six
+explicit labels from SDK `environmentVariables` after matching account, ARN and
+version. All other environment values remain discarded. A native JavaScript SDK
+read through this collector measured V16's six declarations; that read is separate
+from production persistence/rendering acceptance. Migration 30 is unchanged.

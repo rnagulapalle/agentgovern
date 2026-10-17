@@ -115,3 +115,17 @@ test("retains validated V16 declarations under the exact runtime version without
   const injected=structuredClone(result);injected.records[0].declaredMetadata={...result.records[0].declaredMetadata!,ownerTeam:"Bearer private"};
   expect(()=>preserveRuntimeInventory(null,injected)).toThrow("authority or raw metadata");
 });
+
+test("native SDK detail and minimized CLI detail produce the same declarations without retaining any other environment value", async()=>{
+ const workflowMetadata={metadataVersion:"3",organization:"Acme",ownerOrganization:"Revenue Operations",ownerTeam:"Sales Support",environment:"production",onCallStatus:"unassigned"};
+ const environmentVariables={WORKFLOW_METADATA_VERSION:"3",WORKFLOW_ORGANIZATION:"Acme",WORKFLOW_OWNER_ORGANIZATION:"Revenue Operations",WORKFLOW_OWNER_TEAM:"Sales Support",WORKFLOW_ENVIRONMENT:"production",WORKFLOW_ONCALL_STATUS:"unassigned",QUOTE_AGENT_CONFIG_SECRET_ARN:"must-never-retain-config-reference",OTHER_TOKEN:"must-never-retain-token"};
+ const sdk=await collectAwsRuntimeInventory(api({getRuntime:async()=>({...detail(),environmentVariables})}),scope,at);
+ const cli=await collectAwsRuntimeInventory(api({getRuntime:async()=>({...detail(),workflowMetadata})}),scope,at);
+ expect(sdk.records[0].declaredMetadata).toEqual(cli.records[0].declaredMetadata);
+ expect(sdk.records[0].declaredMetadata).toMatchObject(workflowMetadata);
+ expect(JSON.stringify(sdk)).not.toMatch(/must-never|environmentVariables|QUOTE_AGENT_CONFIG_SECRET_ARN|OTHER_TOKEN/);
+ const foreign=await collectAwsRuntimeInventory(api({getRuntime:async()=>({...detail(),agentRuntimeArn:"foreign",environmentVariables})}),scope,at);
+ expect(foreign.records[0].declaredMetadata).toBeUndefined();
+ const malformed=await collectAwsRuntimeInventory(api({getRuntime:async()=>({...detail(),environmentVariables:{WORKFLOW_OWNER_TEAM:"Bearer private",OTHER_TOKEN:"private"}})}),scope,at);
+ expect(malformed.records[0].declaredMetadata).toBeUndefined();
+});
