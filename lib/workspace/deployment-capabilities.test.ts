@@ -87,3 +87,5 @@ it('shared workflow approvals permit only exact POST in the AWS-enabled control 
  expect(decide('isolated-control-demo-1',route,'POST',false)).toBe('deny');
  for(const path of [route+'/execute',route+'/', '/api/workspace/discovery/%61pprovals'])expect(decide('isolated-control-demo-1',path,'POST',true)).toBe('deny');
 });
+
+it("company directory is an authenticated GET/POST surface only in the control profile",()=>{for(const method of ["GET","POST"])expect(decide("isolated-control-demo-1","/api/workspace/company",method)).toBe("allow");for(const method of ["DELETE","PATCH","PUT"])expect(decide("isolated-control-demo-1","/api/workspace/company",method)).toBe("deny");expect(decide(profile,"/api/workspace/company","GET")).toBe("deny");expect(decide("isolated-control-demo-1","/control-plane/organization","GET")).toBe("allow");expect(decide(profile,"/control-plane/organization","GET")).toBe("deny");});

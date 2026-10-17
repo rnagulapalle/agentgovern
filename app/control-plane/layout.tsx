@@ -1,3 +1,4 @@
+import { CompanyWorkspaceProvider } from "../../components/control-plane/company-workspace";
 import type { Metadata } from "next";
 import { quoteDemoProfile, scriptDemoProfile } from "../../lib/workspace/deployment-capabilities";
 import { ControlProvider } from "../../components/control-plane/provider";
@@ -26,13 +27,13 @@ export default async function ControlLayout({
   if (!context) return <WorkspaceGate />;
   const { db, actor } = context;
   const { rows } = await db.query(
-    "SELECT name,email FROM ll_members WHERE org_id=$1 AND email=$2 AND active=true",
+    "SELECT m.name,m.email,(to_jsonb(o)->'company_profile')->>'name' AS company FROM ll_members m JOIN ll_orgs o ON o.id=m.org_id WHERE m.org_id=$1 AND m.email=$2 AND m.active=true",
     [actor.orgId, actor.subject],
   );
   if (!rows[0]) return <WorkspaceGate />;
   return (
     <ControlProvider>
-      <ControlShell member={rows[0]} quoteOnly={process.env.LOOPLABS_DEPLOYMENT_PROFILE === quoteDemoProfile} scriptDemo={process.env.LOOPLABS_DEPLOYMENT_PROFILE === scriptDemoProfile}>{children}</ControlShell>
+      <CompanyWorkspaceProvider enabled={process.env.LOOPLABS_DEPLOYMENT_PROFILE === scriptDemoProfile}><ControlShell member={rows[0]} quoteOnly={process.env.LOOPLABS_DEPLOYMENT_PROFILE === quoteDemoProfile} scriptDemo={process.env.LOOPLABS_DEPLOYMENT_PROFILE === scriptDemoProfile}>{children}</ControlShell></CompanyWorkspaceProvider>
     </ControlProvider>
   );
 }

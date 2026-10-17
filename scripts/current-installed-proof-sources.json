@@ -6,6 +6,7 @@
       "app/api/durable/route.ts",
       "app/api/durable/workflows/route.ts",
       "app/api/workspace/agents/route.ts",
+      "app/api/workspace/company/route.ts",
       "app/api/workspace/discovery/activity/route.ts",
       "app/api/workspace/discovery/approvals/route.ts",
       "app/api/workspace/discovery/onboarding/route.ts",
@@ -24,6 +25,7 @@
       "app/control-plane/control-plane.css",
       "app/control-plane/history/page.tsx",
       "app/control-plane/layout.tsx",
+      "app/control-plane/organization/page.tsx",
       "app/control-plane/page.tsx",
       "app/control-plane/quotes/page.tsx",
       "app/control-plane/work/page.tsx",
@@ -36,6 +38,7 @@
       "components/control-plane/aws-execution-browser.tsx",
       "components/control-plane/aws-workflow-history.tsx",
       "components/control-plane/cloud-owner-review.tsx",
+      "components/control-plane/company-workspace.tsx",
       "components/control-plane/connector-actions-workspace.tsx",
       "components/control-plane/connectors-workspace.tsx",
       "components/control-plane/control-center.css",
@@ -166,6 +169,10 @@
       "lib/workspace/cloud-project-discovery.ts",
       "lib/workspace/cloud-project-evidence.ts",
       "lib/workspace/cloud-project-http.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
+      "lib/workspace/company-profile.ts",
       "lib/workspace/deployment-capabilities.ts",
       "lib/workspace/external-approvals.ts",
       "lib/workspace/identity.ts",
@@ -188,6 +195,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/quote-outbox.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
       "scripts/discovery-installed-source-contract.mjs",
       "tsconfig.json"
@@ -240,6 +249,9 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -259,6 +271,8 @@
       "runtime/temporal/record-routing.ts",
       "runtime/temporal/version-contract.ts",
       "scripts/build-temporal-worker.mjs",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
       "scripts/discovery-installed-source-contract.mjs",
       "scripts/temporal-service.ts",
@@ -312,6 +326,9 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -331,6 +348,8 @@
       "runtime/temporal/record-routing.ts",
       "runtime/temporal/version-contract.ts",
       "scripts/build-temporal-worker.mjs",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
       "scripts/discovery-installed-source-contract.mjs",
       "scripts/temporal-service.ts",
@@ -394,6 +413,9 @@
       "lib/workflows/service.ts",
       "lib/workspace/agents.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/installed-tenant-fixture.ts",
       "lib/workspace/membership-authority-schema.sql",
@@ -415,6 +437,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-proof-diagnostic.ts",
       "scripts/connector-proof-installation.ts",
       "scripts/connector-proof-sources.ts",
@@ -474,6 +498,9 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -504,6 +531,8 @@
       "scripts/chat-ui-proof.ts",
       "scripts/chat-ui-safe-diagnostic.ts",
       "scripts/chat-ui-worker-admission.mjs",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-proof-sources.ts",
       "scripts/connector-twin.py",
       "scripts/current-proof-source-registry.mjs",
@@ -563,6 +592,9 @@
       "lib/workflows/service.ts",
       "lib/workspace/agents.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -584,6 +616,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-twin.py",
       "scripts/container-host-transport.ts",
       "scripts/current-proof-source-registry.mjs",
@@ -650,6 +684,9 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -667,6 +704,8 @@
       "pnpm-lock.yaml",
       "runtime/temporal/operations.ts",
       "runtime/temporal/staging-preflight.ts",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-twin.py",
       "scripts/current-proof-source-registry.mjs",
       "scripts/discovery-installed-source-contract.mjs",
@@ -698,6 +737,7 @@
       "components/control-plane/aws-execution-browser.tsx",
       "components/control-plane/aws-workflow-history.tsx",
       "components/control-plane/cloud-owner-review.tsx",
+      "components/control-plane/company-workspace.tsx",
       "components/control-plane/control-center.css",
       "components/control-plane/discovery-workspace.css",
       "components/control-plane/discovery-workspace.tsx",
@@ -825,6 +865,9 @@
       "lib/workspace/cloud-project-evidence.ts",
       "lib/workspace/cloud-project-http.ts",
       "lib/workspace/cloud-project-schema.sql",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/deployment-capabilities.ts",
       "lib/workspace/external-approvals.ts",
       "lib/workspace/identity.ts",
@@ -852,6 +895,8 @@
       "runtime/temporal/quote-outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
       "scripts/discovery-azure-http-fixture.mjs",
       "scripts/discovery-browser-proof.mjs",
@@ -914,6 +959,9 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/installed-tenant-fixture.ts",
       "lib/workspace/membership-authority-schema.sql",
@@ -939,6 +987,8 @@
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
       "scripts/authenticated-ui-recording.mjs",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
       "scripts/discovery-installed-source-contract.mjs",
       "scripts/installed-diagnostic-runner.mjs",
@@ -1072,6 +1122,9 @@
       "lib/workspace/cloud-project-discovery.ts",
       "lib/workspace/cloud-project-evidence.ts",
       "lib/workspace/cloud-project-http.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -1095,6 +1148,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
       "scripts/discovery-installed-source-contract.mjs",
       "scripts/tenant-route-process.ts",
@@ -1136,6 +1191,9 @@
       "lib/quotes/store.ts",
       "lib/quotes/worker-admission-schema.sql",
       "lib/workspace/auth.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/owned-private-file.ts",
@@ -1146,6 +1204,8 @@
       "package.json",
       "pnpm-lock.yaml",
       "scripts/check-quote-email-health.py",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-twin-tls.py",
       "scripts/connector-twin.py",
       "scripts/current-proof-source-registry.mjs",
@@ -1205,6 +1265,9 @@
       "lib/workflows/service.ts",
       "lib/workspace/agents.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/company-profile-contract.ts",
+      "lib/workspace/company-profile-migration.ts",
+      "lib/workspace/company-profile-schema.sql",
       "lib/workspace/identity.ts",
       "lib/workspace/membership-authority-schema.sql",
       "lib/workspace/membership-authority.ts",
@@ -1224,6 +1287,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/company-directory-setup.ts",
+      "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
       "scripts/discovery-installed-source-contract.mjs",
       "scripts/workspace-restore-proof.ts",
@@ -1232,8 +1297,188 @@
   },
   "edges": [
     {
+      "from": "app/api/workspace/company/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/durable/tenant-pool.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "lib/durable/tenant-pool.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/identity.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/identity.ts",
+      "to": "lib/durable/recovery.ts"
+    },
+    {
+      "from": "lib/durable/recovery.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/durable/recovery.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/durable/recovery.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/durable/database.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/durable/recovery.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "lib/workspace/auth.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/auth.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "app/api/workspace/company/route.ts",
+      "to": "lib/durable/http.ts"
+    },
+    {
+      "from": "lib/durable/http.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/durable/http.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "app/api/workspace/company/route.ts",
+      "to": "lib/workspace/company-profile.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "app/control-plane/organization/page.tsx",
+      "to": "components/control-plane/company-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/company-workspace.tsx",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "components/control-plane/company-workspace.tsx",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "components/control-plane/company-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/company-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/ui.tsx",
+      "to": "lib/control-plane/model.ts"
+    },
+    {
+      "from": "lib/control-plane/model.ts",
+      "to": "lib/engine/evaluate.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/registry.ts"
+    },
+    {
+      "from": "lib/engine/registry.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/hash.ts"
+    },
+    {
+      "from": "lib/control-plane/model.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "app/control-plane/organization/page.tsx",
+      "to": "lib/workspace/deployment-capabilities.ts"
+    },
+    {
       "from": "app/control-plane/activity/page.tsx",
       "to": "components/control-plane/control-center.tsx"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/company-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "lib/workspace/external-approvals.ts",
+      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "components/control-plane/control-center.tsx",
@@ -1252,44 +1497,12 @@
       "to": "lib/durable/database.ts"
     },
     {
-      "from": "lib/durable/database.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/durable/contracts.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/workspace/identity.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/identity.ts",
-      "to": "lib/durable/recovery.ts"
-    },
-    {
-      "from": "lib/durable/recovery.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
-      "from": "lib/durable/tenant-pool.ts",
-      "to": "lib/durable/pg-transport.ts"
-    },
-    {
-      "from": "lib/durable/tenant-pool.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/durable/recovery.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/durable/recovery.ts",
-      "to": "lib/durable/database.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
@@ -1298,14 +1511,6 @@
     {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/auth.ts"
-    },
-    {
-      "from": "lib/workspace/auth.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/auth.ts",
-      "to": "lib/workspace/identity.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
@@ -1408,34 +1613,6 @@
       "to": "components/control-plane/ui.tsx"
     },
     {
-      "from": "components/control-plane/ui.tsx",
-      "to": "lib/control-plane/model.ts"
-    },
-    {
-      "from": "lib/control-plane/model.ts",
-      "to": "lib/engine/evaluate.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/registry.ts"
-    },
-    {
-      "from": "lib/engine/registry.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/hash.ts"
-    },
-    {
-      "from": "lib/control-plane/model.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
       "from": "components/control-plane/control-center.tsx",
       "to": "components/control-plane/aws-execution-browser.tsx"
     },
@@ -1458,10 +1635,6 @@
     {
       "from": "components/control-plane/external-workflow-approvals.tsx",
       "to": "lib/workspace/external-approvals.ts"
-    },
-    {
-      "from": "lib/workspace/external-approvals.ts",
-      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "components/control-plane/external-workflow-approvals.tsx",
@@ -1546,22 +1719,6 @@
     {
       "from": "lib/connectors/scopes.ts",
       "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/durable/recovery.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "lib/connectors/scopes.ts",
@@ -1912,36 +2069,8 @@
       "to": "lib/workspace/tenant-context.ts"
     },
     {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/workspace/auth.ts"
-    },
-    {
       "from": "app/api/workspace/discovery/approvals/route.ts",
       "to": "lib/durable/http.ts"
-    },
-    {
-      "from": "lib/durable/http.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/durable/http.ts",
-      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "app/api/workspace/discovery/approvals/route.ts",
@@ -3217,6 +3346,10 @@
     },
     {
       "from": "app/control-plane/layout.tsx",
+      "to": "components/control-plane/company-workspace.tsx"
+    },
+    {
+      "from": "app/control-plane/layout.tsx",
       "to": "lib/workspace/deployment-capabilities.ts"
     },
     {
@@ -3226,6 +3359,10 @@
     {
       "from": "app/control-plane/layout.tsx",
       "to": "components/control-plane/shell.tsx"
+    },
+    {
+      "from": "components/control-plane/shell.tsx",
+      "to": "components/control-plane/company-workspace.tsx"
     },
     {
       "from": "components/control-plane/shell.tsx",
@@ -3842,6 +3979,26 @@
     {
       "from": "app/api/workspace/discovery/owners/route.ts",
       "to": "lib/workspace/cloud-owner-review.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
     },
     {
       "from": "scripts/current-proof-source-registry.mjs",
@@ -4922,6 +5079,26 @@
     {
       "from": "runtime/temporal/pinned-workflow.ts",
       "to": "runtime/temporal/activities.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
     },
     {
       "from": "scripts/current-proof-source-registry.mjs",
@@ -5998,6 +6175,26 @@
     {
       "from": "runtime/temporal/pinned-quote-workflow.ts",
       "to": "lib/orchestration/quote-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
     },
     {
       "from": "scripts/current-proof-source-registry.mjs",
@@ -7312,6 +7509,26 @@
       "to": "scripts/connector-proof-installation.ts"
     },
     {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
       "from": "scripts/chat-ui-proof.ts",
       "to": "scripts/current-proof-source-registry.mjs"
     },
@@ -8330,6 +8547,26 @@
     {
       "from": "scripts/chat-ui-proof-sources.ts",
       "to": "scripts/connector-proof-sources.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
     },
     {
       "from": "scripts/temporal-load-proof.ts",
@@ -9460,6 +9697,26 @@
       "to": "scripts/worker-artifact-enrollment.mjs"
     },
     {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
       "from": "scripts/gateway-installed-bypass-proof.mjs",
       "to": "scripts/current-proof-source-registry.mjs"
     },
@@ -10488,6 +10745,26 @@
       "to": "scripts/gateway-installed-fixture.ts"
     },
     {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
       "from": "app/api/workspace/discovery/activity/route.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
@@ -11297,6 +11574,26 @@
     },
     {
       "from": "components/control-plane/shell.tsx",
+      "to": "components/control-plane/company-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/company-workspace.tsx",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "components/control-plane/company-workspace.tsx",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "components/control-plane/company-workspace.tsx",
+      "to": "lib/workspace/response.ts"
+    },
+    {
+      "from": "components/control-plane/company-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/shell.tsx",
       "to": "components/control-plane/provider.tsx"
     },
     {
@@ -11310,6 +11607,10 @@
     {
       "from": "components/control-plane/shell.tsx",
       "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "app/control-plane/layout.tsx",
+      "to": "components/control-plane/company-workspace.tsx"
     },
     {
       "from": "app/control-plane/layout.tsx",
@@ -12514,6 +12815,26 @@
     {
       "from": "scripts/discovery-installed-evidence.mjs",
       "to": "scripts/discovery-installed-source-contract.mjs"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
     },
     {
       "from": "scripts/staging-installed-publication.ts",
@@ -14086,6 +14407,26 @@
     {
       "from": "scripts/persistent-installed-typed-quote-proof.mjs",
       "to": "scripts/persistent-installed-trial-core.mjs"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
     },
     {
       "from": "lib/durable/tenant-boundary-prototype.test.ts",
@@ -15864,6 +16205,26 @@
       "to": "lib/durable/database.ts"
     },
     {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
       "from": "scripts/current-proof-source-registry.mjs",
       "to": "scripts/discovery-installed-source-contract.mjs"
     },
@@ -16422,6 +16783,26 @@
     {
       "from": "scripts/native-quote-twin-process.ts",
       "to": "scripts/native-quote-twin.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
     },
     {
       "from": "scripts/current-proof-source-registry.mjs",
@@ -17404,6 +17785,26 @@
       "to": "lib/workspace/identity.ts"
     },
     {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/company-directory-upgrade-process.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
+      "from": "lib/workspace/company-profile-migration.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "scripts/company-directory-setup.ts",
+      "to": "lib/workspace/company-profile-migration.ts"
+    },
+    {
       "from": "scripts/current-proof-source-registry.mjs",
       "to": "scripts/discovery-installed-source-contract.mjs"
     }
@@ -17415,6 +17816,9 @@
     }
   ],
   "nonAstAssets": [
+    "scripts/company-directory-upgrade-process.ts",
+    "scripts/company-directory-setup.ts",
+    "lib/workspace/company-profile-schema.sql",
     "scripts/current-proof-source-registry.mjs",
     "package.json",
     "pnpm-lock.yaml",
@@ -17435,6 +17839,7 @@
     "app/api/durable/route.ts": "7bcdbf6718446dcc082f5bd79efe66f679cad5711e4fbed9747dcc5014186eff",
     "app/api/durable/workflows/route.ts": "2a448b416ad2f70e87bbea03afdffd2dd0d2814fdd64fd40c4bb1660d194ba64",
     "app/api/workspace/agents/route.ts": "29c130f1ea1b824edf9a4a84198d0b3c99559fdb28c7ae7144a7361f3e3b6e81",
+    "app/api/workspace/company/route.ts": "9c095bd8e18378387919d33322fcead69757b97060a410b06adf6b7c2af46e8a",
     "app/api/workspace/discovery/activity/route.ts": "8b6369914ba33c062c6a80ad14eee0bd8c914124be6fce87be7a6e67e5419fa2",
     "app/api/workspace/discovery/approvals/route.ts": "4a5021a0bcaa8cacdb90fd321dd24423e6e9d945823f211937fb7fbc54f3d8fc",
     "app/api/workspace/discovery/onboarding/route.ts": "47b36a284f3f0c5276dd0e0a6204dcc748750f466c872e1d6aa05c3b054ccae8",
@@ -17447,7 +17852,7 @@
     "app/api/workspace/quotes/verification/route.ts": "1386e0ab2f169a7a842258fd19d7d7ebae2842d843017a70cda9701a46a9a7ea",
     "app/api/workspace/records/route.ts": "7c49b2287d84c7cfdb6d4e29bd52b0b2a9fc23ed8a3f4f822040a8cc1684abd6",
     "app/api/workspace/session/route.ts": "5194c1a54bde45b893cb398075b4a625edca806d4b41efc53d824698842b55ce",
-    "app/control-plane/[section]/page.tsx": "089fa297acad3a613e60be3a0aaa0b6168289138666b0afe4db3700178e57096",
+    "app/control-plane/[section]/page.tsx": "e0e210f25e986b5d7429477532aef332844f843ab283346334f977bc075a47dd",
     "app/control-plane/actions/page.tsx": "d7ed38ab4b0f698f266cfdb4609307cc6f5d3e2d592c376ca3a422e70b90b8d7",
     "app/control-plane/activity/page.tsx": "fc3be688e95df4cc206bc9df61a361de20a9153b312cd820956a543b52f2bffe",
     "app/control-plane/agents/page.tsx": "ec10ce3c5a745284691f8abaa712a2394922ef20f5e883499f0f83937e17996a",
@@ -17455,7 +17860,8 @@
     "app/control-plane/control-plane.css": "2cd5918b34f9675f1ef729369384f8cf9a0bfa61f593c407788342eb60fcd51f",
     "app/control-plane/discovery/page.tsx": "181a8282afe6cc830f76b3f0beead9ebf298fd145e83bcbfd5d53f55fecb4a32",
     "app/control-plane/history/page.tsx": "baeb70147a3557a7f461061f005cacb6a19844e5cf50029e9b4d3d9389b82491",
-    "app/control-plane/layout.tsx": "7255b1d4c12bd5ff19de2af1ba14331ee713fcd69bc81a85eb11a2a8776cc7e1",
+    "app/control-plane/layout.tsx": "f6ab0524c14eede0c5a5faa05f4492b91b2db815b1a9bd7c63281da8920fdb2a",
+    "app/control-plane/organization/page.tsx": "c3727621bb525d2b28b4cbff10292d57d82b3f2be8d06b756941c12dce239dc5",
     "app/control-plane/page.tsx": "573688c4835e539e44b02eb0f64dd82e7525ba8ad6967915cfeb0069b231dd16",
     "app/control-plane/quotes/page.tsx": "959e496795d77d13557b7f6d7f66933cff5701cfe79cf384a2ed2d03d2002cce",
     "app/control-plane/work/page.tsx": "d56f08ebfbfcb7deed94fb1a73de0fd1be9dc1f40f065871b7fcb31a02ceb617",
@@ -17469,10 +17875,11 @@
     "components/control-plane/aws-execution-browser.tsx": "1bb31bebd9b75e9b2f87c03ca4fa3e9698339f9935b150f220bc651320bd8d78",
     "components/control-plane/aws-workflow-history.tsx": "442eebbfe6c35a08584c91bcddf161df57df3fc213c9ff9597a6431937c4d0f2",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
+    "components/control-plane/company-workspace.tsx": "0eeb6e2c5e4de776d0fa0b5d935a956a1df66089c630403852c6ef85ee969a49",
     "components/control-plane/connector-actions-workspace.tsx": "0e3c49545f9ec160bb7b0acadce0a45907b10040a9f2250a9062dae1920945ff",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
-    "components/control-plane/control-center.css": "5dbc2a11ae6c66ae644cd0444ab987d3516f2fbb9fba9efba0064c778bc0cce8",
-    "components/control-plane/control-center.tsx": "8d327db07dbbb8b91775f3c7aa0961ed4268b1ab4384832a20a60dfd885b8ead",
+    "components/control-plane/control-center.css": "659130c1abce0a1ce5012141adfef9c978fe265e353febf77b4f1902d212129a",
+    "components/control-plane/control-center.tsx": "983868ec8ed6c30c639f77490d13e6cfdc131707f6c05f9bb9eb74d4cd03751d",
     "components/control-plane/discount-approval-brief.tsx": "8d44b575118d60b1e6a22cbc07e4fa7b9ba03c90eedacc2d2490e5d0b98f1378",
     "components/control-plane/discount-history.tsx": "c38c42a43b51b8c18d2fb8f8bb77834edc62e523035a4b3cfe8ec65cbf328100",
     "components/control-plane/discovery-workspace.css": "d635a72712321737b3f14be303d81c9cd013ce5965d2afeb762d076d0a31d579",
@@ -17490,9 +17897,9 @@
     "components/control-plane/request-planner.tsx": "659a3778dc1e542c264f7814ef655b72eac3542f3a4d34dde8fe440f5e8e32e8",
     "components/control-plane/saved-history-workspace.tsx": "c27650a0a1ef0b17b57c54cd2fa1cfed4a407f9e39d773b97ec4ffe26e4cf7ec",
     "components/control-plane/saved-workspace.css": "ca602c6a14675c99fba6c008115057435f14713a1b0ee5f5509f548053618652",
-    "components/control-plane/saved-workspace.tsx": "63be9daa3576fba9049a6fabd5d309a331d124d30e370a1b419a1168632ab841",
+    "components/control-plane/saved-workspace.tsx": "454f9e051e1d16d80f3c58c58ff844866c235840652a67fa14ee343e99f8f967",
     "components/control-plane/screens.tsx": "8012e435d8a2ac823ade4c2e51fefd1891f167c1bb0efcbf6f4be8dd05cdcc1a",
-    "components/control-plane/shell.tsx": "471db12bfd4f3b8fc5046e0f0aa17609f5f3839a524a4c253e765be583edfe10",
+    "components/control-plane/shell.tsx": "00f988a7b41f531e30b5531d8293c60ed85cb6b1ed176022864442967b209f48",
     "components/control-plane/ui.tsx": "c923100ad0cb557532ad432d5e436abbab6a89e7b8ffb9f00652543c32e340e3",
     "components/control-plane/workflow-workspace.tsx": "98922abdd9abaf7b4659ac0897ad3256d584195b643af76f2e8a9de757a4bc91",
     "components/control-plane/workspace-gate.tsx": "a29c737a46790dc6d1b6bf13eb95fc3aac9ba8bf2910e2951b891641327b5466",
@@ -17501,7 +17908,7 @@
     "components/marketing/product-overview.tsx": "2211c7d2eacba47c5ef3da9399813bb72e9c429cc43c77863448ab293c82efab",
     "current-profile-image-bytes-component.mjs": "d9612f5d505a9e957b859be6010a352270e2ed389d150bb1779f6386de491e59",
     "docs/evidence/historical-chat-artifact-sources-v1.json.gz": "98cdb5fa86b3ca17d5523e95e1479251f05293a2f0a0c1452ed2f3ecf3a59cb1",
-    "install-order.json": "cf7830c6f8ac1a6ceeac3de445864a7ca2f41e9fe91daddcae8568055beb33cd",
+    "install-order.json": "512745eb6e3c7e7ac31b656ee96518199ce94bd4b25bc30d9dfea26458dc75aa",
     "instrumentation.ts": "de978ea9fdb19208b48df6b454989dfc9f064c87397eb07769230bad3813e7fc",
     "lib/analytics.ts": "4e0970fca48cd652730ad5c1ebef97181e44e1f98849185479bb8ed1244b480c",
     "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
@@ -17634,7 +18041,11 @@
     "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
     "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
     "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
-    "lib/workspace/deployment-capabilities.ts": "db3718613f045f796c3e47f4f0fd7da5d6dad38d62932f2af7f83456eca8556e",
+    "lib/workspace/company-profile-contract.ts": "afd1c2b96249f670052ba169b07a7e40c3aa8e0e26bc25ee931eb7a9a260286b",
+    "lib/workspace/company-profile-migration.ts": "e5aa7ee47d9fc738530dc2aa92be4133a0307daa3ffebb1282c63aa5131c03de",
+    "lib/workspace/company-profile-schema.sql": "64a8c04785a8fe968b9727895bf7b243f588f20cec8375038ef6cf30166809f8",
+    "lib/workspace/company-profile.ts": "05c3a69eb49e23fa086470eebcd66b383592706140b03869d5b539b6fe557bb5",
+    "lib/workspace/deployment-capabilities.ts": "64f1661622013b77e764394aeac35390e9d8809fc19cc1321c3e65e90c4f3bba",
     "lib/workspace/external-approvals.ts": "8e344de0fd9f1763631fce00502a06b59665f86fc3549467134bc2ec8d0a8d93",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
     "lib/workspace/installed-tenant-fixture.ts": "7e3d9869ccdc2d3ac1229a57d4af24d29c0d658ec9bb7861767f066d2f185ea3",
@@ -17673,7 +18084,7 @@
     "runtime/temporal/quote-routing.ts": "1180a2ff0ebfb30a06f0f98fac63072e63a5c7f24fa30b9355e30cf0be3002df",
     "runtime/temporal/record-routing.ts": "eb80b015ba2684da22c9ae4456e45a965497e8dda952e7b1354f34397b146a7d",
     "runtime/temporal/staging-host.ts": "4a8b028272874f638361c7a5a74186884174f6123f13e90672a7ea0e9ed876cc",
-    "runtime/temporal/staging-preflight.ts": "df7effb64d5f8793b5b9ca9ef086e5efa0a63574fec3f77db9c615daacec6802",
+    "runtime/temporal/staging-preflight.ts": "6ac482741168c9376e78d36e3dcd137d33bbf6a0fda794d1b8bd3c13a9b650cb",
     "runtime/temporal/version-contract.ts": "318bacf1f4a4549275e2f399256fc27436d48ed8c8232e3bd53fc9160d3fd9b8",
     "scripts/authenticated-ui-recording.mjs": "570bed5ae1d7e2201e6cec74be2410b6add7407f5b666f455291c86207bb7e74",
     "scripts/build-temporal-worker.mjs": "8acc8392c4d8cdd1c222481af89fa1ef11ee49c0991cf414e5dc20b11ddb2629",
@@ -17688,6 +18099,8 @@
     "scripts/chat-ui-safe-diagnostic.ts": "f917bc3fb0f987e2ed34a27281aa3bc63386d6248c4497288de4b90e50adfe1f",
     "scripts/chat-ui-worker-admission.mjs": "d89f9be4cdb20d3e88f2de180ec39efc8150bafde8d81ebb9cd9f1049919da7b",
     "scripts/check-quote-email-health.py": "23c3343deff113cd3823b76f5c231915901307f7bb11be4945e9da03b690c39b",
+    "scripts/company-directory-setup.ts": "ab713d9ea2a32c2c891a9314830724c17273204e758e6203ddad0442b2e29298",
+    "scripts/company-directory-upgrade-process.ts": "fe57760f2a147c1d4483e40b47128ff3d3f6bc4bafbc0855bb48c3d8e979a603",
     "scripts/connector-proof-diagnostic.ts": "d9d999b495c00138a0f01053331003031e6cbe40710b0a76291a2f996c3ca84c",
     "scripts/connector-proof-installation.ts": "c5081c3b7818502f0978811c4b3420b13b13aefc56fc5ad6b1e720fa59e4509d",
     "scripts/connector-proof-sources.ts": "620b7d8ff450031cd7f46a91e3e004fb168d17d2e9ca5e29457bfa60606b066b",
@@ -17696,7 +18109,7 @@
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "7d5d8c51a2af771c53c3cf38f5f4c94a8bda1bd09b0ee2993ca15127834b516a",
+    "scripts/current-proof-source-registry.mjs": "7ef14ab082040ef28214357b98d13b5b789f197cc43d964e7fc57229401396eb",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "acb5818ca827703ea9b0edc931dfc3c57b23e7511a36fd4391f7ec344d171f6a",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
