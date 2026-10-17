@@ -1,6 +1,6 @@
 /** Provider declarations only: never company membership, ownership authority or permissions. */
 export interface CloudRuntimeMetadata {
-  schemaVersion: "1";
+  schemaVersion: "1" | "2";
   source: "aws-runtime-declaration";
   metadataVersion: string | null;
   organization: string | null;
@@ -8,6 +8,9 @@ export interface CloudRuntimeMetadata {
   ownerTeam: string | null;
   environment: "production" | "staging" | "sandbox" | "development" | "test" | null;
   onCallStatus: "assigned" | "unassigned" | null;
+  owner?: string | null;
+  department?: string | null;
+  purpose?: string | null;
 }
 const plain = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === "object" && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype;
 function label(v: unknown): string | null {
@@ -16,19 +19,21 @@ function label(v: unknown): string | null {
 }
 /** Called only after the detail's account, ARN and version match the discovered runtime. */
 export function projectRuntimeMetadata(value: unknown): CloudRuntimeMetadata | null {
-  if (!plain(value) || Object.keys(value).some(k => !["metadataVersion", "organization", "ownerOrganization", "ownerTeam", "environment", "onCallStatus"].includes(k))) return null;
+  if (!plain(value) || Object.keys(value).some(k => !["metadataVersion", "organization", "ownerOrganization", "ownerTeam", "environment", "onCallStatus", "owner", "department", "purpose"].includes(k))) return null;
+  const extended = ["owner", "department", "purpose"].some(k => Object.hasOwn(value,k));
   const projected: CloudRuntimeMetadata = {
-    schemaVersion: "1", source: "aws-runtime-declaration",
+    schemaVersion: extended ? "2" : "1", source: "aws-runtime-declaration",
     metadataVersion: typeof value.metadataVersion === "string" && /^[1-9][0-9]{0,3}$/.test(value.metadataVersion) ? value.metadataVersion : null,
     organization: label(value.organization), ownerOrganization: label(value.ownerOrganization), ownerTeam: label(value.ownerTeam),
     environment: ["production", "staging", "sandbox", "development", "test"].includes(value.environment as string) ? value.environment as CloudRuntimeMetadata["environment"] : null,
     onCallStatus: ["assigned", "unassigned"].includes(value.onCallStatus as string) ? value.onCallStatus as CloudRuntimeMetadata["onCallStatus"] : null,
+    ...(extended ? {owner:label(value.owner),department:label(value.department),purpose:label(value.purpose)} : {}),
   };
   return Object.entries(projected).some(([k,v]) => k !== "schemaVersion" && k !== "source" && v !== null) ? projected : null;
 }
 export function validStoredRuntimeMetadata(value: unknown): value is CloudRuntimeMetadata | null {
   if (value === null) return true;
-  if (!plain(value) || value.schemaVersion !== "1" || value.source !== "aws-runtime-declaration") return false;
+  if (!plain(value) || !["1","2"].includes(String(value.schemaVersion)) || value.source !== "aws-runtime-declaration") return false;
   const fields = Object.fromEntries(Object.entries(value).filter(([key]) => key !== "schemaVersion" && key !== "source"));
   const projected = projectRuntimeMetadata(fields);
   return projected !== null && Object.keys(value).length === Object.keys(projected).length

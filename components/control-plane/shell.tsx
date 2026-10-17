@@ -64,7 +64,7 @@ const groups = [
   },
 ];
 export function ControlScopeNote({ durable, quoteOnly = false, scriptDemo = false }: { durable: boolean; quoteOnly?: boolean; scriptDemo?: boolean }) {
-  if (scriptDemo) return <p>Discounts use a sample record; CRM updates and messages use isolated simulated systems. Decisions and history are saved on the server. No live customer records change and no email is delivered.</p>;
+  if (scriptDemo) return <p>Prepared samples use simulated business systems. Connected AWS workflows keep running in AWS and may use real business systems. LoopLabs reads their reported history; a configured shared approval connection can send your reviewed decision back. Mandatory execution checks and independent effect verification require separate connections.</p>;
   if (quoteOnly) return <p>Sample distributor quotes and simulated confirmations. Another named member must approve each exact action. No live customer records change and no customer email is delivered.</p>;
   return <p>{durable
     ? "Discounts change a sample record; refunds use a simulated payment provider. Decisions are saved on the server. No real money moves. When configured, AI helps prepare bounded customer acknowledgement plans; it cannot approve or execute actions. Business connectors remain simulated, with no live customer updates or real email delivery."

@@ -17,7 +17,7 @@ function history() {
  return {enrollment:{displayName:"Partner quoting",owner:"owner@example.test",logGroup:"/company/events",enrolledAt:at},checkedAt:at,source:{runtimeArn:arn,enrolledRuntimeVersion:"2",logGroup:"/company/events",startTime:Date.now()-86400000,endTime:Date.now()},events:[{...base,eventId:"start",eventName:"workflow.started",occurredAt:new Date(Date.parse(at)-2000).toISOString()},{...base,eventId:"policy",eventName:"policy.evaluated",occurredAt:new Date(Date.parse(at)-1000).toISOString(),requestedPercent:25,decision:"needs_approval",approvalThreshold:20,maximumDiscount:75},{...base,eventId:"pause",eventName:"workflow.paused",reportedOutcome:"awaiting_approval"}],completeness:"partial",unsupportedRecords:2,duplicateDeliveries:3,conflictingEventIds:[],failures:[],enforcement:"not-established"};
 }
 type Call={path:string;body:Record<string,unknown>|null;method:string};
-async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[])=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals",companyCase=false,showShell=false){
+async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[])=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals"|"impact"|"impact-other"|"impact-ambiguous",companyCase=false,showShell=false,fleetCase=false){
  const esbuild=requireModule(requireModule.resolve("esbuild",{paths:[requireModule.resolve("@temporalio/worker")]}));
  const content=pageName==='organization'?'<CompanyOrganization/>':pageName==='connections'?'<SavedWorkspace section="connections" awsConnections/>':`<ControlCenter page="${pageName}" awsEnabled/>`;
  const member={name:'Raj Nagulapalle',email:'raj@example.test',company:'ACME'};
@@ -37,6 +37,10 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
   else if(path==="/api/workspace/discovery/onboarding"){if(body?.operation==="enrollment")value={enrollment:history().enrollment};else if(body?.operation==="history"){value=history();if(failure==="history"){status=503;value={error:"History identity unavailable"}}if(failure==="malformed")value={events:null};}else{status=400;value={error:"Unexpected mutation"}}}
   else if(path==="/api/workspace/discovery/approvals"){value={connected:true,requests:[],reviewer:"manager@example.test",canReview:true};if(failure==="approvals"){status=503;value={error:"Approval source unavailable"};}}
   else {status=404;value={error:"Unexpected endpoint"}}
+  if(failure?.startsWith('impact')&&path.endsWith('/approvals')){const a={runId:failure==='impact-other'?'other-run':'run-one',before:'USD 1200.00',after:'USD 900.00',status:'approved',executionStatus:'completed'};value={connected:true,requests:failure==='impact-ambiguous'?[a,a]:[a]};}
+  if(fleetCase&&path==="/api/workspace/discovery"&&url.search){const v=value as {records:unknown[]};v.records.unshift(...Array.from({length:7},(_,i)=>({record:{resourceArn:arn+'-fleet'+i,resourceId:'fleet_agent_'+i,version:'1',declaredMetadata:{schemaVersion:'2',source:'aws-runtime-declaration',metadataVersion:'1',organization:'Acme',ownerOrganization:null,ownerTeam:i%2?'care':'sales-ops',department:i%2?'Support':'Sales',owner:'Raj',purpose:'Serve customers',environment:'production',onCallStatus:'unassigned'}},stale:false,observedInCurrentScan:true})));}
+  if(fleetCase&&body?.resourceArn!==arn&&path.endsWith('/onboarding'))value={enrollment:null};
+  if(fleetCase&&body?.operation==='history'&&body.resourceArn===arn){const h=history();value={...h,events:h.events.map(e=>({...e,reportedDeploymentVersion:'1'}))};}
   if(companyCase&&path==="/api/workspace/discovery"&&url.search){const v=value as {records:unknown[]};v.records.push({record:{resourceArn:arn+'-support',resourceId:'support_assistant-abcdefghij',version:'2'},stale:false,observedInCurrentScan:true});}
   if(companyCase&&body?.resourceArn===arn+'-support'&&path.endsWith('/onboarding')){if(body.operation==='enrollment')value={enrollment:{...history().enrollment,displayName:'Support assistant'}};if(body.operation==='history'){const h=history();value={...h,enrollment:{...h.enrollment,displayName:'Support assistant'},events:h.events.map(e=>({...e,runId:'run-support',requestedPercent:null}))};}}
   await route.fulfill({status,contentType:"application/json",body:JSON.stringify(value)});
@@ -45,7 +49,7 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
  }finally{await browser.close()}
 }
 it("groups deployment versions and keeps identity and enforcement separate",()=>mounted("agents",async(page,calls)=>{
- expect(await page.locator('.cc-agent-row').count()).toBe(1);await page.getByRole('button',{name:/Partner quoting/}).click();await page.getByRole('dialog').waitFor();await page.getByText('Purpose has not been provided',{exact:false}).waitFor();expect(await page.getByText('Not verified',{exact:true}).count()).toBe(1);await page.getByRole('heading',{name:'AWS-reported business details'}).waitFor();const metadata=page.locator('section').filter({has:page.getByRole('heading',{name:'AWS-reported business details'})});expect(await metadata.innerText()).toContain('Acme Revenue Operations');expect(await metadata.innerText()).toContain('Sales Support and Quote Operations');expect(await metadata.innerText()).toContain('unassigned');expect(await metadata.innerText()).toContain('do not assign company teams');await page.screenshot({path:'.local/v16-metadata/agent-details-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:900});await page.getByText('Metadata version',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:'.local/v16-metadata/agent-details-mobile.png',fullPage:false});expect(await page.locator('[role=dialog]').evaluate(e=>e.getBoundingClientRect().right<=innerWidth+1)).toBe(true);expect(calls.filter(c=>c.body?.operation==='enrollment').map(c=>c.body?.version)).toEqual(['2']);expect(calls.some(c=>c.body?.operation==='history')).toBe(false);
+ expect(await page.locator('.cc-agent-row').count()).toBe(1);await page.getByRole('button',{name:/Partner quoting/}).click();await page.getByRole('dialog').waitFor();await page.getByText('Purpose has not been provided',{exact:false}).waitFor();expect(await page.getByText('Not verified',{exact:true}).count()).toBe(1);await page.getByRole('heading',{name:'AWS-reported business details'}).waitFor();const metadata=page.locator('section').filter({has:page.getByRole('heading',{name:'AWS-reported business details'})});expect(await metadata.innerText()).toContain('Acme Revenue Operations');expect(await metadata.innerText()).toContain('Sales Support and Quote Operations');expect(await metadata.innerText()).toContain('unassigned');expect(await metadata.innerText()).toContain('do not assign company teams');await page.screenshot({path:'.local/v16-metadata/agent-details-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:900});await page.getByText('Metadata version',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:'.local/v16-metadata/agent-details-mobile.png',fullPage:false});expect(await page.locator('[role=dialog]').evaluate(e=>e.getBoundingClientRect().right<=innerWidth+1)).toBe(true);expect(calls.filter(c=>c.body?.operation==='enrollment').map(c=>c.body?.version)).toEqual(['2']);expect(calls.some(c=>c.body?.operation==='history')).toBe(true);
 }),15000);
 it("execution review preserves filters, selection and keyboard return focus",()=>mounted("activity",async(page,calls)=>{
  await page.getByLabel('Search activity').fill('Q-test');const trigger=page.getByRole('button',{name:/25% discount/});await trigger.click();await page.getByRole('dialog').waitFor();await page.getByRole('button',{name:'Review this execution’s approvals'}).click();await page.getByText('No shared approval request was returned for this execution.',{exact:false}).waitFor();expect(calls.find(c=>c.path.endsWith('/approvals'))?.body).toMatchObject({connectionId:'aws-test',resourceArn:arn,version:'2',operation:'list'});await page.getByRole('button',{name:'Back to execution',exact:true}).click();await page.getByRole('button',{name:'Close dialog',exact:true}).click();expect(await page.getByLabel('Search activity').inputValue()).toBe('Q-test');expect(await trigger.evaluate(e=>e===document.activeElement)).toBe(true);expect(calls.every(c=>c.method==='GET'||['enrollment','history','list'].includes(String(c.body?.operation)))).toBe(true);
@@ -95,3 +99,33 @@ it.each(['overview','agents','activity','approvals','connections','policies','or
 },undefined,true,true),25000);
 
 it('failed approval reads stay unknown while separately observed activity remains visible',()=>mounted('overview',async page=>{expect(await page.locator('.cc-admin-stats strong').nth(1).innerText()).toBe('—');expect(await page.locator('.cc-execution-row').count()).toBe(2);await page.getByText('Approval coverage is incomplete.',{exact:false}).waitFor();},'approvals',true),15000);
+
+it('shows all eight saved deployments and never calls incomplete approval coverage zero',()=>mounted('overview',async(page,calls)=>{
+ expect(await page.locator('.cc-admin-stats strong').first().innerText()).toBe('8');
+ expect(await page.locator('.cc-admin-stats strong').nth(1).innerText()).toBe('—');
+ expect(calls.filter(c=>c.body?.operation==='enrollment').some(c=>String(c.body?.resourceArn).endsWith('-fleet6'))).toBe(true);
+ expect(await page.locator('.cc-execution-row').count()).toBe(1);
+ expect(await page.getByText('Showing up to 3 deployments',{exact:false}).count()).toBe(0);
+},undefined,false,false,true),20000);
+it('source departments filter all eight rows without granting company membership',()=>mounted('agents',async(page)=>{
+ expect(await page.locator('.cc-agent-row').count()).toBe(8);
+ await page.getByLabel('Department',{exact:true}).selectOption('aws-department:Sales');
+ expect(await page.locator('.cc-agent-row').count()).toBe(4);
+ await page.getByLabel('Environment',{exact:true}).selectOption('production');
+ expect(await page.locator('.cc-agent-row').count()).toBe(4);
+ await page.getByRole('button',{name:/fleet agent 0/}).click();await page.getByText('Raj',{exact:true}).waitFor();
+},undefined,false,false,true),20000);
+it('uses the retained reported v1 approval connection for a run read under inventory v2',()=>mounted('activity',async(page,calls)=>{
+ await page.getByRole('button',{name:/25% discount/}).click();await page.getByRole('button',{name:'Review this execution’s approvals'}).click();
+ await page.getByText('No shared approval request was returned for this execution.',{exact:false}).waitFor();
+ expect(calls.filter(c=>c.path.endsWith('/approvals')).every(c=>c.body?.version==='1')).toBe(true);
+},undefined,false,false,true),20000);
+
+it('shows before and proposed values only for the uniquely matched execution approval',()=>mounted('activity',async(page,calls)=>{
+ await page.getByRole('button',{name:/25% discount/}).click();await page.getByText('USD 1200.00',{exact:true}).waitFor();await page.getByText('USD 900.00',{exact:true}).waitFor();
+ expect(calls.find(c=>c.path.endsWith('/approvals'))?.body).toMatchObject({operation:'list',version:'2',resourceArn:arn});
+ expect(calls.some(c=>c.body?.operation==='decide')).toBe(false);
+},'impact'),15000);
+it.each(['impact-other','impact-ambiguous'] as const)('does not enrich with mismatched or ambiguous approval data: %s',failure=>mounted('activity',async page=>{
+ await page.getByRole('button',{name:/25% discount/}).click();await page.getByText('No unique approval readback matched this execution.',{exact:true}).waitFor();expect(await page.getByText('USD 1200.00',{exact:true}).count()).toBe(0);
+},failure),15000);

@@ -1,0 +1,2925 @@
+{
+  "version": 3,
+  "construction": {
+    "contract": "installed-platform-proof-source-1",
+    "families": {
+      "discovery": [
+        "app/api/workspace/discovery/activity/route.ts",
+        "app/api/workspace/discovery/approvals/route.ts",
+        "app/api/workspace/discovery/onboarding/route.ts",
+        "app/api/workspace/discovery/owners/route.ts",
+        "app/api/workspace/discovery/route.ts",
+        "app/api/workspace/session/route.ts",
+        "app/control-plane/control-plane.css",
+        "app/control-plane/discovery/page.tsx",
+        "app/control-plane/layout.tsx",
+        "app/sales.css",
+        "components/brand/loop-mark.tsx",
+        "components/control-plane/access.tsx",
+        "components/control-plane/aws-connection-journey.tsx",
+        "components/control-plane/aws-execution-browser.tsx",
+        "components/control-plane/aws-workflow-history.tsx",
+        "components/control-plane/cloud-owner-review.tsx",
+        "components/control-plane/company-workspace.tsx",
+        "components/control-plane/control-center.css",
+        "components/control-plane/discovery-workspace.css",
+        "components/control-plane/discovery-workspace.tsx",
+        "components/control-plane/execution-business-context.tsx",
+        "components/control-plane/external-workflow-approvals.tsx",
+        "components/control-plane/project-discovery-workspace.tsx",
+        "components/control-plane/provider.tsx",
+        "components/control-plane/runtime-metadata.tsx",
+        "components/control-plane/shell.tsx",
+        "components/control-plane/ui.tsx",
+        "components/control-plane/workspace-gate.tsx",
+        "components/marketing/chrome.tsx",
+        "components/marketing/product-overview.tsx",
+        "install-order.json",
+        "instrumentation.ts",
+        "lib/analytics.ts",
+        "lib/connectors/catalog.ts",
+        "lib/connectors/content.ts",
+        "lib/connectors/contracts.ts",
+        "lib/connectors/email-observation.ts",
+        "lib/connectors/hosted.ts",
+        "lib/connectors/native-quote-mail.ts",
+        "lib/connectors/native-quote.ts",
+        "lib/connectors/quote-action-schema.sql",
+        "lib/connectors/quote-action.ts",
+        "lib/connectors/record-scope.ts",
+        "lib/connectors/request.ts",
+        "lib/connectors/schema.sql",
+        "lib/connectors/scope-schema.sql",
+        "lib/connectors/scopes.ts",
+        "lib/connectors/service.ts",
+        "lib/connectors/twin.ts",
+        "lib/control-plane/model.ts",
+        "lib/durable/contracts.ts",
+        "lib/durable/database.ts",
+        "lib/durable/http.ts",
+        "lib/durable/pg-transport.ts",
+        "lib/durable/proposal-schema.sql",
+        "lib/durable/recovery-schema.sql",
+        "lib/durable/recovery.ts",
+        "lib/durable/schema.sql",
+        "lib/durable/service.ts",
+        "lib/durable/tenant-boundary-prototype-schema.sql",
+        "lib/durable/tenant-pool.ts",
+        "lib/durable/workload-pool.ts",
+        "lib/engine/evaluate.ts",
+        "lib/engine/hash.ts",
+        "lib/engine/registry.ts",
+        "lib/engine/types.ts",
+        "lib/enquiries/chat-contract.ts",
+        "lib/enquiries/chat.ts",
+        "lib/enquiries/contracts.ts",
+        "lib/enquiries/dispatch.ts",
+        "lib/enquiries/managed-schema.sql",
+        "lib/enquiries/record-routing-schema.sql",
+        "lib/enquiries/reset-intent-schema.sql",
+        "lib/enquiries/revision-schema.sql",
+        "lib/enquiries/revision.ts",
+        "lib/enquiries/schema.sql",
+        "lib/enquiries/service.ts",
+        "lib/enquiries/temporal-schema.sql",
+        "lib/enquiries/worker-admission-schema.sql",
+        "lib/orchestration/admission.ts",
+        "lib/orchestration/quote-contract.ts",
+        "lib/quotes/authority-schema.sql",
+        "lib/quotes/authority.ts",
+        "lib/quotes/background-generation.ts",
+        "lib/quotes/background-schema.sql",
+        "lib/quotes/background.ts",
+        "lib/quotes/chat-planner.ts",
+        "lib/quotes/demo-control.ts",
+        "lib/quotes/demo-registry.ts",
+        "lib/quotes/digest.ts",
+        "lib/quotes/effect.ts",
+        "lib/quotes/execution-generation.ts",
+        "lib/quotes/https-transport.ts",
+        "lib/quotes/json-body-transport.ts",
+        "lib/quotes/membership-schema.sql",
+        "lib/quotes/membership.ts",
+        "lib/quotes/native-demo-bootstrap.ts",
+        "lib/quotes/native-demo-factory.ts",
+        "lib/quotes/native-email-transport.ts",
+        "lib/quotes/native-pin-provisioner.ts",
+        "lib/quotes/native-transport.ts",
+        "lib/quotes/plan-v2-schema.sql",
+        "lib/quotes/plan-v2.ts",
+        "lib/quotes/plan.ts",
+        "lib/quotes/requester-delegation.ts",
+        "lib/quotes/schema.sql",
+        "lib/quotes/store.ts",
+        "lib/quotes/transaction-context.ts",
+        "lib/quotes/verification-receipt.ts",
+        "lib/quotes/worker-admission-schema.sql",
+        "lib/quotes/workflow-view.ts",
+        "lib/refunds/schema.sql",
+        "lib/site.ts",
+        "lib/workflows/guard.ts",
+        "lib/workflows/schema.sql",
+        "lib/workflows/service.ts",
+        "lib/workspace/agents.ts",
+        "lib/workspace/auth.ts",
+        "lib/workspace/aws-authorization-contract.ts",
+        "lib/workspace/aws-guided-access.ts",
+        "lib/workspace/aws-journey.ts",
+        "lib/workspace/business-display.ts",
+        "lib/workspace/cloud-activity.ts",
+        "lib/workspace/cloud-aws-cli.ts",
+        "lib/workspace/cloud-azure-binding.ts",
+        "lib/workspace/cloud-azure-cli.ts",
+        "lib/workspace/cloud-azure-http.ts",
+        "lib/workspace/cloud-binding.ts",
+        "lib/workspace/cloud-business-metadata-migration.ts",
+        "lib/workspace/cloud-business-metadata-schema.sql",
+        "lib/workspace/cloud-discovery.ts",
+        "lib/workspace/cloud-google-binding.ts",
+        "lib/workspace/cloud-google-http.ts",
+        "lib/workspace/cloud-inventory-schema.sql",
+        "lib/workspace/cloud-inventory.ts",
+        "lib/workspace/cloud-invocation-observation.ts",
+        "lib/workspace/cloud-invocation-reader.ts",
+        "lib/workspace/cloud-observation-operations.ts",
+        "lib/workspace/cloud-observation-schema.sql",
+        "lib/workspace/cloud-observation-store.ts",
+        "lib/workspace/cloud-operations.ts",
+        "lib/workspace/cloud-owner-review-schema.sql",
+        "lib/workspace/cloud-owner-review.ts",
+        "lib/workspace/cloud-private-binding.ts",
+        "lib/workspace/cloud-project-binding.ts",
+        "lib/workspace/cloud-project-discovery.ts",
+        "lib/workspace/cloud-project-evidence.ts",
+        "lib/workspace/cloud-project-http.ts",
+        "lib/workspace/cloud-project-schema.sql",
+        "lib/workspace/cloud-runtime-metadata-migration.ts",
+        "lib/workspace/cloud-runtime-metadata-schema.sql",
+        "lib/workspace/cloud-runtime-metadata.ts",
+        "lib/workspace/company-profile-contract.ts",
+        "lib/workspace/company-profile-migration.ts",
+        "lib/workspace/company-profile-schema.sql",
+        "lib/workspace/deployment-capabilities.ts",
+        "lib/workspace/execution-reference.ts",
+        "lib/workspace/external-approvals.ts",
+        "lib/workspace/identity.ts",
+        "lib/workspace/membership-authority-schema.sql",
+        "lib/workspace/membership-authority.ts",
+        "lib/workspace/navigation.ts",
+        "lib/workspace/owned-private-file.ts",
+        "lib/workspace/quote-workload-installation.ts",
+        "lib/workspace/recovery-capture.ts",
+        "lib/workspace/response.ts",
+        "lib/workspace/schema.sql",
+        "lib/workspace/tenant-bootstrap.ts",
+        "lib/workspace/tenant-context.ts",
+        "lib/workspace/tenant-installer.ts",
+        "lib/workspace/tenant-read-inventory.ts",
+        "lib/workspace/web-recovery-deployment.ts",
+        "lib/workspace/workflow-telemetry-view.ts",
+        "lib/workspace/workflow-telemetry.ts",
+        "next.config.mjs",
+        "package.json",
+        "pnpm-lock.yaml",
+        "runtime/temporal/activities.ts",
+        "runtime/temporal/operations.ts",
+        "runtime/temporal/outbox.ts",
+        "runtime/temporal/quote-outbox.ts",
+        "runtime/temporal/staging-preflight.ts",
+        "runtime/temporal/version-contract.ts",
+        "scripts/cloud-runtime-metadata-setup.ts",
+        "scripts/cloud-runtime-metadata-upgrade-process.ts",
+        "scripts/company-directory-setup.ts",
+        "scripts/company-directory-upgrade-process.ts",
+        "scripts/current-proof-source-registry.mjs",
+        "scripts/discovery-azure-http-fixture.mjs",
+        "scripts/discovery-browser-proof.mjs",
+        "scripts/discovery-installed-evidence.mjs",
+        "scripts/discovery-installed-source-contract.mjs",
+        "scripts/staging-browser-tls.mjs",
+        "tsconfig.json"
+      ]
+    },
+    "edges": [
+      {
+        "from": "app/api/workspace/discovery/activity/route.ts",
+        "to": "lib/workspace/tenant-context.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-context.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-context.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/durable/tenant-pool.ts",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "lib/durable/tenant-pool.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-context.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/durable/service.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/workspace/identity.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/identity.ts",
+        "to": "lib/durable/recovery.ts"
+      },
+      {
+        "from": "lib/durable/recovery.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/durable/recovery.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/durable/recovery.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/durable/database.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/durable/service.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/durable/service.ts",
+        "to": "lib/durable/recovery.ts"
+      },
+      {
+        "from": "lib/durable/service.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-context.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-context.ts",
+        "to": "lib/workspace/auth.ts"
+      },
+      {
+        "from": "lib/workspace/auth.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/auth.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/activity/route.ts",
+        "to": "lib/durable/http.ts"
+      },
+      {
+        "from": "lib/durable/http.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/durable/http.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/activity/route.ts",
+        "to": "lib/workspace/cloud-inventory.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-inventory.ts",
+        "to": "lib/workspace/cloud-runtime-metadata.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-inventory.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-inventory.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-inventory.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-inventory.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-inventory.ts",
+        "to": "lib/workspace/auth.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-inventory.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-discovery.ts",
+        "to": "lib/workspace/cloud-runtime-metadata.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-inventory.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-inventory.ts",
+        "to": "lib/workspace/cloud-project-evidence.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-project-evidence.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/activity/route.ts",
+        "to": "lib/workspace/cloud-activity.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-activity.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-activity.ts",
+        "to": "lib/workspace/cloud-inventory.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-activity.ts",
+        "to": "lib/workspace/cloud-binding.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-binding.ts",
+        "to": "lib/workspace/cloud-private-binding.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-binding.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-binding.ts",
+        "to": "lib/workspace/cloud-aws-cli.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-aws-cli.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-aws-cli.ts",
+        "to": "lib/workspace/cloud-invocation-reader.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-invocation-reader.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-invocation-reader.ts",
+        "to": "lib/workspace/cloud-invocation-observation.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-invocation-observation.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-invocation-observation.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-binding.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-activity.ts",
+        "to": "lib/workspace/cloud-private-binding.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-activity.ts",
+        "to": "lib/workspace/cloud-invocation-reader.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-activity.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "scripts/current-proof-source-registry.mjs",
+        "to": "scripts/discovery-installed-source-contract.mjs"
+      },
+      {
+        "from": "components/control-plane/cloud-owner-review.tsx",
+        "to": "lib/workspace/response.ts"
+      },
+      {
+        "from": "components/control-plane/cloud-owner-review.tsx",
+        "to": "lib/workspace/cloud-owner-review.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-owner-review.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-owner-review.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-owner-review.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-owner-review.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/owners/route.ts",
+        "to": "lib/workspace/tenant-context.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/owners/route.ts",
+        "to": "lib/durable/http.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/owners/route.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/owners/route.ts",
+        "to": "lib/workspace/cloud-owner-review.ts"
+      },
+      {
+        "from": "components/control-plane/project-discovery-workspace.tsx",
+        "to": "components/control-plane/cloud-owner-review.tsx"
+      },
+      {
+        "from": "components/control-plane/project-discovery-workspace.tsx",
+        "to": "lib/workspace/response.ts"
+      },
+      {
+        "from": "components/control-plane/project-discovery-workspace.tsx",
+        "to": "lib/workspace/cloud-operations.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-operations.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-operations.ts",
+        "to": "lib/workspace/cloud-inventory.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-operations.ts",
+        "to": "lib/workspace/cloud-binding.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-operations.ts",
+        "to": "lib/workspace/aws-guided-access.ts"
+      },
+      {
+        "from": "lib/workspace/aws-guided-access.ts",
+        "to": "lib/workspace/aws-authorization-contract.ts"
+      },
+      {
+        "from": "lib/workspace/aws-authorization-contract.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/aws-guided-access.ts",
+        "to": "lib/workspace/cloud-aws-cli.ts"
+      },
+      {
+        "from": "lib/workspace/aws-guided-access.ts",
+        "to": "lib/workspace/cloud-private-binding.ts"
+      },
+      {
+        "from": "lib/workspace/aws-guided-access.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/aws-guided-access.ts",
+        "to": "lib/workspace/workflow-telemetry.ts"
+      },
+      {
+        "from": "lib/workspace/workflow-telemetry.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-operations.ts",
+        "to": "lib/workspace/cloud-project-binding.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-project-binding.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-project-binding.ts",
+        "to": "lib/workspace/cloud-azure-binding.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-binding.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-binding.ts",
+        "to": "lib/workspace/cloud-private-binding.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-binding.ts",
+        "to": "lib/workspace/cloud-azure-cli.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-cli.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-cli.ts",
+        "to": "lib/workspace/cloud-project-http.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-cli.ts",
+        "to": "lib/workspace/cloud-azure-http.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-http.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-http.ts",
+        "to": "lib/workspace/cloud-project-http.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-binding.ts",
+        "to": "lib/workspace/cloud-azure-http.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-azure-binding.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-project-binding.ts",
+        "to": "lib/workspace/cloud-google-binding.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-google-binding.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-google-binding.ts",
+        "to": "lib/workspace/cloud-private-binding.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-google-binding.ts",
+        "to": "lib/workspace/cloud-google-http.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-google-http.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-google-http.ts",
+        "to": "lib/workspace/cloud-project-http.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-google-http.ts",
+        "to": "lib/workspace/cloud-project-http.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-google-binding.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-operations.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-operations.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "components/control-plane/project-discovery-workspace.tsx",
+        "to": "lib/workspace/cloud-inventory.ts"
+      },
+      {
+        "from": "scripts/discovery-browser-proof.mjs",
+        "to": "scripts/current-proof-source-registry.mjs"
+      },
+      {
+        "from": "scripts/discovery-browser-proof.mjs",
+        "to": "lib/workspace/cloud-project-evidence.ts"
+      },
+      {
+        "from": "scripts/discovery-browser-proof.mjs",
+        "to": "lib/workspace/auth.ts"
+      },
+      {
+        "from": "scripts/discovery-browser-proof.mjs",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "scripts/discovery-browser-proof.mjs",
+        "to": "lib/workspace/tenant-installer.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-installer.ts",
+        "to": "lib/workspace/recovery-capture.ts"
+      },
+      {
+        "from": "lib/workspace/recovery-capture.ts",
+        "to": "lib/workspace/owned-private-file.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-installer.ts",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-installer.ts",
+        "to": "lib/workspace/quote-workload-installation.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-installer.ts",
+        "to": "lib/workspace/tenant-read-inventory.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-installer.ts",
+        "to": "lib/workspace/tenant-bootstrap.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-bootstrap.ts",
+        "to": "lib/workspace/web-recovery-deployment.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-bootstrap.ts",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-bootstrap.ts",
+        "to": "lib/workspace/owned-private-file.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-bootstrap.ts",
+        "to": "lib/workspace/owned-private-file.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-bootstrap.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-bootstrap.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-bootstrap.ts",
+        "to": "lib/workspace/tenant-context.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-installer.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/workspace/tenant-installer.ts",
+        "to": "lib/workspace/owned-private-file.ts"
+      },
+      {
+        "from": "scripts/discovery-browser-proof.mjs",
+        "to": "lib/workspace/tenant-read-inventory.ts"
+      },
+      {
+        "from": "scripts/discovery-browser-proof.mjs",
+        "to": "runtime/temporal/staging-preflight.ts"
+      },
+      {
+        "from": "runtime/temporal/staging-preflight.ts",
+        "to": "runtime/temporal/operations.ts"
+      },
+      {
+        "from": "runtime/temporal/operations.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "runtime/temporal/operations.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/contracts.ts",
+        "to": "lib/connectors/content.ts"
+      },
+      {
+        "from": "lib/connectors/content.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/contracts.ts",
+        "to": "lib/connectors/scopes.ts"
+      },
+      {
+        "from": "lib/connectors/scopes.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/connectors/scopes.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/connectors/scopes.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/scopes.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/scopes.ts",
+        "to": "lib/connectors/record-scope.ts"
+      },
+      {
+        "from": "lib/connectors/record-scope.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/contracts.ts",
+        "to": "lib/connectors/record-scope.ts"
+      },
+      {
+        "from": "lib/connectors/contracts.ts",
+        "to": "lib/connectors/request.ts"
+      },
+      {
+        "from": "lib/connectors/request.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/request.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/request.ts",
+        "to": "lib/connectors/content.ts"
+      },
+      {
+        "from": "lib/connectors/request.ts",
+        "to": "lib/connectors/record-scope.ts"
+      },
+      {
+        "from": "lib/connectors/contracts.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "runtime/temporal/staging-preflight.ts",
+        "to": "lib/connectors/catalog.ts"
+      },
+      {
+        "from": "lib/connectors/catalog.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/catalog.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/catalog.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/connectors/catalog.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/connectors/catalog.ts",
+        "to": "lib/connectors/record-scope.ts"
+      },
+      {
+        "from": "lib/connectors/catalog.ts",
+        "to": "lib/connectors/hosted.ts"
+      },
+      {
+        "from": "lib/connectors/hosted.ts",
+        "to": "lib/connectors/record-scope.ts"
+      },
+      {
+        "from": "lib/connectors/hosted.ts",
+        "to": "lib/connectors/request.ts"
+      },
+      {
+        "from": "lib/connectors/hosted.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/hosted.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/hosted.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/hosted.ts",
+        "to": "lib/connectors/twin.ts"
+      },
+      {
+        "from": "lib/connectors/twin.ts",
+        "to": "lib/connectors/email-observation.ts"
+      },
+      {
+        "from": "lib/connectors/email-observation.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/twin.ts",
+        "to": "lib/connectors/record-scope.ts"
+      },
+      {
+        "from": "lib/connectors/twin.ts",
+        "to": "lib/connectors/request.ts"
+      },
+      {
+        "from": "lib/connectors/twin.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/twin.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/twin.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/catalog.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/catalog.ts",
+        "to": "lib/connectors/scopes.ts"
+      },
+      {
+        "from": "runtime/temporal/staging-preflight.ts",
+        "to": "lib/connectors/twin.ts"
+      },
+      {
+        "from": "scripts/discovery-browser-proof.mjs",
+        "to": "scripts/staging-browser-tls.mjs"
+      },
+      {
+        "from": "app/api/workspace/discovery/route.ts",
+        "to": "lib/workspace/tenant-context.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/route.ts",
+        "to": "lib/durable/http.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/route.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/route.ts",
+        "to": "lib/workspace/cloud-inventory.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/route.ts",
+        "to": "lib/workspace/cloud-project-discovery.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/route.ts",
+        "to": "lib/workspace/cloud-operations.ts"
+      },
+      {
+        "from": "app/control-plane/discovery/page.tsx",
+        "to": "components/control-plane/discovery-workspace.tsx"
+      },
+      {
+        "from": "components/control-plane/discovery-workspace.tsx",
+        "to": "components/control-plane/ui.tsx"
+      },
+      {
+        "from": "components/control-plane/ui.tsx",
+        "to": "lib/control-plane/model.ts"
+      },
+      {
+        "from": "lib/control-plane/model.ts",
+        "to": "lib/engine/evaluate.ts"
+      },
+      {
+        "from": "lib/engine/evaluate.ts",
+        "to": "lib/engine/types.ts"
+      },
+      {
+        "from": "lib/engine/evaluate.ts",
+        "to": "lib/engine/registry.ts"
+      },
+      {
+        "from": "lib/engine/registry.ts",
+        "to": "lib/engine/types.ts"
+      },
+      {
+        "from": "lib/engine/evaluate.ts",
+        "to": "lib/engine/hash.ts"
+      },
+      {
+        "from": "lib/control-plane/model.ts",
+        "to": "lib/engine/types.ts"
+      },
+      {
+        "from": "components/control-plane/discovery-workspace.tsx",
+        "to": "components/control-plane/project-discovery-workspace.tsx"
+      },
+      {
+        "from": "components/control-plane/discovery-workspace.tsx",
+        "to": "components/control-plane/aws-connection-journey.tsx"
+      },
+      {
+        "from": "components/control-plane/aws-connection-journey.tsx",
+        "to": "components/control-plane/runtime-metadata.tsx"
+      },
+      {
+        "from": "components/control-plane/runtime-metadata.tsx",
+        "to": "lib/workspace/cloud-runtime-metadata.ts"
+      },
+      {
+        "from": "components/control-plane/aws-connection-journey.tsx",
+        "to": "lib/workspace/response.ts"
+      },
+      {
+        "from": "components/control-plane/aws-connection-journey.tsx",
+        "to": "lib/workspace/aws-journey.ts"
+      },
+      {
+        "from": "components/control-plane/aws-connection-journey.tsx",
+        "to": "lib/workspace/cloud-inventory.ts"
+      },
+      {
+        "from": "components/control-plane/aws-connection-journey.tsx",
+        "to": "lib/workspace/cloud-operations.ts"
+      },
+      {
+        "from": "components/control-plane/aws-connection-journey.tsx",
+        "to": "lib/workspace/cloud-activity.ts"
+      },
+      {
+        "from": "components/control-plane/aws-connection-journey.tsx",
+        "to": "components/control-plane/cloud-owner-review.tsx"
+      },
+      {
+        "from": "components/control-plane/aws-connection-journey.tsx",
+        "to": "components/control-plane/aws-workflow-history.tsx"
+      },
+      {
+        "from": "components/control-plane/aws-workflow-history.tsx",
+        "to": "components/control-plane/external-workflow-approvals.tsx"
+      },
+      {
+        "from": "components/control-plane/external-workflow-approvals.tsx",
+        "to": "lib/workspace/cloud-activity.ts"
+      },
+      {
+        "from": "components/control-plane/external-workflow-approvals.tsx",
+        "to": "lib/workspace/external-approvals.ts"
+      },
+      {
+        "from": "lib/workspace/external-approvals.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "components/control-plane/external-workflow-approvals.tsx",
+        "to": "lib/workspace/response.ts"
+      },
+      {
+        "from": "components/control-plane/aws-workflow-history.tsx",
+        "to": "lib/workspace/response.ts"
+      },
+      {
+        "from": "components/control-plane/aws-workflow-history.tsx",
+        "to": "lib/workspace/cloud-activity.ts"
+      },
+      {
+        "from": "components/control-plane/aws-workflow-history.tsx",
+        "to": "lib/workspace/workflow-telemetry.ts"
+      },
+      {
+        "from": "components/control-plane/aws-workflow-history.tsx",
+        "to": "lib/workspace/aws-journey.ts"
+      },
+      {
+        "from": "components/control-plane/aws-workflow-history.tsx",
+        "to": "lib/workspace/workflow-telemetry-view.ts"
+      },
+      {
+        "from": "lib/workspace/workflow-telemetry-view.ts",
+        "to": "lib/workspace/workflow-telemetry.ts"
+      },
+      {
+        "from": "components/control-plane/aws-workflow-history.tsx",
+        "to": "components/control-plane/aws-execution-browser.tsx"
+      },
+      {
+        "from": "components/control-plane/aws-execution-browser.tsx",
+        "to": "lib/workspace/cloud-activity.ts"
+      },
+      {
+        "from": "components/control-plane/aws-execution-browser.tsx",
+        "to": "lib/workspace/execution-reference.ts"
+      },
+      {
+        "from": "lib/workspace/execution-reference.ts",
+        "to": "lib/workspace/cloud-activity.ts"
+      },
+      {
+        "from": "lib/workspace/execution-reference.ts",
+        "to": "lib/workspace/workflow-telemetry.ts"
+      },
+      {
+        "from": "components/control-plane/aws-execution-browser.tsx",
+        "to": "components/control-plane/execution-business-context.tsx"
+      },
+      {
+        "from": "components/control-plane/execution-business-context.tsx",
+        "to": "lib/workspace/cloud-activity.ts"
+      },
+      {
+        "from": "components/control-plane/execution-business-context.tsx",
+        "to": "lib/workspace/external-approvals.ts"
+      },
+      {
+        "from": "components/control-plane/execution-business-context.tsx",
+        "to": "lib/workspace/response.ts"
+      },
+      {
+        "from": "components/control-plane/aws-execution-browser.tsx",
+        "to": "lib/workspace/workflow-telemetry-view.ts"
+      },
+      {
+        "from": "components/control-plane/discovery-workspace.tsx",
+        "to": "components/control-plane/discovery-workspace.css"
+      },
+      {
+        "from": "components/control-plane/shell.tsx",
+        "to": "components/control-plane/company-workspace.tsx"
+      },
+      {
+        "from": "components/control-plane/company-workspace.tsx",
+        "to": "lib/workspace/company-profile-contract.ts"
+      },
+      {
+        "from": "components/control-plane/company-workspace.tsx",
+        "to": "lib/workspace/company-profile-contract.ts"
+      },
+      {
+        "from": "components/control-plane/company-workspace.tsx",
+        "to": "lib/workspace/response.ts"
+      },
+      {
+        "from": "components/control-plane/company-workspace.tsx",
+        "to": "lib/workspace/cloud-runtime-metadata.ts"
+      },
+      {
+        "from": "components/control-plane/company-workspace.tsx",
+        "to": "lib/workspace/business-display.ts"
+      },
+      {
+        "from": "lib/workspace/business-display.ts",
+        "to": "lib/workspace/company-profile-contract.ts"
+      },
+      {
+        "from": "lib/workspace/business-display.ts",
+        "to": "lib/workspace/cloud-runtime-metadata.ts"
+      },
+      {
+        "from": "components/control-plane/company-workspace.tsx",
+        "to": "components/control-plane/ui.tsx"
+      },
+      {
+        "from": "components/control-plane/shell.tsx",
+        "to": "components/control-plane/provider.tsx"
+      },
+      {
+        "from": "components/control-plane/provider.tsx",
+        "to": "lib/control-plane/model.ts"
+      },
+      {
+        "from": "components/control-plane/provider.tsx",
+        "to": "lib/analytics.ts"
+      },
+      {
+        "from": "components/control-plane/shell.tsx",
+        "to": "components/control-plane/ui.tsx"
+      },
+      {
+        "from": "app/control-plane/layout.tsx",
+        "to": "components/control-plane/company-workspace.tsx"
+      },
+      {
+        "from": "app/control-plane/layout.tsx",
+        "to": "lib/workspace/deployment-capabilities.ts"
+      },
+      {
+        "from": "app/control-plane/layout.tsx",
+        "to": "components/control-plane/provider.tsx"
+      },
+      {
+        "from": "app/control-plane/layout.tsx",
+        "to": "components/control-plane/shell.tsx"
+      },
+      {
+        "from": "app/control-plane/layout.tsx",
+        "to": "app/control-plane/control-plane.css"
+      },
+      {
+        "from": "app/control-plane/layout.tsx",
+        "to": "components/control-plane/control-center.css"
+      },
+      {
+        "from": "app/control-plane/layout.tsx",
+        "to": "app/sales.css"
+      },
+      {
+        "from": "app/control-plane/layout.tsx",
+        "to": "components/control-plane/workspace-gate.tsx"
+      },
+      {
+        "from": "components/control-plane/workspace-gate.tsx",
+        "to": "lib/workspace/deployment-capabilities.ts"
+      },
+      {
+        "from": "components/control-plane/workspace-gate.tsx",
+        "to": "lib/workspace/tenant-context.ts"
+      },
+      {
+        "from": "components/control-plane/workspace-gate.tsx",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "components/control-plane/workspace-gate.tsx",
+        "to": "components/marketing/chrome.tsx"
+      },
+      {
+        "from": "components/marketing/chrome.tsx",
+        "to": "components/brand/loop-mark.tsx"
+      },
+      {
+        "from": "components/marketing/chrome.tsx",
+        "to": "lib/site.ts"
+      },
+      {
+        "from": "components/control-plane/workspace-gate.tsx",
+        "to": "components/marketing/product-overview.tsx"
+      },
+      {
+        "from": "components/control-plane/access.tsx",
+        "to": "lib/workspace/navigation.ts"
+      },
+      {
+        "from": "app/api/workspace/session/route.ts",
+        "to": "lib/workspace/tenant-context.ts"
+      },
+      {
+        "from": "app/api/workspace/session/route.ts",
+        "to": "lib/durable/http.ts"
+      },
+      {
+        "from": "app/api/workspace/session/route.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "instrumentation.ts",
+        "to": "lib/workspace/tenant-bootstrap.ts"
+      },
+      {
+        "from": "instrumentation.ts",
+        "to": "lib/quotes/native-demo-bootstrap.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-bootstrap.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-bootstrap.ts",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-bootstrap.ts",
+        "to": "lib/workspace/tenant-bootstrap.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-bootstrap.ts",
+        "to": "lib/quotes/execution-generation.ts"
+      },
+      {
+        "from": "lib/quotes/execution-generation.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/quotes/execution-generation.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/execution-generation.ts",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "lib/quotes/execution-generation.ts",
+        "to": "lib/workspace/tenant-bootstrap.ts"
+      },
+      {
+        "from": "lib/quotes/execution-generation.ts",
+        "to": "lib/quotes/https-transport.ts"
+      },
+      {
+        "from": "lib/quotes/https-transport.ts",
+        "to": "lib/workspace/owned-private-file.ts"
+      },
+      {
+        "from": "lib/quotes/https-transport.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/execution-generation.ts",
+        "to": "lib/quotes/plan.ts"
+      },
+      {
+        "from": "lib/quotes/plan.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-bootstrap.ts",
+        "to": "lib/quotes/native-demo-factory.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/requester-delegation.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/transaction-context.ts"
+      },
+      {
+        "from": "lib/quotes/transaction-context.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/transaction-context.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/transaction-context.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/background-generation.ts"
+      },
+      {
+        "from": "lib/quotes/background-generation.ts",
+        "to": "lib/workspace/tenant-bootstrap.ts"
+      },
+      {
+        "from": "lib/quotes/background-generation.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/background-generation.ts",
+        "to": "runtime/temporal/quote-outbox.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "runtime/temporal/outbox.ts"
+      },
+      {
+        "from": "runtime/temporal/outbox.ts",
+        "to": "lib/workspace/membership-authority.ts"
+      },
+      {
+        "from": "lib/workspace/membership-authority.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/membership-authority.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "runtime/temporal/outbox.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "runtime/temporal/outbox.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "runtime/temporal/outbox.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "runtime/temporal/outbox.ts",
+        "to": "runtime/temporal/version-contract.ts"
+      },
+      {
+        "from": "runtime/temporal/version-contract.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "runtime/temporal/version-contract.ts",
+        "to": "runtime/temporal/activities.ts"
+      },
+      {
+        "from": "runtime/temporal/activities.ts",
+        "to": "lib/workflows/service.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/connectors/native-quote.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/quotes/digest.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/digest.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote.ts",
+        "to": "lib/quotes/effect.ts"
+      },
+      {
+        "from": "lib/quotes/effect.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/effect.ts",
+        "to": "lib/quotes/plan.ts"
+      },
+      {
+        "from": "lib/quotes/effect.ts",
+        "to": "lib/quotes/store.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/quotes/plan.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/quotes/plan-v2.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/plan-v2.ts",
+        "to": "lib/quotes/plan.ts"
+      },
+      {
+        "from": "lib/quotes/plan-v2.ts",
+        "to": "lib/quotes/authority.ts"
+      },
+      {
+        "from": "lib/quotes/authority.ts",
+        "to": "lib/quotes/background.ts"
+      },
+      {
+        "from": "lib/quotes/background.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/quotes/background.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/quotes/background.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/background.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/quotes/background.ts",
+        "to": "lib/quotes/effect.ts"
+      },
+      {
+        "from": "lib/quotes/background.ts",
+        "to": "lib/quotes/native-email-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-email-transport.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/native-email-transport.ts",
+        "to": "lib/quotes/json-body-transport.ts"
+      },
+      {
+        "from": "lib/quotes/json-body-transport.ts",
+        "to": "lib/quotes/https-transport.ts"
+      },
+      {
+        "from": "lib/quotes/json-body-transport.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/native-email-transport.ts",
+        "to": "lib/connectors/content.ts"
+      },
+      {
+        "from": "lib/quotes/native-email-transport.ts",
+        "to": "lib/connectors/email-observation.ts"
+      },
+      {
+        "from": "lib/quotes/native-email-transport.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/native-email-transport.ts",
+        "to": "lib/quotes/effect.ts"
+      },
+      {
+        "from": "lib/quotes/native-email-transport.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/quotes/native-email-transport.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/quotes/native-email-transport.ts",
+        "to": "lib/quotes/native-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-transport.ts",
+        "to": "lib/quotes/https-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-transport.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/native-transport.ts",
+        "to": "lib/quotes/native-email-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-transport.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/quotes/native-transport.ts",
+        "to": "lib/quotes/effect.ts"
+      },
+      {
+        "from": "lib/quotes/native-transport.ts",
+        "to": "lib/quotes/plan.ts"
+      },
+      {
+        "from": "lib/quotes/background.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/quotes/background.ts",
+        "to": "lib/orchestration/quote-contract.ts"
+      },
+      {
+        "from": "lib/quotes/authority.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/quotes/authority.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/quotes/authority.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/quotes/authority.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/authority.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/quotes/authority.ts",
+        "to": "lib/quotes/membership.ts"
+      },
+      {
+        "from": "lib/quotes/authority.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/quotes/authority.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/quotes/authority.ts"
+      },
+      {
+        "from": "lib/quotes/store.ts",
+        "to": "lib/quotes/membership.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote.ts",
+        "to": "lib/quotes/effect.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote.ts",
+        "to": "lib/quotes/native-transport.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/connectors/native-quote-mail.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote-mail.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote-mail.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote-mail.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote-mail.ts",
+        "to": "lib/quotes/effect.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote-mail.ts",
+        "to": "lib/quotes/native-email-transport.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote-mail.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/native-quote-mail.ts",
+        "to": "lib/connectors/native-quote.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/quotes/native-email-transport.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/quotes/effect.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/quotes/verification-receipt.ts"
+      },
+      {
+        "from": "lib/quotes/verification-receipt.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/verification-receipt.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/quotes/workflow-view.ts"
+      },
+      {
+        "from": "lib/quotes/workflow-view.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/quotes/authority.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/quotes/store.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/connectors/content.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/connectors/request.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/enquiries/dispatch.ts"
+      },
+      {
+        "from": "lib/enquiries/dispatch.ts",
+        "to": "lib/quotes/background.ts"
+      },
+      {
+        "from": "lib/enquiries/dispatch.ts",
+        "to": "lib/workspace/membership-authority.ts"
+      },
+      {
+        "from": "lib/enquiries/dispatch.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/enquiries/dispatch.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/connectors/service.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/connectors/native-quote-mail.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/connectors/native-quote.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/connectors/quote-action.ts"
+      },
+      {
+        "from": "lib/connectors/quote-action.ts",
+        "to": "lib/quotes/transaction-context.ts"
+      },
+      {
+        "from": "lib/connectors/quote-action.ts",
+        "to": "lib/connectors/native-quote-mail.ts"
+      },
+      {
+        "from": "lib/connectors/quote-action.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/quote-action.ts",
+        "to": "lib/quotes/authority.ts"
+      },
+      {
+        "from": "lib/connectors/quote-action.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/connectors/quote-action.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/connectors/quote-action.ts",
+        "to": "lib/connectors/scopes.ts"
+      },
+      {
+        "from": "lib/connectors/quote-action.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/workspace/membership-authority.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/connectors/scopes.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/connectors/request.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/enquiries/dispatch.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/connectors/service.ts",
+        "to": "lib/workflows/guard.ts"
+      },
+      {
+        "from": "lib/workflows/guard.ts",
+        "to": "lib/workspace/membership-authority.ts"
+      },
+      {
+        "from": "lib/workflows/guard.ts",
+        "to": "lib/connectors/scopes.ts"
+      },
+      {
+        "from": "lib/workflows/guard.ts",
+        "to": "lib/connectors/request.ts"
+      },
+      {
+        "from": "lib/workflows/guard.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workflows/guard.ts",
+        "to": "lib/connectors/contracts.ts"
+      },
+      {
+        "from": "lib/workflows/service.ts",
+        "to": "lib/connectors/request.ts"
+      },
+      {
+        "from": "runtime/temporal/activities.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "runtime/temporal/activities.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/workflows/service.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/orchestration/admission.ts"
+      },
+      {
+        "from": "lib/orchestration/admission.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/orchestration/quote-contract.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/quotes/effect.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/quotes/native-email-transport.ts"
+      },
+      {
+        "from": "runtime/temporal/quote-outbox.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "runtime/temporal/quote-outbox.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/authority.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/store.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/plan.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/demo-control.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/enquiries/chat.ts"
+      },
+      {
+        "from": "lib/enquiries/chat.ts",
+        "to": "lib/connectors/content.ts"
+      },
+      {
+        "from": "lib/enquiries/chat.ts",
+        "to": "lib/enquiries/revision.ts"
+      },
+      {
+        "from": "lib/enquiries/revision.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/enquiries/revision.ts",
+        "to": "lib/connectors/content.ts"
+      },
+      {
+        "from": "lib/enquiries/revision.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/enquiries/revision.ts",
+        "to": "lib/workspace/membership-authority.ts"
+      },
+      {
+        "from": "lib/enquiries/revision.ts",
+        "to": "lib/enquiries/contracts.ts"
+      },
+      {
+        "from": "lib/enquiries/contracts.ts",
+        "to": "lib/connectors/content.ts"
+      },
+      {
+        "from": "lib/enquiries/contracts.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/enquiries/chat.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/enquiries/chat.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/enquiries/chat.ts",
+        "to": "lib/workspace/auth.ts"
+      },
+      {
+        "from": "lib/enquiries/chat.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/enquiries/chat.ts",
+        "to": "lib/enquiries/contracts.ts"
+      },
+      {
+        "from": "lib/enquiries/chat.ts",
+        "to": "lib/enquiries/service.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/connectors/content.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/enquiries/revision.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/workspace/membership-authority.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/orchestration/admission.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/connectors/scopes.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/connectors/request.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/workspace/agents.ts"
+      },
+      {
+        "from": "lib/workspace/agents.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/agents.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/workspace/agents.ts",
+        "to": "lib/durable/service.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/workflows/service.ts"
+      },
+      {
+        "from": "lib/enquiries/service.ts",
+        "to": "lib/enquiries/contracts.ts"
+      },
+      {
+        "from": "lib/enquiries/chat.ts",
+        "to": "lib/enquiries/chat-contract.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/enquiries/chat-contract.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/quotes/store.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/quotes/plan-v2.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/connectors/service.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/quotes/verification-receipt.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/orchestration/admission.ts"
+      },
+      {
+        "from": "lib/quotes/demo-control.ts",
+        "to": "lib/workflows/service.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/chat-planner.ts"
+      },
+      {
+        "from": "lib/quotes/chat-planner.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/chat-planner.ts",
+        "to": "lib/enquiries/chat.ts"
+      },
+      {
+        "from": "lib/quotes/chat-planner.ts",
+        "to": "lib/enquiries/chat-contract.ts"
+      },
+      {
+        "from": "lib/quotes/chat-planner.ts",
+        "to": "lib/quotes/demo-control.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/execution-generation.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/native-pin-provisioner.ts"
+      },
+      {
+        "from": "lib/quotes/native-pin-provisioner.ts",
+        "to": "lib/quotes/https-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-pin-provisioner.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/native-pin-provisioner.ts",
+        "to": "lib/quotes/digest.ts"
+      },
+      {
+        "from": "lib/quotes/native-pin-provisioner.ts",
+        "to": "lib/quotes/effect.ts"
+      },
+      {
+        "from": "lib/quotes/native-pin-provisioner.ts",
+        "to": "lib/quotes/native-email-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-pin-provisioner.ts",
+        "to": "lib/quotes/json-body-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-pin-provisioner.ts",
+        "to": "lib/workspace/tenant-bootstrap.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/connectors/native-quote.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/connectors/native-quote-mail.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/native-email-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/https-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/quotes/json-body-transport.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/connectors/twin.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/connectors/quote-action.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/connectors/service.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-factory.ts",
+        "to": "lib/workflows/service.ts"
+      },
+      {
+        "from": "lib/quotes/native-demo-bootstrap.ts",
+        "to": "lib/quotes/demo-registry.ts"
+      },
+      {
+        "from": "lib/quotes/demo-registry.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/quotes/demo-registry.ts",
+        "to": "lib/quotes/demo-control.ts"
+      },
+      {
+        "from": "lib/durable/workload-pool.ts",
+        "to": "lib/workspace/tenant-bootstrap.ts"
+      },
+      {
+        "from": "lib/durable/workload-pool.ts",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "lib/durable/workload-pool.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/durable/workload-pool.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/onboarding/route.ts",
+        "to": "lib/workspace/tenant-context.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/onboarding/route.ts",
+        "to": "lib/durable/http.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/onboarding/route.ts",
+        "to": "lib/workspace/cloud-inventory.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/onboarding/route.ts",
+        "to": "lib/workspace/cloud-owner-review.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/onboarding/route.ts",
+        "to": "lib/workspace/cloud-observation-store.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-store.ts",
+        "to": "lib/durable/database.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-store.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-store.ts",
+        "to": "lib/durable/tenant-pool.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-store.ts",
+        "to": "lib/workspace/identity.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-store.ts",
+        "to": "lib/workspace/auth.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-store.ts",
+        "to": "lib/workspace/cloud-activity.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-store.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/onboarding/route.ts",
+        "to": "lib/workspace/cloud-observation-operations.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/workspace/cloud-inventory.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/workspace/cloud-operations.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/workspace/cloud-observation-store.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/workspace/cloud-owner-review.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/workspace/cloud-activity.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/workspace/aws-guided-access.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/workspace/cloud-discovery.ts"
+      },
+      {
+        "from": "lib/workspace/cloud-observation-operations.ts",
+        "to": "lib/workspace/workflow-telemetry.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/approvals/route.ts",
+        "to": "lib/workspace/tenant-context.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/approvals/route.ts",
+        "to": "lib/durable/http.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/approvals/route.ts",
+        "to": "lib/durable/contracts.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/approvals/route.ts",
+        "to": "lib/workspace/cloud-observation-store.ts"
+      },
+      {
+        "from": "app/api/workspace/discovery/approvals/route.ts",
+        "to": "lib/workspace/external-approvals.ts"
+      },
+      {
+        "from": "scripts/discovery-installed-evidence.mjs",
+        "to": "scripts/current-proof-source-registry.mjs"
+      },
+      {
+        "from": "scripts/discovery-installed-evidence.mjs",
+        "to": "scripts/discovery-installed-source-contract.mjs"
+      },
+      {
+        "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+        "to": "lib/workspace/tenant-bootstrap.ts"
+      },
+      {
+        "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+        "to": "lib/workspace/cloud-business-metadata-migration.ts"
+      },
+      {
+        "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+        "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+      },
+      {
+        "from": "scripts/cloud-runtime-metadata-setup.ts",
+        "to": "lib/workspace/cloud-business-metadata-migration.ts"
+      },
+      {
+        "from": "scripts/cloud-runtime-metadata-setup.ts",
+        "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+      },
+      {
+        "from": "scripts/company-directory-upgrade-process.ts",
+        "to": "lib/workspace/tenant-bootstrap.ts"
+      },
+      {
+        "from": "scripts/company-directory-upgrade-process.ts",
+        "to": "lib/durable/pg-transport.ts"
+      },
+      {
+        "from": "scripts/company-directory-upgrade-process.ts",
+        "to": "lib/workspace/company-profile-migration.ts"
+      },
+      {
+        "from": "lib/workspace/company-profile-migration.ts",
+        "to": "lib/workspace/company-profile-contract.ts"
+      },
+      {
+        "from": "scripts/company-directory-setup.ts",
+        "to": "lib/workspace/company-profile-migration.ts"
+      }
+    ],
+    "directories": [],
+    "nonAstAssets": [
+      "lib/workspace/cloud-business-metadata-schema.sql",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
+      "scripts/company-directory-upgrade-process.ts",
+      "scripts/company-directory-setup.ts",
+      "lib/workspace/company-profile-schema.sql",
+      "scripts/current-proof-source-registry.mjs",
+      "package.json",
+      "pnpm-lock.yaml",
+      "tsconfig.json",
+      "next.config.mjs",
+      "lib/durable/tenant-boundary-prototype-schema.sql",
+      "lib/workspace/membership-authority-schema.sql",
+      "lib/connectors/quote-action-schema.sql",
+      "lib/quotes/background-schema.sql",
+      "lib/quotes/worker-admission-schema.sql"
+    ],
+    "sourceFingerprints": {
+      "app/api/workspace/discovery/activity/route.ts": "8b6369914ba33c062c6a80ad14eee0bd8c914124be6fce87be7a6e67e5419fa2",
+      "app/api/workspace/discovery/approvals/route.ts": "4a5021a0bcaa8cacdb90fd321dd24423e6e9d945823f211937fb7fbc54f3d8fc",
+      "app/api/workspace/discovery/onboarding/route.ts": "47b36a284f3f0c5276dd0e0a6204dcc748750f466c872e1d6aa05c3b054ccae8",
+      "app/api/workspace/discovery/owners/route.ts": "f36ac7a79ab2000e8382851e31c2242b76e5ddd0fda683794e828fa21a51a333",
+      "app/api/workspace/discovery/route.ts": "60ad17f7744937d12c65a62d5d88184ba0923476713c727290096bc45ddab1d3",
+      "app/api/workspace/session/route.ts": "5194c1a54bde45b893cb398075b4a625edca806d4b41efc53d824698842b55ce",
+      "app/control-plane/control-plane.css": "2cd5918b34f9675f1ef729369384f8cf9a0bfa61f593c407788342eb60fcd51f",
+      "app/control-plane/discovery/page.tsx": "181a8282afe6cc830f76b3f0beead9ebf298fd145e83bcbfd5d53f55fecb4a32",
+      "app/control-plane/layout.tsx": "f6ab0524c14eede0c5a5faa05f4492b91b2db815b1a9bd7c63281da8920fdb2a",
+      "app/sales.css": "688fb553b999966168eea82cdba0564e052bada3b9240c74c696210b5109bec6",
+      "components/brand/loop-mark.tsx": "a520ee6e522a488f2e081d217f219099f48e3eca4cf5c67104eacea7616bdf79",
+      "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
+      "components/control-plane/aws-connection-journey.tsx": "c5af1610ae7ce41f8c07eb211047118cfb2b55dd08c2a37d382b2b80d4328758",
+      "components/control-plane/aws-execution-browser.tsx": "d2b1d666e9d224e275d8363ae4cb4adbd2b0c7d7c2a1fb90c91c1f92bb792c29",
+      "components/control-plane/aws-workflow-history.tsx": "2a91fea4d28444f3aac99b0db2c6fb84bdcec69832c0c1ac7064a704fca6738f",
+      "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
+      "components/control-plane/company-workspace.tsx": "d240cf0376fb4f6127316f7992434c5ce3c44b3dbf2d05a001cf48c02d504d72",
+      "components/control-plane/control-center.css": "e9c6afdec43314336e3a80b0a38b8a98eb09ece7e61ad2572832dc07cd5bd06e",
+      "components/control-plane/discovery-workspace.css": "0dde68f3d4ecd91c70d6cd6d58e50e5838683d3154e0dd97ac0aec1743b94351",
+      "components/control-plane/discovery-workspace.tsx": "aaab1f98f599c47c1514dc38853c31e66f7b20a73e185a69232a9f5ab30abe64",
+      "components/control-plane/execution-business-context.tsx": "dfee971f0f5abdce3a204f74e946bf1e082f5bd14b076dac757027985f751c4c",
+      "components/control-plane/external-workflow-approvals.tsx": "07c737c2c865e0e19d208f1ecc9c3083fbf3c1f79b99aac0fad87c482fe49698",
+      "components/control-plane/project-discovery-workspace.tsx": "687f021a0b6ecaa5ae1aded40c30ed8875c81b6875c9fea1997014d4d5699854",
+      "components/control-plane/provider.tsx": "dd9c3ae5b8fcc20a01117f4b293282a42fd7d89d9d93a40f306381d9934d64da",
+      "components/control-plane/runtime-metadata.tsx": "e019c6334413a29a379664e8558e849688a9a7262b33205db8edbe2337952d69",
+      "components/control-plane/shell.tsx": "c7aaff23b0f1b99d7ad9dd442b30ced4347573630644446800dea0aa2950886f",
+      "components/control-plane/ui.tsx": "c923100ad0cb557532ad432d5e436abbab6a89e7b8ffb9f00652543c32e340e3",
+      "components/control-plane/workspace-gate.tsx": "a29c737a46790dc6d1b6bf13eb95fc3aac9ba8bf2910e2951b891641327b5466",
+      "components/marketing/chrome.tsx": "515e22fb0e36006fe345cf0c458c2f7bbcd0e8a419827c5041708d4bb7e0c613",
+      "components/marketing/product-overview.tsx": "2211c7d2eacba47c5ef3da9399813bb72e9c429cc43c77863448ab293c82efab",
+      "install-order.json": "3e6c0b898fd23454acfca056d1785449a934db73b02446b019086f9ed13c4621",
+      "instrumentation.ts": "de978ea9fdb19208b48df6b454989dfc9f064c87397eb07769230bad3813e7fc",
+      "lib/analytics.ts": "4e0970fca48cd652730ad5c1ebef97181e44e1f98849185479bb8ed1244b480c",
+      "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
+      "lib/connectors/content.ts": "891cb662e2ee4cd397b28e3433453ca5c60c8468ab0e016cb9fecf8e10597ba0",
+      "lib/connectors/contracts.ts": "45a2e5a89a381ba5db3fd344fb4ce1ca929b6d1063ea14de113fa86edc22b1dc",
+      "lib/connectors/email-observation.ts": "52282105eef31416e42df1b7e7a41f8bb23090038fef5e8865de32635d7a6565",
+      "lib/connectors/hosted.ts": "dbb52a50eeb94c652df397bb8dc3b0f89ab801ee8e50d32df6399213948fbe05",
+      "lib/connectors/native-quote-mail.ts": "b9e986571708cff4bf7dfc554fbdc3a7d8b28ea66c37689e8db6a32246234270",
+      "lib/connectors/native-quote.ts": "8e6dfb809052ff4fcc366abe358cdf0c8027784d0d8c4a8e5a61514b3d074cdd",
+      "lib/connectors/quote-action-schema.sql": "22b2bb3f86fe17e66631af6adcb62fd67824a80ae960fa0510d6c479f2199ff6",
+      "lib/connectors/quote-action.ts": "bccb1fd0ba4eb1143d247eecaca5b116f2c222e4b3a6b28623ba866e55e679fb",
+      "lib/connectors/record-scope.ts": "d84de98f4e00e4a0d50ae3b8ecf6f30d3286c62d3d64546145d8d1a2b8dd04f7",
+      "lib/connectors/request.ts": "92b64f4b384d11d3434126c60709f56a9f8490d1117d96ff42925b4f5d0210aa",
+      "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
+      "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
+      "lib/connectors/scopes.ts": "4915dd59986762a5efdec7e94d6f29bd918e647f97e04c78c30c25428f1f1d2e",
+      "lib/connectors/service.ts": "5ad9372e7681290c1fc34faa603ab2f6bc8574415b1ac847230b886c6e485fc9",
+      "lib/connectors/twin.ts": "493d996a44c0aaa8cecab33aa5d47bc62c259f9d111f4b285aa37d127e044431",
+      "lib/control-plane/model.ts": "7314eb1f3aa9d059e85370167b5d494f6df2093a61fba707b03079b1c68f57e4",
+      "lib/durable/contracts.ts": "6ea08e75c6304e68d951b93e98e1fedc1af53988428394dfa2a00eee7678f7b6",
+      "lib/durable/database.ts": "1411acd8c739773311ae4393bdec3099334927ce360ca396eff5744f40022683",
+      "lib/durable/http.ts": "b1c0813e3b094e5b40c9e51adf99d1074851e00b2287af61cb7ec95a7f38bcce",
+      "lib/durable/pg-transport.ts": "df8ee427bc35224540820572fd1ef332b12ca53cc280d72cae2421b1678b92eb",
+      "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
+      "lib/durable/recovery-schema.sql": "75af0b8e95425de3d0b88f927e8612ed50ade36db85969da322c98c17eefe395",
+      "lib/durable/recovery.ts": "4d5bd461564e6273e7a512826d30692e660a2621049d6562ce08bebff0ce5240",
+      "lib/durable/schema.sql": "1443e0d0ed90ab054d30d8c6ae1359a18e7fd104408ba305f2d6abe96f304d05",
+      "lib/durable/service.ts": "514c156ce2861f2df0043c861319872c90fcb95aa126d309ff11df60b470f17f",
+      "lib/durable/tenant-boundary-prototype-schema.sql": "cebcd1d5cecf50e195ce30baff9367ef6587560ec4b0de681d3440e8d9c82c9c",
+      "lib/durable/tenant-pool.ts": "f5f4fedca20ceea7323c9c93e74b55f5a41d9ca44222d609b14f4487e009595b",
+      "lib/durable/workload-pool.ts": "1042b30e45a9c5ce57cbd7bf45e1294d87cecbe7bbebf1a632f7e225796dca09",
+      "lib/engine/evaluate.ts": "09c3bba6a5c4bb82bb1d91877a83f435e45592e425eb642749fd11fe77b3817d",
+      "lib/engine/hash.ts": "76e26d1ab2ead6ad8f977cfc878aef1acfba56809c9ed1117f9f088fc796dd2d",
+      "lib/engine/registry.ts": "771e74659da98513c2ea5e1b9f2fb85851ab7864343f4fbbcaaace24c3d4a9b4",
+      "lib/engine/types.ts": "19ad00728e362209b0af8aede5cc66e9a2dea325e9be224d0a24ee82ad33efc3",
+      "lib/enquiries/chat-contract.ts": "adcfd4308e6a9325930203b6a23f6e6179dfe25acaccf897ba1a456d652b56c2",
+      "lib/enquiries/chat.ts": "d0dda47792794d019b5c36429a173ece75c36572212cf6e8feb822056d407581",
+      "lib/enquiries/contracts.ts": "f5158c75f45ef6dfef14043b0bfa809210f205441d9028aa37ccaca80b119b80",
+      "lib/enquiries/dispatch.ts": "4f25ebda0e3f4e7a46d9c534166fc04b35df11ff0971ad0241e3db4efd7005b3",
+      "lib/enquiries/managed-schema.sql": "88818301d4bff0dbfc6d61740f12abe0b0c080045dde7785766b870ac74c92be",
+      "lib/enquiries/record-routing-schema.sql": "05c2c214c09e14b9567402206a1efe6b4fb1f064d07203386f7a7e23947e8267",
+      "lib/enquiries/reset-intent-schema.sql": "907e8dc8168d4f538a576c4a79bceab4f9ed12bc5fbd9a742565a63343828297",
+      "lib/enquiries/revision-schema.sql": "2bfa317431823b35951c4b07bbfae9df4e710491bac7c78e6be23507003c776d",
+      "lib/enquiries/revision.ts": "2f43b6e31be549dc0f80e9580a8173f21f6c7f5830c150ea555f1f2466b69635",
+      "lib/enquiries/schema.sql": "8e9c620147658f3bd59cd2948d0a46f872eb74066d67eba9f844bc5410fdd743",
+      "lib/enquiries/service.ts": "f20e3c5b7f103e3cf165160c47e7875e748c48868ef66fe73366327b6322a759",
+      "lib/enquiries/temporal-schema.sql": "72705c41e2674baadeda22b7e324e9e232947e1a40a7d5717d0cf1280b3736da",
+      "lib/enquiries/worker-admission-schema.sql": "8fa0d638e759fec11b0f529e56383a0fd4b7e8cecf13f432b096128e6e70fa73",
+      "lib/orchestration/admission.ts": "83716b11fac148f92ed024edf9a1c492041ec3b8fb11fd3a6e3a1cff6a524e6a",
+      "lib/orchestration/quote-contract.ts": "99f0dc0263189112f24694d87937ec0a24281a6f62839fe6438debb334ac1372",
+      "lib/quotes/authority-schema.sql": "9bca0a7882861f068c12c982038d41c392b327993e466d1ea76dcaf06fe8dfd0",
+      "lib/quotes/authority.ts": "f0da146d7d5504c411f84e11ca2d63882a4a3995c49f0522b2d8574d8f442d43",
+      "lib/quotes/background-generation.ts": "fb38e7d7245ffd14431b9970c9cc75febb15912fd1feef22a8240df46d54f60f",
+      "lib/quotes/background-schema.sql": "6a21ab5f7c0b74e57fc3bf755041dd5cf98cb4329a11b833d9f543969fb115f0",
+      "lib/quotes/background.ts": "eef879a0e7547a49053863a726b8d0422abc133da0672d7157a95342319d08f9",
+      "lib/quotes/chat-planner.ts": "2047563bc6c3533ae2ffcf7c3f73b98e6789d96e5e6700e7d0fd75d74120e824",
+      "lib/quotes/demo-control.ts": "5d6ebf8c348457ed0cab3f10d1c251909b60c8de7b2c35b619f008054ea4167b",
+      "lib/quotes/demo-registry.ts": "4b51970c008adb84ff82dffddd46f2a443dd12a5001500f416c27c061eb47592",
+      "lib/quotes/digest.ts": "15c655b0eec32d9af939f28710ce8023044150d902886b185b88023f26a19c84",
+      "lib/quotes/effect.ts": "a9181e7ee47942b32335f4068a6d76cbee8e9fd8e76ca69e6a701a7ae7364990",
+      "lib/quotes/execution-generation.ts": "8e217f9769d6cc804e414e76f22d331bf715e9e57e18d722816bbbd70ff09ec7",
+      "lib/quotes/https-transport.ts": "e3828bf57c7fd9e7aa08e6ed8c581850fbc3117cc6486b50bd05f01d94b7395d",
+      "lib/quotes/json-body-transport.ts": "e6732a49a20e79bd635e75b5d655dba9eb3e3433f486c9dff5aa0a0b3b2c3b7b",
+      "lib/quotes/membership-schema.sql": "d2d9c813566d661020223b03a317eefb1fde439f7f164de61e503c309211a1ba",
+      "lib/quotes/membership.ts": "879db345daa984e6083326d3ff6edca5171601cb8f72787555a2611170c92ffe",
+      "lib/quotes/native-demo-bootstrap.ts": "976493cfbcb84da548b93ebeb08e00f226b2d0d81f5310371a6ae407ba860822",
+      "lib/quotes/native-demo-factory.ts": "b1c7ce77bb7953b07d39ffd546ba0f1821bb647059e11c052aa552af28a2ca8e",
+      "lib/quotes/native-email-transport.ts": "883094d1277108c47fe5b2c728ef4916bb5a88f8b07444bf44b702ce07346b66",
+      "lib/quotes/native-pin-provisioner.ts": "2db7ddc3c38175e201d4948237bad850b5d65b2fa3ddd86193e622c063e32100",
+      "lib/quotes/native-transport.ts": "9a9f10e3141fdecd9d02691fcb86c39e8fbbb852e558323e29a04ae11ff9373f",
+      "lib/quotes/plan-v2-schema.sql": "2d9bb08328a8a05c97f0eae0aeeb8232e4d5087d599f92a45a7ece75040318c3",
+      "lib/quotes/plan-v2.ts": "e20bebf998ea3dad9fe734321be34c4c1697f621704aad8fa5c2b9a09be7ddbc",
+      "lib/quotes/plan.ts": "3124905f961bcd4c0a331da025d675cb5a014b24b59f06457976243fc4b18938",
+      "lib/quotes/requester-delegation.ts": "60b4c28c9f95d2655b617a71fd71b0b57e70a05e52172b61772194a3a251fc4b",
+      "lib/quotes/schema.sql": "e5fe056acb1cfae170ab1b4da9c90a94b316b99fc27402a0e9f66a8b348ff7ac",
+      "lib/quotes/store.ts": "050bd64acccc5fed9748ee12a156b1c5c32968ca366a91c83f3b963e136b9793",
+      "lib/quotes/transaction-context.ts": "351324ea6bcd6b11f886d4d9ddebcd5ac2ada56de8a7abfc8e390b69cecf0fc2",
+      "lib/quotes/verification-receipt.ts": "cabdb7b5a337b0a38c344776258133afa9ab396383def68783d1b1b31c287d6d",
+      "lib/quotes/worker-admission-schema.sql": "99ed5ca0fba0a87f1c19ee178bd6bb2d9fd8f82fb38b272e98bd2ed45cf73a73",
+      "lib/quotes/workflow-view.ts": "7dd8d5a9c056c48d82652e15b477ed1c613245e97bf36845072f711fd1c0aa35",
+      "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
+      "lib/site.ts": "90469a9a233ed0e1ac398ff3b28cf31c5449ef4bc9e285fcd3dfbde1514f36f5",
+      "lib/workflows/guard.ts": "b68617f0147b052e5ed113fb42527103a41b7d0cd7dc7895a17411fb2755be03",
+      "lib/workflows/schema.sql": "fad98c6bed6e4cdc0168b5248ca5cbf7411c35ec49cd3bcbd24b27eb11bf3e4d",
+      "lib/workflows/service.ts": "fc27db88a101a5874b6560e3e4088c6f1dce73b9b8b0a609844eb9dc3c1491e6",
+      "lib/workspace/agents.ts": "a7dc16a213f2699679593dc11a2e8aead7533d4832df6180372a9133ea810fe2",
+      "lib/workspace/auth.ts": "c76a1d2373604da598bb9195e16a001a4e09fccd8e5d7adc8f7b8c04a0d00604",
+      "lib/workspace/aws-authorization-contract.ts": "473a6c00918aab5d5d86c1c37bb180f0d74bdcb0401c37588dd927f75b6cfd82",
+      "lib/workspace/aws-guided-access.ts": "faf94eaa55607db84c4500ed34f3179186dd545975263ecd2134440404fce5cb",
+      "lib/workspace/aws-journey.ts": "824c105cb97238b05dadf4e91331fb2cd5db8e468e31b909049905daf4e7a940",
+      "lib/workspace/business-display.ts": "279856fe16fa569d9a6ac6bba8ff8ee1a8ebf618c09559bcb762edef2c201a0c",
+      "lib/workspace/cloud-activity.ts": "7df8d7ef9e73fd374a57a40b9ce203e8dc077728b599286a6f01e42b3d4fc50d",
+      "lib/workspace/cloud-aws-cli.ts": "21307a9373acb8787bb94f802aaa227bb8f856e3648574ae06eb6142cc8e5a5c",
+      "lib/workspace/cloud-azure-binding.ts": "9147b0bc4dac0570e0a3b4d076788b1ab35cd05705fd2a90eceeb56127ef19b5",
+      "lib/workspace/cloud-azure-cli.ts": "9691d88982dfc4a0471138789a21fe97f09c9e5d0bd6dd4fafe15763ae88b366",
+      "lib/workspace/cloud-azure-http.ts": "4aee186eb7170a459c0d8eb1db07b5e7fcd85059aa5ff61f7338095a450c8294",
+      "lib/workspace/cloud-binding.ts": "365a5c9d1c6fb720404dc8ba1500c818663ec59007231065d1b0db5a70b2aaea",
+      "lib/workspace/cloud-business-metadata-migration.ts": "0eb8976403f677558f4b1610ae89f264a674046eecb1085a0c2ddb0c7d14e671",
+      "lib/workspace/cloud-business-metadata-schema.sql": "163c331efb888d81d183710ea7cbbdd316de9a752f4264c5bc35b29a90ce8eb5",
+      "lib/workspace/cloud-discovery.ts": "8f8d4619c8ebb0a54823e4cb3402f5c5bbd5bb376a7246eb7b1209ee9836304c",
+      "lib/workspace/cloud-google-binding.ts": "0dab7008942f8bec744bbfe90a32dff28173e182f5dfc9e1695d26471b81e33a",
+      "lib/workspace/cloud-google-http.ts": "ddee4cb1d4dd4730f4ca6a07bc945e3383574013b521866b7fa7a9ca7523dc63",
+      "lib/workspace/cloud-inventory-schema.sql": "aceb85a2cf7bf8f4c8d29a110904233267847ce64d7f26eca9f5ce210730dd49",
+      "lib/workspace/cloud-inventory.ts": "41decf5cfd37741c94d66f02cbdea8c0f84b4f732b8b1011c9aa261afa0c0d5a",
+      "lib/workspace/cloud-invocation-observation.ts": "3b1eab4b85d5ec1c8a0733048fdf1b574cb789909b4ebb2fa1a8fadd3b373d20",
+      "lib/workspace/cloud-invocation-reader.ts": "52d4217bea73142317fd185f557d1e8807e6ee96807287df27b6770d43067f49",
+      "lib/workspace/cloud-observation-operations.ts": "670cc965fbefb38e829ea9e1db3e20ce2c7dea6f2f46a7c22e4c66ab625ec70e",
+      "lib/workspace/cloud-observation-schema.sql": "51827e2721bf6c5ef77997fb5f57a8650b9b999b976df779d9b1228fe37c7e93",
+      "lib/workspace/cloud-observation-store.ts": "1d0e3e3ccdc8e91215478fc3946d8dac2d1e2b3d8a2124ccd35de2061476afdd",
+      "lib/workspace/cloud-operations.ts": "82b609c8ee1eb60d00462db4302c3344ad812924e2ab29376646644f46807dcb",
+      "lib/workspace/cloud-owner-review-schema.sql": "336f33a43ba22b5b6e9bb5f93e75bd5101267328184821fb76c6df93371c05c6",
+      "lib/workspace/cloud-owner-review.ts": "3849c978ec47f30d110d6ba0c8b0eec3121e39c98bc086a874a56006613c8697",
+      "lib/workspace/cloud-private-binding.ts": "4a616cb479b10ec112f70edbb0c7ad147714c3df64e011f18b325ed4b8c7264d",
+      "lib/workspace/cloud-project-binding.ts": "d0fde98b1fb5f05cb4758a8d4ed4bebe98d4d9e68f0d38db06468aa553539445",
+      "lib/workspace/cloud-project-discovery.ts": "50fe00553c04b2fa8867a67aefec4ca644f1063bedbefdb4c1951b70202bed3c",
+      "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
+      "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
+      "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
+      "lib/workspace/cloud-runtime-metadata-migration.ts": "da64a87d17307c0cb4f7ba64574c3f4bb9194f7ae38533389cc42f3f646b7a78",
+      "lib/workspace/cloud-runtime-metadata-schema.sql": "cae72ecb2fe099e49fa9fb0d90e4a2f06ea23b0e46da35caa5e6bbdfc2392bd3",
+      "lib/workspace/cloud-runtime-metadata.ts": "cad78b7a0499c1e2826d2824182782d141864a185736c408df8d05aed67765da",
+      "lib/workspace/company-profile-contract.ts": "afd1c2b96249f670052ba169b07a7e40c3aa8e0e26bc25ee931eb7a9a260286b",
+      "lib/workspace/company-profile-migration.ts": "e5aa7ee47d9fc738530dc2aa92be4133a0307daa3ffebb1282c63aa5131c03de",
+      "lib/workspace/company-profile-schema.sql": "64a8c04785a8fe968b9727895bf7b243f588f20cec8375038ef6cf30166809f8",
+      "lib/workspace/deployment-capabilities.ts": "64f1661622013b77e764394aeac35390e9d8809fc19cc1321c3e65e90c4f3bba",
+      "lib/workspace/execution-reference.ts": "914d422f206610cc34622e7ac047d8339b8e89f62dfff377c5f78d1847a83a46",
+      "lib/workspace/external-approvals.ts": "8e344de0fd9f1763631fce00502a06b59665f86fc3549467134bc2ec8d0a8d93",
+      "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
+      "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
+      "lib/workspace/membership-authority.ts": "baaca16e454cedf3c5eb3f98a5bd0a4dd11bce0931660a5189c1b6dcb4abd682",
+      "lib/workspace/navigation.ts": "1cf72ddc34e3b4d530fc41d521adb409be1eabafbf70689e6222c89c92fbab26",
+      "lib/workspace/owned-private-file.ts": "c568195f2dff56091f4713e58cc8dd3f151773541878886add698b8a8c8075ad",
+      "lib/workspace/quote-workload-installation.ts": "d7b76e3d524bc285382b28f91862681297ffb07765eefad1a067f000f1428a58",
+      "lib/workspace/recovery-capture.ts": "a8a03c53658b485af49636b2d54e6cb9c69dc6369b331bfab8ae4720de2be08d",
+      "lib/workspace/response.ts": "5854dd6e0d588cd62ad1e643746d2f2a96993ce131146ee90f929b34bad35a18",
+      "lib/workspace/schema.sql": "5efa86906dd872f6eb059cb4be7c73a1790b5fd4b5910dc480f7e1b4e231725e",
+      "lib/workspace/tenant-bootstrap.ts": "b2b4e85ee7d5a4409bcc04a3dc6a0b46c839ac3acd4f9d5f26e686c055fb2ee3",
+      "lib/workspace/tenant-context.ts": "09e7b6c172663fdf59c74289715df64b6099c07ea275a7429ee6c7c66671f7a2",
+      "lib/workspace/tenant-installer.ts": "53c0281769d918cde4b519471b17e158300ee984d63c1fa7d52872a2a98821ce",
+      "lib/workspace/tenant-read-inventory.ts": "191962730ba0a45c9959ae1d9505c64fbf78dc2cf63f8139ae8b1d2b4b237261",
+      "lib/workspace/web-recovery-deployment.ts": "40a4f402e95fd524414ea10ecd77b916ecd61193cffeedc7f86f9a56dd6c183b",
+      "lib/workspace/workflow-telemetry-view.ts": "5288947fdfcfef5d70342c53825b107824e6e9087b50ef9e4ce66ba0faf459c4",
+      "lib/workspace/workflow-telemetry.ts": "34b8e8970f77391330341c0b89413445179f53e6015e409c52bfc23edffd8495",
+      "next.config.mjs": "5746e6fc704bcdf5d09ffacaeb00a0285b2456176516cb5af52faeabf6cd2cb4",
+      "package.json": "87e746156e7152e5e5426a8472f8cc7cd77d9fdd7304bda25752a5b75b0c527f",
+      "pnpm-lock.yaml": "3f9fe9d8a46f3f5dd96b64f112da2494e4ef6e415424161a42a464b73864f280",
+      "runtime/temporal/activities.ts": "9be7fd957c81efbfdc6d365ad583c89fe7cdfe9ed931627ec8690aa65e5d8ab0",
+      "runtime/temporal/operations.ts": "d0ee8ece790da73b7e4eebb8cad351631df7853fabc29a2ad799656312dfadc6",
+      "runtime/temporal/outbox.ts": "1f8ec2d77c6c4b63378fdc1a824ac5ebf8c98417c8dd5f9a5f89ad0f599ccc7a",
+      "runtime/temporal/quote-outbox.ts": "43158c06f9fbc187db0d2413c4ec67ec9501d86a329bee87346f5b31888c5a84",
+      "runtime/temporal/staging-preflight.ts": "6ac482741168c9376e78d36e3dcd137d33bbf6a0fda794d1b8bd3c13a9b650cb",
+      "runtime/temporal/version-contract.ts": "318bacf1f4a4549275e2f399256fc27436d48ed8c8232e3bd53fc9160d3fd9b8",
+      "scripts/cloud-runtime-metadata-setup.ts": "7140f89504aca8932e5ec048facad2e382d8b31eb1f7041b3c53d02280892e9c",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts": "5ee28a2e57045829938ee7e4c5b79a7040fe0ec90e8b1e63e5ca7e9043a0067b",
+      "scripts/company-directory-setup.ts": "ab713d9ea2a32c2c891a9314830724c17273204e758e6203ddad0442b2e29298",
+      "scripts/company-directory-upgrade-process.ts": "fe57760f2a147c1d4483e40b47128ff3d3f6bc4bafbc0855bb48c3d8e979a603",
+      "scripts/current-proof-source-registry.mjs": "dd52215fc26cf7250a9cbf214276e9604f1795ce1ec59faf4e2c76469ace8b7d",
+      "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
+      "scripts/discovery-browser-proof.mjs": "acb5818ca827703ea9b0edc931dfc3c57b23e7511a36fd4391f7ec344d171f6a",
+      "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
+      "scripts/discovery-installed-source-contract.mjs": "9ddb87a895e6c15c31cd188f4217e8efd5ff46234fe2d17e3bd87b7895b86d39",
+      "scripts/staging-browser-tls.mjs": "9b6e13b2dad7999e598989b3a5a53c2a30a6421b917c2abb68e9eb495cc35bb8",
+      "tsconfig.json": "feec4b19d9acba4e15b6c95ad652ed3f7d9c09cd62afadc7c2d8e9416699073b"
+    }
+  },
+  "constructionRegistrySha256": "203637bd84b6ac20e90c846ae1ab47f2cccd9fa34327298da0fa6516f638d267",
+  "installation": {
+    "contract": "installed-discovery-boundary-1",
+    "schema": "discovery_ui_9a03b245747ca67b",
+    "schemaOid": "16385",
+    "epochs": [
+      {
+        "org": "discovery-9a03b245747ca67b",
+        "epoch": "f629fafe-9ab3-40e8-8421-7a32dc0c0316"
+      },
+      {
+        "org": "other-9a03b245747ca67b",
+        "epoch": "f629fafe-9ab3-40e8-8421-7a32dc0c0316"
+      }
+    ],
+    "roles": [
+      {
+        "name": "llti_d9a03b245747ca67b_broker",
+        "oid": "17443"
+      },
+      {
+        "name": "llti_d9a03b245747ca67b_definer",
+        "oid": "17444"
+      },
+      {
+        "name": "llti_d9a03b245747ca67b_web_0",
+        "oid": "17445"
+      },
+      {
+        "name": "llti_d9a03b245747ca67b_worker_0",
+        "oid": "17446"
+      },
+      {
+        "name": "llti_d9a03b245747ca67b_scheduler_0",
+        "oid": "17447"
+      },
+      {
+        "name": "llti_d9a03b245747ca67b_web_1",
+        "oid": "17448"
+      },
+      {
+        "name": "llti_d9a03b245747ca67b_worker_1",
+        "oid": "17449"
+      },
+      {
+        "name": "llti_d9a03b245747ca67b_scheduler_1",
+        "oid": "17450"
+      }
+    ],
+    "normalProductionInstrumentation": true,
+    "currentEpochs": [
+      {
+        "org": "discovery-9a03b245747ca67b",
+        "epoch": "f629fafe-9ab3-40e8-8421-7a32dc0c0316"
+      },
+      {
+        "org": "other-9a03b245747ca67b",
+        "epoch": "f629fafe-9ab3-40e8-8421-7a32dc0c0316"
+      }
+    ],
+    "webRoles": [
+      {
+        "name": "llti_d9a03b245747ca67b_web_0",
+        "oid": "17445",
+        "super": false,
+        "bypass": false,
+        "inherit": false
+      },
+      {
+        "name": "llti_d9a03b245747ca67b_web_1",
+        "oid": "17448",
+        "super": false,
+        "bypass": false,
+        "inherit": false
+      }
+    ],
+    "webTLS": [
+      {
+        "name": "llti_d9a03b245747ca67b_web_0",
+        "connections": 2,
+        "verified_tls": true
+      },
+      {
+        "name": "llti_d9a03b245747ca67b_web_1",
+        "connections": 1,
+        "verified_tls": true
+      }
+    ]
+  },
+  "completedUtc": "2026-10-17T15:45:02.509Z",
+  "proof": "disposable-loopback-cloud-inventory-ui",
+  "browser": "153.0.8010.12",
+  "sourceFingerprints": {
+    "app/api/workspace/discovery/activity/route.ts": "8b6369914ba33c062c6a80ad14eee0bd8c914124be6fce87be7a6e67e5419fa2",
+    "app/api/workspace/discovery/approvals/route.ts": "4a5021a0bcaa8cacdb90fd321dd24423e6e9d945823f211937fb7fbc54f3d8fc",
+    "app/api/workspace/discovery/onboarding/route.ts": "47b36a284f3f0c5276dd0e0a6204dcc748750f466c872e1d6aa05c3b054ccae8",
+    "app/api/workspace/discovery/owners/route.ts": "f36ac7a79ab2000e8382851e31c2242b76e5ddd0fda683794e828fa21a51a333",
+    "app/api/workspace/discovery/route.ts": "60ad17f7744937d12c65a62d5d88184ba0923476713c727290096bc45ddab1d3",
+    "app/api/workspace/session/route.ts": "5194c1a54bde45b893cb398075b4a625edca806d4b41efc53d824698842b55ce",
+    "app/control-plane/control-plane.css": "2cd5918b34f9675f1ef729369384f8cf9a0bfa61f593c407788342eb60fcd51f",
+    "app/control-plane/discovery/page.tsx": "181a8282afe6cc830f76b3f0beead9ebf298fd145e83bcbfd5d53f55fecb4a32",
+    "app/control-plane/layout.tsx": "f6ab0524c14eede0c5a5faa05f4492b91b2db815b1a9bd7c63281da8920fdb2a",
+    "app/sales.css": "688fb553b999966168eea82cdba0564e052bada3b9240c74c696210b5109bec6",
+    "components/brand/loop-mark.tsx": "a520ee6e522a488f2e081d217f219099f48e3eca4cf5c67104eacea7616bdf79",
+    "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
+    "components/control-plane/aws-connection-journey.tsx": "c5af1610ae7ce41f8c07eb211047118cfb2b55dd08c2a37d382b2b80d4328758",
+    "components/control-plane/aws-execution-browser.tsx": "d2b1d666e9d224e275d8363ae4cb4adbd2b0c7d7c2a1fb90c91c1f92bb792c29",
+    "components/control-plane/aws-workflow-history.tsx": "2a91fea4d28444f3aac99b0db2c6fb84bdcec69832c0c1ac7064a704fca6738f",
+    "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
+    "components/control-plane/company-workspace.tsx": "d240cf0376fb4f6127316f7992434c5ce3c44b3dbf2d05a001cf48c02d504d72",
+    "components/control-plane/control-center.css": "e9c6afdec43314336e3a80b0a38b8a98eb09ece7e61ad2572832dc07cd5bd06e",
+    "components/control-plane/discovery-workspace.css": "0dde68f3d4ecd91c70d6cd6d58e50e5838683d3154e0dd97ac0aec1743b94351",
+    "components/control-plane/discovery-workspace.tsx": "aaab1f98f599c47c1514dc38853c31e66f7b20a73e185a69232a9f5ab30abe64",
+    "components/control-plane/execution-business-context.tsx": "dfee971f0f5abdce3a204f74e946bf1e082f5bd14b076dac757027985f751c4c",
+    "components/control-plane/external-workflow-approvals.tsx": "07c737c2c865e0e19d208f1ecc9c3083fbf3c1f79b99aac0fad87c482fe49698",
+    "components/control-plane/project-discovery-workspace.tsx": "687f021a0b6ecaa5ae1aded40c30ed8875c81b6875c9fea1997014d4d5699854",
+    "components/control-plane/provider.tsx": "dd9c3ae5b8fcc20a01117f4b293282a42fd7d89d9d93a40f306381d9934d64da",
+    "components/control-plane/runtime-metadata.tsx": "e019c6334413a29a379664e8558e849688a9a7262b33205db8edbe2337952d69",
+    "components/control-plane/shell.tsx": "c7aaff23b0f1b99d7ad9dd442b30ced4347573630644446800dea0aa2950886f",
+    "components/control-plane/ui.tsx": "c923100ad0cb557532ad432d5e436abbab6a89e7b8ffb9f00652543c32e340e3",
+    "components/control-plane/workspace-gate.tsx": "a29c737a46790dc6d1b6bf13eb95fc3aac9ba8bf2910e2951b891641327b5466",
+    "components/marketing/chrome.tsx": "515e22fb0e36006fe345cf0c458c2f7bbcd0e8a419827c5041708d4bb7e0c613",
+    "components/marketing/product-overview.tsx": "2211c7d2eacba47c5ef3da9399813bb72e9c429cc43c77863448ab293c82efab",
+    "install-order.json": "3e6c0b898fd23454acfca056d1785449a934db73b02446b019086f9ed13c4621",
+    "instrumentation.ts": "de978ea9fdb19208b48df6b454989dfc9f064c87397eb07769230bad3813e7fc",
+    "lib/analytics.ts": "4e0970fca48cd652730ad5c1ebef97181e44e1f98849185479bb8ed1244b480c",
+    "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
+    "lib/connectors/content.ts": "891cb662e2ee4cd397b28e3433453ca5c60c8468ab0e016cb9fecf8e10597ba0",
+    "lib/connectors/contracts.ts": "45a2e5a89a381ba5db3fd344fb4ce1ca929b6d1063ea14de113fa86edc22b1dc",
+    "lib/connectors/email-observation.ts": "52282105eef31416e42df1b7e7a41f8bb23090038fef5e8865de32635d7a6565",
+    "lib/connectors/hosted.ts": "dbb52a50eeb94c652df397bb8dc3b0f89ab801ee8e50d32df6399213948fbe05",
+    "lib/connectors/native-quote-mail.ts": "b9e986571708cff4bf7dfc554fbdc3a7d8b28ea66c37689e8db6a32246234270",
+    "lib/connectors/native-quote.ts": "8e6dfb809052ff4fcc366abe358cdf0c8027784d0d8c4a8e5a61514b3d074cdd",
+    "lib/connectors/quote-action-schema.sql": "22b2bb3f86fe17e66631af6adcb62fd67824a80ae960fa0510d6c479f2199ff6",
+    "lib/connectors/quote-action.ts": "bccb1fd0ba4eb1143d247eecaca5b116f2c222e4b3a6b28623ba866e55e679fb",
+    "lib/connectors/record-scope.ts": "d84de98f4e00e4a0d50ae3b8ecf6f30d3286c62d3d64546145d8d1a2b8dd04f7",
+    "lib/connectors/request.ts": "92b64f4b384d11d3434126c60709f56a9f8490d1117d96ff42925b4f5d0210aa",
+    "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
+    "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
+    "lib/connectors/scopes.ts": "4915dd59986762a5efdec7e94d6f29bd918e647f97e04c78c30c25428f1f1d2e",
+    "lib/connectors/service.ts": "5ad9372e7681290c1fc34faa603ab2f6bc8574415b1ac847230b886c6e485fc9",
+    "lib/connectors/twin.ts": "493d996a44c0aaa8cecab33aa5d47bc62c259f9d111f4b285aa37d127e044431",
+    "lib/control-plane/model.ts": "7314eb1f3aa9d059e85370167b5d494f6df2093a61fba707b03079b1c68f57e4",
+    "lib/durable/contracts.ts": "6ea08e75c6304e68d951b93e98e1fedc1af53988428394dfa2a00eee7678f7b6",
+    "lib/durable/database.ts": "1411acd8c739773311ae4393bdec3099334927ce360ca396eff5744f40022683",
+    "lib/durable/http.ts": "b1c0813e3b094e5b40c9e51adf99d1074851e00b2287af61cb7ec95a7f38bcce",
+    "lib/durable/pg-transport.ts": "df8ee427bc35224540820572fd1ef332b12ca53cc280d72cae2421b1678b92eb",
+    "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
+    "lib/durable/recovery-schema.sql": "75af0b8e95425de3d0b88f927e8612ed50ade36db85969da322c98c17eefe395",
+    "lib/durable/recovery.ts": "4d5bd461564e6273e7a512826d30692e660a2621049d6562ce08bebff0ce5240",
+    "lib/durable/schema.sql": "1443e0d0ed90ab054d30d8c6ae1359a18e7fd104408ba305f2d6abe96f304d05",
+    "lib/durable/service.ts": "514c156ce2861f2df0043c861319872c90fcb95aa126d309ff11df60b470f17f",
+    "lib/durable/tenant-boundary-prototype-schema.sql": "cebcd1d5cecf50e195ce30baff9367ef6587560ec4b0de681d3440e8d9c82c9c",
+    "lib/durable/tenant-pool.ts": "f5f4fedca20ceea7323c9c93e74b55f5a41d9ca44222d609b14f4487e009595b",
+    "lib/durable/workload-pool.ts": "1042b30e45a9c5ce57cbd7bf45e1294d87cecbe7bbebf1a632f7e225796dca09",
+    "lib/engine/evaluate.ts": "09c3bba6a5c4bb82bb1d91877a83f435e45592e425eb642749fd11fe77b3817d",
+    "lib/engine/hash.ts": "76e26d1ab2ead6ad8f977cfc878aef1acfba56809c9ed1117f9f088fc796dd2d",
+    "lib/engine/registry.ts": "771e74659da98513c2ea5e1b9f2fb85851ab7864343f4fbbcaaace24c3d4a9b4",
+    "lib/engine/types.ts": "19ad00728e362209b0af8aede5cc66e9a2dea325e9be224d0a24ee82ad33efc3",
+    "lib/enquiries/chat-contract.ts": "adcfd4308e6a9325930203b6a23f6e6179dfe25acaccf897ba1a456d652b56c2",
+    "lib/enquiries/chat.ts": "d0dda47792794d019b5c36429a173ece75c36572212cf6e8feb822056d407581",
+    "lib/enquiries/contracts.ts": "f5158c75f45ef6dfef14043b0bfa809210f205441d9028aa37ccaca80b119b80",
+    "lib/enquiries/dispatch.ts": "4f25ebda0e3f4e7a46d9c534166fc04b35df11ff0971ad0241e3db4efd7005b3",
+    "lib/enquiries/managed-schema.sql": "88818301d4bff0dbfc6d61740f12abe0b0c080045dde7785766b870ac74c92be",
+    "lib/enquiries/record-routing-schema.sql": "05c2c214c09e14b9567402206a1efe6b4fb1f064d07203386f7a7e23947e8267",
+    "lib/enquiries/reset-intent-schema.sql": "907e8dc8168d4f538a576c4a79bceab4f9ed12bc5fbd9a742565a63343828297",
+    "lib/enquiries/revision-schema.sql": "2bfa317431823b35951c4b07bbfae9df4e710491bac7c78e6be23507003c776d",
+    "lib/enquiries/revision.ts": "2f43b6e31be549dc0f80e9580a8173f21f6c7f5830c150ea555f1f2466b69635",
+    "lib/enquiries/schema.sql": "8e9c620147658f3bd59cd2948d0a46f872eb74066d67eba9f844bc5410fdd743",
+    "lib/enquiries/service.ts": "f20e3c5b7f103e3cf165160c47e7875e748c48868ef66fe73366327b6322a759",
+    "lib/enquiries/temporal-schema.sql": "72705c41e2674baadeda22b7e324e9e232947e1a40a7d5717d0cf1280b3736da",
+    "lib/enquiries/worker-admission-schema.sql": "8fa0d638e759fec11b0f529e56383a0fd4b7e8cecf13f432b096128e6e70fa73",
+    "lib/orchestration/admission.ts": "83716b11fac148f92ed024edf9a1c492041ec3b8fb11fd3a6e3a1cff6a524e6a",
+    "lib/orchestration/quote-contract.ts": "99f0dc0263189112f24694d87937ec0a24281a6f62839fe6438debb334ac1372",
+    "lib/quotes/authority-schema.sql": "9bca0a7882861f068c12c982038d41c392b327993e466d1ea76dcaf06fe8dfd0",
+    "lib/quotes/authority.ts": "f0da146d7d5504c411f84e11ca2d63882a4a3995c49f0522b2d8574d8f442d43",
+    "lib/quotes/background-generation.ts": "fb38e7d7245ffd14431b9970c9cc75febb15912fd1feef22a8240df46d54f60f",
+    "lib/quotes/background-schema.sql": "6a21ab5f7c0b74e57fc3bf755041dd5cf98cb4329a11b833d9f543969fb115f0",
+    "lib/quotes/background.ts": "eef879a0e7547a49053863a726b8d0422abc133da0672d7157a95342319d08f9",
+    "lib/quotes/chat-planner.ts": "2047563bc6c3533ae2ffcf7c3f73b98e6789d96e5e6700e7d0fd75d74120e824",
+    "lib/quotes/demo-control.ts": "5d6ebf8c348457ed0cab3f10d1c251909b60c8de7b2c35b619f008054ea4167b",
+    "lib/quotes/demo-registry.ts": "4b51970c008adb84ff82dffddd46f2a443dd12a5001500f416c27c061eb47592",
+    "lib/quotes/digest.ts": "15c655b0eec32d9af939f28710ce8023044150d902886b185b88023f26a19c84",
+    "lib/quotes/effect.ts": "a9181e7ee47942b32335f4068a6d76cbee8e9fd8e76ca69e6a701a7ae7364990",
+    "lib/quotes/execution-generation.ts": "8e217f9769d6cc804e414e76f22d331bf715e9e57e18d722816bbbd70ff09ec7",
+    "lib/quotes/https-transport.ts": "e3828bf57c7fd9e7aa08e6ed8c581850fbc3117cc6486b50bd05f01d94b7395d",
+    "lib/quotes/json-body-transport.ts": "e6732a49a20e79bd635e75b5d655dba9eb3e3433f486c9dff5aa0a0b3b2c3b7b",
+    "lib/quotes/membership-schema.sql": "d2d9c813566d661020223b03a317eefb1fde439f7f164de61e503c309211a1ba",
+    "lib/quotes/membership.ts": "879db345daa984e6083326d3ff6edca5171601cb8f72787555a2611170c92ffe",
+    "lib/quotes/native-demo-bootstrap.ts": "976493cfbcb84da548b93ebeb08e00f226b2d0d81f5310371a6ae407ba860822",
+    "lib/quotes/native-demo-factory.ts": "b1c7ce77bb7953b07d39ffd546ba0f1821bb647059e11c052aa552af28a2ca8e",
+    "lib/quotes/native-email-transport.ts": "883094d1277108c47fe5b2c728ef4916bb5a88f8b07444bf44b702ce07346b66",
+    "lib/quotes/native-pin-provisioner.ts": "2db7ddc3c38175e201d4948237bad850b5d65b2fa3ddd86193e622c063e32100",
+    "lib/quotes/native-transport.ts": "9a9f10e3141fdecd9d02691fcb86c39e8fbbb852e558323e29a04ae11ff9373f",
+    "lib/quotes/plan-v2-schema.sql": "2d9bb08328a8a05c97f0eae0aeeb8232e4d5087d599f92a45a7ece75040318c3",
+    "lib/quotes/plan-v2.ts": "e20bebf998ea3dad9fe734321be34c4c1697f621704aad8fa5c2b9a09be7ddbc",
+    "lib/quotes/plan.ts": "3124905f961bcd4c0a331da025d675cb5a014b24b59f06457976243fc4b18938",
+    "lib/quotes/requester-delegation.ts": "60b4c28c9f95d2655b617a71fd71b0b57e70a05e52172b61772194a3a251fc4b",
+    "lib/quotes/schema.sql": "e5fe056acb1cfae170ab1b4da9c90a94b316b99fc27402a0e9f66a8b348ff7ac",
+    "lib/quotes/store.ts": "050bd64acccc5fed9748ee12a156b1c5c32968ca366a91c83f3b963e136b9793",
+    "lib/quotes/transaction-context.ts": "351324ea6bcd6b11f886d4d9ddebcd5ac2ada56de8a7abfc8e390b69cecf0fc2",
+    "lib/quotes/verification-receipt.ts": "cabdb7b5a337b0a38c344776258133afa9ab396383def68783d1b1b31c287d6d",
+    "lib/quotes/worker-admission-schema.sql": "99ed5ca0fba0a87f1c19ee178bd6bb2d9fd8f82fb38b272e98bd2ed45cf73a73",
+    "lib/quotes/workflow-view.ts": "7dd8d5a9c056c48d82652e15b477ed1c613245e97bf36845072f711fd1c0aa35",
+    "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
+    "lib/site.ts": "90469a9a233ed0e1ac398ff3b28cf31c5449ef4bc9e285fcd3dfbde1514f36f5",
+    "lib/workflows/guard.ts": "b68617f0147b052e5ed113fb42527103a41b7d0cd7dc7895a17411fb2755be03",
+    "lib/workflows/schema.sql": "fad98c6bed6e4cdc0168b5248ca5cbf7411c35ec49cd3bcbd24b27eb11bf3e4d",
+    "lib/workflows/service.ts": "fc27db88a101a5874b6560e3e4088c6f1dce73b9b8b0a609844eb9dc3c1491e6",
+    "lib/workspace/agents.ts": "a7dc16a213f2699679593dc11a2e8aead7533d4832df6180372a9133ea810fe2",
+    "lib/workspace/auth.ts": "c76a1d2373604da598bb9195e16a001a4e09fccd8e5d7adc8f7b8c04a0d00604",
+    "lib/workspace/aws-authorization-contract.ts": "473a6c00918aab5d5d86c1c37bb180f0d74bdcb0401c37588dd927f75b6cfd82",
+    "lib/workspace/aws-guided-access.ts": "faf94eaa55607db84c4500ed34f3179186dd545975263ecd2134440404fce5cb",
+    "lib/workspace/aws-journey.ts": "824c105cb97238b05dadf4e91331fb2cd5db8e468e31b909049905daf4e7a940",
+    "lib/workspace/business-display.ts": "279856fe16fa569d9a6ac6bba8ff8ee1a8ebf618c09559bcb762edef2c201a0c",
+    "lib/workspace/cloud-activity.ts": "7df8d7ef9e73fd374a57a40b9ce203e8dc077728b599286a6f01e42b3d4fc50d",
+    "lib/workspace/cloud-aws-cli.ts": "21307a9373acb8787bb94f802aaa227bb8f856e3648574ae06eb6142cc8e5a5c",
+    "lib/workspace/cloud-azure-binding.ts": "9147b0bc4dac0570e0a3b4d076788b1ab35cd05705fd2a90eceeb56127ef19b5",
+    "lib/workspace/cloud-azure-cli.ts": "9691d88982dfc4a0471138789a21fe97f09c9e5d0bd6dd4fafe15763ae88b366",
+    "lib/workspace/cloud-azure-http.ts": "4aee186eb7170a459c0d8eb1db07b5e7fcd85059aa5ff61f7338095a450c8294",
+    "lib/workspace/cloud-binding.ts": "365a5c9d1c6fb720404dc8ba1500c818663ec59007231065d1b0db5a70b2aaea",
+    "lib/workspace/cloud-business-metadata-migration.ts": "0eb8976403f677558f4b1610ae89f264a674046eecb1085a0c2ddb0c7d14e671",
+    "lib/workspace/cloud-business-metadata-schema.sql": "163c331efb888d81d183710ea7cbbdd316de9a752f4264c5bc35b29a90ce8eb5",
+    "lib/workspace/cloud-discovery.ts": "8f8d4619c8ebb0a54823e4cb3402f5c5bbd5bb376a7246eb7b1209ee9836304c",
+    "lib/workspace/cloud-google-binding.ts": "0dab7008942f8bec744bbfe90a32dff28173e182f5dfc9e1695d26471b81e33a",
+    "lib/workspace/cloud-google-http.ts": "ddee4cb1d4dd4730f4ca6a07bc945e3383574013b521866b7fa7a9ca7523dc63",
+    "lib/workspace/cloud-inventory-schema.sql": "aceb85a2cf7bf8f4c8d29a110904233267847ce64d7f26eca9f5ce210730dd49",
+    "lib/workspace/cloud-inventory.ts": "41decf5cfd37741c94d66f02cbdea8c0f84b4f732b8b1011c9aa261afa0c0d5a",
+    "lib/workspace/cloud-invocation-observation.ts": "3b1eab4b85d5ec1c8a0733048fdf1b574cb789909b4ebb2fa1a8fadd3b373d20",
+    "lib/workspace/cloud-invocation-reader.ts": "52d4217bea73142317fd185f557d1e8807e6ee96807287df27b6770d43067f49",
+    "lib/workspace/cloud-observation-operations.ts": "670cc965fbefb38e829ea9e1db3e20ce2c7dea6f2f46a7c22e4c66ab625ec70e",
+    "lib/workspace/cloud-observation-schema.sql": "51827e2721bf6c5ef77997fb5f57a8650b9b999b976df779d9b1228fe37c7e93",
+    "lib/workspace/cloud-observation-store.ts": "1d0e3e3ccdc8e91215478fc3946d8dac2d1e2b3d8a2124ccd35de2061476afdd",
+    "lib/workspace/cloud-operations.ts": "82b609c8ee1eb60d00462db4302c3344ad812924e2ab29376646644f46807dcb",
+    "lib/workspace/cloud-owner-review-schema.sql": "336f33a43ba22b5b6e9bb5f93e75bd5101267328184821fb76c6df93371c05c6",
+    "lib/workspace/cloud-owner-review.ts": "3849c978ec47f30d110d6ba0c8b0eec3121e39c98bc086a874a56006613c8697",
+    "lib/workspace/cloud-private-binding.ts": "4a616cb479b10ec112f70edbb0c7ad147714c3df64e011f18b325ed4b8c7264d",
+    "lib/workspace/cloud-project-binding.ts": "d0fde98b1fb5f05cb4758a8d4ed4bebe98d4d9e68f0d38db06468aa553539445",
+    "lib/workspace/cloud-project-discovery.ts": "50fe00553c04b2fa8867a67aefec4ca644f1063bedbefdb4c1951b70202bed3c",
+    "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
+    "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
+    "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
+    "lib/workspace/cloud-runtime-metadata-migration.ts": "da64a87d17307c0cb4f7ba64574c3f4bb9194f7ae38533389cc42f3f646b7a78",
+    "lib/workspace/cloud-runtime-metadata-schema.sql": "cae72ecb2fe099e49fa9fb0d90e4a2f06ea23b0e46da35caa5e6bbdfc2392bd3",
+    "lib/workspace/cloud-runtime-metadata.ts": "cad78b7a0499c1e2826d2824182782d141864a185736c408df8d05aed67765da",
+    "lib/workspace/company-profile-contract.ts": "afd1c2b96249f670052ba169b07a7e40c3aa8e0e26bc25ee931eb7a9a260286b",
+    "lib/workspace/company-profile-migration.ts": "e5aa7ee47d9fc738530dc2aa92be4133a0307daa3ffebb1282c63aa5131c03de",
+    "lib/workspace/company-profile-schema.sql": "64a8c04785a8fe968b9727895bf7b243f588f20cec8375038ef6cf30166809f8",
+    "lib/workspace/deployment-capabilities.ts": "64f1661622013b77e764394aeac35390e9d8809fc19cc1321c3e65e90c4f3bba",
+    "lib/workspace/execution-reference.ts": "914d422f206610cc34622e7ac047d8339b8e89f62dfff377c5f78d1847a83a46",
+    "lib/workspace/external-approvals.ts": "8e344de0fd9f1763631fce00502a06b59665f86fc3549467134bc2ec8d0a8d93",
+    "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
+    "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
+    "lib/workspace/membership-authority.ts": "baaca16e454cedf3c5eb3f98a5bd0a4dd11bce0931660a5189c1b6dcb4abd682",
+    "lib/workspace/navigation.ts": "1cf72ddc34e3b4d530fc41d521adb409be1eabafbf70689e6222c89c92fbab26",
+    "lib/workspace/owned-private-file.ts": "c568195f2dff56091f4713e58cc8dd3f151773541878886add698b8a8c8075ad",
+    "lib/workspace/quote-workload-installation.ts": "d7b76e3d524bc285382b28f91862681297ffb07765eefad1a067f000f1428a58",
+    "lib/workspace/recovery-capture.ts": "a8a03c53658b485af49636b2d54e6cb9c69dc6369b331bfab8ae4720de2be08d",
+    "lib/workspace/response.ts": "5854dd6e0d588cd62ad1e643746d2f2a96993ce131146ee90f929b34bad35a18",
+    "lib/workspace/schema.sql": "5efa86906dd872f6eb059cb4be7c73a1790b5fd4b5910dc480f7e1b4e231725e",
+    "lib/workspace/tenant-bootstrap.ts": "b2b4e85ee7d5a4409bcc04a3dc6a0b46c839ac3acd4f9d5f26e686c055fb2ee3",
+    "lib/workspace/tenant-context.ts": "09e7b6c172663fdf59c74289715df64b6099c07ea275a7429ee6c7c66671f7a2",
+    "lib/workspace/tenant-installer.ts": "53c0281769d918cde4b519471b17e158300ee984d63c1fa7d52872a2a98821ce",
+    "lib/workspace/tenant-read-inventory.ts": "191962730ba0a45c9959ae1d9505c64fbf78dc2cf63f8139ae8b1d2b4b237261",
+    "lib/workspace/web-recovery-deployment.ts": "40a4f402e95fd524414ea10ecd77b916ecd61193cffeedc7f86f9a56dd6c183b",
+    "lib/workspace/workflow-telemetry-view.ts": "5288947fdfcfef5d70342c53825b107824e6e9087b50ef9e4ce66ba0faf459c4",
+    "lib/workspace/workflow-telemetry.ts": "34b8e8970f77391330341c0b89413445179f53e6015e409c52bfc23edffd8495",
+    "next.config.mjs": "5746e6fc704bcdf5d09ffacaeb00a0285b2456176516cb5af52faeabf6cd2cb4",
+    "package.json": "87e746156e7152e5e5426a8472f8cc7cd77d9fdd7304bda25752a5b75b0c527f",
+    "pnpm-lock.yaml": "3f9fe9d8a46f3f5dd96b64f112da2494e4ef6e415424161a42a464b73864f280",
+    "runtime/temporal/activities.ts": "9be7fd957c81efbfdc6d365ad583c89fe7cdfe9ed931627ec8690aa65e5d8ab0",
+    "runtime/temporal/operations.ts": "d0ee8ece790da73b7e4eebb8cad351631df7853fabc29a2ad799656312dfadc6",
+    "runtime/temporal/outbox.ts": "1f8ec2d77c6c4b63378fdc1a824ac5ebf8c98417c8dd5f9a5f89ad0f599ccc7a",
+    "runtime/temporal/quote-outbox.ts": "43158c06f9fbc187db0d2413c4ec67ec9501d86a329bee87346f5b31888c5a84",
+    "runtime/temporal/staging-preflight.ts": "6ac482741168c9376e78d36e3dcd137d33bbf6a0fda794d1b8bd3c13a9b650cb",
+    "runtime/temporal/version-contract.ts": "318bacf1f4a4549275e2f399256fc27436d48ed8c8232e3bd53fc9160d3fd9b8",
+    "scripts/cloud-runtime-metadata-setup.ts": "7140f89504aca8932e5ec048facad2e382d8b31eb1f7041b3c53d02280892e9c",
+    "scripts/cloud-runtime-metadata-upgrade-process.ts": "5ee28a2e57045829938ee7e4c5b79a7040fe0ec90e8b1e63e5ca7e9043a0067b",
+    "scripts/company-directory-setup.ts": "ab713d9ea2a32c2c891a9314830724c17273204e758e6203ddad0442b2e29298",
+    "scripts/company-directory-upgrade-process.ts": "fe57760f2a147c1d4483e40b47128ff3d3f6bc4bafbc0855bb48c3d8e979a603",
+    "scripts/current-proof-source-registry.mjs": "dd52215fc26cf7250a9cbf214276e9604f1795ce1ec59faf4e2c76469ace8b7d",
+    "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
+    "scripts/discovery-browser-proof.mjs": "acb5818ca827703ea9b0edc931dfc3c57b23e7511a36fd4391f7ec344d171f6a",
+    "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
+    "scripts/discovery-installed-source-contract.mjs": "9ddb87a895e6c15c31cd188f4217e8efd5ff46234fe2d17e3bd87b7895b86d39",
+    "scripts/staging-browser-tls.mjs": "9b6e13b2dad7999e598989b3a5a53c2a30a6421b917c2abb68e9eb495cc35bb8",
+    "tsconfig.json": "feec4b19d9acba4e15b6c95ad652ed3f7d9c09cd62afadc7c2d8e9416699073b"
+  },
+  "compiledArtifacts": {
+    ".next/server/app/control-plane/discovery/page.js": "0b40bb03b732b4b6a70bcb0f261f99fb4cd0629ed36658d1683a99101abce7be",
+    ".next/server/app/api/workspace/discovery/route.js": "a4e8e0e23cd955bbb5734514a4327cbeeaed3d33990b2e71d1f399c678e6cf1e",
+    ".next/server/app/api/workspace/discovery/owners/route.js": "f3df3c90d3191b58259a4207ba9ea9f8f0f947f03f7dae4a00b18a2635522005"
+  },
+  "assertions": {
+    "threeProviderOwnerReviewSavedThroughUi": true,
+    "ownerReviewReplayAndChangedDecisionRefused": true,
+    "ownerReviewSurvivesMobileReload": true,
+    "revokedOwnerRequiresRenewalWithoutAuthority": true,
+    "foreignOwnerDirectoryAndReviewDenied": true,
+    "azureMobile390SavedScanReadable": true,
+    "azureUiScanPersistsThroughCliHttpFixture": true,
+    "azureChangedBindingRefusedAndEvidencePreserved": true,
+    "azureProviderMetadataMinimized": true,
+    "projectScopesSavedThroughUi": true,
+    "projectFixtureEvidenceSurvivesReload": true,
+    "projectNativeScanNotClaimed": true,
+    "projectMobile390Readable": true,
+    "projectCrossCompanyAndRevocationDenied": true,
+    "anonymousDenied": true,
+    "namedSignIn": true,
+    "secureHttpOnlyCookie": true,
+    "configuredIsNotObserved": true,
+    "actualLocalCliFixtureScanPersisted": true,
+    "refreshPersistence": true,
+    "expiredBindingRefusedAndPriorEvidencePreserved": true,
+    "mobileMenuClosesOnCurrentPageSelection": true,
+    "mobile390NoOverflow": true,
+    "mobileInputsAtLeast16px": true,
+    "technicalReferencesExpandable": true,
+    "noRawJson": true,
+    "crossCompanyDenied": true,
+    "revokedMemberDenied": true,
+    "noExecutionAuthorityCreated": true,
+    "ownedResourcesRemoved": true
+  },
+  "screenshots": {
+    "desktop.png": "7c247eccd0e5f00add37e5bcfc2320b6a29d1408b98c2ec6a96aea4ef0a5d989",
+    "mobile.png": "c25a62156bf2411a737dea16fe93b2b9c337aa5c8b1f1c300f5c5d8dc152bc51",
+    "expired-access.png": "636efcf2d4357609f9b3e7d900fa9ccf12e51c43bf6988b267651e58da8bedc7",
+    "azure-desktop.png": "406da9498f34336cd9d1dcb5820a2b3ff05da23ef440624ee482d14511b6ce0c",
+    "azure-mobile.png": "ee3b0712bb5d8b82e44119c8345e15b95865043327e1e6d6dfeae40758c78db4",
+    "project-desktop.png": "79b5bfee9ccc3365ce6cbc9bfa30207b30bbc0154e63bead868c1af2dc527096",
+    "project-mobile.png": "6197f57f7479fae2a3668dd97d0bc753a773ec923346b9d944a7a6f8224ca5ef"
+  },
+  "notProved": [
+    "Azure and Google native reads",
+    "AWS signing or real account discovery",
+    "trusted TLS ingress",
+    "live providers",
+    "reviewed cloud enrollment",
+    "mandatory action enforcement",
+    "enterprise readiness"
+  ]
+}

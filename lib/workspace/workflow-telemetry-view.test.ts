@@ -70,3 +70,7 @@ it("describes request metadata from its own reported fields without inventing me
  const missing=telemetryRuns(window([event("action.started",{action_id:"tool"})]))[0];expect(telemetryRequestContext(missing)).toMatchObject({description:"The workflow has not shared a description of this request.",startedAt:null,version:null,messageAvailable:false});
  const quote=telemetryRuns(window([event("action.started",{action_id:"tool",action_name:"price"})]))[0];expect(telemetryRequestContext(quote).description).toBe("The workflow reports a request involving pricing.");
 });
+it('describes internal discount steps without claiming a saved provider write',()=>{
+ const e=event('action.completed',{event_id:'apply',action_id:'apply',action_name:'apply_discount',provider:'internal'});
+ const step=telemetrySteps([e])[0];expect(telemetryStepCopy(step)).toMatchObject({title:'Process the proposed discount',detail:expect.stringContaining('does not independently confirm')});
+});
