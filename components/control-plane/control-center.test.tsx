@@ -17,7 +17,7 @@ function history() {
  return {enrollment:{displayName:"Partner quoting",owner:"owner@example.test",logGroup:"/company/events",enrolledAt:at},checkedAt:at,source:{runtimeArn:arn,enrolledRuntimeVersion:"2",logGroup:"/company/events",startTime:Date.now()-86400000,endTime:Date.now()},events:[{...base,eventId:"start",eventName:"workflow.started",occurredAt:new Date(Date.parse(at)-2000).toISOString()},{...base,eventId:"policy",eventName:"policy.evaluated",occurredAt:new Date(Date.parse(at)-1000).toISOString(),requestedPercent:25,decision:"needs_approval",approvalThreshold:20,maximumDiscount:75},{...base,eventId:"pause",eventName:"workflow.paused",reportedOutcome:"awaiting_approval"}],completeness:"partial",unsupportedRecords:2,duplicateDeliveries:3,conflictingEventIds:[],failures:[],enforcement:"not-established"};
 }
 type Call={path:string;body:Record<string,unknown>|null;method:string};
-async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[])=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals"|"impact"|"impact-other"|"impact-ambiguous"|"pending"|"expired-pending",companyCase=false,showShell=false,fleetCase=false){
+async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[])=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals"|"impact"|"impact-other"|"impact-ambiguous"|"pending"|"expired-pending"|"company-save",companyCase=false,showShell=false,fleetCase=false){
  const esbuild=requireModule(requireModule.resolve("esbuild",{paths:[requireModule.resolve("@temporalio/worker")]}));
  const content=pageName==='organization'?'<CompanyOrganization/>':pageName==='connections'?'<SavedWorkspace section="connections" awsConnections/>':`<ControlCenter page="${pageName}" awsEnabled/>`;
  const member={name:'Raj Nagulapalle',email:'raj@example.test',company:'ACME'};
@@ -44,6 +44,7 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
   if(fleetCase&&body?.operation==='history'&&body.resourceArn===arn){const h=history();value={...h,events:h.events.map(e=>({...e,reportedDeploymentVersion:'1'}))};}
   if(companyCase&&path==="/api/workspace/discovery"&&url.search){const v=value as {records:unknown[]};v.records.push({record:{resourceArn:arn+'-support',resourceId:'support_assistant-abcdefghij',version:'2'},stale:false,observedInCurrentScan:true});}
   if(companyCase&&body?.resourceArn===arn+'-support'&&path.endsWith('/onboarding')){if(body.operation==='enrollment')value={enrollment:{...history().enrollment,displayName:'Support assistant'}};if(body.operation==='history'){const h=history();value={...h,enrollment:{...h.enrollment,displayName:'Support assistant'},events:h.events.map(e=>({...e,runId:'run-support',requestedPercent:null}))};}}
+  if(failure==='company-save'&&path==='/api/workspace/company'&&method==='POST'){status=409;value={error:'Directory changed. Refresh before saving again.'};}
   await route.fulfill({status,contentType:"application/json",body:JSON.stringify(value)});
  });
  await page.goto("https://control-center.test/");await page.addStyleTag({content:await fixtureStyles});if(["connections","organization"].includes(pageName))await page.getByText("ACME",{exact:true}).first().waitFor();else await page.getByText("On-demand read",{exact:false}).waitFor();await run(page,calls);
@@ -143,3 +144,22 @@ it('inventory-only Overview shows gaps without fabricated workflows or sample am
  await page.getByText('7 deployments have no current history read',{exact:true}).waitFor();expect(await page.locator('.cc-department-agent').count()).toBe(8);expect(await page.getByText('USD 1200.00',{exact:true}).count()).toBe(0);expect(await page.getByText('Quote handling',{exact:true}).count()).toBe(0);
  await page.getByLabel('Department',{exact:true}).selectOption('aws-department:Sales');expect(await page.locator('.cc-department-agent').count()).toBe(4);await page.setViewportSize({width:390,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 },undefined,false,true,true),20000);
+
+it('Organization keeps a draft when refresh is cancelled and discards only after confirmation',()=>mounted('organization',async(page,calls)=>{
+ await page.getByLabel('Company name',{exact:true}).fill('Unsaved company');await page.getByText('Unsaved changes.',{exact:false}).waitFor();const before=calls.filter(c=>c.path==='/api/workspace/company').length;
+ await page.getByRole('button',{name:'Refresh',exact:true}).click();await page.getByRole('dialog',{name:'Discard unsaved changes?',exact:true}).waitFor();expect(calls.filter(c=>c.path==='/api/workspace/company').length).toBe(before);
+ await page.getByRole('button',{name:'Keep editing',exact:true}).click();expect(await page.getByLabel('Company name',{exact:true}).inputValue()).toBe('Unsaved company');
+ await page.getByRole('button',{name:'Refresh',exact:true}).click();await page.getByRole('button',{name:'Discard and refresh',exact:true}).click();await page.waitForFunction(()=>document.querySelector('input')?.value==='ACME');expect(calls.filter(c=>c.path==='/api/workspace/company'&&c.method==='POST')).toHaveLength(0);
+ await page.getByRole('button',{name:'Refresh',exact:true}).click();expect(await page.getByRole('dialog').count()).toBe(0);
+},undefined,true,true),15000);
+it('Organization protects drafts on navigation links and does not leave when dismissed',()=>mounted('organization',async(page,calls)=>{
+ await page.getByLabel('Company name',{exact:true}).fill('Unsaved navigation');await page.getByRole('link',{name:'Agents',exact:true}).click();await page.getByRole('button',{name:'Discard and leave',exact:true}).waitFor();await page.keyboard.press('Escape');expect(await page.getByLabel('Company name',{exact:true}).inputValue()).toBe('Unsaved navigation');expect(calls.some(c=>c.method==='POST')).toBe(false);
+ await page.setViewportSize({width:390,height:900});await page.getByRole('button',{name:'Refresh',exact:true}).click();expect(await page.getByRole('dialog').evaluate(e=>e.getBoundingClientRect().right<=innerWidth)).toBe(true);await page.getByRole('button',{name:'Keep editing',exact:true}).click();
+},undefined,true,true),15000);
+it('successful Organization save clears the unsaved warning and refresh needs no discard prompt',()=>mounted('organization',async page=>{
+ await page.getByLabel('Company name',{exact:true}).fill('Saved company');await page.getByRole('button',{name:'Save company directory',exact:true}).click();await page.getByText('Company directory saved.',{exact:false}).waitFor();expect(await page.getByText('Unsaved changes.',{exact:false}).count()).toBe(0);await page.getByRole('button',{name:'Refresh',exact:true}).click();expect(await page.getByRole('dialog').count()).toBe(0);
+},undefined,true,true),15000);
+
+it('failed Organization save keeps the draft and unsaved warning',()=>mounted('organization',async page=>{
+ await page.getByLabel('Company name',{exact:true}).fill('Retain my draft');await page.getByRole('button',{name:'Save company directory',exact:true}).click();await page.getByText('Directory changed. Refresh before saving again.',{exact:true}).waitFor();expect(await page.getByLabel('Company name',{exact:true}).inputValue()).toBe('Retain my draft');await page.getByText('Unsaved changes.',{exact:false}).waitFor();await page.getByRole('button',{name:'Refresh',exact:true}).click();await page.getByRole('dialog',{name:'Discard unsaved changes?',exact:true}).waitFor();
+},'company-save',true,true),15000);

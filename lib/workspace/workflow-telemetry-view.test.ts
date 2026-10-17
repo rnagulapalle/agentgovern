@@ -74,3 +74,7 @@ it('describes internal discount steps without claiming a saved provider write',(
  const e=event('action.completed',{event_id:'apply',action_id:'apply',action_name:'apply_discount',provider:'internal'});
  const step=telemetrySteps([e])[0];expect(telemetryStepCopy(step)).toMatchObject({title:'Process the proposed discount',detail:expect.stringContaining('does not independently confirm')});
 });
+
+it.each([['notify_customer_rejected','Notify the customer of rejection'],['ask_for_details','Ask for missing details']])('translates %s without treating a failed or uncertain attempt as success',(name,title)=>{
+ for(const state of ['action.started','action.failed','action.uncertain'] as const){const step=telemetrySteps([event(state,{action_id:'tool',action_name:name,provider:'slack'})])[0];expect(telemetryStepCopy(step).title).toBe(title);expect(telemetryStepCopy(step).tone).not.toBe('done');}
+});
