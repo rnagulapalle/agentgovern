@@ -77,12 +77,20 @@ it("company activity scope keeps each execution identity and fits on a phone",()
 
 it.each(['overview','agents','activity','approvals','connections','policies','organization'] as const)('captures the implemented %s page with the shared ACME administrator shell',pageName=>mounted(pageName,async page=>{
  if(pageName==='connections'){await page.getByText('Sample pricing rules loaded.',{exact:false}).waitFor();expect(await page.getByRole('alert').count()).toBe(0);}
+ const readingScale=async()=>({title:await page.locator('.cp-page-title h1').first().evaluate(e=>getComputedStyle(e).fontSize),nav:await page.locator('.cp-nav-item.is-active').evaluate(e=>getComputedStyle(e).fontSize),action:await page.locator('.cp-button').first().evaluate(e=>getComputedStyle(e).fontSize)});
+ expect(await readingScale()).toEqual({title:'32px',nav:'16px',action:'16px'});
+ if(pageName==='activity'){
+  expect(await page.locator('.cc-execution-row strong').first().evaluate(e=>getComputedStyle(e).fontSize)).toBe('16px');
+  expect(await page.locator('.cc-execution-row small').first().evaluate(e=>getComputedStyle(e).fontSize)).toBe('14px');
+  expect(await page.locator('.cc-execution-row .cc-outcome').first().evaluate(e=>getComputedStyle(e).fontSize)).toBe('14px');
+ }
  await mkdir('.local/acme-admin/screenshots',{recursive:true});expect(await page.locator('.cp-nav-item.is-active').evaluate(e=>getComputedStyle(e).color)).toBe('rgb(255, 255, 255)');await page.getByText('ACME',{exact:true}).first().waitFor();await page.screenshot({path:'.local/acme-admin/screenshots/'+pageName+'.png',fullPage:true,animations:'disabled'});
  if(pageName==='agents'){await page.getByRole('button',{name:/Partner quoting/}).click();await page.getByRole('dialog').waitFor();await page.screenshot({path:'.local/acme-admin/screenshots/agent-details.png',fullPage:true,animations:'disabled'});await page.getByRole('button',{name:'Business details',exact:true}).click();await page.screenshot({path:'.local/acme-admin/screenshots/agent-business-details.png',fullPage:true,animations:'disabled'});await page.getByRole('button',{name:'Close dialog',exact:true}).click();}
- if(pageName==='activity'){await page.getByRole('button',{name:/25% discount/}).first().click();await page.getByRole('dialog').waitFor();await page.screenshot({path:'.local/acme-admin/screenshots/activity-timeline.png',fullPage:true,animations:'disabled'});await page.getByRole('button',{name:'Close dialog',exact:true}).click();}
+ if(pageName==='activity'){await page.getByRole('button',{name:/25% discount/}).first().click();await page.getByRole('dialog').waitFor();expect(await page.locator('.cp-modal-heading h2').evaluate(e=>getComputedStyle(e).fontSize)).toBe('24px');expect(await page.locator('.aws-timeline-title strong').first().evaluate(e=>getComputedStyle(e).fontSize)).toBe('16px');expect(await page.locator('.aws-timeline-title time').first().evaluate(e=>getComputedStyle(e).fontSize)).toBe('14px');await page.screenshot({path:'.local/acme-admin/screenshots/activity-timeline.png',fullPage:true,animations:'disabled'});await page.getByRole('button',{name:'Close dialog',exact:true}).click();}
 
  if(pageName==='organization'){await page.getByLabel('Company name',{exact:true}).fill('ACME Corporation');await page.getByRole('button',{name:'Save company directory',exact:true}).click();await page.getByText('Company directory saved.',{exact:false}).waitFor();expect(await page.getByText('Company administrator',{exact:true}).count()).toBe(3);}
  await page.setViewportSize({width:390,height:900});expect(await page.evaluate(()=>Array.from(document.querySelectorAll('body *')).filter(e=>e.getBoundingClientRect().right>innerWidth+1&&e.getBoundingClientRect().width>0).map(e=>[e.tagName,e.className,Math.round(e.getBoundingClientRect().right)]).slice(0,12))).toEqual([]);
+ expect(await readingScale()).toEqual({title:'28px',nav:'16px',action:'16px'});
  await page.screenshot({path:'.local/acme-admin/screenshots/'+pageName+'-mobile.png',fullPage:true,animations:'disabled'});
 },undefined,true,true),25000);
 

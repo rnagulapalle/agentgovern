@@ -6,9 +6,9 @@
 .saved-workspace-row h3 { margin: 0 0 6px; display: flex; gap: 8px; align-items: center; }
 .saved-workspace-row p { margin: 6px 0; }
 .saved-workspace-row .cp-button { flex-shrink: 0; }
-.saved-workspace-row details { margin-top: 10px; font-size: 13px; overflow-wrap: anywhere; }
+.saved-workspace-row details { margin-top: 10px; font-size:var(--text-body); overflow-wrap: anywhere; }
 .saved-workspace-row summary { cursor: pointer; }
-.saved-workspace-badge { display: inline-block; background: var(--cp-paper); color: var(--cp-muted); padding: 4px 8px; font-size: 12px; }
+.saved-workspace-badge { display: inline-block; background: var(--cp-paper); color: var(--cp-muted); padding: 4px 8px; font-size:var(--text-label); }
 .saved-workspace-facts { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 10px 20px; }
 .saved-workspace-facts dd { margin: 0; }
 @media (max-width: 700px) { .saved-workspace-row { flex-direction: column; gap: 12px; } .saved-workspace-facts { grid-template-columns: 1fr; gap: 6px; } }
