@@ -163,3 +163,31 @@
 .cp-app.cc-brand-system h3 { font-size:18px;line-height:1.4; }
 .cp-app.cc-brand-system :focus-visible { outline-color:var(--cp-ink); }
 .cp-app.cc-brand-system .cp-modal-heading h2 { font-size:24px;line-height:1.3; }
+/* CIO Overview: business decisions, activity, ownership, then control coverage. */
+.cc-workspace .cc-overview-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.cc-workspace .cc-overview-priority{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}
+.cc-workspace .cc-overview-decisions{display:grid;gap:14px;min-width:0}
+.cc-workspace .cc-business-request,.cc-workspace .cc-overview-empty,.cc-workspace .cc-overview-visibility,.cc-workspace .cc-overview-followup,.cc-workspace .cc-department-card{background:var(--cp-paper);border:1px solid var(--cp-line);border-radius:2px;padding:20px;min-width:0;overflow-wrap:anywhere}
+.cc-workspace .cc-business-request{border-left:3px solid #8d5d18;display:grid;gap:12px}
+.cc-workspace .cc-business-request h3,.cc-workspace .cc-overview-visibility h3,.cc-workspace .cc-overview-empty h3,.cc-workspace .cc-overview-followup h3,.cc-workspace .cc-department-card h3{font-size:var(--text-body);font-weight:500;margin:0}
+.cc-workspace .cc-business-request small,.cc-workspace .cc-overview-followup-row small,.cc-workspace .cc-department-agent small{display:block;color:var(--cp-muted);font-size:var(--text-label);line-height:1.6}
+.cc-workspace .cc-status-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;background:var(--cc-soft);color:var(--cp-muted);font-size:var(--text-label);line-height:1.4;border-radius:2px}
+.cc-workspace .cc-status-chip.is-waiting{color:#865d1d;background:#f8f1e4}
+.cc-workspace .cc-business-values{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:4px 0}
+.cc-workspace .cc-business-values dt{color:var(--cp-muted);font-size:var(--text-label)}
+.cc-workspace .cc-business-values dd{margin:3px 0 0;font-size:var(--text-subheading);overflow-wrap:anywhere}
+.cc-workspace .cc-review-reason{display:grid;gap:4px;font-size:var(--text-body);margin:0}
+.cc-workspace .cc-review-reason strong{font-size:var(--text-label);color:var(--cp-muted)}
+.cc-workspace .cc-overview-visibility,.cc-workspace .cc-overview-empty{display:grid;gap:14px}
+.cc-workspace .cc-overview-visibility>.cc-status-chip{justify-self:start}
+.cc-workspace .cc-overview-followup-row{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--cp-line);padding:13px 0;color:var(--cp-ink);font-size:var(--text-body)}
+.cc-workspace .cc-overview-followup-row:last-of-type{border-bottom:0}
+.cc-workspace .cc-department-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.cc-workspace .cc-department-agent{width:100%;display:grid;gap:9px;text-align:left;border:0;border-top:1px solid var(--cp-line);background:none;color:var(--cp-ink);padding:15px 0 0;margin-top:14px;font-size:var(--text-body)}
+.cc-workspace .cc-department-agent .cc-status-chip{justify-self:start}
+.cc-workspace .cc-overview-control{border-top:1px solid var(--cp-line);padding-top:20px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.cc-workspace .cc-overview-control h2{font-size:var(--text-body);font-weight:500;margin:0 0 10px}
+.cc-workspace .cc-control-items{display:flex;gap:10px 18px;flex-wrap:wrap;color:var(--cp-muted);font-size:var(--text-label)}
+.cc-workspace .cc-overview-samples{font-size:var(--text-label);color:var(--cp-muted)}
+@media(max-width:1100px){.cc-workspace .cc-department-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:750px){.cc-workspace .cc-overview-priority,.cc-workspace .cc-department-grid{grid-template-columns:1fr}.cc-workspace .cc-admin-stats{grid-template-columns:1fr 1fr}.cc-workspace .cc-admin-stats>div{border-bottom:1px solid var(--cp-line)}.cc-workspace .cc-admin-stats>div:nth-child(2){border-right:0}.cc-workspace .cc-admin-stats>div:nth-child(n+3){border-bottom:0}.cc-workspace .cc-business-request,.cc-workspace .cc-overview-empty,.cc-workspace .cc-overview-visibility,.cc-workspace .cc-overview-followup,.cc-workspace .cc-department-card{padding:16px}}

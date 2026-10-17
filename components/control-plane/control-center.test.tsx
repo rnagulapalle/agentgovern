@@ -17,7 +17,7 @@ function history() {
  return {enrollment:{displayName:"Partner quoting",owner:"owner@example.test",logGroup:"/company/events",enrolledAt:at},checkedAt:at,source:{runtimeArn:arn,enrolledRuntimeVersion:"2",logGroup:"/company/events",startTime:Date.now()-86400000,endTime:Date.now()},events:[{...base,eventId:"start",eventName:"workflow.started",occurredAt:new Date(Date.parse(at)-2000).toISOString()},{...base,eventId:"policy",eventName:"policy.evaluated",occurredAt:new Date(Date.parse(at)-1000).toISOString(),requestedPercent:25,decision:"needs_approval",approvalThreshold:20,maximumDiscount:75},{...base,eventId:"pause",eventName:"workflow.paused",reportedOutcome:"awaiting_approval"}],completeness:"partial",unsupportedRecords:2,duplicateDeliveries:3,conflictingEventIds:[],failures:[],enforcement:"not-established"};
 }
 type Call={path:string;body:Record<string,unknown>|null;method:string};
-async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[])=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals"|"impact"|"impact-other"|"impact-ambiguous",companyCase=false,showShell=false,fleetCase=false){
+async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[])=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals"|"impact"|"impact-other"|"impact-ambiguous"|"pending"|"expired-pending",companyCase=false,showShell=false,fleetCase=false){
  const esbuild=requireModule(requireModule.resolve("esbuild",{paths:[requireModule.resolve("@temporalio/worker")]}));
  const content=pageName==='organization'?'<CompanyOrganization/>':pageName==='connections'?'<SavedWorkspace section="connections" awsConnections/>':`<ControlCenter page="${pageName}" awsEnabled/>`;
  const member={name:'Raj Nagulapalle',email:'raj@example.test',company:'ACME'};
@@ -37,6 +37,7 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
   else if(path==="/api/workspace/discovery/onboarding"){if(body?.operation==="enrollment")value={enrollment:history().enrollment};else if(body?.operation==="history"){value=history();if(failure==="history"){status=503;value={error:"History identity unavailable"}}if(failure==="malformed")value={events:null};}else{status=400;value={error:"Unexpected mutation"}}}
   else if(path==="/api/workspace/discovery/approvals"){value={connected:true,requests:[],reviewer:"manager@example.test",canReview:true};if(failure==="approvals"){status=503;value={error:"Approval source unavailable"};}}
   else {status=404;value={error:"Unexpected endpoint"}}
+  if((failure==='pending'||failure==='expired-pending')&&path.endsWith('/approvals'))value={connected:true,canReview:true,reviewer:'manager@example.test',requests:body?.version==='2'?[{id:'request-one',runId:'run-one',revision:'a'.repeat(64),policyVersion:'policy-2',status:'pending',title:'Review customer discount',reason:'25% exceeds delegated authority.',action:'Update quote',system:'CRM',before:'USD 1200.00',after:'USD 900.00',requestedBy:'customer@example.test',allowedReviewers:['manager@example.test'],expiresAt:new Date(Date.now()+(failure==='pending'?3600000:-3600000)).toISOString(),decidedBy:null,decidedAt:null,channel:'slack',executionStatus:'held'}]:[]};
   if(failure?.startsWith('impact')&&path.endsWith('/approvals')){const a={runId:failure==='impact-other'?'other-run':'run-one',before:'USD 1200.00',after:'USD 900.00',status:'approved',executionStatus:'completed'};value={connected:true,requests:failure==='impact-ambiguous'?[a,a]:[a]};}
   if(fleetCase&&path==="/api/workspace/discovery"&&url.search){const v=value as {records:unknown[]};v.records.unshift(...Array.from({length:7},(_,i)=>({record:{resourceArn:arn+'-fleet'+i,resourceId:'fleet_agent_'+i,version:'1',declaredMetadata:{schemaVersion:'2',source:'aws-runtime-declaration',metadataVersion:'1',organization:'Acme',ownerOrganization:null,ownerTeam:i%2?'care':'sales-ops',department:i%2?'Support':'Sales',owner:'Raj',purpose:'Serve customers',environment:'production',onCallStatus:'unassigned'}},stale:false,observedInCurrentScan:true})));}
   if(fleetCase&&body?.resourceArn!==arn&&path.endsWith('/onboarding'))value={enrollment:null};
@@ -57,7 +58,7 @@ it("execution review preserves filters, selection and keyboard return focus",()=
 it.each(['history','inventory','malformed'] as const)("%s failure stays unknown instead of a successful empty history",failure=>mounted('activity',async page=>{await page.getByRole('alert').first().waitFor();expect(await page.locator('.cc-execution-row').count()).toBe(0);await page.getByText('Activity could not be fully checked.',{exact:false}).waitFor();},failure),15000);
 it("one failed directory does not erase the separately observed AWS execution",()=>mounted('overview',async page=>{await page.getByRole('alert').waitFor();expect(await page.locator('.cc-execution-row').count()).toBe(1);},'directory'),15000);
 it("nested connection review closes one panel at a time and restores page scroll",()=>mounted('overview',async page=>{
- await page.getByRole('button',{name:'Review connections',exact:true}).click();
+ await page.getByRole('button',{name:'View coverage',exact:true}).click();
  await page.getByRole('button',{name:'Set up AWS connection',exact:true}).click();
  expect(await page.getByRole('dialog').count()).toBe(2);
  await page.keyboard.press('Escape');expect(await page.getByRole('dialog').count()).toBe(1);
@@ -98,7 +99,7 @@ it.each(['overview','agents','activity','approvals','connections','policies','or
  await page.screenshot({path:'.local/acme-admin/screenshots/'+pageName+'-mobile.png',fullPage:true,animations:'disabled'});
 },undefined,true,true),25000);
 
-it('failed approval reads stay unknown while separately observed activity remains visible',()=>mounted('overview',async page=>{expect(await page.locator('.cc-admin-stats strong').nth(1).innerText()).toBe('—');expect(await page.locator('.cc-execution-row').count()).toBe(2);await page.getByText('Approval coverage is incomplete.',{exact:false}).waitFor();},'approvals',true),15000);
+it('failed approval reads stay unknown while separately observed activity remains visible',()=>mounted('overview',async page=>{expect(await page.locator('.cc-admin-stats strong').nth(1).innerText()).toBe('—');expect(await page.locator('.cc-execution-row').count()).toBe(2);await page.getByRole('heading',{name:'Approval coverage is incomplete',exact:true}).waitFor();},'approvals',true),15000);
 
 it('shows all eight saved deployments and never calls incomplete approval coverage zero',()=>mounted('overview',async(page,calls)=>{
  expect(await page.locator('.cc-admin-stats strong').first().innerText()).toBe('8');
@@ -129,3 +130,16 @@ it('shows before and proposed values only for the uniquely matched execution app
 it.each(['impact-other','impact-ambiguous'] as const)('does not enrich with mismatched or ambiguous approval data: %s',failure=>mounted('activity',async page=>{
  await page.getByRole('button',{name:/25% discount/}).click();await page.getByText('No unique approval readback matched this execution.',{exact:true}).waitFor();expect(await page.getByText('USD 1200.00',{exact:true}).count()).toBe(0);
 },failure),15000);
+
+it('Overview shows real approval context and opens the same deployment request without deciding',()=>mounted('overview',async(page,calls)=>{
+ const card=page.locator('.cc-business-request');expect(await card.count()).toBe(1);expect(await page.locator('.cc-overview-followup-row').count()).toBe(0);await card.getByText('USD 1200.00',{exact:true}).waitFor();await card.getByText('USD 900.00',{exact:true}).waitFor();expect(await card.innerText()).toContain('25% exceeds delegated authority.');
+ const headings=await page.locator('.cc-section-heading h2').allTextContents();expect(headings.indexOf('Latest business activity')).toBeLessThan(headings.indexOf('Operations across your company'));
+ await page.setViewportSize({width:390,height:900});expect(await page.locator('.cc-admin-stats').evaluate(e=>getComputedStyle(e).gridTemplateColumns.split(' ').length)).toBe(2);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await mkdir('.local/cio-overview-release/screenshots',{recursive:true});await page.screenshot({path:'.local/cio-overview-release/screenshots/mobile-overview.png',fullPage:true});
+ await card.getByRole('button',{name:'Review request',exact:true}).click();await page.getByRole('dialog').waitFor();await page.getByText('Approval deployment version 2.',{exact:false}).waitFor();await page.getByRole('dialog').getByText('Review customer discount',{exact:true}).waitFor();expect(calls.some(c=>c.body?.operation==='decide')).toBe(false);
+},'pending',false,true),20000);
+it('expired approval is never promoted to a decision card',()=>mounted('overview',async page=>{expect(await page.locator('.cc-business-request').count()).toBe(0);await page.getByText('No current pending shared approvals returned in this scope.',{exact:true}).waitFor();},'expired-pending'),15000);
+it('inventory-only Overview shows gaps without fabricated workflows or sample amounts',()=>mounted('overview',async page=>{
+ await page.getByText('7 deployments have no current history read',{exact:true}).waitFor();expect(await page.locator('.cc-department-agent').count()).toBe(8);expect(await page.getByText('USD 1200.00',{exact:true}).count()).toBe(0);expect(await page.getByText('Quote handling',{exact:true}).count()).toBe(0);
+ await page.getByLabel('Department',{exact:true}).selectOption('aws-department:Sales');expect(await page.locator('.cc-department-agent').count()).toBe(4);await page.setViewportSize({width:390,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+},undefined,false,true,true),20000);
