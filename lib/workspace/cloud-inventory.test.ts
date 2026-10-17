@@ -163,7 +163,7 @@ it("saves V16 source declarations in PostgreSQL and preserves them across reconn
  const prerequisite=createHash("sha256").update(await readFile("lib/workspace/cloud-inventory-schema.sql")).digest("hex");
  await db.query("INSERT INTO ll_migrations(version,digest)VALUES(16,$1)",[prerequisite]);
  const owner=await db.connect();try{
-  expect(await installCloudRuntimeMetadata(owner)).toEqual({migration:30,repeated:false,executionAuthorityGranted:false});
+  expect(await installCloudRuntimeMetadata(owner)).toEqual({migration:30,repeated:false,metadataColumnGrant:false,executionAuthorityGranted:false});
   expect(await installCloudRuntimeMetadata(owner)).toMatchObject({repeated:true});
  }finally{owner.release();}
  await store.recordScan(actor,key,value);
@@ -176,3 +176,29 @@ it("saves V16 source declarations in PostgreSQL and preserves them across reconn
  await expect(store.recordScan(actor,key,changed)).rejects.toThrow("replay changed");
  for(const table of ["ll_agents","ll_tokens","ll_actions"])expect((await db.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n).toBe(0);
 }));
+
+it("the installed web principal saves metadata only after an exact metadata-column grant; peer and worker roles gain no authority",async()=>{
+ const installed=await createInstalledTenantFixture({tenants:[tenant,"company-b"],salesOrg:tenant,seed:async owner=>{
+  await owner.query("INSERT INTO ll_members(email,org_id,name,password_hash)VALUES('owner@example.test','company-a','Owner','test'),('other@example.test','company-b','Other','test')");
+  await owner.query("INSERT INTO ll_sessions(hash,email,expires_at)VALUES('session-a','owner@example.test',now()+interval '1 hour')");
+ }});
+ try{
+  const db=installed.web(tenant),peer=installed.web("company-b"),worker=await installed.workload(tenant,"worker"),store=new CloudInventoryStore(db),actor:Actor={orgId:tenant,subject:"owner@example.test",tokenHash:"session-a",role:"operator"};
+  const role=(await db.query("SELECT current_user role")).rows[0].role,workerRole=(await worker.query("SELECT current_user role")).rows[0].role;
+  await store.configureConnection(actor,scope);const value=scan(new Date().toISOString(),"16");value.records[0].declaredMetadata={schemaVersion:"1",source:"aws-runtime-declaration",metadataVersion:"3",organization:"Acme",ownerOrganization:"Revenue Operations",ownerTeam:"Sales Support",environment:"production",onCallStatus:"unassigned"};
+  await expect(store.recordScan(actor,randomUUID(),value)).rejects.toThrow(/permission denied/);
+  await installed.owner.query("INSERT INTO ll_migrations(version,digest)VALUES(30,$1)",[createHash("sha256").update(await readFile("lib/workspace/cloud-runtime-metadata-schema.sql")).digest("hex")]);
+  const owner=await installed.owner.connect();try{
+   await expect(installCloudRuntimeMetadata(owner,{role:workerRole,org:tenant})).rejects.toThrow("bound web role required");
+   await expect(installCloudRuntimeMetadata(owner,{role,org:"company-b"})).rejects.toThrow("bound web role required");
+   expect(await installCloudRuntimeMetadata(owner,{role,org:tenant})).toMatchObject({migration:30,repeated:true,metadataColumnGrant:true,executionAuthorityGranted:false});
+   expect(await installCloudRuntimeMetadata(owner,{role,org:tenant})).toMatchObject({repeated:true,metadataColumnGrant:true});
+  }finally{owner.release();}
+  await store.recordScan(actor,randomUUID(),value);expect((await store.latest(actor,scope.connectionId)).records[0].record.declaredMetadata).toEqual(value.records[0].declaredMetadata);
+  expect((await db.query("SELECT has_column_privilege(current_user,'ll_cloud_runtime_observations','declared_metadata','UPDATE') allowed")).rows[0].allowed).toBe(false);
+  for(const restricted of [peer,worker])expect((await restricted.query("SELECT has_column_privilege(current_user,'ll_cloud_runtime_observations','declared_metadata','INSERT') allowed")).rows[0].allowed).toBe(false);
+  expect((await peer.query("SELECT * FROM ll_cloud_runtime_observations")).rows).toHaveLength(0);
+  const runtime=await db.connect();try{await expect(installCloudRuntimeMetadata(runtime,{role,org:tenant})).rejects.toThrow("table owner required");}finally{runtime.release();}
+  expect((await db.query("SELECT count(*)::int n FROM ll_actions")).rows[0].n).toBe(0);
+ }finally{await installed.close();}
+},30000);
