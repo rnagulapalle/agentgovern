@@ -61,6 +61,8 @@ const actionCopy: Record<string, [string, string]> = {
  request_approval: ["Ask for approval", "Hold the request for a manager’s decision."],
  update_approval_message: ["Update the approval conversation", "Reflect the decision in the connected approval channel."],
  notify_manager_declined: ["Notify the manager", "Report that the policy declined the request."],
+ notify_customer_rejected: ["Notify the customer of rejection", "The workflow attempts to send its rejection response. Delivery is confirmed only by separate evidence."],
+ ask_for_details: ["Ask for missing details", "Request the information needed before the workflow can continue."],
  triage: ["Request human review", "Route the request to a person for review."],
 };
 export function telemetryStepCopy(step: ReturnType<typeof telemetrySteps>[number]) {
