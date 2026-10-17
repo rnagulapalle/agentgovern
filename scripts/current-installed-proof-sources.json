@@ -58,6 +58,7 @@
       "components/control-plane/quote-workspace.tsx",
       "components/control-plane/refund-workspace.tsx",
       "components/control-plane/request-planner.tsx",
+      "components/control-plane/runtime-metadata.tsx",
       "components/control-plane/saved-history-workspace.tsx",
       "components/control-plane/saved-workspace.css",
       "components/control-plane/saved-workspace.tsx",
@@ -169,6 +170,9 @@
       "lib/workspace/cloud-project-discovery.ts",
       "lib/workspace/cloud-project-evidence.ts",
       "lib/workspace/cloud-project-http.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
+      "lib/workspace/cloud-runtime-metadata.ts",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -195,6 +199,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/quote-outbox.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
@@ -249,6 +255,8 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -271,6 +279,8 @@
       "runtime/temporal/record-routing.ts",
       "runtime/temporal/version-contract.ts",
       "scripts/build-temporal-worker.mjs",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
@@ -326,6 +336,8 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -348,6 +360,8 @@
       "runtime/temporal/record-routing.ts",
       "runtime/temporal/version-contract.ts",
       "scripts/build-temporal-worker.mjs",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
@@ -413,6 +427,8 @@
       "lib/workflows/service.ts",
       "lib/workspace/agents.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -437,6 +453,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-proof-diagnostic.ts",
@@ -498,6 +516,8 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -531,6 +551,8 @@
       "scripts/chat-ui-proof.ts",
       "scripts/chat-ui-safe-diagnostic.ts",
       "scripts/chat-ui-worker-admission.mjs",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-proof-sources.ts",
@@ -592,6 +614,8 @@
       "lib/workflows/service.ts",
       "lib/workspace/agents.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -616,6 +640,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-twin.py",
@@ -684,6 +710,8 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -704,6 +732,8 @@
       "pnpm-lock.yaml",
       "runtime/temporal/operations.ts",
       "runtime/temporal/staging-preflight.ts",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-twin.py",
@@ -744,6 +774,7 @@
       "components/control-plane/external-workflow-approvals.tsx",
       "components/control-plane/project-discovery-workspace.tsx",
       "components/control-plane/provider.tsx",
+      "components/control-plane/runtime-metadata.tsx",
       "components/control-plane/shell.tsx",
       "components/control-plane/ui.tsx",
       "components/control-plane/workspace-gate.tsx",
@@ -865,6 +896,9 @@
       "lib/workspace/cloud-project-evidence.ts",
       "lib/workspace/cloud-project-http.ts",
       "lib/workspace/cloud-project-schema.sql",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
+      "lib/workspace/cloud-runtime-metadata.ts",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -895,6 +929,8 @@
       "runtime/temporal/quote-outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
@@ -959,6 +995,8 @@
       "lib/workflows/guard.ts",
       "lib/workflows/service.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -987,6 +1025,8 @@
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
       "scripts/authenticated-ui-recording.mjs",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
@@ -1122,6 +1162,9 @@
       "lib/workspace/cloud-project-discovery.ts",
       "lib/workspace/cloud-project-evidence.ts",
       "lib/workspace/cloud-project-http.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
+      "lib/workspace/cloud-runtime-metadata.ts",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -1148,6 +1191,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
@@ -1191,6 +1236,8 @@
       "lib/quotes/store.ts",
       "lib/quotes/worker-admission-schema.sql",
       "lib/workspace/auth.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -1204,6 +1251,8 @@
       "package.json",
       "pnpm-lock.yaml",
       "scripts/check-quote-email-health.py",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/connector-twin-tls.py",
@@ -1265,6 +1314,8 @@
       "lib/workflows/service.ts",
       "lib/workspace/agents.ts",
       "lib/workspace/auth.ts",
+      "lib/workspace/cloud-runtime-metadata-migration.ts",
+      "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -1287,6 +1338,8 @@
       "runtime/temporal/outbox.ts",
       "runtime/temporal/staging-preflight.ts",
       "runtime/temporal/version-contract.ts",
+      "scripts/cloud-runtime-metadata-setup.ts",
+      "scripts/cloud-runtime-metadata-upgrade-process.ts",
       "scripts/company-directory-setup.ts",
       "scripts/company-directory-upgrade-process.ts",
       "scripts/current-proof-source-registry.mjs",
@@ -1466,6 +1519,18 @@
     },
     {
       "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/runtime-metadata.tsx"
+    },
+    {
+      "from": "components/control-plane/runtime-metadata.tsx",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
       "to": "components/control-plane/company-workspace.tsx"
     },
     {
@@ -1494,6 +1559,10 @@
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/durable/database.ts"
     },
     {
@@ -1515,6 +1584,10 @@
     {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-discovery.ts",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
@@ -1955,6 +2028,10 @@
     {
       "from": "components/control-plane/discovery-workspace.tsx",
       "to": "components/control-plane/aws-connection-journey.tsx"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "components/control-plane/runtime-metadata.tsx"
     },
     {
       "from": "components/control-plane/aws-connection-journey.tsx",
@@ -3981,6 +4058,22 @@
       "to": "lib/workspace/cloud-owner-review.ts"
     },
     {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
       "from": "scripts/company-directory-upgrade-process.ts",
       "to": "lib/workspace/tenant-bootstrap.ts"
     },
@@ -5079,6 +5172,22 @@
     {
       "from": "runtime/temporal/pinned-workflow.ts",
       "to": "runtime/temporal/activities.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
     },
     {
       "from": "scripts/company-directory-upgrade-process.ts",
@@ -6175,6 +6284,22 @@
     {
       "from": "runtime/temporal/pinned-quote-workflow.ts",
       "to": "lib/orchestration/quote-contract.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
     },
     {
       "from": "scripts/company-directory-upgrade-process.ts",
@@ -7509,6 +7634,22 @@
       "to": "scripts/connector-proof-installation.ts"
     },
     {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
       "from": "scripts/company-directory-upgrade-process.ts",
       "to": "lib/workspace/tenant-bootstrap.ts"
     },
@@ -8547,6 +8688,22 @@
     {
       "from": "scripts/chat-ui-proof-sources.ts",
       "to": "scripts/connector-proof-sources.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
     },
     {
       "from": "scripts/company-directory-upgrade-process.ts",
@@ -9697,6 +9854,22 @@
       "to": "scripts/worker-artifact-enrollment.mjs"
     },
     {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
       "from": "scripts/company-directory-upgrade-process.ts",
       "to": "lib/workspace/tenant-bootstrap.ts"
     },
@@ -10745,6 +10918,22 @@
       "to": "scripts/gateway-installed-fixture.ts"
     },
     {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
       "from": "scripts/company-directory-upgrade-process.ts",
       "to": "lib/workspace/tenant-bootstrap.ts"
     },
@@ -10862,6 +11051,10 @@
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/durable/database.ts"
     },
     {
@@ -10883,6 +11076,10 @@
     {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-discovery.ts",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
@@ -11487,6 +11684,14 @@
     {
       "from": "components/control-plane/discovery-workspace.tsx",
       "to": "components/control-plane/aws-connection-journey.tsx"
+    },
+    {
+      "from": "components/control-plane/aws-connection-journey.tsx",
+      "to": "components/control-plane/runtime-metadata.tsx"
+    },
+    {
+      "from": "components/control-plane/runtime-metadata.tsx",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
     },
     {
       "from": "components/control-plane/aws-connection-journey.tsx",
@@ -12815,6 +13020,22 @@
     {
       "from": "scripts/discovery-installed-evidence.mjs",
       "to": "scripts/discovery-installed-source-contract.mjs"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
     },
     {
       "from": "scripts/company-directory-upgrade-process.ts",
@@ -14409,6 +14630,22 @@
       "to": "scripts/persistent-installed-trial-core.mjs"
     },
     {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
       "from": "scripts/company-directory-upgrade-process.ts",
       "to": "lib/workspace/tenant-bootstrap.ts"
     },
@@ -15766,6 +16003,10 @@
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/durable/database.ts"
     },
     {
@@ -15787,6 +16028,10 @@
     {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-discovery.ts",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
@@ -16203,6 +16448,22 @@
     {
       "from": "scripts/tenant-route-process.ts",
       "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
     },
     {
       "from": "scripts/company-directory-upgrade-process.ts",
@@ -16783,6 +17044,22 @@
     {
       "from": "scripts/native-quote-twin-process.ts",
       "to": "scripts/native-quote-twin.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
     },
     {
       "from": "scripts/company-directory-upgrade-process.ts",
@@ -17785,6 +18062,22 @@
       "to": "lib/workspace/identity.ts"
     },
     {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-upgrade-process.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
+      "from": "scripts/cloud-runtime-metadata-setup.ts",
+      "to": "lib/workspace/cloud-runtime-metadata-migration.ts"
+    },
+    {
       "from": "scripts/company-directory-upgrade-process.ts",
       "to": "lib/workspace/tenant-bootstrap.ts"
     },
@@ -17816,6 +18109,9 @@
     }
   ],
   "nonAstAssets": [
+    "scripts/cloud-runtime-metadata-upgrade-process.ts",
+    "scripts/cloud-runtime-metadata-setup.ts",
+    "lib/workspace/cloud-runtime-metadata-schema.sql",
     "scripts/company-directory-upgrade-process.ts",
     "scripts/company-directory-setup.ts",
     "lib/workspace/company-profile-schema.sql",
@@ -17871,7 +18167,7 @@
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
     "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
     "components/control-plane/agents-workspace.tsx": "60059f9dd43bfa3fc5c04c836899c08da4ddc68b3d631c07df8858385b968b7f",
-    "components/control-plane/aws-connection-journey.tsx": "95ac70583e87005c9b26513bc13da7d7080bc2ab504028037953ac62703283c1",
+    "components/control-plane/aws-connection-journey.tsx": "c5af1610ae7ce41f8c07eb211047118cfb2b55dd08c2a37d382b2b80d4328758",
     "components/control-plane/aws-execution-browser.tsx": "1bb31bebd9b75e9b2f87c03ca4fa3e9698339f9935b150f220bc651320bd8d78",
     "components/control-plane/aws-workflow-history.tsx": "442eebbfe6c35a08584c91bcddf161df57df3fc213c9ff9597a6431937c4d0f2",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
@@ -17879,7 +18175,7 @@
     "components/control-plane/connector-actions-workspace.tsx": "0e3c49545f9ec160bb7b0acadce0a45907b10040a9f2250a9062dae1920945ff",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
     "components/control-plane/control-center.css": "659130c1abce0a1ce5012141adfef9c978fe265e353febf77b4f1902d212129a",
-    "components/control-plane/control-center.tsx": "983868ec8ed6c30c639f77490d13e6cfdc131707f6c05f9bb9eb74d4cd03751d",
+    "components/control-plane/control-center.tsx": "605a5248c5006145d92e3a6c6764be8cbf649a349b96a811351705660274c303",
     "components/control-plane/discount-approval-brief.tsx": "8d44b575118d60b1e6a22cbc07e4fa7b9ba03c90eedacc2d2490e5d0b98f1378",
     "components/control-plane/discount-history.tsx": "c38c42a43b51b8c18d2fb8f8bb77834edc62e523035a4b3cfe8ec65cbf328100",
     "components/control-plane/discovery-workspace.css": "d635a72712321737b3f14be303d81c9cd013ce5965d2afeb762d076d0a31d579",
@@ -17895,6 +18191,7 @@
     "components/control-plane/quote-workspace.tsx": "4753eec41270b2bb97233e0b8b08bcaaff197881befa83f344d16d968b3a0e23",
     "components/control-plane/refund-workspace.tsx": "3d751741e99cc54d5dd4aae5439be98b82cd1abf7f546d37ac018d8d48797449",
     "components/control-plane/request-planner.tsx": "659a3778dc1e542c264f7814ef655b72eac3542f3a4d34dde8fe440f5e8e32e8",
+    "components/control-plane/runtime-metadata.tsx": "74399ff0de645b2b1d7d95012c15d2ea9e0f37eecc4b298a0324f9319420bd3b",
     "components/control-plane/saved-history-workspace.tsx": "c27650a0a1ef0b17b57c54cd2fa1cfed4a407f9e39d773b97ec4ffe26e4cf7ec",
     "components/control-plane/saved-workspace.css": "ca602c6a14675c99fba6c008115057435f14713a1b0ee5f5509f548053618652",
     "components/control-plane/saved-workspace.tsx": "454f9e051e1d16d80f3c58c58ff844866c235840652a67fa14ee343e99f8f967",
@@ -17908,7 +18205,7 @@
     "components/marketing/product-overview.tsx": "2211c7d2eacba47c5ef3da9399813bb72e9c429cc43c77863448ab293c82efab",
     "current-profile-image-bytes-component.mjs": "d9612f5d505a9e957b859be6010a352270e2ed389d150bb1779f6386de491e59",
     "docs/evidence/historical-chat-artifact-sources-v1.json.gz": "98cdb5fa86b3ca17d5523e95e1479251f05293a2f0a0c1452ed2f3ecf3a59cb1",
-    "install-order.json": "512745eb6e3c7e7ac31b656ee96518199ce94bd4b25bc30d9dfea26458dc75aa",
+    "install-order.json": "3e6c0b898fd23454acfca056d1785449a934db73b02446b019086f9ed13c4621",
     "instrumentation.ts": "de978ea9fdb19208b48df6b454989dfc9f064c87397eb07769230bad3813e7fc",
     "lib/analytics.ts": "4e0970fca48cd652730ad5c1ebef97181e44e1f98849185479bb8ed1244b480c",
     "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
@@ -18017,16 +18314,16 @@
     "lib/workspace/aws-guided-access.ts": "faf94eaa55607db84c4500ed34f3179186dd545975263ecd2134440404fce5cb",
     "lib/workspace/aws-journey.ts": "824c105cb97238b05dadf4e91331fb2cd5db8e468e31b909049905daf4e7a940",
     "lib/workspace/cloud-activity.ts": "7df8d7ef9e73fd374a57a40b9ce203e8dc077728b599286a6f01e42b3d4fc50d",
-    "lib/workspace/cloud-aws-cli.ts": "3aad5fe6b3e8b44559fe8e87fee2adde4dfff6d7382049c4362b785b0daa90cb",
+    "lib/workspace/cloud-aws-cli.ts": "68cb4652585147412748a002f79b46b120020e0fca945789ddcc827572c7c64c",
     "lib/workspace/cloud-azure-binding.ts": "9147b0bc4dac0570e0a3b4d076788b1ab35cd05705fd2a90eceeb56127ef19b5",
     "lib/workspace/cloud-azure-cli.ts": "9691d88982dfc4a0471138789a21fe97f09c9e5d0bd6dd4fafe15763ae88b366",
     "lib/workspace/cloud-azure-http.ts": "4aee186eb7170a459c0d8eb1db07b5e7fcd85059aa5ff61f7338095a450c8294",
     "lib/workspace/cloud-binding.ts": "365a5c9d1c6fb720404dc8ba1500c818663ec59007231065d1b0db5a70b2aaea",
-    "lib/workspace/cloud-discovery.ts": "127ac2be9b9df0800718b31cb1231ca0155ca59f4e1f967a0a56fddaffe116cb",
+    "lib/workspace/cloud-discovery.ts": "df490447175d92287ac591de33f2460b34c2e3c3e2ea49ba1d0a2afea2b4947e",
     "lib/workspace/cloud-google-binding.ts": "0dab7008942f8bec744bbfe90a32dff28173e182f5dfc9e1695d26471b81e33a",
     "lib/workspace/cloud-google-http.ts": "ddee4cb1d4dd4730f4ca6a07bc945e3383574013b521866b7fa7a9ca7523dc63",
     "lib/workspace/cloud-inventory-schema.sql": "aceb85a2cf7bf8f4c8d29a110904233267847ce64d7f26eca9f5ce210730dd49",
-    "lib/workspace/cloud-inventory.ts": "88a9a9574f51cdbf932b96c13532a68ce1942235e108aeda7f211d4dd57e37d0",
+    "lib/workspace/cloud-inventory.ts": "41decf5cfd37741c94d66f02cbdea8c0f84b4f732b8b1011c9aa261afa0c0d5a",
     "lib/workspace/cloud-invocation-observation.ts": "3b1eab4b85d5ec1c8a0733048fdf1b574cb789909b4ebb2fa1a8fadd3b373d20",
     "lib/workspace/cloud-invocation-reader.ts": "52d4217bea73142317fd185f557d1e8807e6ee96807287df27b6770d43067f49",
     "lib/workspace/cloud-observation-operations.ts": "1cd336ce857bb832e0f6c74b4c1608a1f27931254092d2ff1d7548d66fc602df",
@@ -18041,6 +18338,9 @@
     "lib/workspace/cloud-project-evidence.ts": "e67e8c7a1b237837853bc961556f6705d7f7235893d914116e1c50dec7a1be8a",
     "lib/workspace/cloud-project-http.ts": "0d2574748fbaa21fab843832fec2a049aaeba362f62c321e4c11907986bbb40d",
     "lib/workspace/cloud-project-schema.sql": "5538a143044622368f606262ea9f6fada5f69a110f4c4d2002f0ee95bf10f7bf",
+    "lib/workspace/cloud-runtime-metadata-migration.ts": "c5da1a17056738ced2f125017d38a25b7c08ef32f35fc1f851d5b802efe62c77",
+    "lib/workspace/cloud-runtime-metadata-schema.sql": "cae72ecb2fe099e49fa9fb0d90e4a2f06ea23b0e46da35caa5e6bbdfc2392bd3",
+    "lib/workspace/cloud-runtime-metadata.ts": "e2988034aa662a5a2f6b80ae4db70726eb34b5488893218a05730fd8f3745f7a",
     "lib/workspace/company-profile-contract.ts": "afd1c2b96249f670052ba169b07a7e40c3aa8e0e26bc25ee931eb7a9a260286b",
     "lib/workspace/company-profile-migration.ts": "e5aa7ee47d9fc738530dc2aa92be4133a0307daa3ffebb1282c63aa5131c03de",
     "lib/workspace/company-profile-schema.sql": "64a8c04785a8fe968b9727895bf7b243f588f20cec8375038ef6cf30166809f8",
@@ -18088,7 +18388,7 @@
     "runtime/temporal/version-contract.ts": "318bacf1f4a4549275e2f399256fc27436d48ed8c8232e3bd53fc9160d3fd9b8",
     "scripts/authenticated-ui-recording.mjs": "570bed5ae1d7e2201e6cec74be2410b6add7407f5b666f455291c86207bb7e74",
     "scripts/build-temporal-worker.mjs": "8acc8392c4d8cdd1c222481af89fa1ef11ee49c0991cf414e5dc20b11ddb2629",
-    "scripts/chat-ui-current-sources.json": "54249f0005fd6f13a097cb93740c12c19b96fdf8440594c680d5ffe07b20a9fa",
+    "scripts/chat-ui-current-sources.json": "a24b8b3534ebd5df5e809da8ebedcc1de428b2be2d6a748cac4a140294137c50",
     "scripts/chat-ui-extracted-admission.mjs": "e3a077db7c94f42b98c883e5fae08bfc40b14c649ba1bc4385b29e713449d17d",
     "scripts/chat-ui-installed-fixture.ts": "638aa49142498bc5eb7a3b2a33671419e1c8ded5d8721d2c1f0270db43c7633e",
     "scripts/chat-ui-model-session.mjs": "55bf6e71cdc87368c4fee254b6d0ceb75ad6ca1b9b5965df903517e029dc540a",
@@ -18099,17 +18399,19 @@
     "scripts/chat-ui-safe-diagnostic.ts": "f917bc3fb0f987e2ed34a27281aa3bc63386d6248c4497288de4b90e50adfe1f",
     "scripts/chat-ui-worker-admission.mjs": "d89f9be4cdb20d3e88f2de180ec39efc8150bafde8d81ebb9cd9f1049919da7b",
     "scripts/check-quote-email-health.py": "23c3343deff113cd3823b76f5c231915901307f7bb11be4945e9da03b690c39b",
+    "scripts/cloud-runtime-metadata-setup.ts": "12770be59cc91967e60598b9dc1b6f1fd6b75a558196af7e03c6c229d22d9ba2",
+    "scripts/cloud-runtime-metadata-upgrade-process.ts": "accfb5b8d6078e31a3f099ded5a7cb154c285f652abd1dff61ad23d8ae1f80af",
     "scripts/company-directory-setup.ts": "ab713d9ea2a32c2c891a9314830724c17273204e758e6203ddad0442b2e29298",
     "scripts/company-directory-upgrade-process.ts": "fe57760f2a147c1d4483e40b47128ff3d3f6bc4bafbc0855bb48c3d8e979a603",
     "scripts/connector-proof-diagnostic.ts": "d9d999b495c00138a0f01053331003031e6cbe40710b0a76291a2f996c3ca84c",
     "scripts/connector-proof-installation.ts": "c5081c3b7818502f0978811c4b3420b13b13aefc56fc5ad6b1e720fa59e4509d",
-    "scripts/connector-proof-sources.ts": "aeef74eec0c5bcd92c25f2c7c89383954aed7001ea83f16260f9e0753306239b",
+    "scripts/connector-proof-sources.ts": "52fc51d806469dbdf8ece080fc8bf4963f0357bcc6debe872ea29aa99b4ec051",
     "scripts/connector-proof-worker.ts": "6a580f6996343c492306cfeb9bf5c61386b2f4ef8988a2dcfafd6619941563a5",
     "scripts/connector-proof.ts": "9c79e9199789ca07d8e93b64f7bf256a734c4fbf9e4383b6a93d4e58317fd4d3",
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "7ef14ab082040ef28214357b98d13b5b789f197cc43d964e7fc57229401396eb",
+    "scripts/current-proof-source-registry.mjs": "123c7b5d88de66fdaeb8e93c232ce0b3ab2584bb124f9e025861685baf5c28fd",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "acb5818ca827703ea9b0edc931dfc3c57b23e7511a36fd4391f7ec344d171f6a",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",

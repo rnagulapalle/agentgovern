@@ -1,8 +1,9 @@
+import { installCloudRuntimeMetadata } from "./cloud-runtime-metadata-migration";
 import { createInstalledTenantFixture } from "./installed-tenant-fixture";
 import { expect, it, vi } from "vitest";
 import { Pool } from "pg";
 import { readFile } from "node:fs/promises";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CloudInventoryStore } from "./cloud-inventory";
 import type { Actor } from "../durable/contracts";
 import type { RuntimeInventoryScan } from "./cloud-discovery";
@@ -152,3 +153,26 @@ it("scan admission rechecks identity and commits the shared per-connection throt
     expect((await db.query("SELECT count FROM ll_tenant_access_attempts WHERE key=$1", [`cloud-discovery:${actor.orgId}:${scope.connectionId}`])).rows[0].count).toBe(5);
   } finally { await installed.close(); }
 });
+
+it("saves V16 source declarations in PostgreSQL and preserves them across reconnect and canonical replay",async()=>fixture(async(db,store,actor)=>{
+ await store.configureConnection(actor,scope);const value=scan(new Date().toISOString(),"16"),key=randomUUID();
+ value.records[0].declaredMetadata={schemaVersion:"1",source:"aws-runtime-declaration",metadataVersion:"3",organization:"Acme",ownerOrganization:"Revenue Operations",ownerTeam:"Sales Support",environment:"production",onCallStatus:"unassigned"};
+ await expect(store.recordScan(actor,key,value)).rejects.toThrow("storage upgrade is required");
+ expect((await db.query("SELECT count(*)::int n FROM ll_cloud_scans")).rows[0].n).toBe(0);
+ await db.query("CREATE TABLE ll_migrations(version integer PRIMARY KEY,digest text NOT NULL)");
+ const prerequisite=createHash("sha256").update(await readFile("lib/workspace/cloud-inventory-schema.sql")).digest("hex");
+ await db.query("INSERT INTO ll_migrations(version,digest)VALUES(16,$1)",[prerequisite]);
+ const owner=await db.connect();try{
+  expect(await installCloudRuntimeMetadata(owner)).toEqual({migration:30,repeated:false,executionAuthorityGranted:false});
+  expect(await installCloudRuntimeMetadata(owner)).toMatchObject({repeated:true});
+ }finally{owner.release();}
+ await store.recordScan(actor,key,value);
+ const reread=await new CloudInventoryStore(db).latest(actor,scope.connectionId);
+ expect(reread.records[0].record.declaredMetadata).toEqual(value.records[0].declaredMetadata);
+ expect(reread.records[0].record.coverage.ownership).toBe("unmapped");
+ const reordered=structuredClone(value);reordered.records[0].declaredMetadata=Object.fromEntries(Object.entries(value.records[0].declaredMetadata).reverse()) as (typeof value.records)[number]["declaredMetadata"];
+ expect(await store.recordScan(actor,key,reordered)).toMatchObject({repeated:true});
+ const changed=structuredClone(value);changed.records[0].declaredMetadata!.ownerTeam="Other team";
+ await expect(store.recordScan(actor,key,changed)).rejects.toThrow("replay changed");
+ for(const table of ["ll_agents","ll_tokens","ll_actions"])expect((await db.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n).toBe(0);
+}));

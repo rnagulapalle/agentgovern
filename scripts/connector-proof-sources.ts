@@ -9,6 +9,7 @@ export const connectorProofSources=Object.freeze([
   "app/api/durable/workflows/route.ts",
   "app/api/workspace/enquiries/route.ts",
   "install-order.json",
+  "lib/workspace/cloud-runtime-metadata-schema.sql",
   "lib/connectors/catalog.ts",
   "lib/connectors/content.ts",
   "lib/connectors/contracts.ts",

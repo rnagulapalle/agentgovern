@@ -1,3 +1,5 @@
+import { projectRuntimeMetadata, validStoredRuntimeMetadata, type CloudRuntimeMetadata } from "./cloud-runtime-metadata";
+
 // Read-only collection contract. No enrollment, credential issuance or execution.
 export interface CloudDiscoveryScope {
   tenantId: string;
@@ -17,6 +19,7 @@ export interface DiscoveredRuntime {
   resourceArn: string;
   version: string;
   observedAt: string;
+  declaredMetadata?: CloudRuntimeMetadata | null;
   roleReference: string | null;
   workloadIdentityReference: string | null;
   gaps: ("runtime-identity-unavailable" | "effective-permissions-unknown" | "declared-tools-unknown")[];
@@ -67,7 +70,7 @@ function identityReferences(value: unknown, listed: { id: string; arn: string; v
   const prefix = `arn:aws:bedrock-agentcore:${scope.region}:${scope.accountId}:workload-identity-directory/`;
   const workload = typeof identity === "string" && identity.startsWith(prefix)
     && /^[a-zA-Z0-9_:/.-]{1,1024}$/.test(identity) ? identity : null;
-  return { roleReference: role, workloadIdentityReference: workload };
+  return { roleReference: role, workloadIdentityReference: workload, declaredMetadata: projectRuntimeMetadata(row.workflowMetadata) };
 }
 export async function collectAwsRuntimeInventory(api: AwsRuntimeInventoryApi, input: CloudDiscoveryScope, at: string): Promise<RuntimeInventoryScan> {
   // Copy before awaiting: caller mutation cannot redirect an enrolled scan.
@@ -97,9 +100,10 @@ export async function collectAwsRuntimeInventory(api: AwsRuntimeInventoryApi, in
         references = identityReferences(detail, listed, scope);
         if (!references) result.failures.push("invalid-detail");
       } catch { result.failures.push("detail-unavailable"); }
-      // Never retain raw responses, environment values, descriptions or headers.
+      // Retain only validated declarations, never raw environment values, descriptions or headers.
       result.records.push({ scope: { ...scope }, source: "aws-agentcore-runtime", resourceId: listed.id,
         resourceArn: listed.arn, version: listed.version, observedAt,
+        ...(references?.declaredMetadata ? {declaredMetadata: references.declaredMetadata} : {}),
         roleReference: references?.roleReference ?? null, workloadIdentityReference: references?.workloadIdentityReference ?? null,
         gaps: [...(!references?.roleReference || !references?.workloadIdentityReference ? ["runtime-identity-unavailable" as const] : []),
           "effective-permissions-unknown", "declared-tools-unknown"],
@@ -131,7 +135,8 @@ export function preserveRuntimeInventory(previous: RuntimeInventoryScan | null, 
     if (JSON.stringify(scopeCopy(record.scope)) !== JSON.stringify(scope)
       || !listedRuntime({ agentRuntimeId: record.resourceId, agentRuntimeArn: record.resourceArn, agentRuntimeVersion: record.version }, scope))
       throw new Error("Inventory record scope differs");
-    if (Object.keys(record).sort().join() !== "coverage,gaps,observedAt,resourceArn,resourceId,roleReference,scope,source,version,workloadIdentityReference"
+    if (Object.keys(record).filter(k => k !== "declaredMetadata").sort().join() !== "coverage,gaps,observedAt,resourceArn,resourceId,roleReference,scope,source,version,workloadIdentityReference"
+      || (record.declaredMetadata !== undefined && !validStoredRuntimeMetadata(record.declaredMetadata))
       || record.source !== "aws-agentcore-runtime"
       || JSON.stringify(record.coverage) !== JSON.stringify({ ownership: "unmapped", activity: "unconnected", enforcement: "unverified" }))
       throw new Error("Inventory evidence cannot carry authority or raw metadata");

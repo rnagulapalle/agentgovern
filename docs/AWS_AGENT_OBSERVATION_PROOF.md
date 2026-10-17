@@ -30,3 +30,29 @@ The deployment of the independent quote workflow has not been identified. Its ru
 - Only then connect the enforcement/approval/continuation boundary; this module grants no authority and must not be used as an execution permit.
 
 Primary references: [AWS runtime observability fields](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-runtime-metrics.html), [AWS observability setup](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html), [MCP tool discovery](https://modelcontextprotocol.io/specification/2025-11-25/server/tools).
+
+## V16 business declarations (local engineering, October 16)
+
+The runtime detail projection now reads six explicit `WORKFLOW_*` labels:
+metadata version, organization, owner organization, owner team, environment and
+on-call status. It never returns the environment map or config-secret reference.
+The discovery contract stores these in optional `declaredMetadata`, with its own
+schema version and AWS-declaration provenance. Older observations remain valid.
+Migration 30 adds a nullable, bounded declaration column to append-only runtime
+observations. Install it through `scripts/cloud-runtime-metadata-setup.ts` with a
+separate table-owner connection before refreshing deployments with metadata.
+Existing migrations remain unchanged; the installer grants no new privileges.
+An unmigrated installation refuses metadata-bearing scans instead of losing fields.
+
+Company-assigned teams/purpose and the invited accountable owner remain separate.
+AWS labels do not enroll a member, assign a company team or establish authority.
+The agent summary and connection review display these labels with the discovered
+runtime version; missing/invalid values remain unknown. Saved discovery must be
+refreshed to obtain metadata from a newer deployment.
+
+Read-only inspection of account 342206308838/us-west-2 found runtime V16 and
+metadata version 3. A bounded last-24-hours business-event traversal returned 620
+events for versions 12–15 and no V16 events. That read proves neither V16 business
+amount/summary ingestion nor a new V16 Slack execution. Runtime labels alone do
+not fill execution amounts or request text. Native inspection, parser projection,
+PostgreSQL persistence, mounted UI tests and deployment are distinct evidence.

@@ -103,3 +103,15 @@ test("stored inventory cannot inject authority, raw metadata or hide missing evi
   }
   expect(() => preserveRuntimeInventory(null, { ...scan, completeness: "unknown" } as unknown as typeof scan)).toThrow("completeness");
 });
+
+test("retains validated V16 declarations under the exact runtime version without changing company authority", async () => {
+  const workflowMetadata={metadataVersion:"3",organization:"Acme",ownerOrganization:"Acme Revenue Operations",ownerTeam:"Sales Support and Quote Operations",environment:"production",onCallStatus:"unassigned"};
+  const result=await collectAwsRuntimeInventory(api({getRuntime:async()=>({...detail(),workflowMetadata})}),scope,at);
+  expect(result.records[0].declaredMetadata).toMatchObject({...workflowMetadata,source:"aws-runtime-declaration",schemaVersion:"1"});
+  expect(result.records[0].coverage.ownership).toBe("unmapped");
+  expect(preserveRuntimeInventory(null,result).records[0].record.declaredMetadata).toEqual(result.records[0].declaredMetadata);
+  const wrong=await collectAwsRuntimeInventory(api({getRuntime:async()=>({...detail(),agentRuntimeVersion:"16",workflowMetadata})}),scope,at);
+  expect(wrong.records[0].declaredMetadata).toBeUndefined();
+  const injected=structuredClone(result);injected.records[0].declaredMetadata={...result.records[0].declaredMetadata!,ownerTeam:"Bearer private"};
+  expect(()=>preserveRuntimeInventory(null,injected)).toThrow("authority or raw metadata");
+});
