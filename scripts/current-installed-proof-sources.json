@@ -18416,7 +18416,7 @@
     "components/control-plane/enquiry-progress.tsx": "d75ce63d60927b6c4f8f8807a642936e427040e4de0b65d3195ee1b7d76d6b36",
     "components/control-plane/enquiry-workspace.tsx": "fc4c0434be27e3dbdb2620eca709cb0dd87994d7d07fd2d56cfe2e4945a175a0",
     "components/control-plane/execution-business-context.tsx": "dfee971f0f5abdce3a204f74e946bf1e082f5bd14b076dac757027985f751c4c",
-    "components/control-plane/external-workflow-approvals.tsx": "07c737c2c865e0e19d208f1ecc9c3083fbf3c1f79b99aac0fad87c482fe49698",
+    "components/control-plane/external-workflow-approvals.tsx": "8b061d040c622d5a87b95ba47076cec9627a2cad3e9b6a260c34a95d9bcf6b8f",
     "components/control-plane/project-discovery-workspace.tsx": "687f021a0b6ecaa5ae1aded40c30ed8875c81b6875c9fea1997014d4d5699854",
     "components/control-plane/provider.tsx": "dd9c3ae5b8fcc20a01117f4b293282a42fd7d89d9d93a40f306381d9934d64da",
     "components/control-plane/quote-workflow-view.tsx": "835149a7c08bd9d42826edc7428b76a09c768dbdb526565f531635210e7913af",

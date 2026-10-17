@@ -208,3 +208,20 @@ Separately, read-only CloudWatch inspection found quote references in the comple
 and rejected approval runs, but none in the 78-percent denial. All 90 retrieved
 source events passed the local projector. This does not establish a new deployment
 or production browser acceptance. The earlier production release stays unchanged.
+
+### October 17 decision-status presentation patch
+
+The confirmation for a LoopLabs decision is displayed inside the matching request
+card and requires the same request ID, revision and current saved decision. It
+cannot appear as a general approval banner above a different pending or rejected
+request. Switching deployment references clears the local confirmation.
+
+A rejected request is labeled “Rejected · Proposed change not approved.” The
+approval interface's execution status remains available in expandable details;
+it is not promoted to the final run outcome. Native observation found the quote
+adapter returning `held` after its run and history had reached `rejected`. The UI
+preserves that source report without presenting the rejected proposal as waiting
+for another decision. Execution history remains the place to inspect continuation
+and the customer response. This patch changes no approval authority, workflow
+state or provider behavior. Its deployment and native validation are recorded
+separately from this note.
