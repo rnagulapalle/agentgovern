@@ -89,6 +89,7 @@ export const connectorProofSources=Object.freeze([
   "lib/workspace/membership-authority.ts",
   "lib/workspace/owned-private-file.ts",
   "lib/workspace/schema.sql",
+  "lib/workspace/company-profile-schema.sql",
   "lib/workspace/tenant-bootstrap.ts",
   "lib/workspace/web-recovery-deployment.ts",
   "lib/workspace/tenant-context.ts",

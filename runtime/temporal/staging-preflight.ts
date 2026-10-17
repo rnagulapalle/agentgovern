@@ -17,6 +17,7 @@ export const scopedMigrations=[
  [23,"lib/workspace/membership-authority-schema.sql"],
  [24,"lib/enquiries/revision-schema.sql"],
  [28,"lib/workspace/cloud-observation-schema.sql"],
+ [29,"lib/workspace/company-profile-schema.sql"],
 ] as const;
 export async function migrationDigests(){
  // Existing staging runtimes retain their released base contract. The optional

@@ -52,7 +52,8 @@
     "lib/workspace/membership-authority-schema.sql",
     "lib/enquiries/revision-schema.sql",
     "scripts/chat-ui-proof-sources.ts",
-    "lib/workspace/cloud-observation-schema.sql"
+    "lib/workspace/cloud-observation-schema.sql",
+    "lib/workspace/company-profile-schema.sql"
   ],
   "files": [
     "Dockerfile.temporal",
@@ -71,6 +72,7 @@
     "app/sales.css",
     "components/analytics/Analytics.tsx",
     "components/brand/loop-mark.tsx",
+    "components/control-plane/company-workspace.tsx",
     "components/control-plane/enquiry-execution.tsx",
     "components/control-plane/enquiry-progress.tsx",
     "components/control-plane/enquiry-workspace.tsx",
@@ -180,6 +182,8 @@
     "lib/workspace/cloud-observation-schema.sql",
     "lib/workspace/cloud-owner-review-schema.sql",
     "lib/workspace/cloud-project-schema.sql",
+    "lib/workspace/company-profile-contract.ts",
+    "lib/workspace/company-profile-schema.sql",
     "lib/workspace/deployment-capabilities.ts",
     "lib/workspace/identity.ts",
     "lib/workspace/membership-authority-schema.sql",

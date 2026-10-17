@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCompany } from "./company-workspace";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -76,11 +77,13 @@ export function ControlShell({
   scriptDemo = false,
 }: {
   children: React.ReactNode;
-  member: { name: string; email: string };
+  member: { name: string; email: string; company?: string | null };
   quoteOnly?: boolean;
   scriptDemo?: boolean;
 }) {
   const { state, toast } = useControl();
+  const {snapshot:company}=useCompany();
+  const companyName=company?.profile?.name || member.company;
   const pathname = usePathname();
   const section = pathname.split("/")[2] || "overview";
   const durable = scriptDemo || [
@@ -122,7 +125,7 @@ export function ControlShell({
     { key: "overview", label: "Overview", icon: LayoutGrid },
     { key: "agents", label: "Agents", icon: Bot },
     { key: "activity", label: "Activity", icon: Activity },
-    { key: "approvals", label: "Approvals", icon: ShieldCheck },
+    { key: "approvals", label: "Approvals & outcomes", icon: ShieldCheck },
   ] }, { name: "CONFIGURE", items: [
     { key: "connectors", label: "Connections", icon: Database },
     { key: "policies", label: "Policies", icon: SlidersHorizontal },
@@ -130,7 +133,7 @@ export function ControlShell({
   const navigation = quoteOnly ? [{ name: "QUOTE WORKSPACE", items: groups[0].items.filter(item => item.key === "quotes") }] : scriptDemo ? savedNavigation : groups;
   const title =
     navigation.flatMap((g) => g.items).find((i) => i.key === section)?.label ||
-    (scriptDemo ? ({ quotes: "Quote workspace", actions: "Action details", discovery: "AWS connection", workflows: "Sample workflows", "workflow-runs": "Customer handoffs", history: "Saved decisions", reconciliation: "Outcome review", outputs: "Output controls" } as Record<string,string>)[section] || "Workspace" : "Example settings");
+    (scriptDemo ? ({ quotes: "Quote workspace", actions: "Action details", discovery: "AWS connection", workflows: "Sample workflows", "workflow-runs": "Customer handoffs", history: "Saved decisions", organization: "Organization", reconciliation: "Outcome review", outputs: "Output controls" } as Record<string,string>)[section] || "Workspace" : "Example settings");
   const results = [
     ...state.agents.map((a) => ({
       name: a.name,
@@ -185,13 +188,13 @@ export function ControlShell({
           href={durable ? "/control-plane" : "/control-plane/settings"}
           className="cp-workspace"
         >
-          <span className="cp-workspace-icon">M</span>
+          <span className="cp-workspace-icon">{scriptDemo ? (companyName || "Company").slice(0,1) : "M"}</span>
           <span>
             <strong>
-              {quoteOnly ? "Quote workspace" : durable ? "LoopLabs workspace" : "Prepared examples"}
+              {quoteOnly ? "Quote workspace" : durable ? (companyName || "Company workspace") : "Prepared examples"}
             </strong>
             <small>
-              {quoteOnly ? "Sample data only" : durable ? "Saved controls" : "Browser-local sample data"}
+              {quoteOnly ? "Sample data only" : durable ? "Company administration" : "Browser-local sample data"}
             </small>
           </span>
           <ChevronDown size={14} />
@@ -227,7 +230,7 @@ export function ControlShell({
           ))}
         </nav>
         <div className="cp-sidebar-bottom">
-          <div className="cp-enforcement">
+          <div className="cp-enforcement" hidden={scriptDemo}>
             <div>
               <span className="cp-live-dot" />
               <strong>{quoteOnly ? "Quote action controls" : scriptDemo ? "Workspace controls" : "Governed by default"}</strong>
@@ -243,6 +246,7 @@ export function ControlShell({
               <span>v0.1</span>
             </span>
           </div>
+          {scriptDemo && <Link prefetch={false} href="/control-plane/organization" className={`cp-nav-item ${section === "organization" ? "is-active" : ""}`}><Settings2 size={17} strokeWidth={1.5}/>Organization</Link>}
           {!quoteOnly && !scriptDemo && <Link
             prefetch={false}
             href="/control-plane/settings"
@@ -267,7 +271,7 @@ export function ControlShell({
             <span>
               <strong>{member.name}</strong>
               <small>{member.email}</small>
-              {scriptDemo && <small>Workspace administrator</small>}
+              {scriptDemo && <small>Company administrator</small>}
             </span>
             <ArrowUpRight size={14} />
           </Link>
@@ -283,7 +287,7 @@ export function ControlShell({
             <Menu size={21} />
           </button>
           <div className="cp-breadcrumb">
-            <span>Workspace</span>
+            <span>{scriptDemo ? companyName || "Company" : "Workspace"}</span>
             <ChevronRight size={12} />
             <strong>{title}</strong>
           </div>
@@ -338,7 +342,7 @@ export function ControlShell({
             <BrandMark small /> {scriptDemo ? "Action controls and saved decisions" : "Action, execution, and output controls"}
           </span>
           <span>
-            {durable
+            {scriptDemo ? "Connected activity & saved decisions" : durable
               ? "Sample data · decisions saved on the server"
               : "Sample data · changes saved in this browser"}
           </span>

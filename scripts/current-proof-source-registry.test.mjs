@@ -26,7 +26,7 @@ test.each(['missing','extra','altered','edge'])('exact current registry rejects 
 test('new transitive import and dynamic import change closure; missing dependency fails construction',()=>{
  const dir=mkdtempSync(join(tmpdir(),'ll-source-closure-'));
  try{
-  for(const f of ['scripts/current-proof-source-registry.mjs','scripts/discovery-installed-source-contract.mjs','package.json','pnpm-lock.yaml','tsconfig.json','next.config.mjs','lib/durable/tenant-boundary-prototype-schema.sql','lib/workspace/membership-authority-schema.sql','lib/connectors/quote-action-schema.sql','lib/quotes/background-schema.sql','lib/quotes/worker-admission-schema.sql']){mkdirSync(join(dir,f,'..'),{recursive:true});writeFileSync(join(dir,f),readFileSync(f));}
+  for(const f of constructCurrentProofRegistry().families.web){mkdirSync(join(dir,f,'..'),{recursive:true});writeFileSync(join(dir,f),readFileSync(f));}
   // Real TypeScript parser dependency only; no application/runtime execution.
   mkdirSync(join(dir,'node_modules')); symlinkSync(join(process.cwd(),'node_modules/typescript'),join(dir,'node_modules/typescript'),'dir');
   writeFileSync(join(dir,'root.ts'),"export {x} from './a';\n");writeFileSync(join(dir,'a.ts'),'export const x=1;\n');const roots={test:['root.ts']};const first=constructCurrentProofRegistry(dir,roots);

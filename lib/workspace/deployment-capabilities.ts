@@ -3,7 +3,7 @@
  * default-denies other protected entry points, independently of client input. */
 export const quoteDemoProfile = 'isolated-quote-demo-1';
 export const scriptDemoProfile = 'isolated-control-demo-1';
-export const scriptDemoSections = Object.freeze(['quotes', 'agents', 'activity', 'actions', 'workflow-runs', 'history', 'workflows', 'approvals', 'policies', 'connectors', 'outputs', 'reconciliation']);
+export const scriptDemoSections = Object.freeze(['quotes', 'organization', 'agents', 'activity', 'actions', 'workflow-runs', 'history', 'workflows', 'approvals', 'policies', 'connectors', 'outputs', 'reconciliation']);
 const apiMethods: Readonly<Record<string, readonly string[]>> = Object.freeze({
   '/api/workspace/session': Object.freeze(['GET', 'POST', 'DELETE']),
   '/api/workspace/quotes': Object.freeze(['GET', 'POST']),
@@ -14,6 +14,7 @@ const apiMethods: Readonly<Record<string, readonly string[]>> = Object.freeze({
 const scriptApiMethods: Readonly<Record<string, readonly string[]>> = Object.freeze({
   ...apiMethods,
   '/api/workspace/agents': Object.freeze(['GET', 'POST']),
+  '/api/workspace/company': Object.freeze(['GET', 'POST']),
   '/api/durable': Object.freeze(['GET', 'POST']),
   '/api/durable/connectors': Object.freeze(['GET', 'POST']),
   '/api/durable/workflows': Object.freeze(['GET', 'POST']),

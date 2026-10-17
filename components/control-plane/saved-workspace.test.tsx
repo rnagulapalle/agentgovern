@@ -59,12 +59,12 @@ it("unknown action states do not become a successful empty queue",async()=>mount
 
 it('policies retains administrator boundaries without repeating the capability overview',()=>{
  const h=renderToStaticMarkup(<SavedWorkspace section="policies"/>);
- for(const phrase of ['Workspace administrator','same server permissions apply to both named administrators','self-approval','bypass a hard limit','another workspace','unsupported action','Account invitations','cloud IAM administration','billing management'])expect(h).toContain(phrase);
+ for(const phrase of ['Company administrator','Both invited administrators share the installed company view','self-approval','bypass a hard limit','another workspace','unsupported action','Account invitations','cloud IAM administration','billing management'])expect(h).toContain(phrase);
  for(const route of ['discovery','work','settings','records','requests'])expect(h).not.toContain('href="/control-plane/'+route+'"');
  expect(h).not.toContain('Capabilities and availability');expect(h).not.toContain('super-admin');expect(h).not.toContain('type="submit"');
 });
 it('administrator boundaries remain visible when a saved API refuses access',async()=>mounted('policies',async(page,requests)=>{
- await page.getByRole('alert').waitFor();await page.getByRole('heading',{name:'Workspace administrator',exact:true}).waitFor();
+ await page.getByRole('alert').waitFor();await page.getByRole('heading',{name:'Company administrator',exact:true}).waitFor();
  expect(await page.getByRole('heading',{name:'Capabilities and availability'}).count()).toBe(0);
  expect(requests.every(r=>r.startsWith('GET '))).toBe(true);
 },'pricing'),15000);
@@ -118,3 +118,5 @@ it('the product capability overview appears on the workspace overview only',()=>
  expect(renderToStaticMarkup(<SavedWorkspace section="overview"/>)).toContain('Capabilities and availability');
  for(const section of ['policies','connections'] as const)expect(renderToStaticMarkup(<SavedWorkspace section={section}/>)).not.toContain('Capabilities and availability');
 });
+
+it('AWS Connections describes observed cloud activity separately from the sample business systems',()=>{const h=renderToStaticMarkup(<SavedWorkspace section="connections" awsConnections/>);expect(h).toContain('AWS connections observe saved inventory and enrolled workflow activity');expect(h).toContain('sample business systems below');expect(h).toContain('Execution controls require separate verified onboarding');});
