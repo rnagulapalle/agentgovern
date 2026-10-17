@@ -18,3 +18,11 @@ test("rejects injected authority and drops malformed or sensitive labels rather 
  expect(validStoredRuntimeMetadata({...projectRuntimeMetadata(declaration),permissions:["*"]})).toBe(false);
  expect(validStoredRuntimeMetadata({...projectRuntimeMetadata(declaration),source:"company-authority"})).toBe(false);
 });
+test('retains explicit owner/department/purpose without changing legacy declarations or admitting authority',()=>{
+ const v=projectRuntimeMetadata({...declaration,owner:'Raj',department:'Sales',purpose:'Prepare customer quotes'})!;
+ expect(v).toMatchObject({schemaVersion:'2',owner:'Raj',department:'Sales',purpose:'Prepare customer quotes'});expect(validStoredRuntimeMetadata(v)).toBe(true);
+ expect(validStoredRuntimeMetadata({...v,schemaVersion:'1'})).toBe(false);
+ expect(projectRuntimeMetadata({...declaration,owner:'<script>',department:'Finance\nAdmin'})?.owner).toBeNull();
+ expect(projectRuntimeMetadata({...declaration,owner:'Raj',permissions:['*']})).toBeNull();
+ expect(validStoredRuntimeMetadata({...v,extra:'authority'})).toBe(false);
+});

@@ -83,11 +83,12 @@ it("observation requires a fixed account and cannot accept a browser-chosen log-
  expect(execute).not.toHaveBeenCalled();
 });
 
-it("projects only the six reviewed AWS business labels, never the environment map or config secret", async () => {
+it("projects only the nine reviewed AWS business labels, never the environment map or config secret", async () => {
   execute.mockImplementation((_p,_a,_o,cb)=>cb(null,"{}"));
   await awsCliInventoryApi(config()).getRuntime({agentRuntimeId:id,agentRuntimeVersion:"16"});
   const query=execute.mock.calls[0][1].at(-1);
   expect(query).toContain("workflowMetadata:{metadataVersion:environmentVariables.WORKFLOW_METADATA_VERSION");
-  expect(query.match(/environmentVariables\./g)).toHaveLength(6);
+  expect(query.match(/environmentVariables\./g)).toHaveLength(9);
+  for(const key of ["WORKFLOW_OWNER","WORKFLOW_DEPARTMENT","WORKFLOW_PURPOSE"])expect(query).toContain("environmentVariables."+key);
   expect(query).not.toContain("QUOTE_AGENT_CONFIG_SECRET_ARN");
 });

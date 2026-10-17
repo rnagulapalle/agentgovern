@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {Pool} from 'pg';
 import {readOwnedPrivateFile,parseTenantInstallation} from '../lib/workspace/tenant-bootstrap';
 import {scopedPoolOptions} from '../lib/durable/pg-transport';
+import {installCloudBusinessMetadata} from '../lib/workspace/cloud-business-metadata-migration';
 import {installCloudRuntimeMetadata} from '../lib/workspace/cloud-runtime-metadata-migration';
 async function main(){
  assert.equal(process.env.LOOPLABS_RUNTIME_METADATA_UPGRADE,'explicit-offline');assert.equal(process.platform,'linux');assert.equal(process.getuid?.(),1001);
@@ -14,6 +15,6 @@ async function main(){
  assert.equal(config.web.length,1);assert.equal(config.workloads.length,0);const role=config.web[0];assert.equal(role.org,config.salesOrg);
  const url=new URL(input.database.url),target=new URL(config.broker.url);assert.equal(url.username,'trial');assert.equal(url.pathname,target.pathname);assert(!url.search&&!url.hash);url.hostname=target.hostname;url.port=target.port;
  const db=new Pool(await scopedPoolOptions({url:url.href,schema:config.schema,purpose:'installer',transport:config.transport}));
- try{const client=await db.connect();try{await owner.assertStable();await web.assertStable();const result=await installCloudRuntimeMetadata(client,{role:role.role,org:role.org});await owner.assertStable();await web.assertStable();console.log(JSON.stringify({contract:'additive-cloud-runtime-metadata-upgrade-1',...result,schema:config.schema,org:role.org,ownerProcessRetained:false}));}finally{client.release();}}finally{await db.end();}
+ try{const client=await db.connect();try{await owner.assertStable();await web.assertStable();await installCloudRuntimeMetadata(client,{role:role.role,org:role.org});const result=await installCloudBusinessMetadata(client,{role:role.role,org:role.org});await owner.assertStable();await web.assertStable();console.log(JSON.stringify({contract:'additive-cloud-runtime-metadata-upgrade-1',...result,schema:config.schema,org:role.org,ownerProcessRetained:false}));}finally{client.release();}}finally{await db.end();}
 }
 main().catch(()=>{console.error('Runtime metadata upgrade refused or failed; no completion receipt. Inspect the private one-shot owner diagnostics.');process.exitCode=1;});

@@ -1,3 +1,11 @@
+## CIO fleet visibility patch (October 17, candidate)
+
+Cloud business declarations now retain explicit owner, department and purpose through additive migration 31. Existing migration 30 is unchanged. Source labels participate in dashboard grouping and filters; saved company assignments override them. These are display labels, not company membership or approval grants. The dashboard reads every deployment returned in saved inventory rather than selecting the first three or five, and keeps incomplete approval coverage distinct from zero.
+
+Execution approval navigation requires one reported version and a matching saved deployment reference. Unknown, mixed or ambiguous versions do not receive approval controls. A configured v15 approval connection does not authorize v16. Business impact is read from a unique matching approval record; missing request text and unrelated provider effects are not invented.
+
+Agent setup and Activity use distinct embedded views. Source history remains an on-demand, workflow-reported read, not independently verified delivery or mandatory execution enforcement. Refreshing the dashboard does not discover new AWS deployments: discovery must be refreshed separately. Native production acceptance and release receipts are recorded outside this architecture note; this candidate section alone is not evidence of deployment.
+
 ## Local quote status presentation (P1b, October 13)
 
 The quote workspace separates the retained result at completion, the latest server

@@ -71,12 +71,13 @@ function identityReferences(value: unknown, listed: { id: string; arn: string; v
   const workload = typeof identity === "string" && identity.startsWith(prefix)
     && /^[a-zA-Z0-9_:/.-]{1,1024}$/.test(identity) ? identity : null;
   // The guided connection uses the native SDK response; CLI reads already
-  // return this minimized declaration. Both paths select the same six fields.
+  // return this minimized declaration. Both paths select the same bounded business fields.
   const env = object(row.environmentVariables);
   const declaration = row.workflowMetadata === undefined && env ? {
     metadataVersion: env.WORKFLOW_METADATA_VERSION, organization: env.WORKFLOW_ORGANIZATION,
     ownerOrganization: env.WORKFLOW_OWNER_ORGANIZATION, ownerTeam: env.WORKFLOW_OWNER_TEAM,
     environment: env.WORKFLOW_ENVIRONMENT, onCallStatus: env.WORKFLOW_ONCALL_STATUS,
+    ...(env.WORKFLOW_OWNER || env.WORKFLOW_DEPARTMENT || env.WORKFLOW_PURPOSE ? {owner:env.WORKFLOW_OWNER,department:env.WORKFLOW_DEPARTMENT,purpose:env.WORKFLOW_PURPOSE} : {}),
   } : row.workflowMetadata;
   return { roleReference: role, workloadIdentityReference: workload, declaredMetadata: projectRuntimeMetadata(declaration) };
 }

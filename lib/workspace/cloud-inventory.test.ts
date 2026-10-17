@@ -1,3 +1,4 @@
+import { installCloudBusinessMetadata } from "./cloud-business-metadata-migration";
 import { installCloudRuntimeMetadata } from "./cloud-runtime-metadata-migration";
 import { createInstalledTenantFixture } from "./installed-tenant-fixture";
 import { expect, it, vi } from "vitest";
@@ -202,3 +203,26 @@ it("the installed web principal saves metadata only after an exact metadata-colu
   expect((await db.query("SELECT count(*)::int n FROM ll_actions")).rows[0].n).toBe(0);
  }finally{await installed.close();}
 },30000);
+
+it("additive metadata31 keeps legacy records, persists source department and owner, and rejects authority fields",async()=>fixture(async(db,store,actor)=>{
+ await db.query("CREATE TABLE ll_migrations(version integer PRIMARY KEY,digest text NOT NULL)");
+ await db.query("INSERT INTO ll_migrations(version,digest) VALUES(16,$1)",[createHash("sha256").update(await readFile("lib/workspace/cloud-inventory-schema.sql")).digest("hex")]);
+ const owner=await db.connect();try{
+  await installCloudRuntimeMetadata(owner);
+  await store.configureConnection(actor,scope);
+  const legacy=scan(new Date().toISOString(),'1');
+  legacy.records[0].declaredMetadata={schemaVersion:'1',source:'aws-runtime-declaration',metadataVersion:'1',organization:'Acme',ownerOrganization:'Revenue Operations',ownerTeam:'sales-ops',environment:'production',onCallStatus:'unassigned'};
+  await store.recordScan(actor,randomUUID(),legacy);
+  expect(await installCloudBusinessMetadata(owner)).toMatchObject({migration:31,repeated:false,executionAuthorityGranted:false});
+  expect(await installCloudBusinessMetadata(owner)).toMatchObject({repeated:true});
+ }finally{owner.release();}
+ await store.configureConnection(actor,scope);const value=scan(new Date().toISOString(),'20');
+ value.records[0].declaredMetadata={schemaVersion:'2',source:'aws-runtime-declaration',metadataVersion:'1',organization:'Acme',ownerOrganization:null,ownerTeam:'sales-ops',environment:'production',onCallStatus:'unassigned',owner:'Raj',department:'Sales',purpose:'Prepare customer quotes'};
+ await store.recordScan(actor,randomUUID(),value);
+ const saved=(await store.latest(actor,scope.connectionId)).records;
+ expect(saved.find(r=>r.record.version==='20')!.record.declaredMetadata).toEqual(value.records[0].declaredMetadata);
+ expect(saved.find(r=>r.record.version==='1')!.record.declaredMetadata).toMatchObject({schemaVersion:'1',ownerTeam:'sales-ops'});
+ await expect(db.query("UPDATE ll_cloud_runtime_observations SET declared_metadata=declared_metadata||'{\"permissions\":[\"*\"]}'::jsonb")).rejects.toThrow();
+ await expect(db.query("UPDATE ll_cloud_runtime_observations SET declared_metadata=declared_metadata||'{\"source\":null}'::jsonb")).rejects.toThrow();
+ expect((await store.latest(actor,scope.connectionId)).records[0].record.coverage.ownership).toBe('unmapped');
+}));

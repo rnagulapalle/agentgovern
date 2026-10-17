@@ -52,6 +52,9 @@ export function telemetryDecision(events:WorkflowTelemetryEvent[],decision:strin
 const actionCopy: Record<string, [string, string]> = {
  classify: ["Understand the request", "Identify what the customer is asking for."],
  resolve_customer: ["Find the customer", "Look up the customer in the connected CRM."],
+ load_base_quote: ["Read the existing quote", "Inspect the quote values used by this request."],
+ policy_check: ["Evaluate discount policy", "The workflow reports its internal policy check."],
+ apply_discount: ["Process the proposed discount", "This internal step does not independently confirm a saved CRM change. Check the later update and reported outcome."],
  price: ["Calculate pricing", "Prepare pricing for the requested products."],
  record_crm: ["Update the customer record", "Save the quote information in the connected CRM."],
  send_quote: ["Send the quote", "Deliver the quote through the connected channel."],
