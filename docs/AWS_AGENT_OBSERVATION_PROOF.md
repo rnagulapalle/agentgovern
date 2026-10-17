@@ -41,7 +41,9 @@ schema version and AWS-declaration provenance. Older observations remain valid.
 Migration 30 adds a nullable, bounded declaration column to append-only runtime
 observations. Install it through `scripts/cloud-runtime-metadata-setup.ts` with a
 separate table-owner connection before refreshing deployments with metadata.
-Existing migrations remain unchanged; the installer grants no new privileges.
+Existing migrations remain unchanged. The owner installer grants only
+`INSERT(declared_metadata)` to the exact existing workspace-bound web role; it
+grants no UPDATE, DELETE or action/execution permissions.
 An unmigrated installation refuses metadata-bearing scans instead of losing fields.
 
 Company-assigned teams/purpose and the invited accountable owner remain separate.
