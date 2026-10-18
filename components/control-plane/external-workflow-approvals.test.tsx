@@ -1,6 +1,7 @@
 import { expect,it } from "vitest";
 import { chromium,type Page } from "@playwright/test";
 import { resolve } from "node:path";
+import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { approvalHash,type ExternalApproval } from "../../lib/workspace/external-approvals";
 const requireModule=createRequire(import.meta.url);
@@ -15,7 +16,7 @@ async function mounted(run:(page:Page,calls:Record<string,unknown>[],set:(a:Exte
  await page.clock.install();await page.goto('https://approval-fixture.test/');await page.addScriptTag({content:bundle.outputFiles[0].text});await page.getByRole('heading',{name:'Workflow approvals',exact:true}).waitFor();await run(page,calls,a=>{saved=Array.isArray(a)?a:[a];});
  }finally{await browser.close();}}
 it('shows reason and exact before/after then sends one confirmed decision',()=>mounted(async(page,calls)=>{await page.getByText('25% exceeds the 20% delegated authority',{exact:false}).waitFor();expect(await page.getByText('0% discount',{exact:true}).isVisible()).toBe(true);await page.getByRole('button',{name:'Review decision',exact:true}).click();await page.getByRole('button',{name:'Confirm approval',exact:true}).click();await page.getByText('Your approval was saved for this request.',{exact:false}).waitFor();expect(calls.filter(c=>c.operation==='decide')).toHaveLength(1);expect(calls.find(c=>c.operation==='decide')?.revision).toBe(request().revision);expect(calls.every(c=>!('reviewer'in c))).toBe(true);}),20000);
-it('reads a Slack decision from the same source and refreshes history',()=>mounted(async(page,_calls,set)=>{await page.getByRole('button',{name:'Review decision',exact:true}).waitFor();set({...request(),status:'approved',decidedBy:'manager@example.test',decidedAt:new Date().toISOString(),executionStatus:'completed'});await page.clock.fastForward(15001);await page.getByText('Decision by manager@example.test',{exact:false}).waitFor();expect(await page.getByRole('button',{name:'Review decision',exact:true}).count()).toBe(0);expect(await page.locator('#refresh-count').innerText()).toBe('1');}),20000);
+it('reads a Slack decision from the same source and refreshes history',()=>mounted(async(page,_calls,set)=>{await page.getByRole('button',{name:'Review decision',exact:true}).waitFor();set({...request(),status:'approved',decidedBy:'manager@example.test',decidedAt:new Date().toISOString(),executionStatus:'completed'});await page.clock.fastForward(15001);await page.getByLabel('Decision evidence').getByText('manager@example.test',{exact:true}).first().waitFor();expect(await page.getByRole('button',{name:'Review decision',exact:true}).count()).toBe(0);expect(await page.locator('#refresh-count').innerText()).toBe('1');}),20000);
 it('does not offer self approval',()=>mounted(async page=>{await page.getByText('A different authorized reviewer must decide your request.',{exact:true}).waitFor();expect(await page.getByRole('button',{name:'Review decision',exact:true}).count()).toBe(0);},{self:true}),20000);
 it('unconfigured connection cannot present actionable approvals',()=>mounted(async page=>{await page.getByText('Approval connection is not configured for this agent.',{exact:false}).waitFor();expect(await page.getByRole('button',{name:'Review decision',exact:true}).count()).toBe(0);},{connected:false}),20000);
 it('lost mutation acknowledgement removes controls and does not retry',()=>mounted(async(page,calls)=>{await page.getByRole('button',{name:'Review decision',exact:true}).click();await page.getByRole('button',{name:'Confirm approval',exact:true}).click();await page.getByRole('alert').waitFor();expect(calls.filter(c=>c.operation==='decide')).toHaveLength(1);expect(await page.getByRole('button',{name:'Confirm approval',exact:true}).count()).toBe(0);},{lost:true}),20000);
@@ -23,6 +24,8 @@ it('an execution-scoped panel never offers another run’s approval',()=>mounted
  await page.getByText('No shared approval request was returned for this execution.',{exact:false}).waitFor();
  expect(await page.getByRole('button',{name:'Review decision',exact:true}).count()).toBe(0);
  expect(calls.every(c=>c.operation==='list')).toBe(true);
+ expect(await page.getByRole('heading',{name:'Approval record unavailable',exact:true}).isVisible()).toBe(true);
+ expect(await page.getByLabel('Decision evidence').count()).toBe(0);
 },{runId:'different-run'}),20000);
 
 it('keeps the approval confirmation inside its exact request when another request arrives',()=>mounted(async(page,_calls,set)=>{
@@ -40,4 +43,24 @@ it('shows rejection as final while retaining a conflicting held source report in
 it('removes a local decision confirmation when the authoritative request no longer matches',()=>mounted(async(page,_calls,set)=>{
  await page.getByRole('button',{name:'Review decision',exact:true}).click();await page.getByRole('button',{name:'Confirm approval',exact:true}).click();await page.getByRole('status').waitFor();
  set({...request(),status:'rejected',decidedBy:'manager@example.test',decidedAt:new Date().toISOString(),executionStatus:'held'});await page.clock.fastForward(15001);await page.getByText('Proposed change not approved',{exact:false}).waitFor();expect(await page.getByRole('status').count()).toBe(0);
+}),20000);
+
+it('labels a missing reviewer without substituting an eligible reviewer or requester',()=>mounted(async(page,_calls,set)=>{
+ await page.getByRole('button',{name:'Review decision',exact:true}).waitFor();
+ set({...request(),status:'approved',decidedBy:null,decidedAt:null,executionStatus:'completed'});await page.clock.fastForward(15001);
+ const evidence=page.getByLabel('Decision evidence');
+ await evidence.getByText('Not returned by workflow',{exact:true}).waitFor();
+ expect(await evidence.getByText('Not returned by workflow',{exact:true}).isVisible()).toBe(true);
+ expect(await evidence.getByText('Not recorded',{exact:true}).isVisible()).toBe(true);
+ expect(await page.getByRole('button',{name:'Review decision',exact:true}).count()).toBe(0);
+}),20000);
+
+it('lays out labeled policy and reviewer evidence on desktop and mobile',()=>mounted(async(page,_calls,set)=>{
+ await page.getByRole('button',{name:'Review decision',exact:true}).waitFor();
+ set({...request(),status:'approved',decidedBy:'manager@example.test',decidedAt:'2026-10-17T12:02:12Z',executionStatus:'completed'});await page.clock.fastForward(15001);
+ await page.getByLabel('Decision evidence').getByText('manager@example.test',{exact:true}).first().waitFor();
+ const font=(await readFile('node_modules/geist/dist/fonts/geist-sans/Geist-Regular.woff2')).toString('base64');
+ await page.addStyleTag({content:await readFile('app/control-plane/control-plane.css','utf8')+await readFile('components/control-plane/discovery-workspace.css','utf8')+`@font-face{font-family:Geist;src:url(data:font/woff2;base64,${font})}body{font-family:Geist,sans-serif;margin:0;padding:24px;box-sizing:border-box}*{box-sizing:border-box}#root{max-width:650px;margin:auto}`});
+ await page.setViewportSize({width:740,height:1100});await page.screenshot({path:'.local/approval-evidence-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'.local/approval-evidence-mobile.png',fullPage:true});
 }),20000);

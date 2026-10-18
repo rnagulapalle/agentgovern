@@ -256,3 +256,24 @@
 @media(max-width:600px) { .aws-workflow-observation .aws-onboarding-form { grid-template-columns:minmax(0,1fr); }.aws-workflow-observation .aws-onboarding-form>.cp-button { width:100%; } }
 
 .cp-app .aws-workflow-observation.is-compact { border:0;padding:0;background:transparent; }
+
+/* Shared policy/approval evidence uses the execution drawer's type hierarchy. */
+.aws-policy-evidence,.aws-review-decision { margin-top:16px; padding:18px; background:var(--cp-surface-subtle,#f5f5f2); border:1px solid #deded7; border-radius:8px; }
+.aws-policy-evidence h5,.aws-approval-review h5 { margin:0 0 14px; font-size:18px; font-weight:600; }
+.aws-review-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 24px; margin:0; }
+.aws-review-grid dt { color:#66655f; font-size:16px; margin-bottom:4px; }
+.aws-review-grid dd { margin:0; font-size:18px; font-weight:500; overflow-wrap:anywhere; }
+.aws-review-heading,.aws-review-toolbar { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.aws-review-heading h3 { margin:6px 0 8px; }
+.aws-review-heading p { margin:0; }
+.aws-review-toolbar { align-items:center; margin:20px 0; }
+.aws-review-empty { padding:24px; border:1px dashed #d8d7cf; border-radius:8px; background:#fafaf8; }
+.aws-review-empty h4 { margin:0 0 10px; }
+.aws-review-connection { margin:20px 0; font-size:16px; color:#66655f; }
+.aws-review-connection[open] { padding:16px; border:1px solid #deded7; border-radius:8px; }
+.aws-review-connection summary { cursor:pointer; }
+.aws-review-connection dl { margin-top:18px; }
+.aws-review-values { display:grid; grid-template-columns:minmax(110px,1fr) minmax(0,2fr); gap:12px 20px; padding:18px 0; border-block:1px solid #deded7; }
+.aws-review-values dt { color:#66655f; font-size:16px; }
+.aws-review-values dd { margin:0; overflow-wrap:anywhere; }
+@media(max-width:600px) { .aws-review-grid { grid-template-columns:1fr; } .aws-review-heading,.aws-review-toolbar { flex-wrap:wrap; } .aws-review-values { grid-template-columns:1fr; gap:6px; } .aws-review-values dd { margin-bottom:12px; } }

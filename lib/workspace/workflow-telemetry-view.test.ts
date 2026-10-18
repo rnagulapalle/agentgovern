@@ -1,5 +1,5 @@
 import {it,expect} from "vitest";
-import {telemetryRuns,eventLabels,telemetrySteps,telemetryDecision,telemetryStepCopy,telemetryRequestLabel,telemetryOutcomeGroup,telemetryRequestContext} from "./workflow-telemetry-view";
+import {telemetryRuns,telemetryTimelineSteps,eventLabels,telemetrySteps,telemetryDecision,telemetryStepCopy,telemetryRequestLabel,telemetryOutcomeGroup,telemetryRequestContext} from "./workflow-telemetry-view";
 import {projectWorkflowEvent,workflowEventNames,type WorkflowTelemetryWindow} from "./workflow-telemetry";
 function event(event_name:string,extra:Record<string,unknown>={}){return projectWorkflowEvent(JSON.stringify({schema_version:"1.0",event_name,event_id:"event-1",run_id:"run-1",action_id:null,timestamp:"2026-10-15T12:00:00.000001Z",attempt:1,trace_id:"a".repeat(32),span_id:"b".repeat(16),trigger_channel:"slack",agent_deployment_version:"10",...extra}))!;}
 function window(events:WorkflowTelemetryWindow['events'],conflictingEventIds:string[]=[]):WorkflowTelemetryWindow{return{source:{runtimeArn:"arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/agent-1234567890",enrolledRuntimeVersion:"10",logGroup:"/company/events",startTime:1,endTime:2},events,completeness:"partial",unsupportedRecords:0,duplicateDeliveries:0,conflictingEventIds,failures:[],enforcement:"not-established"};}
@@ -77,4 +77,17 @@ it('describes internal discount steps without claiming a saved provider write',(
 
 it.each([['notify_customer_rejected','Notify the customer of rejection'],['ask_for_details','Ask for missing details']])('translates %s without treating a failed or uncertain attempt as success',(name,title)=>{
  for(const state of ['action.started','action.failed','action.uncertain'] as const){const step=telemetrySteps([event(state,{action_id:'tool',action_name:name,provider:'slack'})])[0];expect(telemetryStepCopy(step).title).toBe(title);expect(telemetryStepCopy(step).tone).not.toBe('done');}
+});
+
+it("omits routine interpretation from the journey while retaining evidence and interpretation problems",()=>{
+ const completed=event("action.completed",{action_id:"intent",action_name:"classify",provider:"anthropic"});
+ const customer=event("action.completed",{event_id:"crm",action_id:"crm",action_name:"resolve_customer",provider:"hubspot"});
+ const events=[completed,customer];
+ expect(telemetryTimelineSteps(events).map(step=>step.first.actionName)).toEqual(["resolve_customer"]);
+ expect(events).toHaveLength(2);expect(telemetrySteps(events)).toHaveLength(2);
+ expect(telemetryTimelineSteps(events,true)).toHaveLength(2);
+ for(const name of ["action.started","action.failed","action.uncertain","action.withheld"]){
+  const steps=telemetryTimelineSteps([event(name,{action_id:"intent",action_name:"classify",provider:"anthropic"})]);
+  expect(steps).toHaveLength(1);expect(telemetryStepCopy(steps[0])).toMatchObject({title:"Interpret the request",provider:null});
+ }
 });

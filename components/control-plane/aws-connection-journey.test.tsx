@@ -313,8 +313,18 @@ it("changing agents clears the selected trace and view switching never sends a d
 it("shows readable tool stages, honest missing business data and outcome/search filters",async()=>mounted(async(page,calls)=>{
  await openAgent(page,true);await page.getByText("Agent setup saved.",{exact:false}).waitFor();
  await page.setViewportSize({width:1440,height:1100});await page.getByRole("button",{name:"Review 5% discount · run-0",exact:true}).click();
- for(const title of ["Request received","Understand the request","Find the customer","Calculate pricing","Update the customer record","Send the quote"]){expect(await page.getByLabel("Execution trace",{exact:true}).getByText(title,{exact:true}).isVisible()).toBe(true);}
+ for(const title of ["Request received","Find the customer","Calculate pricing","Update the customer record","Send the quote"]){expect(await page.getByLabel("Execution trace",{exact:true}).getByText(title,{exact:true}).isVisible()).toBe(true);}
+ expect(await page.getByLabel("Execution steps for run-0",{exact:true}).getByText("Anthropic",{exact:true}).count()).toBe(0);
+ expect(await page.getByLabel("Execution steps for run-0",{exact:true}).getByText("Interpret the request",{exact:true}).count()).toBe(0);
+ expect(await page.locator(".aws-trace-technical").getByText(/Action completion reported · classify/).count()).toBe(1);
  expect(await page.getByText("A 5% discount was requested.",{exact:true}).isVisible()).toBe(true);
+ const policy=page.getByLabel("Policy checked",{exact:true});
+ expect(await policy.getByText("5%",{exact:true}).isVisible()).toBe(true);
+ expect(await policy.getByText("20%",{exact:true}).isVisible()).toBe(true);
+ expect(await policy.getByText("70%",{exact:true}).isVisible()).toBe(true);
+ expect(await policy.getByText("Automatically approved",{exact:true}).isVisible()).toBe(true);
+ expect(await policy.getByText("Not reported",{exact:true}).count()).toBe(2);
+
  expect(await page.getByText("Original request text wasn’t shared by this workflow. Time shown is when processing started.",{exact:true}).isVisible()).toBe(true);
  expect(await page.getByText("Not shared by workflow",{exact:true}).isVisible()).toBe(true);
  expect(await page.locator(".aws-trace-technical[open]").count()).toBe(0);
