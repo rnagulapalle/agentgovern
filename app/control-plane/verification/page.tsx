@@ -1,5 +1,5 @@
 import Link from "next/link";
-import evidence from "@/docs/evidence/connector-proof.json";
+import evidence from "@/docs/evidence/connector-proof-20261013-cutover.json";
 import { PageTitle } from "@/components/control-plane/ui";
 const descriptions: Record<string, [string, string]> = {
   "workflow: external agents submit scoped steps through actual HTTP handlers":

@@ -1,0 +1,16 @@
+# Offline provisioning role, never mounted into a web or execution worker.
+FROM node:22-bookworm-slim
+WORKDIR /app
+# The isolated retained owner creates leaf TLS fixtures; no signing material
+# is copied into an execution worker or web image.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --ignore-scripts
+COPY install-order.json ./install-order.json
+COPY lib ./lib
+COPY runtime ./runtime
+COPY scripts ./scripts
+USER node
+CMD ["node", "--import", "tsx", "scripts/staging-database-bootstrap.mjs"]

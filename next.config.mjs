@@ -10,6 +10,7 @@ const nextConfig = {
   } : {}),
   // Self-contained server bundle for small Docker images (.next/standalone).
   output: "standalone",
+  outputFileTracingRoot: process.cwd(),
   skipTrailingSlashRedirect: true,
   async rewrites() {
     return [

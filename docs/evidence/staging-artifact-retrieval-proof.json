@@ -1,0 +1,75 @@
+{
+  "executionEvidence": {
+    "runId": 38075662222,
+    "workflowCommit": "948f98b6f0c193af619e34df539df26a2f1549bc",
+    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/38075662222",
+    "productionChanged": false
+  },
+  "passed": true,
+  "scope": "fresh runner private artifact retrieval and exact image/worker verification",
+  "originRun": 38073578341,
+  "originCommit": "6b6387e2ea3db59534c41389833ff5b673693519",
+  "artifactId": 11678448686,
+  "manifestSha256": "9a5cf7172bdedb12febf6374f1bb0babb4ab026bcd761a8022e6b0d6a217f9b1",
+  "archiveSha256": "b020d16745eb053169261bd2d14ec6de820630b41369828ad376d7306ffcad64",
+  "archiveBytes": 2400805376,
+  "buildId": "ack-2895fd612163d3c0cf9d66f87efc28200d2441c24d782dc795b4fe7a1c3a1906",
+  "images": [
+    {
+      "role": "web",
+      "id": "sha256:8f97bcc8ae0e0c787aebbf794a2539f3be4a84904a682f8b157980e7e30c4eb1"
+    },
+    {
+      "role": "worker",
+      "id": "sha256:0f67a07189f964afb52e81adad1ca27b153c954c271d940a56c4bfd47097b53b"
+    },
+    {
+      "role": "twin",
+      "id": "sha256:1780ddcdc33545132ff66dcf2db85e70db656c289232ae90ad0c0e994bac7cea"
+    },
+    {
+      "role": "provisioner",
+      "id": "sha256:fe261c03db4c29a24e71bfe4b405f0a6d6524c9169ab4a32c06911c0859d4f60"
+    }
+  ],
+  "imagesRemoved": true,
+  "dependencyImages": {
+    "version": 1,
+    "platform": "linux/amd64",
+    "images": [
+      {
+        "role": "postgres",
+        "selectionTag": "postgres:16",
+        "reference": "postgres@sha256:75adc2a65806c96bc0e59030230bfe3f1c1b0d6d8f8181a8913e2b8b53bdc166",
+        "imageId": "sha256:275447c94b11b151decd1f29877965301d5a77032037c46de93d990f739f00a9"
+      },
+      {
+        "role": "temporal",
+        "selectionTag": "temporalio/server:1.31.0",
+        "reference": "temporalio/server@sha256:d7b3a2f56c599b317494b28e84099c02a096a94005fd20180b54d5ae5a8b3be1",
+        "imageId": "sha256:fce8c365ec85e41182bdafac2fc9d93ed72b9dda72db8cbd7d7192cb237f711f"
+      },
+      {
+        "role": "schema",
+        "selectionTag": "temporalio/admin-tools:1.31.0",
+        "reference": "temporalio/admin-tools@sha256:b396c1dff819b3653236f3acb65cfcde2bc032822c4202842236fd8a5d6d5898",
+        "imageId": "sha256:9a860057b10ec4a1e5b33a077c2b253205d4dbe6256d3627a40b83210991b501"
+      }
+    ]
+  },
+  "dependencyNewImagesRemoved": true,
+  "servicesStarted": false,
+  "sourceFingerprints": {
+    "scripts/staging-image-artifact.mjs": "cf78d67c833418417f2bb64bce784b96cf6fe682f92abd8f43fa6da0165cebd1",
+    "scripts/staging-artifact-retrieval.mjs": "a2bc73e4781decdd5d8830c18e63afd11dccbb5b1f3d313a6d1785c276b1272e",
+    "scripts/staging-runtime-images.mjs": "29891a47d7bf259b865d56ebfe5558681ed456716aeb8f638727b0064603c6d6",
+    "config/staging-runtime-images.json": "3e53fe690cfe0527084f654344e3e8092d02130d39c71574bbc76e398cf66b5f",
+    "scripts/staging-runtime-retrieval.mjs": "96344626a72e3d176eb98d109c4b7c63822dd274e5b6bebcf9138df98eebc4e4"
+  },
+  "notVerified": [
+    "persistent staging",
+    "application rollout or rollback",
+    "live provider guarantees",
+    "production acceptance"
+  ]
+}

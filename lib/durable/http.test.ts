@@ -3,6 +3,9 @@ import { NextRequest } from "next/server";
 import { body, browserOrigin, credential, failure, sameOrigin } from "./http";
 import { ControlError } from "./contracts";
 import { database } from "./database";
+import { Pool } from "pg";
+import { assertTenantPool } from "./tenant-pool";
+import { tenantContext } from "../workspace/tenant-context";
 
 const request = (headers: Record<string, string> = {}, content = "{}") =>
   new NextRequest("https://looplabs.run/api/durable", {
@@ -12,6 +15,24 @@ const request = (headers: Record<string, string> = {}, content = "{}") =>
   });
 afterEach(() => vi.unstubAllEnvs());
 describe("Durable HTTP boundary", () => {
+  it("permits only the explicit canonical HTTPS staging origin and ignores forged proxy headers", () => {
+    const staging = "https://staging.example.test:8443";
+    const proxy = (origin: string) => new NextRequest("http://0.0.0.0:3000/api/workspace/session", {
+      headers: { origin, "x-forwarded-host": "evil.example", "x-forwarded-proto": "http" },
+    });
+    vi.stubEnv("LOOPLABS_DURABLE_ORIGIN", staging);
+    vi.stubEnv("LOOPLABS_TEMPORAL_WORKSPACE", "production");
+    expect(() => browserOrigin(proxy(staging))).toThrow("not configured correctly");
+    vi.stubEnv("LOOPLABS_TEMPORAL_WORKSPACE", "staging");
+    expect(browserOrigin(proxy(staging))).toBe(staging);
+    expect(() => sameOrigin(proxy(staging), true)).not.toThrow();
+    for (const origin of ["https://looplabs.run", "https://evil.example", "http://0.0.0.0:3000", "https://staging.example.test", staging + ".evil"])
+      expect(() => sameOrigin(proxy(origin), true)).toThrow("Same-origin");
+    for (const bad of ["http://staging.example.test", "https://user:secret@staging.example.test", "https://staging.example.test/", "https://staging.example.test/path", "https://staging.example.test?q=1", "https://staging.example.test#fragment", "https://STAGING.example.test", "not-a-url"]){
+      vi.stubEnv("LOOPLABS_DURABLE_ORIGIN", bad);
+      expect(() => browserOrigin(proxy(staging))).toThrow("not configured correctly");
+    }
+  });
   it("uses the configured public origin behind TLS proxies without trusting forwarded headers", () => {
     vi.stubEnv("LOOPLABS_DURABLE_ORIGIN", "https://looplabs.run");
     const proxy = (origin: string) => new NextRequest("http://0.0.0.0:3000/api/durable/session", {
@@ -100,30 +121,37 @@ describe("Durable HTTP boundary", () => {
     expect(unsafe.status).toBe(503);
     expect(await unsafe.text()).not.toContain("secret URI");
   });
-  it("fails closed without database configuration and reuses the server pool", async () => {
-    const original = process.env.LOOPLABS_DATABASE_URL;
-    try {
-      delete process.env.LOOPLABS_DATABASE_URL;
-      expect(() => database()).toThrow("temporarily unavailable");
-      process.env.LOOPLABS_DATABASE_URL =
-        process.env.LOOPLABS_TEST_DATABASE_URL;
-      const pool = database();
-      expect(database()).toBe(pool);
-      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+  it("refuses singleton access whether database environment is absent or supplied", async () => {
+    for (const configured of [undefined, "postgresql://unregistered:private-fixture@127.0.0.1:1/never_connect"]) {
+      vi.stubEnv("LOOPLABS_DATABASE_URL", configured);
+      vi.stubEnv("LOOPLABS_RECOVERY_EPOCH", "11111111-1111-4111-8111-111111111111");
+      vi.stubEnv("LOOPLABS_TEMPORAL_ORG", "forged-workspace");
+      expect(() => database()).toThrow("Authenticated scoped database context required");
       try {
-        expect(
-          pool.emit("error", new Error("private database connection")),
-        ).toBe(true);
-        expect(log).toHaveBeenCalledWith(
-          "Durable database idle connection failed. New requests will reconnect.",
-        );
-      } finally {
-        log.mockRestore();
+        database();
+      } catch (error) {
+        expect(error).toBeInstanceOf(ControlError);
+        const response = failure(error);
+        expect(response.status).toBe(503);
+        expect(response.headers.get("cache-control")).toBe("no-store");
+        expect(await response.text()).not.toContain("private-fixture");
       }
-      await pool.end();
+      expect(() => tenantContext()).toThrow("Tenant context unavailable");
+    }
+  });
+  it("refuses a real but unregistered pool before SQL instead of adopting caller workspace identity", async () => {
+    const pool = new Pool({ connectionString: "postgresql://unregistered:private-fixture@127.0.0.1:1/never_connect" });
+    const query = vi.spyOn(pool, "query");
+    try {
+      for (const org of [undefined, "forged-workspace", "another-workspace"])
+        await expect(assertTenantPool(pool, org)).rejects.toMatchObject({
+          status: 403,
+          message: "Scoped database context required.",
+        });
+      expect(query).not.toHaveBeenCalled();
     } finally {
-      if (original) process.env.LOOPLABS_DATABASE_URL = original;
-      else delete process.env.LOOPLABS_DATABASE_URL;
+      query.mockRestore();
+      await pool.end();
     }
   });
 });

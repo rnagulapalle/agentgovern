@@ -1,0 +1,94 @@
+{
+  "at": "2026-10-10T23:20:31.136Z",
+  "scope": "Actual LoopLabs HTTP handlers, isolated PostgreSQL, native FetchSandbox identity/API and Resend twin effects. No live provider or inbox delivery.",
+  "checks": [
+    {
+      "name": "Native owner API keys provision isolated paired environments; other owners cannot inspect evidence",
+      "passed": true
+    },
+    {
+      "name": "Managed hosted rehearsal refuses the missing atomic CRM guarantee before submitting any action",
+      "passed": true
+    },
+    {
+      "name": "Installed migration23 binds genuine named requester and approval sessions; matching legacy bearer cannot impersonate either while explicit agent contracts remain supported",
+      "passed": true
+    },
+    {
+      "name": "LoopLabs exact named approval executes one hosted Resend acceptance and independently reads it back",
+      "passed": true
+    },
+    {
+      "name": "Repeating LoopLabs execution does not send a second email",
+      "passed": true
+    },
+    {
+      "name": "Real fifteen-second provider hold exceeds client deadline; LoopLabs reconciles acceptance without resending",
+      "passed": true
+    },
+    {
+      "name": "Deliberately broken extra/wrong-recipient acceptance turns a prior success into conflict",
+      "passed": true
+    },
+    {
+      "name": "Unsupported atomic CRM version guard keeps the complete workflow held; no downstream email or false green",
+      "passed": true
+    }
+  ],
+  "acceptedResponseLossEvidence": {
+    "acceptedRequestId": "47f950721715",
+    "acceptedStatus": 200,
+    "transport": {
+      "state": "delay_completed",
+      "delay_ms": 15000,
+      "mode": "until_matching_retry",
+      "release_reason": "deadline",
+      "delay_started_at": "2026-10-10T23:20:15.651800+00:00",
+      "client_disconnected_at": "2026-10-10T23:20:17.148943+00:00",
+      "delay_completed_at": "2026-10-10T23:20:30.655729+00:00"
+    },
+    "providerWritesAfterReconciliation": 1
+  },
+  "sourceFingerprints": {
+    "lib/connectors/request.ts": "37584ef57721d52bc77995e97c68a6b69f06f69e63da73c7ea67408a92c0344c",
+    "lib/connectors/content.ts": "b37017e9f6dc0fc44b6f3d80f9e1b74afd4bf1352719bd5bf62e8d5e80719291",
+    "lib/connectors/record-scope.ts": "d84de98f4e00e4a0d50ae3b8ecf6f30d3286c62d3d64546145d8d1a2b8dd04f7",
+    "lib/connectors/scopes.ts": "4915dd59986762a5efdec7e94d6f29bd918e647f97e04c78c30c25428f1f1d2e",
+    "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
+    "lib/enquiries/record-routing-schema.sql": "05c2c214c09e14b9567402206a1efe6b4fb1f064d07203386f7a7e23947e8267",
+    "runtime/temporal/record-routing.ts": "cfca7823cefedcfd561460332c56871afb9e34d9fa1697ba3525c02ae3396536",
+    "runtime/temporal/outbox.ts": "b57338da79c98108113b7969fb911ad3bee10688f8596d0ba9459948a2c21e20",
+    "runtime/temporal/version-contract.ts": "80fd2948beed1f9f9c0318ed2ac24e59fb3c0820538b718891e179f047c3b921",
+    "lib/enquiries/runner.ts": "931eba28f2a011ba5290ac8af01ac38701a9fe6dea25caf51b53b3578226c864",
+    "lib/durable/proposal-schema.sql": "a92e30c43859ef2f05da6dd5c63361125831b05a059543ec05a9717db56e570a",
+    "lib/refunds/schema.sql": "c99cd0e743b794bdc80e70525c6472572b8b6e1bb1365cd5df18b5669fa910ae",
+    "lib/durable/recovery.ts": "836b90a85dc4f8e8b8bd6bafc4297f4af0937c894decb190d892956669f31343",
+    "lib/durable/service.ts": "6081a5020cdc0ccf6be3cd979a8e97c364936fd274105f825444c452744b588c",
+    "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",
+    "lib/enquiries/service.ts": "23b73acb6110e9be039dd87607d292642e212b38f88e387331e16e1a07a53f2c",
+    "lib/orchestration/admission.ts": "83716b11fac148f92ed024edf9a1c492041ec3b8fb11fd3a6e3a1cff6a524e6a",
+    "runtime/temporal/admission.ts": "77348e8c27f69fd2d5e765401c62ca9492473db5f050580151c4f564d97ddeb8",
+    "lib/enquiries/contracts.ts": "f5158c75f45ef6dfef14043b0bfa809210f205441d9028aa37ccaca80b119b80",
+    "app/api/workspace/enquiries/route.ts": "46e69b652610914d1a1c6d110c188028502e8168a51e397a4f3deee6325c316c",
+    "lib/workspace/membership-authority.ts": "c5ec0b85a7d0341cb68d3072f6c490d0c8d539335eec5f57578123b126fc5d25",
+    "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",
+    "lib/quotes/schema.sql": "e5fe056acb1cfae170ab1b4da9c90a94b316b99fc27402a0e9f66a8b348ff7ac",
+    "lib/quotes/authority-schema.sql": "9bca0a7882861f068c12c982038d41c392b327993e466d1ea76dcaf06fe8dfd0",
+    "lib/quotes/plan-v2-schema.sql": "2d9bb08328a8a05c97f0eae0aeeb8232e4d5087d599f92a45a7ece75040318c3",
+    "lib/quotes/membership-schema.sql": "d2d9c813566d661020223b03a317eefb1fde439f7f164de61e503c309211a1ba",
+    "lib/workflows/service.ts": "861a42c6f3547bc0efe69f6f55e24ea561fe72854b987d25fcf4c653c5362214",
+    "lib/enquiries/dispatch.ts": "f92e87203abefcefb6453192194429958c32cad61f43687a337fbd4df9d3c223",
+    "lib/connectors/hosted.ts": "72e67b5ae33fec3201641928bd7389abd98dc97b03de3b4990588d8e9063f79a",
+    "lib/connectors/twin.ts": "44d3ecd40689583cc7f4475a16c95a84aedefbbcb9f4371320d9ff5d15a6ec3d",
+    "lib/connectors/service.ts": "fa92397b199bb7497bdc6a391eb036cea3072cc2ca7cd83c272d0257d7240913",
+    "app/api/durable/connectors/route.ts": "cba1fdad383a132abf98b8d869ca0c07cd016defa3b8ac0d8b108b752e406a56",
+    "app/api/durable/workflows/route.ts": "d1462ef5bdfd9f445bdb7103d1c00c4dc2d36fc69f47b6695239f0008b818faf",
+    "scripts/hosted-connector-proof.ts": "ee97e9ef6c206d111486d017948e28cb5b73ab5e21d8b4892190a74929801aa3",
+    "scripts/workflow-http-proof-server.ts": "0802e102094dd95243727121cedbfaf2e17f660f916d5511777c4441b044012e"
+  },
+  "limitations": [
+    "CRM update cannot satisfy existing atomic approval-version invariant with this provider binding; downstream work stays held.",
+    "Not a completed CRM-to-email workflow acceptance.",
+    "No hosted provider restart/durable-session proof or production readiness claim."
+  ]
+}

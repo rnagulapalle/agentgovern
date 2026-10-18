@@ -1,9 +1,13 @@
 name: Quality gates
 
 on:
-  pull_request:
+  # Direct main commits need an explicit CI run; merged PRs reuse identical-tree proof.
+  workflow_dispatch:
   push:
-    branches: [main]
+    # Private provider fixtures are available only to repository writers on
+    # these branches. A fork must be reviewed and admitted to an internal branch;
+    # an absent required check remains blocked, never a skipped/passed proof.
+    branches: ['codex/**']
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -16,7 +20,11 @@ jobs:
   quality-gates:
     name: quality-gates
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
+    environment: quality-fixtures
+    permissions:
+      contents: read
+      id-token: write
     services:
       postgres:
         image: postgres:17
@@ -33,6 +41,61 @@ jobs:
           --health-retries 10
     env:
       LOOPLABS_TEST_DATABASE_URL: postgresql://looplabs:ci-local-only@127.0.0.1:5432/looplabs_test
+      LOOPLABS_TEST_PG_BIN: /usr/lib/postgresql/17/bin
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install browser and matching archive tools
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          if [ ! -x /usr/lib/postgresql/17/bin/pg_dump ]; then
+            sudo install -d /usr/share/postgresql-common/pgdg
+            sudo curl --fail --silent --show-error --proto '=https' \
+              -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+              https://www.postgresql.org/media/keys/ACCC4CF8.asc
+            . /etc/os-release
+            echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client-17
+          fi
+          echo /usr/lib/postgresql/17/bin >> "$GITHUB_PATH"
+      - name: Obtain short-lived private-fixture read access
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::962639302232:role/looplabs-quality-fixtures-read
+          aws-region: us-west-2
+          role-duration-seconds: 900
+          role-session-name: looplabs-quality-${{ github.run_id }}
+      - name: Restore authenticated test prerequisites
+        run: |
+          node --input-type=module - <<'JS'
+          import {readFileSync} from 'node:fs';
+          import {execFileSync} from 'node:child_process';
+          const m=JSON.parse(readFileSync('scripts/quality-fixture-manifest.json'));
+          execFileSync('aws',['s3api','get-object','--bucket',m.bucket,'--key',m.key,process.env.RUNNER_TEMP+'/quality-fixtures.tar.gz'],{stdio:['ignore','ignore','pipe']});
+          JS
+          node scripts/quality-fixtures.mjs "$RUNNER_TEMP/quality-fixtures.tar.gz" "$RUNNER_TEMP/quality-fixtures"
+      - name: Install isolated pinned Python dependencies
+        run: |
+          python3 -m venv "$FETCHSANDBOX_BACKEND_PATH/.venv"
+          "$LOOPLABS_TEST_PYTHON" -m pip install --disable-pip-version-check -r scripts/connector-twin-requirements.txt
+          "$LOOPLABS_TEST_PYTHON" scripts/check-twin-dependencies.py scripts/connector-twin-requirements.txt
+      - name: Run every quality gate
+        run: pnpm quality
+
+  staging-temporal-service:
+    name: staging-temporal-service
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -43,4 +106,16 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm quality
+      - run: node scripts/staging-temporal-service-proof.mjs
+
+  staging-database-container:
+    name: staging-database-container
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/staging-database-container-proof.mjs
+      # The dependency target contains no private FetchSandbox source or spec.
+      - run: docker build --target dependencies -f Dockerfile.connector-twin -t looplabs-twin-dependencies:ci .
+      - run: docker run --rm --network none --read-only --memory 128m --cap-drop ALL --security-opt no-new-privileges looplabs-twin-dependencies:ci python /app/check-dependencies.py /app/requirements.txt
+      - run: docker image rm looplabs-twin-dependencies:ci

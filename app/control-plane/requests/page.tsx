@@ -1,13 +1,12 @@
-import { database } from "@/lib/durable/database";
 import {
-  workspaceMember,
+  workspaceContext,
   WorkspaceGate,
-} from "@/components/control-plane/workspace-gate";
-import { PageTitle } from "@/components/control-plane/ui";
+} from "../../../components/control-plane/workspace-gate";
+import { PageTitle } from "../../../components/control-plane/ui";
 export default async function RequestsPage() {
-  const actor = await workspaceMember();
-  if (!actor) return <WorkspaceGate />;
-  const db = database();
+  const context = await workspaceContext();
+  if (!context) return <WorkspaceGate />;
+  const { db, actor } = context;
   const { rows } = await db.query(
     "SELECT name,email,company,company_size,role,workflow,created_at FROM ll_sales_requests WHERE org_id=$1 ORDER BY created_at DESC LIMIT 100",
     [actor.orgId],

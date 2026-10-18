@@ -5,4 +5,4 @@ alwaysApply: true
 
 Read and follow `AGENTS.md` before making any change. Apply `.agents/skills/looplabs-engineering/SKILL.md`. Keep public claims within `docs/LOOPLABS_CLAIM_AND_FUNNEL_AUDIT.md`.
 
-Run `pnpm quality` before completion. Never bypass a failing gate or deploy outside `./deploy.sh`.
+Run focused local checks; full `pnpm quality` runs once in GitHub CI. Do not repeat it before commit, push or deployment. Never bypass a failing gate or deploy outside `./deploy.sh`.

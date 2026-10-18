@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "scope": "disposable PostgreSQL-backed staging Temporal service configuration",
+  "checks": [
+    "generated mTLS and JWKS configuration accepted",
+    "namespace creation and idempotent repeat",
+    "namespace workload accepted",
+    "other namespace, invalid, tampered and expired JWT refused",
+    "reader cannot start workflow",
+    "namespace and authorization survive service/database SIGKILL"
+  ],
+  "images": [
+    {
+      "image": "postgres:16",
+      "id": "sha256:275447c94b11b151decd1f29877965301d5a77032037c46de93d990f739f00a9"
+    },
+    {
+      "image": "temporalio/server:1.31.0",
+      "id": "sha256:fce8c365ec85e41182bdafac2fc9d93ed72b9dda72db8cbd7d7192cb237f711f"
+    },
+    {
+      "image": "temporalio/admin-tools:1.31.0",
+      "id": "sha256:9a860057b10ec4a1e5b33a077c2b253205d4dbe6256d3627a40b83210991b501"
+    },
+    {
+      "image": "node:22-bookworm-slim",
+      "id": "sha256:d0a16be756b6ec6658aecb8b7bcf87fa6c7d0d7fcc6ca53ad14bb49a4c90bdd7"
+    }
+  ],
+  "notVerified": [
+    "complete eight-service deployment",
+    "application workflows and browser UX",
+    "remote allocated staging",
+    "sustained capacity, restore and operator alerts"
+  ],
+  "commit": "e29ab43",
+  "ciJob": "https://github.com/rnagulapalle/agentgovern/actions/runs/37808859411/job/113420185335",
+  "sourceSha256": {
+    "scripts/staging-temporal-service-proof.mjs": "50301493a6eb13bf1c65cc66607ab773fc91c98fb5cc4fa33c51f0bb7a00ca77",
+    "scripts/staging-temporal-service-controller.mjs": "b31c3e44a210b3e909e96e13b2cfd53cd3ac74d6be36c426dad3f588dc25fe72",
+    "scripts/staging-temporal-config.mjs": "2aacddbd5688e033def992b088c2e51efb0e329e9c18d763a11ac7736ed5dd5c",
+    "scripts/staging-namespace-bootstrap.mjs": "97d7738a68feaeded8e42ef17f7662880a7b5a31cfdb9b662afa9d5389d805d2",
+    "scripts/staging-authorization.mjs": "e22bd995ca0a7c3f73c35542f1cc972b6d01b121aa1a194683349adbcf2232e4"
+  }
+}

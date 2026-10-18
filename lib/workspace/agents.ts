@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { ControlError, type Actor } from "../durable/contracts";
 import { transaction } from "../durable/database";
 import { authorize, tokenHash } from "../durable/service";
@@ -71,7 +71,9 @@ export async function registerAgent(
   input: Record<string, unknown>,
 ) {
   const p = parseAgent(input);
-  return transaction(db, actor.orgId, async (c) => {
+  return transaction(db, actor.orgId, c => registerAgentIn(c, actor, p));
+}
+export async function registerAgentIn(c: PoolClient, actor: Actor, p: AgentInput) {
     await authorize(c, actor, ["operator"]);
     if (
       !(
@@ -140,5 +142,4 @@ export async function registerAgent(
       [actor.orgId, actor.subject],
     );
     return { id: p.id, agentToken: token };
-  });
 }

@@ -1,0 +1,80 @@
+// Current six-image observations are not accepted origins. No receipt issuer here.
+import assert from 'node:assert/strict';
+import {validateImageManifest2} from './staging-image-artifact.mjs';
+import {createHash} from 'node:crypto';
+import {constructCurrentProofRegistry,currentProofRoots} from './current-proof-source-registry.mjs';
+import {installedServiceRoles2} from './staging-installed-service-observations.mjs';
+import {installedAssemblySourceSnapshot} from './staging-installed-source-snapshot.mjs';
+// Closed successor closure includes the producer and intake themselves. This is
+// construction metadata, not execution evidence or a replacement historical pin.
+const installedReleaseRoots2={...currentProofRoots,assembly:[...currentProofRoots.assembly,'scripts/staging-platform-proof.mjs','scripts/staging-installed-release-intake.mjs','scripts/staging-installed-observation-record.mjs','scripts/staging-installed-accepted-origins.mjs','scripts/staging-installed-artifact-download.mjs','scripts/staging-installed-artifact-extract.py','scripts/staging-installed-origin-check.mjs','scripts/staging-installed-held-ack-controller.mjs']};
+export function constructInstalledReleaseRegistry2(root=process.cwd()){return constructCurrentProofRegistry(root,installedReleaseRoots2);}
+export function validateInstalledReleaseRegistry2(expected,root=process.cwd()){
+ // Refuse malformed caller metadata before walking the repository. The complete
+ // current-byte comparison below remains mandatory for a well-shaped registry.
+ assert(expected&&typeof expected==='object'&&!Array.isArray(expected),'Closed construction registry required');
+ sameKeys(expected,['contract','families','edges','directories','nonAstAssets','sourceFingerprints']);
+ assert.equal(expected.contract,'installed-platform-proof-source-1');
+ for(const key of ['edges','directories','nonAstAssets'])assert(Array.isArray(expected[key]),'Construction list required: '+key);
+ for(const key of ['families','sourceFingerprints'])assert(expected[key]&&typeof expected[key]==='object'&&!Array.isArray(expected[key]),'Construction map required: '+key);
+ assert.deepEqual(expected,constructInstalledReleaseRegistry2(root),'Complete current producer/intake closure changed');return true;
+}
+export const installedImageRoles2=Object.freeze(['web','worker','twin','quoteEmail','provisioner','quote']);
+const digest=value=>assert(typeof value==='string'&&/^[a-f0-9]{64}$/.test(value));
+const sameKeys=(value,keys)=>assert.deepEqual(Object.keys(value).sort(),[...keys].sort());
+export function decodeInstalledObservations2(result){
+ sameKeys(result,['passed','scope','checks','notVerified','diagnosticRunner','fullInstalledAcceptance','quoteApprovalRestoreProved','quoteRestoreContainment','quoteSuccessor','quoteBrowser','restoreContainment','dependencyImages','plannerAuthority','actualProviderEffects','browser','buildId','sourceCommit','images','services','admission',...(result.candidateQuoteSwitch?['candidateQuoteSwitch']:[]),...(result.artifact?['artifact']:[])]);
+ assert.equal(result?.passed,true);assert.equal(result.fullInstalledAcceptance,false,'Raw installed observations must remain explicitly unaccepted');
+ assert.equal(result.scope,'assembled isolated API/runtime and fresh typed HTTPS browser trial');
+ assert.deepEqual(result.images.map(image=>image.role),installedImageRoles2);assert.equal(new Set(result.images.map(image=>image.id)).size,6);
+ for(const image of result.images){sameKeys(image,['id','role']);assert(/^sha256:[a-f0-9]{64}$/.test(image.id));}
+ assert.equal(result.services.length,13);
+ const labelled=result.services.every(service=>Object.hasOwn(service,'role'));
+ if(labelled){assert.deepEqual(result.services.map(service=>service.role),installedServiceRoles2);assert.equal(new Set(result.services.map(service=>service.containerId)).size,13);const images=Object.fromEntries(result.images.map(image=>[image.role,image.id]));const mapping={web:'web','temporal-worker':'worker','temporal-scheduler':'worker','connector-twin':'twin',authorization:'worker','quote-worker':'quote','quote-scheduler':'quote','quote-twin':'provisioner','quote-email':'quoteEmail','offline-installer':'provisioner'};for(const service of result.services){assert(/^[a-f0-9]{64}$/.test(service.containerId));assert(/^sha256:[a-f0-9]{64}$/.test(service.imageId));if(mapping[service.role])assert.equal(service.imageId,images[mapping[service.role]]);else assert.equal(service.imageId,result.dependencyImages.images.find(image=>image.role===(service.role==='temporal'?'temporal':'postgres')).imageId);}}
+ for(const service of result.services){sameKeys(service,['health','memoryBytes','pids','readOnly',...(labelled?['role','imageId','containerId']:[])]);assert(Number.isSafeInteger(service.memoryBytes)&&service.memoryBytes>0);assert(Number.isSafeInteger(service.pids)&&service.pids>0);assert.equal(typeof service.readOnly,'boolean');assert(['healthy','not-configured'].includes(service.health));}
+ assert.equal(result.admission.admitted,true);assert.deepEqual(result.admission.blockers,[]);assert.equal(result.admission.hostReserveBytes,2*1024**3);
+ assert.deepEqual(result.plannerAuthority,{webOnly:true});assert.equal(result.actualProviderEffects,4);
+ assert.equal(result.dependencyImages.runtimeBindings,3);assert.equal(result.dependencyImages.schemaExecutions,6);
+ assert.equal(result.browser.passed,true);assert.deepEqual(result.browser.planning,{typedRequest:true,clarified:true,model:'us.amazon.nova-lite-v1:0',savedBeforeSubmission:true});
+ for(const check of ['real hostile-origin browser POST with reviewer cookie refused before approval','independent UI approvals and actual verified completion','saved outcome and exact recipient survive 390px reload without overflow','untrusted CA refused before sign-in'])assert(result.browser.checks.includes(check));
+ sameKeys(result.browser,['passed','scope','planning','checks','notVerified']);
+ const ack=result.restoreContainment;sameKeys(ack,['approvedArchive','archiveSha256','originalOid','restoredOid','externalEpochRotated','runtimeRoles','revivedSessionsRefused','restoredApprovalRefused','quarantineReplay','quarantinedHttpObserved','packagedAckQuoteWorkerRefused','packagedAckQuoteSchedulerRefused','omittedEpochRefused','staleInstalledBootstrapRefused','quotePlanNotInEarlierArchive','quoteApprovalRestoreProved','retainedEffects','fullInstalledAcceptance']);for(const key of ['approvedArchive','externalEpochRotated','revivedSessionsRefused','restoredApprovalRefused','quarantineReplay','quarantinedHttpObserved','packagedAckQuoteWorkerRefused','packagedAckQuoteSchedulerRefused','omittedEpochRefused','staleInstalledBootstrapRefused','quotePlanNotInEarlierArchive'])assert.equal(ack[key],true,key);
+ assert.equal(ack.runtimeRoles,5);assert.equal(ack.quoteApprovalRestoreProved,false);assert.equal(ack.fullInstalledAcceptance,false);digest(ack.archiveSha256);assert.notEqual(ack.originalOid,ack.restoredOid);
+ assert.equal(result.quoteApprovalRestoreProved,true);const quote=result.quoteRestoreContainment;sameKeys(quote,['separateApprovedArchive','archiveSha256','archiveBytes','firstRestoredOid','secondRestoredOid','archivedSourceVersion','currentProviderVersion','providerQuoteEffects','providerMailEffects','providerStateUnchanged','oldNamedCookiesAndPasswordsRefused','restoredExactApprovalInvalidated','downstreamHeldAuthorityInvalidated','staleIndependentApprovalRejected','freshWorkflowWithFreshApprovalNotYetProved','authorityReactivated','fullInstalledAcceptance']);
+ for(const key of ['separateApprovedArchive','providerStateUnchanged','oldNamedCookiesAndPasswordsRefused','restoredExactApprovalInvalidated','downstreamHeldAuthorityInvalidated','staleIndependentApprovalRejected'])assert.equal(quote[key],true,key);
+ assert.equal(quote.authorityReactivated,false);assert.equal(quote.fullInstalledAcceptance,false);digest(quote.archiveSha256);assert.notEqual(quote.archiveSha256,ack.archiveSha256);assert.equal(quote.firstRestoredOid,ack.restoredOid);assert.notEqual(quote.firstRestoredOid,quote.secondRestoredOid);assert.equal(quote.providerQuoteEffects,1);assert.equal(quote.providerMailEffects,1);
+ const successor=result.quoteSuccessor;sameKeys(successor,['contract','planId','planHash','updateActionId','messageActionId','scopeId','checks','administrativeFixtureOnboarding','selfServiceOnboardingProved','oldMemberAndApprovalAuthorityReactivated','destinationScopeIdReused','freshIndependentApprovalProved','newProviderEffectIssued','fullInstalledAcceptance',...(successor.freshCompletion?['freshCompletion']:[])]);assert.equal(successor.contract,'typed-quote-successor-browser-1');assert.equal(successor.freshIndependentApprovalProved,true);assert.equal(successor.oldMemberAndApprovalAuthorityReactivated,false);if(successor.freshCompletion){sameKeys(successor.freshCompletion,['newQuoteEffects','newSimulatedEmailAcceptances','oldEffectsUnchanged','sourceBefore','sourceAfter','production','receiptHash']);const {receiptHash,...effects}=successor.freshCompletion;assert.deepEqual(effects,{newQuoteEffects:1,newSimulatedEmailAcceptances:1,oldEffectsUnchanged:true,sourceBefore:'v4',sourceAfter:'v5',production:false});digest(receiptHash);assert.equal(successor.newProviderEffectIssued,true);assert(successor.checks.includes('Fresh post-restore background quote and separately approved dependent confirmation observed, verified and reloaded without changing old effects'));}else assert.equal(successor.newProviderEffectIssued,false);assert.equal(successor.fullInstalledAcceptance,false);
+ const browser=result.quoteBrowser;sameKeys(browser,['contract','completedUtc','planId','planHash','updateActionId','messageActionId','scopeId','checks','providerObservations','verificationReceipt','fullInstalledAcceptance','production','notProved']);assert.equal(browser.contract,'typed-quote-browser-observations-1');assert.equal(browser.fullInstalledAcceptance,false);assert.equal(browser.production,false);digest(browser.planHash);assert.notEqual(browser.planId,successor.planId);
+ const expected=[['proposed',0,0,3],['submitted',0,0,3],['approved',0,0,3],['lost',1,0,4],['reconciled',1,0,4],['completed',1,1,4],['reloaded',1,1,4]];
+ const observations=browser.providerObservations.map(({phase,quoteEffects,mailEffects,quoteVersion})=>[phase,quoteEffects,mailEffects,quoteVersion]);
+ if(observations.length===8){assert.deepEqual(observations[2],expected[1]);observations.splice(2,1);}assert.deepEqual(observations,expected);
+
+ const receipt=browser.verificationReceipt;sameKeys(receipt,['runId','steps','quoteId','contract','planHash','verifiedAt','verifiedBy','receiptHash','workspaceId','recoveryEpoch']);for(const step of receipt.steps)sameKeys(step,['binding','ordinal','actionId','payloadHash','sourceAfter','effectDigest','requestIdentity','providerReference']);assert.equal(receipt.contract,'quote-verification-receipt-1');assert.equal(receipt.planHash,browser.planHash);assert.equal(receipt.runId,browser.planId);assert.deepEqual(receipt.steps.map(step=>step.actionId),[browser.updateActionId,browser.messageActionId]);assert.deepEqual(receipt.steps.map(step=>step.ordinal),[1,2]);for(const step of receipt.steps)for(const key of ['binding','payloadHash','effectDigest','requestIdentity'])digest(step[key]);assert.notEqual(receipt.steps[0].binding,receipt.steps[1].binding);
+ return {contract:'installed-platform-observations-2',imageRoles:[...installedImageRoles2],services:13,roleBoundTopologyObserved:labelled,releaseEligible:false,fullInstalledAcceptance:false};
+}
+// Complete current-byte validation does not confer CI/artifact/release acceptance.
+export async function validateInstalledObservationSources2(input,root=process.cwd()){
+ sameKeys(input,['contract','observations','construction','sourceBefore','sourceAfter','cleanup']);
+ assert.equal(input.contract,'installed-generation-observation-intake-2');
+ const decoded=decodeInstalledObservations2(input.observations);
+ validateInstalledReleaseRegistry2(input.construction,root);const snapshot=await installedAssemblySourceSnapshot(root);
+ assert.deepEqual(input.sourceBefore,snapshot,'Original complete source snapshot changed');assert.deepEqual(input.sourceAfter,snapshot,'Final complete source snapshot changed');
+ assert.deepEqual(input.cleanup,{ownedCleanupVerified:true,sourceUnchanged:true,baselineVerified:true,fullInstalledAcceptance:false});
+ return {...decoded,sourceByteComparisonPassed:true,observedSourceProvenanceEstablished:false,sourceSnapshotSha256:createHash('sha256').update(JSON.stringify(snapshot)).digest('hex')};
+}
+// Full-platform acceptance is separate from the independent bounded package-
+// origin consumer. Changing a diagnostic flag cannot manufacture either scope.
+export function requireInstalledReleaseReceipt2(result){
+ assert.equal(result?.fullInstalledAcceptance,true,'Diagnostic fullInstalledAcceptance:false is not an accepted release receipt');
+ throw Error('Full installed platform acceptance is not implemented by this observation boundary; bounded origins use the independent package consumer');
+}
+
+// Measured observation receipt for later independent origin admission. The
+// running job cannot attest that its own future quality/cleanup steps succeeded.
+export async function installedObservationReceipt2(envelope,metadata,root=process.cwd()){
+ const decoded=await validateInstalledObservationSources2(envelope,root);assert.equal(decoded.roleBoundTopologyObserved,true,'Current role-labelled topology required; historical anonymous services cannot be repinned');assert.equal(envelope.observations.candidateQuoteSwitch,undefined,'Base origin recording excludes candidate-only switch claims');
+ assert.deepEqual(envelope.observations.diagnosticRunner,{mode:'github-actions',ci:true,releaseAccepted:false},'Only the actual CI producer can record this CI observation scope');
+ sameKeys(metadata,['runId','privateWorkflowCommit','publicBaseCommit','exactCompressedOverlaySha256']);assert(Number.isSafeInteger(metadata.runId)&&metadata.runId>0);for(const key of ['privateWorkflowCommit','publicBaseCommit'])assert(/^[a-f0-9]{40}$/.test(metadata[key]));digest(metadata.exactCompressedOverlaySha256);
+ const artifact=envelope.observations.artifact;assert(artifact,'Actual six-image retained artifact required');sameKeys(artifact,['version','workers','manifestSha256','archiveSha256','archiveBytes','images','reloadedAfterRemoval','workerBuildVerified']);assert.equal(artifact.version,2);assert.equal(artifact.reloadedAfterRemoval,true);assert.equal(artifact.workerBuildVerified,true);digest(artifact.manifestSha256);digest(artifact.archiveSha256);assert.deepEqual(artifact.images,envelope.observations.images);validateImageManifest2({version:2,workers:artifact.workers,images:artifact.images,archive:{file:'images.tar',sha256:artifact.archiveSha256,bytes:artifact.archiveBytes}});assert.equal(artifact.workers.ack.buildId,envelope.observations.buildId);
+ return {...envelope,contract:'installed-platform-observation-receipt-2',executionEvidence:{...metadata,runUrl:`https://github.com/rnagulapalle/sandbox/actions/runs/${metadata.runId}`,productionChanged:false},fullInstalledAcceptance:false,releaseEligible:false,originIndependentlyVerified:false};
+}

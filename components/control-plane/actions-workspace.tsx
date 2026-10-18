@@ -6,38 +6,38 @@ import { RefundWorkspace } from "./refund-workspace";
 import { ConnectorActionsWorkspace } from "./connector-actions-workspace";
 const workflowFrom = (v: string | null) =>
   ["refunds", "crm", "email"].includes(v || "") ? v! : "discounts";
-export function ActionsWorkspace() {
+export function ActionsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }) {
   const q = useSearchParams();
   const [workflow, setWorkflow] = useState(workflowFrom(q.get("workflow")));
   useEffect(() => {
     setWorkflow(workflowFrom(q.get("workflow")));
   }, [q]);
+  const selectedWorkflow = scriptDemo && workflow === "refunds" ? "discounts" : workflow;
   return (
     <>
       <div className="workspace-workflow-select">
         <label>
-          Workflow
+          Action type
           <select
-            value={workflow}
+            value={selectedWorkflow}
             onChange={(e) => setWorkflow(e.target.value)}
           >
             <option value="discounts">Discount changes</option>
-            <option value="refunds">Refunds</option>
+            {!scriptDemo && <option value="refunds">Refunds</option>}
             <option value="crm">CRM contact updates</option>
             <option value="email">Customer messages</option>
           </select>
         </label>
         <p>
-          One workspace. Each workflow keeps its own permissions, approval rules
-          and saved history.
+          Choose the operation to review. Each action type has its own permissions, approval rules and saved history.
         </p>
       </div>
-      {workflow === "crm" || workflow === "email" ? (
-        <ConnectorActionsWorkspace connector={workflow} />
-      ) : workflow === "refunds" ? (
+      {selectedWorkflow === "crm" || selectedWorkflow === "email" ? (
+        <ConnectorActionsWorkspace connector={selectedWorkflow} />
+      ) : selectedWorkflow === "refunds" ? (
         <RefundWorkspace />
       ) : (
-        <DurableWorkspace />
+        <DurableWorkspace scriptDemo={scriptDemo} />
       )}
     </>
   );

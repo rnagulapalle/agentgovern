@@ -1,0 +1,9 @@
+# Direct versions from the currently proven private fixture environment.
+# Image identities are recorded by the proof; this is not a supply-chain audit.
+fastapi==0.115.0
+uvicorn==0.30.6
+pyyaml==6.0.3
+pydantic==2.9.2
+jsonschema==4.26.0
+faker==40.11.0
+httpx==0.28.1

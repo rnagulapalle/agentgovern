@@ -3,7 +3,7 @@ import Link from "next/link";
 import { workspaceJson } from "@/lib/workspace/response";
 import { useCallback, useEffect, useState } from "react";
 import type { Connector, ConnectorAction } from "@/lib/connectors/contracts";
-import { PageTitle } from "./ui";
+import { PageTitle, Status } from "./ui";
 interface Data {
   policies: { connector: Connector; active: boolean; version: number }[];
   actions: ConnectorAction[];
@@ -17,8 +17,10 @@ interface Data {
 }
 export function ConnectorActionsWorkspace({
   connector,
+  selectedActionId,
 }: {
   connector: Connector;
+  selectedActionId?: string;
 }) {
   const [data, setData] = useState<Data | null>(null),
     [agents, setAgents] = useState<
@@ -71,7 +73,7 @@ export function ConnectorActionsWorkspace({
   return (
     <div className="cp-durable">
       <PageTitle
-        eyebrow="SAVED WORKFLOW"
+        eyebrow="ACTION REQUESTS"
         title={name}
         description={
           connector === "crm"
@@ -98,11 +100,11 @@ export function ConnectorActionsWorkspace({
         </p>
       )}
       <section className="cp-panel cp-durable-card">
-        <h2>Request one bounded action</h2>
+        <h2>Request an action</h2>
         <p>
           {connector === "crm"
-            ? "Boundary: lifecycle stage on contact 1001. A later contact change prevents blind retry."
-            : "Boundary: the “case received” template to customer@example.test. Custom recipients and text are refused. Provider acceptance does not establish real delivery."}
+            ? "Allowed change: the lifecycle stage of sample contact 1001. If the record changes later, check its outcome before trying again."
+            : "Allowed message: the “case received” template to customer@example.test. Other recipients and message text are not allowed. Simulated acceptance is not real delivery."}
         </p>
         <form
           className="cp-durable-form"
@@ -145,7 +147,7 @@ export function ConnectorActionsWorkspace({
             </label>
           ) : (
             <label>
-              Approved template
+              Message template
               <input value="We received your case" readOnly />
             </label>
           )}
@@ -171,8 +173,7 @@ export function ConnectorActionsWorkspace({
               ? "accepting new requests"
               : "contained"
             : "checking…"}
-          . Containment stops queued work; it cannot recall an already
-          dispatched effect.
+          . Containment stops queued work. An action already sent may still take effect.
         </p>
         <button
           className="cp-button"
@@ -189,16 +190,16 @@ export function ConnectorActionsWorkspace({
           provider; it never sends the action again.
         </p>
         {data?.actions
-          .filter((a) => a.connector === connector)
+          .filter((a) => a.connector === connector && (!selectedActionId || a.id === selectedActionId))
           .map((a) => (
-            <article className="cp-durable-scope" key={a.id}>
+            <article className="cp-durable-scope" key={a.id} id={`action-${a.id}`}>
               <h3>
                 {connector === "crm"
                   ? `Set lifecycle to ${(a.payload as { lifecycle: string }).lifecycle}`
                   : "Send the case-received message"}
               </h3>
               <p>
-                <strong>{a.state}</strong> · {a.reason}
+                <Status value={a.state} /> · {a.reason}
               </p>
               <p>
                 Agent: {a.agent_id} · Requested by: {a.proposed_by}

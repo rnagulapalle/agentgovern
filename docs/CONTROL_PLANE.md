@@ -1,4 +1,43 @@
+## CIO fleet visibility patch (October 17, candidate)
+
+Cloud business declarations now retain explicit owner, department and purpose through additive migration 31. Existing migration 30 is unchanged. Source labels participate in dashboard grouping and filters; saved company assignments override them. These are display labels, not company membership or approval grants. The dashboard reads every deployment returned in saved inventory rather than selecting the first three or five, and keeps incomplete approval coverage distinct from zero.
+
+Execution approval navigation requires one reported version and a matching saved deployment reference. Unknown, mixed or ambiguous versions do not receive approval controls. A configured v15 approval connection does not authorize v16. Business impact is read from a unique matching approval record; missing request text and unrelated provider effects are not invented.
+
+Agent setup and Activity use distinct embedded views. Source history remains an on-demand, workflow-reported read, not independently verified delivery or mandatory execution enforcement. Refreshing the dashboard does not discover new AWS deployments: discovery must be refreshed separately. Native production acceptance and release receipts are recorded outside this architecture note; this candidate section alone is not evidence of deployment.
+
+## Local quote status presentation (P1b, October 13)
+
+The quote workspace separates the retained result at completion, the latest server
+check, and permission for further actions. A correlated completed run keeps its
+historical step labels when current verification is unknown or conflicts. The UI
+never infers that a generic conflict specifically means approval expiry or provider
+drift. A completed run's “Recheck current status” resolves saved state and requests
+the read-only verification view; it does not reapprove, resend, or issue another
+final-verification mutation. Initial final verification still uses the existing
+verification operation. Server authorization and expiry checks are unchanged.
+
+Presentation tests cover missing/mismatched receipts, held and uncertain actions,
+and mounted desktop/mobile status refresh. A SQL metadata fixture checks receipt
+retention separately from a native twin integration that executes and verifies both
+effects before advancing the application clock past approval expiry. That integration
+checks one retained receipt, refusal of fresh final verification, and unchanged
+provider effect counts after repeated execution attempts. Neither proves live delivery.
+These local changes do not establish deployed browser acceptance.
+
+## October 8 staged server workflow increment
+
+The earlier architecture below describes the original browser-local examples. The invited server workspace now adds PostgreSQL-backed scoped identity/policy/approval/lease/effect controls and isolated Temporal adoption. See `TEMPORAL_ADOPTION_PLAN.md`, `PERSISTED_PROPOSAL_BOUNDARIES.md`, `PERSISTED_RECORD_GRANTS.md`, `SCOPED_TEMPORAL_ROUTING.md` and `SCOPED_CHAT_EXPERIENCE.md` for current contracts and measured proof.
+
+Typed chat interpretation remains bounded to the fixed acknowledgement graph. An exact saved plan captures record/recipient/request/source/policy versions. Explicit record grants select existing agents; independent approvals bind their actual action payloads. A leased scheduling outbox freezes one-way execution ownership and a compatible content-bound worker build. Temporal provides durable scheduling/history, while application controls recheck current authorization, dependencies and observed effects. Unknown outcomes reconcile rather than resend. No model grants execution authority; no browser selection changes saved destinations.
+
+The current-source local browser/package proof does not establish production cutover, live connector safety, arbitrary workflow generation, complete tenant isolation, HA/SLA or Temporal superiority. `ENTERPRISE_ACCEPTANCE.md` defines remaining acceptance.
+
 # LoopLabs agent control plane
+
+## Managed acknowledgement experience (October 6)
+
+See [ENQUIRY_MANAGED_EXPERIENCE.md](ENQUIRY_MANAGED_EXPERIENCE.md) for automatic scoped-assistant assignment, inline approval cards and a separate background runner. Migration 8 adds explicit background consent and worker heartbeat/cursor. The hosted CRM guarantee remains blocked; no live inbox listener, real delivery or broad Tasklet parity is claimed.
 
 ## Bounded external-agent workflow (October 4)
 

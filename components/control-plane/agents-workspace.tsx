@@ -3,7 +3,7 @@ import Link from "next/link";
 import { workspaceJson } from "@/lib/workspace/response";
 import { useCallback, useEffect, useState } from "react";
 import { PageTitle } from "./ui";
-import { agentPresentation } from "@/lib/workspace/presentation";
+import { agentPresentation, agentReviewDestination } from "@/lib/workspace/presentation";
 interface Directory {
   agents: {
     id: string;
@@ -18,12 +18,13 @@ interface Directory {
   }[];
   owners: { email: string; name: string }[];
 }
-export function AgentsWorkspace() {
+export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }) {
   const [data, setData] = useState<Directory | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [key, setKey] = useState("");
   const [connector, setConnector] = useState("discount_record");
+  const [agentId, setAgentId] = useState("");
   const refresh = useCallback(async () => {
     const r = await fetch("/api/workspace/agents", { cache: "no-store" });
     const v = await workspaceJson(r);
@@ -31,6 +32,7 @@ export function AgentsWorkspace() {
     setData(v);
   }, []);
   useEffect(() => {
+    setAgentId(`agent-${crypto.randomUUID()}`);
     refresh().catch((e) => setError(e.message));
   }, [refresh]);
   return (
@@ -48,9 +50,7 @@ export function AgentsWorkspace() {
       <section className="cp-panel cp-durable-card">
         <h2>Onboard an agent</h2>
         <p>
-          Choose one supported connector. Rules and action limits apply on the
-          server. CRM and customer-message actions always require named
-          approval. The prepared refund agent has its own payment boundary.
+          Choose the system this agent may act on. Its allowed action and request allowance are saved on the server. Customer-record changes and messages require independent approval. {!scriptDemo && "The prepared refund agent has its own payment boundary."}
         </p>
         <form
           className="cp-durable-form"
@@ -80,6 +80,7 @@ export function AgentsWorkspace() {
               const v = await workspaceJson(r);
               if (!r.ok) throw new Error(v.error);
               setKey(v.agentToken);
+              setAgentId(`agent-${crypto.randomUUID()}`);
               form.reset();
               await refresh();
             } catch (e) {
@@ -101,9 +102,11 @@ export function AgentsWorkspace() {
             />
           </label>
           <label>
-            Agent ID
+            Agent reference (generated)
             <input
               name="id"
+              value={agentId}
+              readOnly
               required
               pattern="[a-zA-Z0-9_-]{1,64}"
               maxLength={64}
@@ -124,7 +127,7 @@ export function AgentsWorkspace() {
             </select>
           </label>
           <label>
-            Role
+            Agent type (assigned)
             <input
               value={
                 connector === "discount_record"
@@ -137,7 +140,7 @@ export function AgentsWorkspace() {
             />
           </label>
           <label>
-            Connector
+            Allowed system
             <select
               value={connector}
               onChange={(e) => setConnector(e.target.value)}
@@ -148,7 +151,7 @@ export function AgentsWorkspace() {
             </select>
           </label>
           <label>
-            Lifetime requests
+            Lifetime request allowance
             <input
               type="number"
               name="actionLimit"
@@ -158,7 +161,7 @@ export function AgentsWorkspace() {
               required
             />
           </label>
-          <button className="cp-button cp-button-dark" disabled={busy || !data}>
+          <button className="cp-button cp-button-dark" disabled={busy || !data || !agentId}>
             {busy ? "Registering…" : "Register agent"}
           </button>
         </form>
@@ -201,10 +204,10 @@ export function AgentsWorkspace() {
             <dl>
               <div>
                 <dt>Owner</dt>
-                <dd>{a.owner || "Workspace owner"}</dd>
+                <dd>{a.owner || "Owner not supplied"}</dd>
               </div>
               <div>
-                <dt>Role</dt>
+                <dt>Agent type</dt>
                 <dd>{agentPresentation(a.tools).role}</dd>
               </div>
               <div>
@@ -220,20 +223,16 @@ export function AgentsWorkspace() {
                 <dd>
                   {a.tools.includes("stripe.refund")
                     ? "Amount and budget rules on the Refunds workflow"
-                    : `${a.reserved} / ${a.action_limit} lifetime requests`}
+                    : `${a.reserved} of ${a.action_limit} lifetime requests used`}
                 </dd>
               </div>
             </dl>
-            <Link
+            {agentReviewDestination(a.tools, scriptDemo) ? <Link
               className="cp-button"
-              href={
-                agentPresentation(a.tools).workflow
-                  ? `/control-plane/actions?workflow=${agentPresentation(a.tools).workflow}`
-                  : "/control-plane/connectors"
-              }
+              href={agentReviewDestination(a.tools, scriptDemo)!}
             >
               Review actions →
-            </Link>
+            </Link> : <p>This agent’s workflow is not enabled in this deployment.</p>}
           </article>
         ))}
       </section>

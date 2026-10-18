@@ -1,0 +1,258 @@
+import {installQuoteAdmissionGrants} from '../workspace/quote-workload-installation';
+import {tenantPoolBinding} from '../durable/tenant-pool';
+import {spawnOwnedPythonFixture} from '../../scripts/owned-python-fixture';
+import assert from 'node:assert/strict';
+import { parseQuoteVerificationReceipt } from '../quotes/verification-receipt';
+import { acquireConnectorTwinLease,assertConnectorTwinPortFree } from '../../scripts/owned-connector-twin-lease';
+import { NativeQuoteTransport } from '../quotes/native-transport';
+import { ControlError } from '../durable/contracts';
+import { NativeQuoteConnector } from './native-quote';
+import { startNativeQuoteTwin } from '../../scripts/native-quote-twin';
+import { Pool } from 'pg';
+import { fork, type ChildProcess } from 'node:child_process';
+import { once } from 'node:events';
+import { NativeQuoteMailConnector } from './native-quote-mail';
+import { NativeQuoteEmailTransport,nativeMailIdentity,type NativeMailPin } from '../quotes/native-email-transport';
+import { quoteRequestIdentity } from '../quotes/effect';
+import { FetchSandboxConnectors } from './twin';
+import { mkdtemp,writeFile,rm,realpath,lstat,chmod } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { readFile } from 'node:fs/promises';
+import { ConnectorControl } from './service';
+import { WorkflowControl } from '../workflows/service';
+import { QuoteActionBoundary } from './quote-action';
+import { type ConnectorProvider } from './contracts';
+import { beforeEach, afterEach, afterAll, expect, it, vi } from 'vitest';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { createInstalledTenantFixture } from '../workspace/installed-tenant-fixture';
+import { tokenHash } from '../durable/service';
+import { transaction } from '../durable/database';
+import { QuoteAuthorityControl, type QuoteDestination } from '../quotes/authority';
+import { QuotePlanStore, type QuoteContextLoader } from '../quotes/store';
+import type { QuotePlanProposalV2, QuotePlanContextV2 } from '../quotes/plan-v2';
+
+let lease: Awaited<ReturnType<typeof acquireConnectorTwinLease>> | undefined;
+const activeFixtures=new Set<Promise<void>>(),ownedChildren=new Set<ChildProcess>(),cleanupErrors:unknown[]=[];
+let suiteClosing=false;
+function rememberChild(child:ChildProcess){child.on('error',()=>{});assert(child.pid&&child.pid!==process.pid,'Owned child identity required');ownedChildren.add(child);return child;}
+function terminal(child:ChildProcess){return child.exitCode!==null||child.signalCode!==null;}
+async function waitBounded<T>(pending:Promise<T>,ms:number,label:string):Promise<T>{let timer:ReturnType<typeof setTimeout>|undefined;try{return await Promise.race([pending,new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(Error(label)),ms);})]);}finally{clearTimeout(timer);}}
+async function stopOwned(child:ChildProcess,label:string,ms=5000){
+ assert(child.pid&&child.pid!==process.pid&&ownedChildren.has(child),'Exact owned child required');
+ if(!terminal(child)){const exiting=once(child,'exit');assert(child.kill('SIGTERM'),'Owned termination refused');await waitBounded(exiting,ms,label+' exit unconfirmed; destructive cleanup withheld');}
+ assert(terminal(child),label+' terminal exit required');
+ assert(child.exitCode===0&&child.signalCode===null||child.exitCode===null&&child.signalCode==='SIGTERM',label+' unexpected terminal status');
+}
+async function trackedFixture(run:()=>Promise<void>){
+ if(suiteClosing)throw Error('Owned fixture suite is closing');
+ // Vitest timeout does not cancel a returned async function. Wait for the prior
+ // already-running fixture's finally before another same-port fixture can start.
+ await waitBounded(Promise.allSettled([...activeFixtures]),45000,'Prior owned fixture cleanup unconfirmed');if(suiteClosing)throw Error('Owned fixture suite closed during cleanup await');
+ const pending=run();activeFixtures.add(pending);try{return await pending;}finally{activeFixtures.delete(pending);}
+}
+beforeEach(async()=>{
+ await waitBounded(Promise.allSettled([...activeFixtures]),45000,'Prior owned fixture cleanup unconfirmed');
+ if(activeFixtures.size||[...ownedChildren].some(c=>!terminal(c)))throw Error('Owned fixture teardown unconfirmed; next lease withheld');
+ lease=await acquireConnectorTwinLease();
+},125000);
+afterEach(async()=>{
+ await waitBounded(Promise.allSettled([...activeFixtures]),45000,'Active owned fixture cleanup unconfirmed');
+ if(activeFixtures.size||[...ownedChildren].some(c=>!terminal(c)))throw Error('Owned fixture teardown unconfirmed; lease release withheld');
+ await lease?.release();lease=undefined;
+},60000);
+afterAll(async()=>{
+ suiteClosing=true;const errors:unknown[]=[];
+ try{await waitBounded(Promise.allSettled([...activeFixtures]),45000,'Active owned fixture cleanup unconfirmed');}catch(e){errors.push(e);}
+ for(const child of ownedChildren)try{await stopOwned(child,'Owned quote/mail child');}catch(e){errors.push(e);}
+ errors.push(...cleanupErrors);
+ // Release only after every owned child exit is independently confirmed and
+ // running fixture cleanup completed. A killed test process may release its PG
+ // lock, but subsequent port preflight still refuses an orphan listener.
+ if(activeFixtures.size||[...ownedChildren].some(c=>!terminal(c)))throw new AggregateError(errors,'Owned fixture teardown unconfirmed; lease release withheld');
+ try{await lease?.release();}catch(e){errors.push(e);}
+ if(errors.length)throw new AggregateError(errors,'Owned fixture lifecycle failed');
+},60000);
+const destination:QuoteDestination={contract:'private-quote-twin-1',workspaceId:'one',quoteId:'quote-42',distributorId:'distributor-7',recipient:'buyer@example.test',sender:'sales@example.test',quoteBinding:'a'.repeat(64),emailBinding:'b'.repeat(64)};
+async function baseFixture(run:(f:Awaited<ReturnType<typeof setup>>)=>Promise<void>){const f=await setup();try{await run(f);}finally{vi.unstubAllEnvs();const errors:unknown[]=[];try{await f.native.close();}catch(e){errors.push(e);}if(!f.native.childrenTerminal()||[...ownedChildren].some(c=>!terminal(c)))throw new AggregateError(errors,'Native child exit unconfirmed; installed role teardown withheld');try{await f.installed.close();}catch(e){errors.push(e);}if(errors.length){cleanupErrors.push(...errors);throw new AggregateError(errors,'Owned installed fixture cleanup failed');}}}
+async function setup(){
+ const keys={owner:randomBytes(32).toString('base64url'),manager:randomBytes(32).toString('base64url'),colleague:randomBytes(32).toString('base64url'),foreign:randomBytes(32).toString('base64url')};
+ const installed=await createInstalledTenantFixture({tenants:['one','two'],salesOrg:'one',seed:async owner=>{
+  for(const [subject,org,key]of [['owner@example.test','one',keys.owner],['manager@example.test','one',keys.manager],['colleague@example.test','one',keys.colleague],['other@example.test','two',keys.foreign]]){
+   await owner.query('INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,$2,$1,\'fixture\')',[subject,org]);
+   await owner.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,$2,now()+interval '1 hour')",[tokenHash(key),subject]);
+  }
+ }});
+ let native:Awaited<ReturnType<typeof makeNative>>|undefined;
+ try{
+ const web=installed.web('one'),owner=(await installed.context.authenticated(keys.owner)).actor,manager=(await installed.context.authenticated(keys.manager)).actor,colleague=(await installed.context.authenticated(keys.colleague)).actor,foreign=(await installed.context.authenticated(keys.foreign)).actor;
+ const authority=new QuoteAuthorityControl(web,destination),scope=randomUUID();
+ native=await makeNative();const providerFixture=native;
+ const quote={id:'quote-42',distributorId:'distributor-7',recipient:'buyer@example.test',sourceVersion:'v3',currency:'USD' as const,subtotalMinor:100000,lines:[{id:'line-1',quantity:10,unitPriceMinor:10000}]};
+ // Actual native scoped HTTP quote read plus separately retained pricing metadata.
+ // Capability metadata remains confined to the isolated native fixture, not hosted parity.
+ const pricing={workspaceId:'one',requester:owner.subject,quote,approvalGrants:[{member:manager.subject,workspaceId:'one',quoteId:quote.id,policyVersion:3,active:true as const,capability:'quote.discount.approve' as const}],policy:{version:3,delegatedBps:1000,hardCapBps:2000,active:true as const},agents:[{id:'quote-agent',workspaceId:'one',quoteId:quote.id,action:'quote.update' as const,active:true as const},{id:'message-agent',workspaceId:'one',quoteId:quote.id,action:'quote.message' as const,active:true as const}],provider:{workspaceId:'one',quoteId:quote.id,binding:destination.quoteBinding,contract:'quote-conditional-write-1' as const,atomicSourceVersion:true as const,actionIdIdempotency:true as const,effectReadback:true as const},email:{workspaceId:'one',quoteId:quote.id,from:destination.sender,recipient:quote.recipient,actionIdIdempotency:true as const,effectReadback:true as const}};
+ const loadPricing=async()=>{const current=await providerFixture.connector.transport.read();if(!current)throw new ControlError(503,'Native source unavailable');const policy=await providerFixture.policy();return {...structuredClone(pricing),policy,quote:{...structuredClone(pricing.quote),sourceVersion:current.sourceVersion,distributorId:current.distributorId,subtotalMinor:current.subtotalMinor}};};
+ const loader:QuoteContextLoader=async(c,actor,reference)=>{
+  expect(reference).toEqual({quoteId:quote.id,distributorId:quote.distributorId});
+  const current=await authority.currentAuthority(c,actor,scope,manager.subject,3);if(!current)throw Error('Current quote proposal authority unavailable');
+  return {contract:'quote-plan-context-2',pricing:await loadPricing(),authority:current} satisfies QuotePlanContextV2;
+ };
+ const store=new QuotePlanStore(web,loader,(c,actor,ref)=>authority.currentAuthority(c,actor,ref.scopeId,ref.member,ref.policyVersion),authority);
+ const prepare=async()=>{
+  await authority.enroll(owner,scope);await authority.grantManager(owner,scope,manager.subject,3);
+  const current=await transaction(web,'one',c=>authority.currentAuthority(c,owner,scope,manager.subject,3));if(!current)throw Error('Current quote scope required');
+  const action=randomUUID();return {version:'distributor-quote-plan-2',planId:randomUUID(),workspaceId:'one',requester:owner.subject,approver:manager.subject,policyVersion:3,quote:structuredClone(quote),discountBps:1400,update:{actionId:action,agentId:'quote-agent'},message:{actionId:randomUUID(),agentId:'message-agent',dependsOn:action},authority:current} satisfies QuotePlanProposalV2;
+ };
+ await installed.owner.query(await readFile('lib/connectors/quote-action-schema.sql','utf8'));
+ for(const [id,tool,role,connector]of [['quote-agent','twin.quote','quote_agent','quote_twin'],['message-agent','twin.email','email_agent','email_twin']]){
+  await installed.owner.query('INSERT INTO ll_agents(org_id,id,tools) VALUES($1,$2,$3)',['one',id,[tool]]);
+  await installed.owner.query('INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES($1,$2,$2,$3,$4,$5)',['one',id,owner.subject,role,connector]);
+  await installed.owner.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'one',$2,'agent')",[tokenHash(randomBytes(32).toString('base64url')),id]);
+ }
+ for(const connector of ['quote','email'])await installed.owner.query("INSERT INTO ll_connector_policies(org_id,connector,version) VALUES('one',$1,3) ON CONFLICT(org_id,connector) DO UPDATE SET version=3",[connector]);
+ const boundary=new QuoteActionBoundary(web,authority,async(c,actor,plan)=>({contract:'quote-plan-context-2',pricing:await loadPricing(),authority:await authority.currentSavedPlanAuthority(actor,plan.planId,c)}),async(_c,actor,ref)=>({contract:'quote-pricing-policy-1',workspaceId:actor.orgId,quoteId:ref.quoteId,policy:await providerFixture.policy()}));
+ const provider=(binding:string)=>({workspaceId:'one',bindingId:binding,source:vi.fn(async()=>null),write:vi.fn(async()=>{throw Error('No provider execution conformance');}),inspect:vi.fn(async()=>{throw Error('No provider execution conformance');})} satisfies ConnectorProvider);
+ const quoteProvider=providerFixture.connector,emailProvider=provider(destination.emailBinding),control=new ConnectorControl(web,quoteProvider,boundary),emailControl=new ConnectorControl(web,emailProvider,boundary);
+ const save=async()=>{const p=await prepare();await store.save(owner,p);for(const agent of ['quote-agent','message-agent'])await installed.owner.query('INSERT INTO ll_connector_scope_grants(org_id,scope_id,agent_id,created_by) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',['one',scope,agent,owner.subject]);return store.read(owner,p.planId);};
+ return {native:providerFixture,loadPricing,workflow:new WorkflowControl(web,control,{authority,loadContext:loader}),boundary,control,emailControl,quoteProvider,emailProvider,save,installed,web,owner,manager,colleague,foreign,authority,scope,store,prepare,pricing,keys};
+ }catch(e){const errors:unknown[]=[e];try{await native?.close();}catch(error){errors.push(error);}if(native&&!native.childrenTerminal()){cleanupErrors.push(...errors);throw new AggregateError(errors,'Native startup exit unconfirmed; installed teardown withheld');}try{await installed.close();}catch(error){errors.push(error);}throw new AggregateError(errors,'Owned installed fixture setup refused');}
+}
+
+
+async function makeNative(){
+ const url=new URL(process.env.LOOPLABS_TEST_DATABASE_URL!);if(!['localhost','127.0.0.1'].includes(url.hostname))throw Error('Owned local provider database required');
+ const schema='native_quote_'+randomBytes(8).toString('hex'),role=schema+'_role',password=randomBytes(32).toString('hex');
+ const admin=new Pool({connectionString:url.toString(),max:1}),owner=new Pool({connectionString:url.toString(),options:'-c search_path='+schema,max:2});
+ let schemaOid:string|undefined,roleOid:string|undefined,provider:Pool|undefined,server:Awaited<ReturnType<typeof startNativeQuoteTwin>>|undefined,serverRunning=false,closing=false,closed=false;const children=new Set<ChildProcess>();
+ const allTerminal=()=>[...children].every(terminal);
+ const metadata=async(stage:string)=>writeFile('../native-quote-mail-provider-'+schema+'.json',JSON.stringify({stage,schema,schemaOid: schemaOid??null,role,roleOid:roleOid??null,children:[...children].map(c=>({pid:c.pid,exitCode:c.exitCode,signalCode:c.signalCode})),childrenTerminal:allTerminal()}),{mode:0o600});
+ const closeServer=async()=>{if(serverRunning){await server!.close();serverRunning=false;}};
+ const close=async()=>{if(closed)return;closing=true;const errors:unknown[]=[];for(const child of children)try{await stopOwned(child,'Owned native quote child');}catch(e){errors.push(e);}try{await closeServer();}catch(e){errors.push(e);}if(!allTerminal()||serverRunning||[...ownedChildren].some(c=>!terminal(c))){cleanupErrors.push(...errors);throw new AggregateError(errors,'Native process exit unconfirmed; DB teardown withheld');}
+  let providerClosed=provider===undefined,ownerClosed=false;try{await provider?.end();providerClosed=true;}catch(e){errors.push(e);}try{await owner.end();ownerClosed=true;}catch(e){errors.push(e);}
+  if(!providerClosed||!ownerClosed){cleanupErrors.push(...errors);throw new AggregateError(errors,'Native pool quiescence unconfirmed; DB teardown withheld');}
+  try{if(schemaOid){assert.equal((await admin.query('SELECT oid::text oid FROM pg_namespace WHERE nspname=$1',[schema])).rows[0]?.oid,schemaOid);await admin.query('DROP SCHEMA '+schema+' CASCADE');assert.equal((await admin.query('SELECT 1 FROM pg_namespace WHERE nspname=$1',[schema])).rowCount,0);}if(roleOid){assert.equal((await admin.query('SELECT oid::text oid FROM pg_roles WHERE rolname=$1',[role])).rows[0]?.oid,roleOid);await admin.query('DROP ROLE '+role);assert.equal((await admin.query('SELECT 1 FROM pg_roles WHERE rolname=$1',[role])).rowCount,0);}}catch(e){errors.push(e);}finally{await admin.end();}closed=true;await metadata(errors.length?'cleanup-failed':'cleanup-complete');if(errors.length){cleanupErrors.push(...errors);throw new AggregateError(errors,'Owned native quote cleanup failed');}};
+ try{
+ await admin.query('CREATE SCHEMA '+schema);schemaOid=(await admin.query('SELECT oid::text oid FROM pg_namespace WHERE nspname=$1',[schema])).rows[0].oid;await metadata('schema-owned');
+ await owner.query(`CREATE TABLE native_quotes(workspace_id text NOT NULL,quote_id text NOT NULL,version bigint NOT NULL CHECK(version>0),result jsonb NOT NULL,PRIMARY KEY(workspace_id,quote_id));CREATE TABLE native_quote_effects(workspace_id text NOT NULL,quote_id text NOT NULL,action_id uuid NOT NULL,request_identity text NOT NULL,effect jsonb NOT NULL,PRIMARY KEY(workspace_id,action_id));ALTER TABLE native_quotes ENABLE ROW LEVEL SECURITY;ALTER TABLE native_quote_effects ENABLE ROW LEVEL SECURITY;CREATE POLICY scoped ON native_quotes USING(workspace_id='one' AND quote_id='quote-42') WITH CHECK(workspace_id='one' AND quote_id='quote-42');CREATE POLICY scoped ON native_quote_effects USING(workspace_id='one' AND quote_id='quote-42') WITH CHECK(workspace_id='one' AND quote_id='quote-42')`);
+ await admin.query(`CREATE ROLE ${role} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS PASSWORD '${password}'`);roleOid=(await admin.query('SELECT oid::text oid FROM pg_roles WHERE rolname=$1',[role])).rows[0].oid;await metadata('role-owned');
+ await owner.query("CREATE TABLE native_quote_policies(workspace_id text NOT NULL,quote_id text NOT NULL,policy jsonb NOT NULL,PRIMARY KEY(workspace_id,quote_id));ALTER TABLE native_quote_policies ENABLE ROW LEVEL SECURITY;CREATE POLICY scoped ON native_quote_policies USING(workspace_id='one' AND quote_id='quote-42') WITH CHECK(workspace_id='one' AND quote_id='quote-42');INSERT INTO native_quote_policies VALUES('one','quote-42','{\"version\":3,\"delegatedBps\":1000,\"hardCapBps\":2000,\"active\":true}')");
+ await owner.query("CREATE TABLE native_pending_mail(workspace_id text NOT NULL,quote_id text NOT NULL,action_id uuid NOT NULL,request_identity text NOT NULL,predecessor_identity text NOT NULL,state text NOT NULL,acceptance jsonb,PRIMARY KEY(workspace_id,action_id));ALTER TABLE native_pending_mail ENABLE ROW LEVEL SECURITY;CREATE POLICY scoped ON native_pending_mail USING(workspace_id='one' AND quote_id='quote-42') WITH CHECK(workspace_id='one' AND quote_id='quote-42')");
+ await owner.query(`GRANT SELECT,INSERT,UPDATE(state,acceptance) ON native_pending_mail TO ${role}`);
+ await owner.query(`GRANT SELECT ON native_quote_policies TO ${role};GRANT USAGE ON SCHEMA ${schema} TO ${role};GRANT SELECT,UPDATE(version,result) ON native_quotes TO ${role};GRANT SELECT,INSERT ON native_quote_effects TO ${role}`);
+ await owner.query("INSERT INTO native_quotes VALUES('one','quote-42',3,$1)",[{distributorId:'distributor-7',currency:'USD',subtotalMinor:100000,discountBps:0,totalMinor:100000}]);
+ url.username=role;url.password=password;provider=new Pool({connectionString:url.toString(),options:'-c search_path='+schema,max:4});const token=randomBytes(32).toString('hex'),readyProvider=provider;
+ const binding={workspaceId:'one',quoteId:'quote-42',quoteBinding:destination.quoteBinding,emailBinding:destination.emailBinding,token};
+ const lost=new Set<string>();server=await startNativeQuoteTwin(readyProvider,binding,{loseReplyActionIds:lost});serverRunning=true;
+ let connector=new NativeQuoteConnector({origin:server.origin,...destinationConfig()},async()=>token,1500,{ownedTestOrigin:true});
+ const writes=vi.spyOn(connector.transport,'write'),lookups=vi.spyOn(connector.transport,'lookup');
+ return {get connector(){return connector;},enroll:async(pin:NativeMailPin,mail:FetchSandboxConnectors,faults?:ReadonlySet<string>)=>{if(closing||suiteClosing)throw Error('Owned native fixture is closing');await closeServer();if(closing||suiteClosing)throw Error('Owned native fixture closed during server await');server=await startNativeQuoteTwin(readyProvider,binding,{mail:{pins:[pin],transport:mail,failResolutionActionIds:faults}});serverRunning=true;connector=new NativeQuoteConnector({origin:server.origin,...destinationConfig()},async()=>token,1500,{ownedTestOrigin:true});},policy:async()=>structuredClone((await readyProvider.query("SELECT policy FROM native_quote_policies WHERE workspace_id='one' AND quote_id='quote-42'")).rows[0]?.policy),owner,lost,writes,lookups,provider:readyProvider,schema,role,token,binding,origin:server.origin,
+  count:async()=>Number((await owner.query('SELECT count(*) n FROM native_quote_effects')).rows[0].n),
+  restart:async(mail?:{pin:NativeMailPin;token:string})=>{
+   if(closing||suiteClosing)throw Error('Owned native fixture is closing');await closeServer();if(closing||suiteClosing)throw Error('Owned native fixture closed during server await');for(const existing of children)await stopOwned(existing,'Owned native quote child');if(closing||suiteClosing)throw Error('Owned native fixture closed during child await');
+   const deadline=Date.now()+5000;const child=rememberChild(fork('scripts/native-quote-twin-process.ts',[],{execArgv:['--import','tsx'],env:{PATH:process.env.PATH,NODE_ENV:'test'},stdio:['ignore','ignore','ignore','ipc']}));children.add(child);const message=once(child,'message');await metadata('child-started');child.send({url:url.toString(),schema,binding,...(mail?{mail:{pins:[mail.pin],origin:"http://127.0.0.1:8018",token:mail.token,timeoutMs:250}}:{})});
+   const [value]=await waitBounded(message,Math.max(1,deadline-Date.now()),'Owned native startup timed out');if(closing||suiteClosing||terminal(child)||!value||typeof value.origin!=='string'||!/^http:\/\/127\.0\.0\.1:\d+$/.test(value.origin))throw Error('Owned native startup refused');return new NativeQuoteConnector({origin:value.origin,...destinationConfig()},async()=>token,1500,{ownedTestOrigin:true});
+  },childrenTerminal:allTerminal,close
+ };
+ }catch(e){const errors:unknown[]=[e];try{await close();}catch(error){errors.push(error);}throw new AggregateError(errors,'Owned native setup refused');}
+}
+function destinationConfig(){return{workspaceId:destination.workspaceId,quoteId:destination.quoteId,quoteBinding:destination.quoteBinding,emailBinding:destination.emailBinding};}
+class CountingMail extends FetchSandboxConnectors{posts=0;lose=false;constructor(readonly token:string){super('http://127.0.0.1:8018',token,1000);}override request(path:string,init:RequestInit={}){if(path==='/quote-email/emails'&&init.method==='POST'){this.posts++;if(this.lose)init={...init,headers:{...init.headers,'X-LoopLabs-Lose-Response':'true'}};}return super.request(path,init);}}
+async function mailProcess(pin:NativeMailPin){
+ const token=randomBytes(32).toString('hex'),dir=await realpath(await mkdtemp(join(tmpdir(),'ll-installed-quote-mail-'))),fixtureId=randomBytes(8).toString('hex');await chmod(dir,0o700);const directoryIdentity=await lstat(dir);assert(directoryIdentity.isDirectory()&&!directoryIdentity.isSymbolicLink()&&directoryIdentity.uid===process.getuid!()&&(directoryIdentity.mode&0o777)===0o700);
+ let child:ChildProcess|undefined,closing=false,closePromise:Promise<void>|undefined;const children=new Set<ChildProcess>();
+ const metadata=async()=>writeFile('../native-quote-mail-owned-'+fixtureId+'.json',JSON.stringify({fixtureId,directory:{path:dir,dev:directoryIdentity.dev,ino:directoryIdentity.ino},children:[...children].map(c=>({pid:c.pid,exitCode:c.exitCode,signalCode:c.signalCode})),allChildrenTerminal:[...children].every(terminal)}),{mode:0o600});
+ const removeDirectory=async()=>{const current=await lstat(dir);assert.equal(await realpath(dir),dir);assert(current.isDirectory()&&!current.isSymbolicLink());for(const key of ['dev','ino','uid','mode']as const)assert.equal(current[key],directoryIdentity[key]);await rm(dir,{recursive:true,force:false});};
+ await writeFile(join(dir,'connector-twin-credentials.json'),JSON.stringify({token}),{mode:0o600});await writeFile(join(dir,'connector-twin-quote-mail.json'),JSON.stringify({version:'native-quote-mail-enrollment-1',entries:[{request:pin.messageRequest,requestIdentity:nativeMailIdentity(pin.messageRequest),quoteRequestIdentity:quoteRequestIdentity(pin.quoteRequest)}]}),{mode:0o600});
+ const stop=async()=>{const current=child;if(!current)return;await stopOwned(current,'Owned mail child');if(child===current)child=undefined;await metadata();};
+ const start=async()=>{
+  const deadline=Date.now()+8000;if(closing||suiteClosing)throw Error('Owned mail fixture is closing');if(child&&!terminal(child))throw Error('Owned mail already running');await assertConnectorTwinPortFree();if(closing||suiteClosing)throw Error('Owned mail fixture closed during port preflight');
+  const current=rememberChild(await spawnOwnedPythonFixture(['scripts/connector-twin.py'],dir));child=current;children.add(current);await metadata();
+  while(Date.now()<deadline){if(closing||suiteClosing)throw Error('Owned mail fixture is closing');if(terminal(current))throw Error('Owned mail startup failed');try{const remaining=deadline-Date.now();if(remaining<=0)break;const response=await fetch('http://127.0.0.1:8018/quote-email/effects/'+pin.messageRequest.idempotencyKey,{headers:{Authorization:'Bearer '+token,'X-LoopLabs-Workspace':'one','X-LoopLabs-Quote':'quote-42','X-LoopLabs-Binding':destination.emailBinding},signal:AbortSignal.timeout(Math.max(1,Math.min(500,remaining)))});await response.text();if([200,404].includes(response.status)){if(closing||suiteClosing||terminal(current))throw Error('Owned mail startup identity changed');return;}}catch{}
+   const remaining=deadline-Date.now();if(remaining>0)await new Promise(r=>setTimeout(r,Math.min(100,remaining)));
+  }throw Error('Owned mail startup timed out within whole elapsed budget');
+ };
+ const close=()=>closePromise??=(async()=>{closing=true;const errors:unknown[]=[];for(const current of children)try{await stopOwned(current,'Owned mail child');}catch(e){errors.push(e);}await metadata();if([...children].some(c=>!terminal(c))){cleanupErrors.push(...errors);throw new AggregateError(errors,'Mail child exit unconfirmed; private files retained');}try{await removeDirectory();}catch(e){errors.push(e);}if(errors.length){cleanupErrors.push(...errors);throw new AggregateError(errors,'Owned mail cleanup failed');}})();
+ try{await start();}catch(e){const errors:unknown[]=[e];try{await close();}catch(error){errors.push(error);}throw new AggregateError(errors,'Owned mail startup refused');}
+ return {readState:()=>readFile(join(dir,'connector-twin-state.json')),transport:new CountingMail(token),count:async()=>JSON.parse(await readFile(join(dir,'connector-twin-state.json'),'utf8')).email.emails.length,restart:async()=>{if(closing||suiteClosing)throw Error('Owned mail fixture is closing');await stop();await start();},childrenTerminal:()=>[...children].every(terminal),close};
+}
+async function fixture(run:(f:Awaited<ReturnType<typeof setup>> & {saved:Awaited<ReturnType<Awaited<ReturnType<typeof setup>>['save']>>;mail:Awaited<ReturnType<typeof mailProcess>>;message:ConnectorControl;flow:WorkflowControl;quote:ConnectorControl;mailProvider:NativeQuoteMailConnector;pin:NativeMailPin})=>Promise<void>){return trackedFixture(()=>baseFixture(async f=>{
+ const saved=await f.save();if(saved.plan.version!=='distributor-quote-plan-2')throw Error('Bound quote plan required');const pin:NativeMailPin={quoteRequest:saved.plan.update.request,messageRequest:saved.plan.message.request};const mail=await mailProcess(pin);
+ try{await f.native.enroll(pin,mail.transport);const provider=f.native.connector,quote=new ConnectorControl(f.web,provider,f.boundary),acceptance=new NativeQuoteEmailTransport(pin,provider.transport,mail.transport),mailProvider=new NativeQuoteMailConnector(provider,pin,acceptance),message=new ConnectorControl(f.web,mailProvider,f.boundary),flow=new WorkflowControl(f.web,quote,{authority:f.authority,loadContext:async(c,actor)=>({contract:'quote-plan-context-2',pricing:await f.loadPricing(),authority:await f.authority.currentSavedPlanAuthority(actor,saved.id,c)}),message});await flow.createQuote(f.owner,saved.id);await run({...f,saved,mail,message,flow,quote,mailProvider,pin});}finally{try{await mail.close();}catch(e){cleanupErrors.push(e);throw e;}}
+}));}
+async function approved(f:Parameters<Parameters<typeof fixture>[0]>[0]){const q=await f.quote.proposeQuote(f.owner,f.saved.id,f.saved.planHash,'update'),m=await f.message.proposeQuote(f.owner,f.saved.id,f.saved.planHash,'message');await expect(f.message.review(f.owner,m.id,m.payload_hash,true)).rejects.toMatchObject({status:403});await f.quote.review(f.manager,q.id,q.payload_hash,true);await f.message.review(f.manager,m.id,m.payload_hash,true);return{q,m};}
+async function verifyReceipt(f:Parameters<Parameters<typeof fixture>[0]>[0]){const result=await f.flow.verify(f.owner,f.saved.id);if(!('receipt'in result))throw Error('Exact quote receipt required');const receipt=parseQuoteVerificationReceipt(result.receipt);expect(result).toEqual({verified:true,receipt});return receipt;}
+async function executed(f:Parameters<Parameters<typeof fixture>[0]>[0]){const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);await f.message.execute(f.owner,m.id);return{q,m};}
+// Every case installs actual scoped roles/schema and Python/native processes,
+// then exercises multiple real approval/readback transactions. Actual303-test parallel
+// trial cases exceeded5s (not just receipt cases). Per-case15s, or30s for genuine
+// process restarts, remains finite; provider HTTP deadlines/default parallelism,
+// all product assertions and failure outcomes stay unchanged.
+it('genuine installed quote graph executes exact independently approved update and email, then reads both effects before completion',async()=>fixture(async f=>{const {q,m}=await approved(f);await expect(f.message.execute(f.owner,m.id)).rejects.toMatchObject({status:409});expect(f.mail.transport.posts).toBe(0);expect((await f.quote.execute(f.owner,q.id)).state).toBe('succeeded');expect((await f.message.execute(f.owner,m.id)).state).toBe('succeeded');expect(await f.mail.count()).toBe(1);expect(f.mail.transport.posts).toBe(1);await verifyReceipt(f);expect((await f.flow.read(f.owner,f.saved.id)).state).toBe('completed');expect(f.mail.transport.posts).toBe(1);}),15000);
+it('duplicate execute and read-only reconciliation cannot resend, including actual native fence and email process restart',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);await f.message.execute(f.owner,m.id);expect((await f.message.execute(f.owner,m.id)).state).toBe('succeeded');await f.mail.restart();expect((await f.message.reconcile(f.owner,m.id)).state).toBe('succeeded');expect(await f.mail.count()).toBe(1);expect(f.mail.transport.posts).toBe(1);}),30000);
+it('actual quote drift after update holds downstream email with no POST, even earlier verified action state',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);await f.native.owner.query("UPDATE native_quotes SET version=version+1 WHERE workspace_id='one'");await expect(f.message.execute(f.owner,m.id)).rejects.toMatchObject({status:409});expect(f.mail.transport.posts).toBe(0);expect(await f.mail.count()).toBe(0);}),15000);
+it('named grant revoke/reactivation and changed pricing invalidate reviewed email without delivery or approval revival',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);await f.authority.setManagerActive(f.owner,f.scope,f.manager.subject,3,false,1);await f.authority.setManagerActive(f.owner,f.scope,f.manager.subject,3,true,2);expect((await f.message.execute(f.owner,m.id)).state).toBe('cancelled');expect(f.mail.transport.posts).toBe(0);expect(await f.mail.count()).toBe(0);}),15000);
+it('read-only missing and pending fence can never create/send email or make succeeded state',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);const action=await f.message.read(f.owner,m.id);expect((await f.mailProvider.inspect(action)).outcome).toBe('unknown');await f.native.owner.query("INSERT INTO native_pending_mail VALUES('one','quote-42',$1,$2,$3,'pending',NULL)",[m.id,nativeMailIdentity(f.pin.messageRequest),quoteRequestIdentity(f.pin.quoteRequest)]);expect((await f.mailProvider.inspect(action)).outcome).toBe('unknown');expect(f.mail.transport.posts).toBe(0);expect(await f.mail.count()).toBe(0);}),15000);
+
+it('sequential designated-manager email review after actual quote effect uses current policy and exact readback, never stale source substitution',async()=>fixture(async f=>{const q=await f.quote.proposeQuote(f.owner,f.saved.id,f.saved.planHash,'update');await f.quote.review(f.manager,q.id,q.payload_hash,true);await f.quote.execute(f.owner,q.id);const m=await f.message.proposeQuote(f.owner,f.saved.id,f.saved.planHash,'message');expect(m.state).toBe('held');await expect(f.message.review(f.owner,m.id,m.payload_hash,true)).rejects.toMatchObject({status:403});expect(f.mail.transport.posts).toBe(0);expect((await f.message.review(f.manager,m.id,m.payload_hash,true)).state).toBe('ready');expect((await f.message.execute(f.owner,m.id)).state).toBe('succeeded');await verifyReceipt(f);expect(f.mail.transport.posts).toBe(1);}),15000);
+it('changed numeric policy after quote prevents sequential email admission, with no email side effect',async()=>fixture(async f=>{const q=await f.quote.proposeQuote(f.owner,f.saved.id,f.saved.planHash,'update');await f.quote.review(f.manager,q.id,q.payload_hash,true);await f.quote.execute(f.owner,q.id);await f.native.owner.query("UPDATE native_quote_policies SET policy=jsonb_set(policy,'{delegatedBps}','900') WHERE workspace_id='one'");await expect(f.message.proposeQuote(f.owner,f.saved.id,f.saved.planHash,'message')).rejects.toMatchObject({status:409});expect(f.mail.transport.posts).toBe(0);expect(await f.mail.count()).toBe(0);}),15000);
+
+it('actual lost email reply and provider/Python restart resolve only existing pending fence through readback, never resend',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);f.mail.transport.lose=true;expect((await f.message.execute(f.owner,m.id)).state).toBe('uncertain');expect(await f.mail.count()).toBe(1);expect(f.mail.transport.posts).toBe(1);expect((await f.message.execute(f.owner,m.id)).state).toBe('uncertain');await f.mail.restart();const quote=await f.native.restart({pin:f.pin,token:f.mail.transport.token});const provider=new NativeQuoteMailConnector(quote,f.pin,new NativeQuoteEmailTransport(f.pin,quote.transport,f.mail.transport));const message=new ConnectorControl(f.web,provider,f.boundary);const resolve=vi.spyOn(quote.transport,'mailResolve'),write=vi.spyOn(quote.transport,'mailWrite');expect((await message.reconcile(f.owner,m.id)).state).toBe('succeeded');expect(resolve).toHaveBeenCalledTimes(1);expect(write).not.toHaveBeenCalled();expect(await f.mail.count()).toBe(1);expect(f.mail.transport.posts).toBe(1);expect((await message.reconcile(f.owner,m.id)).state).toBe('succeeded');expect(resolve).toHaveBeenCalledTimes(1);}),30000);
+it('resolution persistence failure retains pending acceptance, then existing-only resolution repairs without email send',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);const faults=new Set([m.id]);await f.native.enroll(f.pin,f.mail.transport,faults);const provider=new NativeQuoteMailConnector(f.native.connector,f.pin,new NativeQuoteEmailTransport(f.pin,f.native.connector.transport,f.mail.transport)),message=new ConnectorControl(f.web,provider,f.boundary);expect((await message.execute(f.owner,m.id)).state).toBe('uncertain');expect(await f.mail.count()).toBe(1);expect((await message.reconcile(f.owner,m.id)).state).toBe('uncertain');expect(f.mail.transport.posts).toBe(1);faults.clear();expect((await message.reconcile(f.owner,m.id)).state).toBe('succeeded');expect(f.mail.transport.posts).toBe(1);expect(await f.mail.count()).toBe(1);}),15000);
+it('missing simulated acceptance remains pending and unknown under reconcile; missing approval expiry cannot authorize resolution',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);await f.native.owner.query("INSERT INTO native_pending_mail VALUES('one','quote-42',$1,$2,$3,'pending',NULL)",[m.id,nativeMailIdentity(f.pin.messageRequest),quoteRequestIdentity(f.pin.quoteRequest)]);await f.installed.owner.query("UPDATE ll_connector_actions SET state='uncertain' WHERE org_id='one' AND id=$1",[m.id]);const resolve=vi.spyOn(f.native.connector.transport,'mailResolve');expect((await f.message.reconcile(f.owner,m.id)).state).toBe('uncertain');expect(resolve).toHaveBeenCalledTimes(1);expect(f.mail.transport.posts).toBe(0);expect(await f.mail.count()).toBe(0);await f.native.owner.query("UPDATE native_quote_policies SET policy=jsonb_set(policy,'{delegatedBps}','900') WHERE workspace_id='one'");expect((await f.message.reconcile(f.owner,m.id)).state).toBe('uncertain');expect(resolve).toHaveBeenCalledTimes(1);await f.native.owner.query("UPDATE native_quote_policies SET policy=jsonb_set(policy,'{delegatedBps}','1000') WHERE workspace_id='one'");await f.installed.owner.query("UPDATE ll_connector_actions SET approval_until=NULL WHERE org_id='one' AND id=$1",[m.id]);expect((await f.message.reconcile(f.owner,m.id)).state).toBe('uncertain');expect(resolve).toHaveBeenCalledTimes(1);expect(f.mail.transport.posts).toBe(0);}),15000);
+it('changed current quote after simulated mail prevents final completion and preserves one physical email',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);await f.message.execute(f.owner,m.id);await f.native.owner.query("UPDATE native_quotes SET version=version+1 WHERE workspace_id='one'");await expect(f.flow.verify(f.owner,f.saved.id)).rejects.toMatchObject({status:409});expect((await f.flow.read(f.owner,f.saved.id)).state).toBe('active');expect((await f.message.read(f.owner,m.id)).state).toBe('conflict');expect(f.mail.transport.posts).toBe(1);expect(await f.mail.count()).toBe(1);}),15000);
+
+it('paused exact quote graph and foreign named operator cannot dispatch approved email',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);await expect(f.message.execute(f.foreign,m.id)).rejects.toMatchObject({status:403});await f.flow.pause(f.owner,f.saved.id);await expect(f.message.execute(f.owner,m.id)).rejects.toMatchObject({status:409});expect(f.mail.transport.posts).toBe(0);expect(await f.mail.count()).toBe(0);}),15000);
+it('pricing changes after email network claim retain real simulated acceptance as uncertain and cannot resend or complete',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);let enter!:()=>void,release!:()=>void;const entered=new Promise<void>(r=>enter=r),gate=new Promise<void>(r=>release=r),original=NativeQuoteTransport.prototype.mailWrite;const write=vi.spyOn(f.native.connector.transport,'mailWrite').mockImplementationOnce(async request=>{enter();await gate;return original.call(f.native.connector.transport,request);});const pending=f.message.execute(f.owner,m.id);try{await entered;await f.native.owner.query("UPDATE native_quote_policies SET policy=jsonb_set(policy,'{hardCapBps}','1300') WHERE workspace_id='one'");}finally{release();}expect(await pending).toMatchObject({state:'uncertain',evidence:{outcome:'verified'}});expect(await f.mail.count()).toBe(1);expect(f.mail.transport.posts).toBe(1);expect((await f.message.execute(f.owner,m.id)).state).toBe('uncertain');expect((await f.message.reconcile(f.owner,m.id)).state).toBe('uncertain');await expect(f.flow.verify(f.owner,f.saved.id)).rejects.toMatchObject({status:409});expect(write).toHaveBeenCalledTimes(1);expect(f.mail.transport.posts).toBe(1);}),15000);
+
+it('separately pinned mail predecessor must equal the immutable saved plan update, never a newer same-price action',async()=>fixture(async f=>{const {q,m}=await approved(f);await f.quote.execute(f.owner,q.id);const wrong={...f.pin,quoteRequest:{...f.pin.quoteRequest,sourceVersion:'v4',idempotencyKey:randomUUID()}};expect((await f.native.connector.transport.write(wrong.quoteRequest)).status).toBe('observed');const provider=new NativeQuoteMailConnector(f.native.connector,wrong,new NativeQuoteEmailTransport(wrong,f.native.connector.transport,f.mail.transport)),control=new ConnectorControl(f.web,provider,f.boundary);expect((await control.execute(f.owner,m.id)).state).toBe('cancelled');expect(f.mail.transport.posts).toBe(0);expect(await f.mail.count()).toBe(0);}),15000);
+
+it('actual concurrent final verification creates one exact receipt, reloads after new controller and never resends',async()=>fixture(async f=>{
+ const {q,m}=await executed(f);const receipts=await Promise.all([verifyReceipt(f),verifyReceipt(f)]);expect(receipts[0]).toEqual(receipts[1]);const receipt=receipts[0];if(f.saved.plan.version!=='distributor-quote-plan-2')throw Error('Expected bound quote plan');expect(receipt).toMatchObject({workspaceId:'one',runId:f.saved.id,planHash:f.saved.planHash,quoteId:'quote-42',recoveryEpoch:f.saved.plan.authority.recoveryEpoch,verifiedBy:f.owner.subject,steps:[{ordinal:1,actionId:q.id,payloadHash:q.payload_hash,requestIdentity:quoteRequestIdentity(f.pin.quoteRequest),sourceAfter:'v4'},{ordinal:2,actionId:m.id,payloadHash:m.payload_hash,requestIdentity:nativeMailIdentity(f.pin.messageRequest),sourceAfter:null}]});
+ expect((await f.web.query('SELECT count(*)::int n FROM ll_workflow_events WHERE run_id=$1 AND quote_verification IS NOT NULL',[f.saved.id])).rows[0].n).toBe(1);
+ const reloaded=new WorkflowControl(f.web,f.quote,f.flow.quotes);const view=await reloaded.quoteVerification(f.manager,f.saved.id);expect(view.historical).toEqual(receipt);expect(view.current.outcome).toBe('verified');expect((await reloaded.verify(f.owner,f.saved.id))).toEqual({verified:true,receipt});expect(f.mail.transport.posts).toBe(1);expect(await f.mail.count()).toBe(1);expect(await f.native.count()).toBe(1);
+}),15000);
+it('later quote drift keeps historical receipt immutable and fresh current status contained, with no new event or POST',async()=>fixture(async f=>{
+ await executed(f);const receipt=await verifyReceipt(f);await f.native.owner.query("UPDATE native_quotes SET version=version+1 WHERE workspace_id='one'");const view=await f.flow.quoteVerification(f.owner,f.saved.id);expect(view.historical).toEqual(receipt);expect(view.current.outcome).toBe('conflict');await expect(f.flow.verify(f.owner,f.saved.id)).rejects.toMatchObject({status:409});expect((await f.web.query('SELECT quote_verification FROM ll_workflow_events WHERE quote_verification IS NOT NULL')).rows).toEqual([{quote_verification:receipt}]);expect(f.mail.transport.posts).toBe(1);expect(await f.mail.count()).toBe(1);
+}),15000);
+it('revoked quote manager grant retains history for current owner but refuses current success and duplicate finalization',async()=>fixture(async f=>{
+ await executed(f);const receipt=await verifyReceipt(f);await f.authority.setManagerActive(f.owner,f.scope,f.manager.subject,3,false,1);const view=await f.flow.quoteVerification(f.owner,f.saved.id);expect(view.historical).toEqual(receipt);expect(view.current.outcome).toBe('conflict');await expect(f.flow.verify(f.owner,f.saved.id)).rejects.toMatchObject({status:409});await f.installed.owner.query('UPDATE ll_members SET active=false WHERE email=$1',[f.manager.subject]);await expect(f.flow.quoteVerification(f.manager,f.saved.id)).rejects.toMatchObject({status:403});expect(f.mail.transport.posts).toBe(1);
+}),15000);
+it('installed operational pause after receipt and pause during fresh provider await refuse success without new effects',async()=>fixture(async f=>{
+ await executed(f);const receipt=await verifyReceipt(f);await f.web.query("UPDATE ll_workflow_runs SET state='paused' WHERE id=$1",[f.saved.id]);expect(await f.flow.quoteVerification(f.owner,f.saved.id)).toMatchObject({historical:receipt,current:{outcome:'conflict'}});await expect(f.flow.verify(f.owner,f.saved.id)).rejects.toMatchObject({status:409});expect(f.mail.transport.posts).toBe(1);expect((await f.web.query('SELECT count(*)::int n FROM ll_workflow_events WHERE quote_verification IS NOT NULL')).rows[0].n).toBe(1);
+}),15000);
+it('real pause during correlated provider readback rolls back final receipt and completion',async()=>fixture(async f=>{
+ await executed(f);const original=f.mailProvider.verificationEvidence.bind(f.mailProvider);let enter!:()=>void,release!:()=>void;const entered=new Promise<void>(r=>enter=r),gate=new Promise<void>(r=>release=r);vi.spyOn(f.mailProvider,'verificationEvidence').mockImplementationOnce(async a=>{const observed=await original(a);enter();await gate;return observed;});const pending=f.flow.verify(f.owner,f.saved.id);await entered;try{await f.flow.pause(f.owner,f.saved.id);}finally{release();}await expect(pending).rejects.toMatchObject({status:409});expect((await f.web.query('SELECT state FROM ll_workflow_runs WHERE id=$1',[f.saved.id])).rows[0].state).toBe('paused');expect((await f.web.query('SELECT count(*)::int n FROM ll_workflow_events WHERE quote_verification IS NOT NULL')).rows[0].n).toBe(0);expect(f.mail.transport.posts).toBe(1);expect(await f.mail.count()).toBe(1);
+}),15000);
+it('old completion/event without exact receipt and restored wrong graph never become current final success',async()=>fixture(async f=>{
+ await executed(f);await f.installed.owner.query("UPDATE ll_workflow_runs SET state='completed' WHERE id=$1",[f.saved.id]);await f.installed.owner.query('ALTER TABLE ll_workflow_events DISABLE TRIGGER ll_quote_verification_insert_boundary');try{await f.installed.owner.query("INSERT INTO ll_workflow_events(org_id,run_id,kind,subject) VALUES('one',$1,'verified',$2)",[f.saved.id,f.owner.subject]);}finally{await f.installed.owner.query('ALTER TABLE ll_workflow_events ENABLE TRIGGER ll_quote_verification_insert_boundary');}
+ expect(await f.flow.quoteVerification(f.owner,f.saved.id)).toMatchObject({historical:null,current:{outcome:'unknown'}});await expect(f.flow.verify(f.owner,f.saved.id)).rejects.toMatchObject({status:409});await f.installed.owner.query('ALTER TABLE ll_workflow_steps DISABLE TRIGGER ll_workflow_step_boundary');try{await f.installed.owner.query("UPDATE ll_workflow_steps SET dependency_action_id=NULL WHERE run_id=$1 AND ordinal=2",[f.saved.id]);}finally{await f.installed.owner.query('ALTER TABLE ll_workflow_steps ENABLE TRIGGER ll_workflow_step_boundary');}await expect(f.flow.quoteVerification(f.owner,f.saved.id)).rejects.toMatchObject({status:409});expect((await f.web.query('SELECT count(*)::int n FROM ll_workflow_events WHERE quote_verification IS NOT NULL')).rows[0].n).toBe(0);expect(f.mail.transport.posts).toBe(1);
+}),15000);
+
+it('actual held requestor advance is an exact no-op with no approval lease events native write or Python mail mutation',async()=>fixture(async f=>{
+ await f.installed.owner.query(await readFile('lib/quotes/background-schema.sql','utf8'));const webBinding=tenantPoolBinding(f.web)!;await installQuoteAdmissionGrants(f.installed.owner,f.installed.schema,webBinding.role,'one',webBinding.roleOid);
+ const q=await f.quote.proposeQuote(f.owner,f.saved.id,f.saved.planHash,'update'),m=await f.message.proposeQuote(f.owner,f.saved.id,f.saved.planHash,'message');expect(q.state).toBe('held');expect(m.state).toBe('held');
+ const normalize=(value:unknown)=>JSON.parse(JSON.stringify(value));const snapshot=async()=>{const result:Record<string,unknown>={};for(const table of ['ll_quote_plans','ll_connector_actions','ll_workflow_runs','ll_connector_events'])result[table]=normalize((await f.installed.owner.query('SELECT * FROM '+table+' ORDER BY id')).rows);const routes=(await f.installed.owner.query("SELECT to_regclass('ll_quote_background_routes') present")).rows[0].present;expect(routes).not.toBeNull();result.routes=normalize((await f.installed.owner.query('SELECT * FROM ll_quote_background_routes ORDER BY plan_id')).rows);return result;};
+ const before=await snapshot(),nativeBefore=normalize((await f.native.owner.query('SELECT * FROM native_quotes ORDER BY workspace_id,quote_id')).rows),mailBefore=await f.mail.readState();const exact=normalize((await f.installed.owner.query('SELECT * FROM ll_connector_actions WHERE id=$1',[q.id])).rows[0]);
+ const returned=normalize(await f.quote.execute(f.owner,q.id));expect(returned).toEqual(exact);expect(returned).toMatchObject({id:q.id,org_id:'one',agent_id:f.saved.plan.update.agentId,payload_hash:q.payload_hash,policy_version:3,state:'held',approved_by:null,approval_until:null,lease_token:null,lease_until:null});expect(await snapshot()).toEqual(before);expect(normalize((await f.native.owner.query('SELECT * FROM native_quotes ORDER BY workspace_id,quote_id')).rows)).toEqual(nativeBefore);expect(await f.native.count()).toBe(0);expect(f.native.writes).not.toHaveBeenCalled();expect(await f.mail.count()).toBe(0);expect(f.mail.transport.posts).toBe(0);expect(await f.mail.readState()).toEqual(mailBefore);
+ await expect(f.quote.review(f.owner,q.id,q.payload_hash,true)).rejects.toMatchObject({status:403});expect((await f.quote.review(f.manager,q.id,q.payload_hash,true)).state).toBe('ready');expect((await f.installed.owner.query('SELECT state,approved_by,lease_token FROM ll_connector_actions WHERE id=$1',[m.id])).rows[0]).toEqual({state:'held',approved_by:null,lease_token:null});expect(await f.native.count()).toBe(0);expect(f.mail.transport.posts).toBe(0);
+}),15000);
+
+
+it('elapsed approval after actual twin completion preserves the receipt and prevents repeated effects',async()=>fixture(async f=>{
+ const {q,m}=await executed(f);const receipt=await verifyReceipt(f);
+ const before=(await f.web.query('SELECT id,state,approval_until,evidence FROM ll_connector_actions ORDER BY id')).rows;
+ const expires=Math.max(...before.map(a=>new Date(a.approval_until).getTime()));
+ // Elapsed application clock only; database approvals and recorded effects stay intact.
+ const clock=vi.spyOn(Date,'now').mockReturnValue(expires+1);
+ try{
+  const reloaded=new WorkflowControl(f.web,f.quote,f.flow.quotes);
+  expect(await reloaded.quoteVerification(f.owner,f.saved.id)).toMatchObject({historical:receipt,current:{outcome:'conflict'}});
+  await expect(reloaded.verify(f.owner,f.saved.id)).rejects.toMatchObject({status:409});
+  expect((await f.quote.execute(f.owner,q.id)).state).toBe('succeeded');expect((await f.message.execute(f.owner,m.id)).state).toBe('succeeded');
+  expect((await f.web.query('SELECT id,state,approval_until,evidence FROM ll_connector_actions ORDER BY id')).rows).toEqual(before);
+  expect((await f.web.query('SELECT quote_verification FROM ll_workflow_events WHERE quote_verification IS NOT NULL')).rows).toEqual([{quote_verification:receipt}]);
+  expect(await f.native.count()).toBe(1);expect(await f.mail.count()).toBe(1);expect(f.mail.transport.posts).toBe(1);
+ }finally{clock.mockRestore();}
+}),15000);

@@ -1,0 +1,41 @@
+import {it,expect} from "vitest";
+import {typedReceipt,typedSourceFiles,membershipAuthoritySourceFiles} from "./staging-browser-record.mjs";
+// Synthetic extension of the earlier measured result tests retention/refusal only.
+import {readFileSync} from "node:fs";
+const prior=JSON.parse(readFileSync("docs/evidence/staging-platform-browser-prepared-proof.json","utf8"));
+const result=Object.fromEntries(Object.entries(prior).filter(([k])=>!["sourceFingerprints","executionEvidence"].includes(k)));
+Object.assign(result,{dependencyImages:{...JSON.parse(readFileSync("config/staging-runtime-images.json","utf8")),runtimeBindings:3,schemaExecutions:6},scope:"assembled isolated API/runtime and fresh typed HTTPS browser trial",notVerified:prior.notVerified.filter(x=>x!=="fresh typed chat/model interpretation"),plannerAuthority:{webOnly:true},actualProviderEffects:4,restoreContainment:{approvedArchive:true,externalEpochRotated:true,runtimeRoles:3,omittedEpochRefused:true,revivedSessionsRefused:true,restoredApprovalRefused:true,packagedWorkerRefused:true,packagedSchedulerRefused:true,quarantineRevokesAuthority:true,quarantineReplay:true,staleBootstrapRefused:true,retainedEffects:4},browser:{...prior.browser,scope:"trusted HTTPS Chromium fresh typed planning/review/approval over disposable assembled runtime",planning:{typedRequest:true,clarified:true,model:"us.amazon.nova-lite-v1:0",savedBeforeSubmission:true},checks:["real typed request and missing-recipient clarification save an exact scoped plan without execution authority",...prior.browser.checks],notVerified:prior.browser.notVerified.filter(x=>x!=="fresh typed chat/model interpretation")}});
+const metadata={runId:123,privateWorkflowCommit:"a".repeat(40),publicBaseCommit:"b".repeat(40),exactCompressedOverlaySha256:"c".repeat(64)};
+it("requires measured typed planning, web-only authority, verified effects and CI input provenance before retaining a result",()=>{
+ const receipt=typedReceipt(result,metadata,{source:"d".repeat(64)});expect(receipt.executionEvidence.productionChanged).toBe(false);expect(receipt.executionEvidence.actualProviderEffects).toBe(4);
+ for(const changes of [{passed:false},{browser:{...result.browser,planning:undefined}},{browser:{...result.browser,checks:[]}},{plannerAuthority:{webOnly:false}},{actualProviderEffects:6},{admission:{...result.admission,hostReserveBytes:1}},{notVerified:["fresh typed chat/model interpretation"]},{actionIds:["private"]},{secret:"private"},{browser:{...result.browser,secret:"private"}},{services:[{secret:"private"},...result.services.slice(1)]}])expect(()=>typedReceipt({...result,...changes},metadata,{})).toThrow();
+ for(const changes of [{runId:NaN},{publicBaseCommit:"unknown"},{exactCompressedOverlaySha256:"wrong"},{secret:"private"}])expect(()=>typedReceipt(result,{...metadata,...changes},{})).toThrow();
+});
+
+it("refuses absent, partial, inflated or unexpected restore evidence",()=>{
+ expect(()=>typedReceipt({...result,restoreContainment:undefined},metadata,{})).toThrow();
+ for(const [key,value] of Object.entries(result.restoreContainment)){
+  const invalid=typeof value==="boolean"?false:value+1;
+  expect(()=>typedReceipt({...result,restoreContainment:{...result.restoreContainment,[key]:invalid}},metadata,{})).toThrow();
+ }
+ expect(()=>typedReceipt({...result,restoreContainment:{...result.restoreContainment,secret:"private"}},metadata,{})).toThrow();
+});
+
+it("accepts only exact image-retention evidence and refuses inflated or unknown fields",()=>{
+ const artifact={archiveBytes:123,archiveSha256:"a".repeat(64),manifestSha256:"b".repeat(64),images:result.images,reloadedAfterRemoval:true,workerBuildVerified:true};
+ expect(typedReceipt({...result,artifact},metadata,{}).artifact).toEqual(artifact);
+ for(const change of [{archiveBytes:0},{archiveBytes:9*1024**3},{manifestSha256:""},{archiveSha256:""},{images:[]},{reloadedAfterRemoval:false},{workerBuildVerified:false},{secret:"private"}])expect(()=>typedReceipt({...result,artifact:{...artifact,...change}},metadata,{})).toThrow();
+});
+
+it("refuses absent incomplete or substituted dependency-image proof",()=>{
+ for(const change of [undefined,{...result.dependencyImages,runtimeBindings:2},{...result.dependencyImages,schemaExecutions:5},{...result.dependencyImages,platform:"linux/arm64"},{...result.dependencyImages,images:[]},{...result.dependencyImages,secret:"private"}])expect(()=>typedReceipt({...result,dependencyImages:change},metadata,{})).toThrow();
+});
+
+it("covers additive membership history dependencies without erasing any historical runtime source",()=>{
+ const files=typedSourceFiles(prior.sourceFingerprints);
+ expect(files).toHaveLength(106);
+ expect(files).toEqual(expect.arrayContaining(Object.keys(prior.sourceFingerprints)));
+ expect(files).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/membership-schema.sql","scripts/membership-authority-setup.ts"]));
+ expect(new Set(files).size).toBe(files.length);
+ for(const file of membershipAuthoritySourceFiles)expect(typedSourceFiles({...prior.sourceFingerprints,[file]:"d".repeat(64)})).toEqual(files);
+});

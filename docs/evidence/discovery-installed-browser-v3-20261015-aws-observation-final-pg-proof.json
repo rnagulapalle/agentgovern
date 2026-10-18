@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "production": false,
+  "exit_code": 0,
+  "pgReady": true,
+  "wrongPasswordRefused": true,
+  "plaintextRefused": true,
+  "ownedCleanupTerminal": true,
+  "ownedDataRemoved": true,
+  "completed_utc": "2026-10-15T23:44:22Z"
+}

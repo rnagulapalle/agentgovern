@@ -31,7 +31,8 @@ export default function ContactSales() {
           </p>
           <p>
             We’ll agree a bounded pilot if there is a fit. The current workspace
-            uses sample discount data and a simulated payment provider.
+            uses sample discount data, CRM and messaging twins, and a simulated
+            payment provider. No real money moves or customer email is delivered.
           </p>
           <p>
             Prefer to book directly?{" "}

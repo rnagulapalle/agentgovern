@@ -25,3 +25,8 @@ describe("action workspace access", () => {
     expect(html).not.toContain("Approve this discount");
   });
 });
+it('limited installed demo does not advertise an unavailable refund connector', () => {
+ const html = renderToStaticMarkup(createElement(DurableWorkspace, { scriptDemo: true }));
+ expect(html).toContain('sample discount record');
+ expect(html).not.toContain('workflow=refunds');
+});

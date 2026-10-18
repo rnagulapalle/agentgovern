@@ -1,0 +1,8 @@
+import {describe,it,expect} from 'vitest';
+import {installedDiagnosticRunnerMode} from './installed-diagnostic-runner.mjs';
+const facts={platform:'linux',arch:'x64',uid:1000,gid:1000},env={LOOPLABS_STAGING_PLATFORM_PROOF:'isolated'};
+describe('explicit diagnostic execution opt-in, synthetic guard cases only',()=>{
+ it('keeps authentic CI mode separate from explicit dedicated diagnostics',()=>{expect(installedDiagnosticRunnerMode({...env,GITHUB_ACTIONS:'true'},facts)).toMatchObject({mode:'github-actions',ci:true,releaseAccepted:false});expect(installedDiagnosticRunnerMode({...env,LOOPLABS_INSTALLED_DEDICATED_LINUX_PROOF:'isolated'},facts)).toMatchObject({mode:'dedicated-isolated-linux',ci:false,providerAttested:false,releaseAccepted:false});});
+ for(const [name,e,f]of [['missing explicit mode',env,facts],['mixed CI/dedicated',{...env,GITHUB_ACTIONS:'true',LOOPLABS_INSTALLED_DEDICATED_LINUX_PROOF:'isolated'},facts],['fake CI false flag',{...env,GITHUB_ACTIONS:'false',LOOPLABS_INSTALLED_DEDICATED_LINUX_PROOF:'isolated'},facts],['macOS',{...env,LOOPLABS_INSTALLED_DEDICATED_LINUX_PROOF:'isolated'},{...facts,platform:'darwin'}],['wrong architecture',{...env,LOOPLABS_INSTALLED_DEDICATED_LINUX_PROOF:'isolated'},{...facts,arch:'arm64'}],['root user',{...env,LOOPLABS_INSTALLED_DEDICATED_LINUX_PROOF:'isolated'},{...facts,uid:0}],['unisolated platform',{LOOPLABS_INSTALLED_DEDICATED_LINUX_PROOF:'isolated'},facts]])it('refuses '+name,()=>expect(()=>installedDiagnosticRunnerMode(e,f)).toThrow());
+ it('actual platform facts alone cannot grant diagnostic execution without explicit isolated opt-in',()=>expect(()=>installedDiagnosticRunnerMode({},{platform:process.platform,arch:process.arch,uid:process.getuid?.(),gid:process.getgid?.()})).toThrow());
+});

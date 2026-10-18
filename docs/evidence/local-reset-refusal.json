@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-09T10:06:37.109Z",
+  "scope": "Local actual Temporal reset with inert activity only",
+  "passed": false,
+  "blocker": "reset_request_id_did_not_deduplicate_original_run",
+  "distinctExecution": true,
+  "duplicateRequestDeduplicated": false,
+  "pinPreserved": true,
+  "original": {
+    "events": 11,
+    "sha256": "8db7c2aebcf1a083803732cfdc7b8dfa3c2de871ac19263f381797f6baf04841"
+  },
+  "reset": {
+    "events": 14,
+    "sha256": "b87bc7d12f022f913758c8e0e6b0732c7072330a8975c0ddf2d3cd0586e87d19"
+  },
+  "buildId": "ack-696ab7761b0bc72d20d4a62bedc980fd423869753ffedbf35c9d0d913d91aa21",
+  "activityCalls": 3,
+  "notVerified": [
+    "application approvals and reservations",
+    "provider effect deduplication",
+    "migration14 archive restore",
+    "image retention",
+    "enterprise acceptance"
+  ]
+}

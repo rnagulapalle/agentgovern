@@ -1,0 +1,11 @@
+import {test,expect} from 'vitest';
+import {mkdtemp,realpath,mkdir,writeFile,symlink,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createHash} from 'node:crypto';
+import {assertProofSourcePath,verifyProofSource,sourceFailureCategory} from './temporal-proof-source';
+const actual=['app/blog/[slug]/opengraph-image.tsx','app/blog/[slug]/page.tsx','app/control-plane/[section]/page.tsx','app/news/[slug]/page.tsx'];
+const sha=(s:string)=>createHash('sha256').update(s).digest('hex');
+test.each(actual)('actual Next source %s validates literal path and exact bytes',async file=>{assertProofSourcePath(file);await verifyProofSource(file,sha(await(await import('node:fs/promises')).readFile(file,'utf8')),process.cwd());});
+test.each(['','/absolute','../file','a/../file','./file','a//file','a/./file','a\\file','a/','a\0file','a\nfile'])('unsafe source path refuses %j',file=>expect(()=>assertProofSourcePath(file)).toThrow('refused'));
+test('symbolic ancestor escape and stale source bytes refuse; exact source remains usable',async()=>{const root=await realpath(await mkdtemp(join(tmpdir(),'ll-source-path-')));try{const own=join(root,'own'),foreign=join(root,'foreign');await mkdir(own,{mode:0o700});await mkdir(foreign,{mode:0o700});await writeFile(join(foreign,'file'),'foreign');await symlink(foreign,join(own,'alias'));await expect(verifyProofSource('alias/file',sha('foreign'),own)).rejects.toThrow('refused');await writeFile(join(own,'file'),'current');await expect(verifyProofSource('file',sha('stale'),own)).rejects.toThrow('refused');await verifyProofSource('file',sha('current'),own);expect(sourceFailureCategory(Error('secret credential'))).toBe('proof_failed');}finally{await rm(root,{recursive:true,force:true});}});

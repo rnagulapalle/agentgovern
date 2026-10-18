@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "scope": "fresh runner private artifact retrieval and exact image/worker verification",
+  "originRun": 37877500571,
+  "originCommit": "5eef23d39dc4fcdc96aa55eede4e971730cbf000",
+  "artifactId": 11593736628,
+  "manifestSha256": "a889c3af2859a52c0532df533eb4dc0ef749430f235b239c780188b92231788b",
+  "archiveSha256": "94f0afc3b160655649b724105a9c5d86757b96c3d7858b8f62a335896fe7e624",
+  "archiveBytes": 2399583744,
+  "buildId": "ack-8a67eac787ef6af73dec85c7032fc2689d31ba1b70f61ef4cf5665b2cd5f76a8",
+  "images": [
+    {
+      "role": "web",
+      "id": "sha256:d8c5c97e4ac69acc45d6d7abafe30c45d5b2b13f15782a36a62d33143e158605"
+    },
+    {
+      "role": "worker",
+      "id": "sha256:6ffa4c1c380053bcf27f47eade2879a6be11a3b3d6a45f760849e7da290a9d08"
+    },
+    {
+      "role": "twin",
+      "id": "sha256:4297f7e6efac9aa9e245a9100b2513d6894e4dc87147a43ac52e13c113c7b843"
+    },
+    {
+      "role": "provisioner",
+      "id": "sha256:9d0f9553d1238544ad3f5c6e6516416a2fc041861e9342fe0a813c39d4da585b"
+    }
+  ],
+  "imagesRemoved": true,
+  "servicesStarted": false,
+  "sourceFingerprints": {
+    "scripts/staging-image-artifact.mjs": "cf78d67c833418417f2bb64bce784b96cf6fe682f92abd8f43fa6da0165cebd1",
+    "scripts/staging-artifact-retrieval.mjs": "a2bc73e4781decdd5d8830c18e63afd11dccbb5b1f3d313a6d1785c276b1272e"
+  },
+  "notVerified": [
+    "persistent staging",
+    "application rollout or rollback",
+    "live provider guarantees",
+    "production acceptance"
+  ],
+  "executionEvidence": {
+    "runId": 37879011443,
+    "workflowCommit": "f9d5f088dc0387233af5a82ec914d1bf251f65d6",
+    "runUrl": "https://github.com/rnagulapalle/sandbox/actions/runs/37879011443",
+    "productionChanged": false
+  }
+}

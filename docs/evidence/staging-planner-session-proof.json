@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-10T15:24:04.193Z",
+  "sourceFingerprints": {
+    "scripts/staging-planner-inputs.mjs": "bb5f7b0e582e274336dd8c68fb9fbe52ffa3b72c8e4e28c3d4e8ffdb30868f4c",
+    "scripts/staging-planner-proof.ts": "dddfda3f051e4d70abe4bc276d6d7bbef7af2998074604f197ac67b234ad5036",
+    "lib/enquiries/chat.ts": "09c4c04d575c946fe4085f6a52b656250b9ed19bc6f9a59cc9399a3d4e1d5641",
+    "lib/enquiries/chat-contract.ts": "adcfd4308e6a9325930203b6a23f6e6179dfe25acaccf897ba1a456d652b56c2"
+  },
+  "passed": true,
+  "scope": "local temporary model-session input and actual invocation only",
+  "checks": [
+    "short-lived temporary session prepared in a separate private web input",
+    "actual bounded acknowledgement intent validated",
+    "alternate model denied by AWS"
+  ],
+  "notVerified": [
+    "assembled web-container model invocation",
+    "typed HTTPS browser planning",
+    "persistent remote staging",
+    "live providers and enterprise acceptance"
+  ]
+}

@@ -23,9 +23,13 @@ ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
+RUN node scripts/build-enquiry-worker.mjs
 
 # ---- runner: minimal production image ----
+# Official AWS Roles Anywhere helper needs the glibc loader; system CA roots
+# remain verified. No cloud credentials are copied into the image.
 FROM node:22-alpine AS runner
+RUN apk add --no-cache gcompat ca-certificates
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -35,6 +39,7 @@ RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 COPY --from=build /app/public ./public
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
+COPY --from=build /app/.worker ./.worker
 USER nextjs
 EXPOSE 3000
 CMD ["node", "server.js"]

@@ -1,0 +1,38 @@
+LoopLabs shared workflow approval connection
+
+Purpose
+Keep the existing AWS workflow as the only approval authority. Slack and
+LoopLabs review the same saved request. Approval is separate from execution
+completion and from mandatory tool-call enforcement.
+
+1. Workflow builder: expose the shared interface
+Use contract looplabs-shared-approval-1 at the reviewed regional API Gateway
+path /looplabs/approval-bridge. The integration guide and protocol helpers are
+in docs/SHARED_WORKFLOW_APPROVALS.md and integrations/shared-approvals/.
+Do not create a second approval database. Slack and this hook must decide the
+same exact immutable approval revision and arrange continuation once.
+
+2. Administrator: install the exact secure binding
+Bind the workspace, AWS connection, runtime ARN, version, recovery epoch and
+named reviewers. Configure the reviewed endpoint and owner-readable server
+signing file. Never send credentials in browser fields or exported log events.
+This release uses administrator-assisted binding; it does not install arbitrary
+customer hooks or provision signing secrets through the onboarding page.
+
+3. User: verify without sending a decision
+Open the agent workspace and choose Verify approval connection. A successful
+signed read confirms that this version's configured approval interface answers.
+It does not establish that every action is protected or that continuation works.
+
+4. Validate a fresh held request
+Trigger a test from Slack. Compare reason, exact before/after values, policy,
+requester and deadline in LoopLabs. Decide once. Verify the saved decision,
+existing Slack card, workflow continuation and actual downstream effect.
+Check rejection, expiry, changed payload, revoked reviewer, simultaneous decisions
+and lost acknowledgements separately. Do not retry an uncertain write blindly.
+
+Limits
+History is on-demand, source-reported telemetry. Approval polling checks every
+15 seconds only while the page is visible; no instant synchronization promise.
+Mandatory tool execution checkpoints and independent effect verification are
+separate integrations. Workflow durability and recovery remain its owner's duty.

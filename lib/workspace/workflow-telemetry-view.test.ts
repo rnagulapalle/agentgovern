@@ -1,0 +1,80 @@
+import {it,expect} from "vitest";
+import {telemetryRuns,eventLabels,telemetrySteps,telemetryDecision,telemetryStepCopy,telemetryRequestLabel,telemetryOutcomeGroup,telemetryRequestContext} from "./workflow-telemetry-view";
+import {projectWorkflowEvent,workflowEventNames,type WorkflowTelemetryWindow} from "./workflow-telemetry";
+function event(event_name:string,extra:Record<string,unknown>={}){return projectWorkflowEvent(JSON.stringify({schema_version:"1.0",event_name,event_id:"event-1",run_id:"run-1",action_id:null,timestamp:"2026-10-15T12:00:00.000001Z",attempt:1,trace_id:"a".repeat(32),span_id:"b".repeat(16),trigger_channel:"slack",agent_deployment_version:"10",...extra}))!;}
+function window(events:WorkflowTelemetryWindow['events'],conflictingEventIds:string[]=[]):WorkflowTelemetryWindow{return{source:{runtimeArn:"arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/agent-1234567890",enrolledRuntimeVersion:"10",logGroup:"/company/events",startTime:1,endTime:2},events,completeness:"partial",unsupportedRecords:0,duplicateDeliveries:0,conflictingEventIds,failures:[],enforcement:"not-established"};}
+it.each([["completed","Completed · agent reported"],["declined","Blocked by workflow policy"],["rejected","Rejected · agent reported"],["failed","Failed · agent reported"],["needs_info","Waiting for details"],["triaged","Waiting for review"],["unrecognized","Outcome reported · unrecognized state"]])("labels reported outcome %s without claiming verified effects",(outcome,label)=>{
+ const r=telemetryRuns(window([event("workflow.finished",{outcome})]))[0];expect(r.status).toBe(label);expect(r.startObserved).toBe(false);expect(r.events[0].effectVerified).toBe(false);expect(r.events[0].approvalIdentityVerified).toBe(false);
+});
+it("keeps approval requests, source-reported approval and missing final events distinct from completion",()=>{
+ expect(telemetryRuns(window([event("approval.approved")]))[0].status).toBe("Outcome not reported");
+ expect(telemetryRuns(window([event("workflow.paused",{outcome:"awaiting_approval"})]))[0].status).toBe("Awaiting manager approval");
+ expect(telemetryRuns(window([event("workflow.paused",{outcome:"unknown"})]))[0].status).toBe("Paused · agent reported");
+ expect(telemetryRuns(window([event("workflow.started")]))[0].status).toBe("In progress · agent reported");
+ expect(telemetryRuns(window([]))).toEqual([]);
+});
+it("keeps conflicting completion visible and never converts it to success",()=>{
+ const e=event("workflow.finished",{outcome:"completed"});const r=telemetryRuns(window([e],[e.eventId]))[0];expect(r.status).toBe("Evidence conflict · review required");expect(r.conflict).toBe(true);
+});
+it("orders parallel runs and microsecond events independently and retains the reported policy",()=>{
+ const a=event("workflow.started",{event_id:"start"}),b=event("policy.evaluated",{event_id:"policy",timestamp:"2026-10-15T12:00:00.000002Z",requested_pct:25,decision:"needs_approval"}),c=event("workflow.finished",{event_id:"finish",timestamp:"2026-10-15T12:00:00.000003Z",outcome:"completed"}),other=event("workflow.started",{event_id:"other",run_id:"run-2",timestamp:"2026-10-15T12:00:00.000004Z",trigger_channel:"email"});
+ const result=telemetryRuns(window([c,other,b,a]));expect(result.map(r=>r.id)).toEqual(["run-2","run-1"]);expect(result[1]).toMatchObject({startObserved:true,policy:{requestedPercent:25,decision:"needs_approval"}});expect(result[1].events.map(e=>e.eventId)).toEqual(["start","policy","finish"]);expect(result[0].trigger).toBe("email");
+ expect(Object.keys(eventLabels).sort()).toEqual([...workflowEventNames].sort());
+});
+
+it("groups proposed started completed for one action while preserving parallel calls and retry attempts",()=>{
+ const base={action_id:"tool-1",action_name:"record_crm",provider:"hubspot"};
+ const events=[event("action.proposed",{...base,event_id:"p"}),event("action.started",{...base,event_id:"s"}),event("action.completed",{...base,event_id:"c"}),event("action.started",{...base,event_id:"parallel",action_id:"tool-2"}),event("action.failed",{...base,event_id:"retry",attempt:2})];
+ const steps=telemetrySteps(events);expect(steps).toHaveLength(3);expect(steps[0]).toMatchObject({title:"record crm",state:"Completed"});expect(steps[0].events).toHaveLength(3);expect(steps[1].state).toBe("In progress");expect(steps[2].state).toBe("Failed");
+});
+it("uncertain tool outcomes and separate execution IDs are never collapsed into success",()=>{
+ const first=event("action.completed",{event_id:"done",action_id:"tool"}),unknown=event("action.uncertain",{event_id:"unknown",action_id:"tool"}),other=event("action.completed",{event_id:"other",action_id:"tool",run_id:"run-2"});
+ expect(telemetrySteps([first,unknown,other]).map(s=>s.state)).toEqual(["Outcome uncertain","Completed"]);
+ expect(telemetryRuns(window([first,other]))).toHaveLength(2);
+});
+it("orders executions by their start rather than moving an old approval run above newer requests",()=>{
+ const a=event("workflow.started",{event_id:"a",run_id:"old"}),b=event("workflow.started",{event_id:"b",run_id:"new",timestamp:"2026-10-15T12:01:00Z"}),c=event("workflow.finished",{event_id:"c",run_id:"old",timestamp:"2026-10-15T12:02:00Z",outcome:"completed"});
+ expect(telemetryRuns(window([a,b,c])).map(r=>r.id)).toEqual(["new","old"]);
+});
+it("keeps source policy decisions separate from manager decisions and execution completion",()=>{
+ expect(telemetryDecision([],"auto_approve")).toBe("Automatically approved");expect(telemetryDecision([],"needs_approval")).toBe("Manager approval required");expect(telemetryDecision([],"decline")).toBe("Denied by policy");
+ expect(telemetryDecision([event("approval.approved")],"needs_approval")).toBe("Manager approved");expect(telemetryDecision([event("approval.rejected")],"needs_approval")).toBe("Manager rejected");
+ expect(telemetryDecision([],null)).toBe("Decision not reported");
+});
+
+it("links quote references without merging separate executions on the same quote",()=>{
+ const first=event("workflow.started",{event_id:"one",run_id:"run-a",quote_id:"Q-same"}),second=event("workflow.finished",{event_id:"two",run_id:"run-b",quote_id:"Q-same",outcome:"declined"});
+ const runs=telemetryRuns(window([first,second]));expect(runs).toHaveLength(2);expect(runs.every(r=>r.quoteIds.length===1&&r.quoteIds[0]==="Q-same")).toBe(true);
+});
+
+it("uses readable action labels while preserving failed and uncertain tool states",()=>{
+ const failed=telemetrySteps([event("action.failed",{action_id:"a",action_name:"record_crm",provider:"hubspot"})])[0];
+ expect(telemetryStepCopy(failed)).toMatchObject({title:"Update the customer record",provider:"HubSpot",tone:"attention"});expect(failed.state).toBe("Failed");
+ const uncertain=telemetrySteps([event("action.uncertain",{action_id:"b",action_name:"send_quote",provider:"slack"})])[0];
+ expect(telemetryStepCopy(uncertain)).toMatchObject({title:"Send the quote",provider:"Slack",tone:"attention"});expect(uncertain.state).toBe("Outcome uncertain");
+ const unknown=telemetrySteps([event("action.started",{action_id:"c",action_name:"custom_task",provider:"other"})])[0];expect(telemetryStepCopy(unknown)).toMatchObject({title:"custom task",provider:"other",tone:"neutral"});
+});
+it("names quote preparation only from observed tools and does not invent a policy decision",()=>{
+ const run=telemetryRuns(window([event("action.completed",{action_id:"tool",action_name:"price"})]))[0];
+ expect(telemetryRequestLabel(run)).toBe("Prepare a quote");expect(telemetryDecision(run.events,null)).toBe("Decision not reported");expect(telemetryOutcomeGroup(run)).toBe("attention");
+});
+it("keeps conflicts and uncertain effects in needs-attention filters even with reported completion",()=>{
+ const end=event("workflow.finished",{event_id:"end",outcome:"completed"});
+ const conflict=telemetryRuns(window([end],["end"]))[0];expect(telemetryOutcomeGroup(conflict)).toBe("attention");
+ const unknown=event("action.uncertain",{event_id:"unknown",action_id:"tool"});expect(telemetryOutcomeGroup(telemetryRuns(window([unknown,end]))[0])).toBe("attention");
+});
+
+it("describes request metadata from its own reported fields without inventing message text or receipt time",()=>{
+ const start=event("workflow.started",{event_id:"start",agent_deployment_version:"15"}),policy=event("policy.evaluated",{event_id:"policy",requested_pct:25});
+ const run=telemetryRuns(window([start,policy]))[0];expect(telemetryRequestContext(run)).toMatchObject({description:"A 25% discount was requested.",channel:"slack",version:"15",startedAt:start.occurredAt,messageAvailable:false});
+ const missing=telemetryRuns(window([event("action.started",{action_id:"tool"})]))[0];expect(telemetryRequestContext(missing)).toMatchObject({description:"The workflow has not shared a description of this request.",startedAt:null,version:null,messageAvailable:false});
+ const quote=telemetryRuns(window([event("action.started",{action_id:"tool",action_name:"price"})]))[0];expect(telemetryRequestContext(quote).description).toBe("The workflow reports a request involving pricing.");
+});
+it('describes internal discount steps without claiming a saved provider write',()=>{
+ const e=event('action.completed',{event_id:'apply',action_id:'apply',action_name:'apply_discount',provider:'internal'});
+ const step=telemetrySteps([e])[0];expect(telemetryStepCopy(step)).toMatchObject({title:'Process the proposed discount',detail:expect.stringContaining('does not independently confirm')});
+});
+
+it.each([['notify_customer_rejected','Notify the customer of rejection'],['ask_for_details','Ask for missing details']])('translates %s without treating a failed or uncertain attempt as success',(name,title)=>{
+ for(const state of ['action.started','action.failed','action.uncertain'] as const){const step=telemetrySteps([event(state,{action_id:'tool',action_name:name,provider:'slack'})])[0];expect(telemetryStepCopy(step).title).toBe(title);expect(telemetryStepCopy(step).tone).not.toBe('done');}
+});

@@ -1,3 +1,4 @@
+import { assertTenantPool } from "../durable/tenant-pool";
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import { ControlError } from "../durable/contracts";
@@ -43,6 +44,7 @@ export function parseSales(input: Record<string, unknown>) {
 }
 export async function submitSales(db: Pool, input: Record<string, unknown>) {
   const v = parseSales(input);
+  const binding = await assertTenantPool(db);
   const c = await db.connect();
   try {
     await c.query("BEGIN");
@@ -54,8 +56,9 @@ export async function submitSales(db: Pool, input: Record<string, unknown>) {
       );
     }
     await c.query(
-      "INSERT INTO ll_sales_requests(id,email,name,company,company_size,role,workflow) VALUES($1,$2,$3,$4,$5,$6,$7)",
+      "INSERT INTO ll_sales_requests(org_id,id,email,name,company,company_size,role,workflow) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
       [
+        binding.org,
         randomUUID(),
         v.email.toLowerCase(),
         v.name,

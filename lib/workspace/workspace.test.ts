@@ -1,5 +1,4 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
 import { Pool } from "pg";
 import { NextRequest } from "next/server";
 import {
@@ -9,7 +8,6 @@ import {
   describe,
   it,
   expect,
-  vi,
 } from "vitest";
 import { ControlError } from "../durable/contracts";
 import {
@@ -23,17 +21,14 @@ import { digest, memberSession, WORKSPACE_COOKIE } from "./identity";
 import { agentDirectory, parseAgent, registerAgent } from "./agents";
 import { parseSales, submitSales } from "./sales";
 import { safeNext } from "./navigation";
-let admin: Pool;
+import { createInstalledTenantFixture } from "./installed-tenant-fixture";
+import { configureTenantContext } from "./tenant-context";
+let fixture: Awaited<ReturnType<typeof createInstalledTenantFixture>>;
+let owner: Pool;
 let db: Pool;
-let createdRuntimeRole = false;
-const schema = `ws_${randomBytes(8).toString("hex")}`;
 const memberEmail = "owner@example.com";
 const password = "example-password-for-test";
 const agentToken = randomBytes(32).toString("base64url");
-vi.mock("../durable/database", async (original) => ({
-  ...(await original<typeof import("../durable/database")>()),
-  database: () => db,
-}));
 import {
   POST as login,
   GET as profile,
@@ -60,59 +55,23 @@ const req = (
     ...(value === undefined ? {} : { body: JSON.stringify(value) }),
   });
 beforeAll(async () => {
-  if (!process.env.LOOPLABS_TEST_DATABASE_URL)
-    throw new Error("Dedicated PostgreSQL required for workspace auth tests.");
-  admin = new Pool({
-    connectionString: process.env.LOOPLABS_TEST_DATABASE_URL,
-  });
-  await admin.query(`CREATE SCHEMA ${schema}`);
-  if (
-    !(await admin.query("SELECT 1 FROM pg_roles WHERE rolname='ll_runtime'"))
-      .rows[0]
-  ) {
-    await admin.query("CREATE ROLE ll_runtime");
-    createdRuntimeRole = true;
-  }
-  db = new Pool({
-    connectionString: process.env.LOOPLABS_TEST_DATABASE_URL,
-    options: `-c search_path=${schema}`,
-  });
-  await db.query(await readFile("lib/durable/schema.sql", "utf8"));
-  await db.query(await readFile("lib/workspace/schema.sql", "utf8"));
-  await db.query(await readFile("lib/connectors/schema.sql", "utf8"));
-  await db.query(await readFile("lib/workflows/schema.sql", "utf8"));
-  await admin.query(`GRANT USAGE ON SCHEMA ${schema} TO ll_runtime`);
-  await db.query("GRANT INSERT ON ll_tokens TO ll_runtime");
-  await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof'),('other')");
-  await db.query("INSERT INTO ll_records(org_id) VALUES('local-proof')");
-  await db.query(
-    "INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,'local-proof','Owner',$2),('disabled@example.com','local-proof','Disabled',$2)",
-    [memberEmail, passwordHash(password)],
-  );
-  await db.query(
-    "UPDATE ll_members SET active=false WHERE email='disabled@example.com'",
-  );
-  await db.query(
-    "INSERT INTO ll_agents(org_id,id) VALUES('local-proof','existing-agent')",
-  );
-  await db.query(
-    "INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','existing-agent','agent')",
-    [tokenHash(agentToken)],
-  );
-});
+  fixture = await createInstalledTenantFixture({tenants:['local-proof','other'],salesOrg:'local-proof',seed:async(owner)=>{
+    await owner.query("INSERT INTO ll_records(org_id) VALUES('local-proof')");
+    await owner.query("INSERT INTO ll_members(email,org_id,name,password_hash) VALUES($1,'local-proof','Owner',$2),('disabled@example.com','local-proof','Disabled',$2)",[memberEmail,passwordHash(password)]);
+    await owner.query("UPDATE ll_members SET active=false WHERE email='disabled@example.com'");
+    await owner.query("INSERT INTO ll_agents(org_id,id) VALUES('local-proof','existing-agent')");
+    await owner.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','existing-agent','agent')",[tokenHash(agentToken)]);
+  }});
+  owner=fixture.owner;db=fixture.web('local-proof');configureTenantContext(fixture.context);
+},30000);
 beforeEach(async () => {
-  await db.query("DELETE FROM ll_sessions");
-  await db.query("DELETE FROM ll_access_attempts");
-  await db.query("UPDATE ll_members SET active=true WHERE email=$1", [
-    memberEmail,
-  ]);
+  // Explicit owner-only fixture reset. Product services below use installed web roles.
+  await owner.query("DELETE FROM ll_sessions");
+  await owner.query("DELETE FROM ll_access_attempts");
+  await owner.query("DELETE FROM ll_tenant_access_attempts");
+  await owner.query("UPDATE ll_members SET active=true WHERE email=$1", [memberEmail]);
 });
-afterAll(async () => {
-  await db.end();
-  await admin.query(`DROP SCHEMA ${schema} CASCADE`);
-  if (createdRuntimeRole) await admin.query("DROP ROLE ll_runtime");
-  await admin.end();
-});
+afterAll(async () => {await fixture?.close();});
 async function signed() {
   const token = await signIn(db, { email: memberEmail, password });
   return { token, actor: await authenticate(db, token) };
@@ -173,12 +132,12 @@ describe("workspace identity boundary", () => {
     await expect(
       signIn(db, { email: memberEmail, password }),
     ).rejects.toMatchObject({ status: 429 });
-    await db.query(
-      "UPDATE ll_access_attempts SET window_start=now()-interval '16 minutes'",
+    await owner.query(
+      "UPDATE ll_tenant_access_attempts SET window_start=now()-interval '16 minutes'",
     );
     await signIn(db, { email: memberEmail, password });
-    await db.query(
-      "UPDATE ll_access_attempts SET count=120 WHERE key='login-global'",
+    await owner.query(
+      "UPDATE ll_tenant_access_attempts SET count=120 WHERE key='login-global'",
     );
     await expect(
       signIn(db, { email: "another@example.com", password }),
@@ -198,14 +157,14 @@ describe("workspace identity boundary", () => {
     } finally {
       c.release();
     }
-    await db.query(
+    await owner.query(
       "UPDATE ll_sessions SET expires_at=now()-interval '1 second'",
     );
     await expect(authenticate(db, token)).rejects.toMatchObject({
       status: 401,
     });
     const fresh = await signed();
-    await db.query("UPDATE ll_members SET active=false WHERE email=$1", [
+    await owner.query("UPDATE ll_members SET active=false WHERE email=$1", [
       memberEmail,
     ]);
     expect(await memberSession(db, fresh.token)).toBeNull();
@@ -213,7 +172,8 @@ describe("workspace identity boundary", () => {
   it("keeps named approval authority tied to an active member", async () => {
     const { actor } = await signed();
     const service = new DurableControl(db);
-    const a = await service.propose(actor, {
+    const proposer = await authenticate(db, agentToken);
+    const a = await service.propose(proposer, {
       actionId: randomUUID(),
       agentId: "existing-agent",
       discount: 25,
@@ -222,13 +182,13 @@ describe("workspace identity boundary", () => {
     expect(a.state).toBe("held");
     const approved = await service.review(actor, a.id, true, a.payload_hash);
     expect(approved.approved_by).toBe(memberEmail);
-    await db.query("UPDATE ll_members SET active=false WHERE email=$1", [
+    await owner.query("UPDATE ll_members SET active=false WHERE email=$1", [
       memberEmail,
     ]);
     await expect(service.execute(actor, a.id)).rejects.toMatchObject({
       status: 403,
     });
-    await db.query(
+    await owner.query(
       "UPDATE ll_members SET active=true WHERE email='disabled@example.com'",
     );
     try {
@@ -247,7 +207,7 @@ describe("workspace identity boundary", () => {
         ).rows[0].n,
       ).toBe(0);
     } finally {
-      await db.query(
+      await owner.query(
         "UPDATE ll_members SET active=false WHERE email='disabled@example.com'",
       );
     }
@@ -320,7 +280,6 @@ describe("agent provisioning boundary", () => {
     const c = await db.connect();
     try {
       await c.query("BEGIN");
-      await c.query("SET LOCAL ROLE ll_runtime");
       await c.query(
         "INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','existing-agent','agent')",
         [tokenHash(randomBytes(32).toString("base64url"))],
@@ -330,7 +289,7 @@ describe("agent provisioning boundary", () => {
           "INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof','escalated','operator')",
           [tokenHash(randomBytes(32).toString("base64url"))],
         ),
-      ).rejects.toThrow("limited to agent keys");
+      ).rejects.toThrow("limited to scoped agent keys");
     } finally {
       await c.query("ROLLBACK");
       c.release();
@@ -397,13 +356,13 @@ describe("agent provisioning boundary", () => {
   });
   it("denies onboarding without connector evidence and enforces endpoint authorization", async () => {
     const { token, actor } = await signed();
-    await db.query("DELETE FROM ll_records WHERE org_id='local-proof'");
+    await owner.query("DELETE FROM ll_records WHERE org_id='local-proof'");
     try {
       await expect(
         registerAgent(db, actor, proposal("missing-connector")),
       ).rejects.toMatchObject({ status: 409 });
     } finally {
-      await db.query("INSERT INTO ll_records(org_id) VALUES('local-proof')");
+      await owner.query("INSERT INTO ll_records(org_id) VALUES('local-proof')");
     }
     expect(
       (await directory(req("/api/workspace/agents", undefined, token))).status,
@@ -461,9 +420,10 @@ describe("sales intake and redirects", () => {
       ).status,
     ).toBe(403);
     expect((await sales(req("/api/sales", {}))).status).toBe(400);
-    await db.query(
-      "UPDATE ll_access_attempts SET count=10 WHERE key='sales-global'",
+    await owner.query(
+      "UPDATE ll_tenant_access_attempts SET count=10 WHERE key='sales-global'",
     );
+    await owner.query("UPDATE ll_access_attempts SET count=10 WHERE key='sales-global'");
     expect((await sales(req("/api/sales", lead))).status).toBe(429);
   });
   it("restricts sign-in return destinations to workspace routes", () => {
@@ -482,7 +442,7 @@ describe("sales intake and redirects", () => {
 
 it("registers CRM and messaging agents with one supported permission and named owner", async () => {
   const { actor } = await signed();
-  await db.query(
+  await owner.query(
     "INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email') ON CONFLICT DO NOTHING",
   );
   for (const [role, connector, tool] of [
@@ -501,7 +461,7 @@ it("registers CRM and messaging agents with one supported permission and named o
     ).rows[0];
     expect(row.tools).toEqual([tool]);
   }
-  await db.query(
+  await owner.query(
     "UPDATE ll_connector_policies SET active=false WHERE connector='crm'",
   );
   await expect(
@@ -511,4 +471,15 @@ it("registers CRM and messaging agents with one supported permission and named o
       connector: "crm_twin",
     }),
   ).rejects.toMatchObject({ status: 409 });
+});
+
+it("runs product consumers on genuine installed scoped roles and refuses foreign or workload authority",async()=>{
+  const facts=(await db.query("SELECT current_user role,(SELECT rolsuper OR rolbypassrls OR rolcreaterole OR rolcreatedb FROM pg_roles WHERE rolname=current_user) privileged")).rows[0];
+  expect(facts.role).toMatch(/^llti_/);expect(facts.privileged).toBe(false);
+  const other=fixture.web('other');expect((await other.query("SELECT email FROM ll_members WHERE email=$1",[memberEmail])).rows).toEqual([]);
+  await expect(other.query("INSERT INTO ll_sales_requests(id,org_id,email,name,company,company_size,role,workflow) VALUES($1,'local-proof','x@example.com','Foreign','Example','201–500','Owner','Specific recurring operational pain')",[randomUUID()])).rejects.toMatchObject({code:'42501'});
+  const worker=await fixture.workload('local-proof','worker');
+  await expect(signIn(worker,{email:memberEmail,password})).rejects.toMatchObject({code:'42501'});
+  const {token}=await signed();expect((await fixture.context.member(token)).actor.subject).toBe(memberEmail);
+  await expect(fixture.context.member(agentToken)).rejects.toMatchObject({status:401});
 });

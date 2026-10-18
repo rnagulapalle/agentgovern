@@ -2,6 +2,15 @@
 # Deploy the app to the existing Lightsail server. DNS, TLS and nginx host
 # configuration are managed separately; an app release must not replace them.
 set -euo pipefail
+if [[ "${1:-}" == --profile ]]; then
+  [[ $# == 2 ]] || { echo 'Unsupported explicit deployment profile.' >&2; exit 1; }
+  case "$2" in
+    quote-demo) exec bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/deploy-quote-demo.sh" ;;
+    control-demo) exec bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/deploy-control-demo.sh" ;;
+    *) echo 'Unsupported explicit deployment profile.' >&2; exit 1 ;;
+  esac
+fi
+[[ $# == 0 ]] || { echo 'Unexpected deployment arguments.' >&2; exit 1; }
 
 SERVER="ubuntu@184.32.118.87"
 APP_DIR="/home/ubuntu/agent-trust-demo"
@@ -65,6 +74,13 @@ cleanup() {
     cp "$backup/docker-compose.yml" docker-compose.yml
     printf 'services:\n  web:\n    image: looplabs-web:rollback-%s\n' "$release" > "$backup/rollback.yml"
     sudo docker compose -f docker-compose.yml -f "$backup/rollback.yml" up -d --no-deps --no-build web
+    if sudo docker compose config --services | grep -qx enquiry-worker; then
+      printf '  enquiry-worker:\n    image: looplabs-web:rollback-%s\n' "$release" >> "$backup/rollback.yml"
+      sudo docker compose -f docker-compose.yml -f "$backup/rollback.yml" up -d --no-deps --no-build enquiry-worker
+    else
+      project=$(sudo docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$(sudo docker compose ps -q web)")
+      sudo docker ps -aq --filter "label=com.docker.compose.project=$project" --filter label=com.docker.compose.service=enquiry-worker | xargs -r sudo docker rm -f >/dev/null
+    fi
     sudo docker compose exec -T nginx nginx -t </dev/null
     sudo docker compose exec -T nginx nginx -s reload </dev/null
   fi
@@ -81,7 +97,7 @@ network=$(sudo docker inspect --format '{{range $name, $_ := .NetworkSettings.Ne
 python3 - "$app/.env" "$backup/candidate-runtime.env" <<'PYENV'
 import sys
 from pathlib import Path
-allowed = {"LOOPLABS_DURABLE_ORIGIN", "LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN", "LOOPLABS_CONNECTOR_TWIN_URL", "LOOPLABS_CONNECTOR_TWIN_TOKEN"}
+allowed = {"LOOPLABS_DURABLE_ORIGIN", "LOOPLABS_DATABASE_URL", "LOOPLABS_REFUND_TWIN_URL", "LOOPLABS_REFUND_TWIN_TOKEN", "LOOPLABS_CONNECTOR_TWIN_URL", "LOOPLABS_CONNECTOR_TWIN_TOKEN", "LOOPLABS_FETCHSANDBOX_BINDING", "LOOPLABS_CHAT_MODEL", "LOOPLABS_RECORD_CATALOG", "LOOPLABS_TEMPORAL_WORKSPACE", "LOOPLABS_TEMPORAL_RECORD_BUILD_ID", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"}
 source = Path(sys.argv[1])
 values = [line for line in source.read_text().splitlines() if line.split("=", 1)[0] in allowed] if source.exists() else []
 target = Path(sys.argv[2]); target.touch(mode=0o600); target.write_text("\n".join(values) + "\n")
@@ -108,6 +124,8 @@ check_app() {
           if (!result.rows.some(row => row.version === 2)) throw new Error("Refund schema missing");
           if (!result.rows.some(row => row.version === 3)) throw new Error("Workspace membership schema missing");
           if (!result.rows.some(row => row.version === 4)) throw new Error("Connector action schema missing");
+          if (!result.rows.some(row => row.version === 5)) throw new Error("Workflow schema missing");
+          if (!result.rows.some(row => row.version === 7)) throw new Error("Saved enquiry schema missing; apply enquiries:setup before release");
         } finally { await pool.end(); }
         const evidence = await fetch(process.env.LOOPLABS_REFUND_TWIN_URL + "/v1/charges/ch_looplabs_refund_demo", {
           headers: { Authorization: "Bearer " + process.env.LOOPLABS_REFUND_TWIN_TOKEN },
@@ -158,7 +176,7 @@ rsync -a --exclude '.env*' --exclude nginx/nginx.conf --exclude nginx/certs \
   --exclude certbot --exclude .local --exclude coverage "$stage/" "$app/"
 sudo docker tag "$image" looplabs-web:latest
 activated=1
-sudo env LOOPLABS_IMAGE="$image" docker compose up -d --no-deps --no-build web
+sudo env LOOPLABS_IMAGE="$image" docker compose up -d --no-deps --no-build web enquiry-worker
 web=$(sudo docker compose ps -q web)
 ready=0
 for attempt in $(seq 1 30); do
@@ -166,6 +184,22 @@ for attempt in $(seq 1 30); do
   sleep 2
 done
 [ "$ready" -eq 1 ]
+# A web-only release is incomplete: the separately deployed runner must publish
+# a fresh heartbeat after this container started, without borrowing a human session.
+worker=$(sudo docker compose ps -q enquiry-worker)
+test -n "$worker"
+worker_started=$(sudo docker inspect --format '{{.State.StartedAt}}' "$worker")
+worker_ready=0
+for attempt in $(seq 1 12); do
+  if [ "$(sudo docker inspect --format '{{.State.Running}}' "$worker")" = true ] && sudo docker exec "$web" node -e '
+    const { Pool } = require("pg");
+    const db = new Pool({connectionString:process.env.LOOPLABS_DATABASE_URL,connectionTimeoutMillis:3000});
+    db.query("SELECT 1 FROM ll_enquiry_worker_status WHERE last_tick>$1::timestamptz AND last_tick>now()-make_interval(secs=>30)", [process.argv[1]])
+      .then(r=>{if(!r.rows.length) process.exitCode=1;}).catch(()=>{process.exitCode=1;}).finally(()=>db.end());
+  ' "$worker_started"; then worker_ready=1; break; fi
+  sleep 5
+done
+[ "$worker_ready" -eq 1 ]
 # nginx resolves the Compose service when it loads its configuration.
 sudo docker compose exec -T nginx nginx -t </dev/null
 sudo docker compose exec -T nginx nginx -s reload </dev/null

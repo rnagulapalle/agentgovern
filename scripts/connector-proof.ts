@@ -1,3 +1,4 @@
+import {validateInstalledProofConstruction} from './current-proof-source-registry.mjs';
 import { readFile, writeFile, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { execFile } from "node:child_process";
@@ -6,21 +7,35 @@ const execFileAsync = promisify(execFile);
 import { spawn, type ChildProcess } from "node:child_process";
 import { resolve } from "node:path";
 import assert from "node:assert/strict";
-import { Pool } from "pg";
+import type { Pool } from "pg";
+import { createInstalledTenantFixture } from "../lib/workspace/installed-tenant-fixture";
+import { quarantineRestore } from "../lib/durable/recovery";
+import { proofChildEnvironment, stopProofChild } from "./connector-proof-installation";
 import { authenticate, tokenHash } from "../lib/durable/service";
+import {memberSession,digest,WORKSPACE_COOKIE} from "../lib/workspace/identity";
 import { ConnectorControl } from "../lib/connectors/service";
 import { FetchSandboxConnectors } from "../lib/connectors/twin";
+import { WorkflowControl } from "../lib/workflows/service";
+import { EnquiryControl } from "../lib/enquiries/service";
+import { ScopeControl } from "../lib/connectors/scopes";
+import type { RecordScope } from "../lib/connectors/record-scope";
 import type { Connector, ConnectorAction } from "../lib/connectors/contracts";
+import { connectorFailureDiagnostic,type ProofHttpDiagnostic } from "./connector-proof-diagnostic";
+let activeCheck=0,lastHttp:ProofHttpDiagnostic|undefined;
+import { validateConnectorProofSources } from "./connector-proof-sources";
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function main() {
+ validateInstalledProofConstruction();
+  // Must complete before starting the provider or creating any effect.
+  const sourceFingerprints=await validateConnectorProofSources();
   const url = process.env.LOOPLABS_TEST_DATABASE_URL;
   if (!url)
     throw new Error(
       "A dedicated test database is required; no live workspace will be modified.",
     );
-  const schema = `proof_connectors_${randomBytes(8).toString("hex")}`;
-  const admin = new Pool({ connectionString: url });
-  let db: Pool | undefined, child: ChildProcess | undefined;
+  if(process.env.NODE_ENV!=='test')throw Error('Explicit disposable proof context required.');
+  let fixture:Awaited<ReturnType<typeof createInstalledTenantFixture>>|undefined;
+  let db:Pool|undefined,web:Pool,workerDb:Pool,schema:string,child:ChildProcess|undefined;
   await mkdir(".local", { recursive: true, mode: 0o700 });
   const dir = await mkdtemp(resolve(".local/connector-proof-"));
   const token = randomBytes(32).toString("base64url");
@@ -29,31 +44,31 @@ async function main() {
     JSON.stringify({ token }),
     { mode: 0o600 },
   );
+  const recordScopes:RecordScope[]=[
+    {version:"record-scope-1",workspaceId:"local-proof",contactId:"2001",recipient:"alice@example.test"},
+    {version:"record-scope-1",workspaceId:"local-proof",contactId:"2002",recipient:"bob@example.test"},
+    {version:"record-scope-1",workspaceId:"other-proof",contactId:"2003",recipient:"carol@example.test"},
+  ];
+  await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records:recordScopes}),{mode:0o600});
   async function start() {
     const backend =
       process.env.FETCHSANDBOX_BACKEND_PATH ||
       `${process.env.HOME}/sandbox/backend`;
-    let output = "";
     child = spawn(
       `${backend}/.venv/bin/python`,
       ["scripts/connector-twin.py"],
       {
-        env: { ...process.env, LOOPLABS_CONNECTOR_STATE_DIR: dir },
+        env: proofChildEnvironment({LOOPLABS_CONNECTOR_STATE_DIR: dir,FETCHSANDBOX_BACKEND_PATH:backend}),
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
-    child.stderr?.on("data", (b) => {
-      output += String(b);
-    });
-    child.stdout?.on("data", (b) => {
-      output += String(b);
-    });
+    child.stderr?.resume();child.stdout?.resume();
     for (let i = 0; i < 80; i++) {
       if (child.exitCode !== null)
-        throw new Error(`Private twin could not start: ${output.slice(-600)}`);
+        throw new Error("Private twin could not start.");
       try {
         const r = await fetch("http://127.0.0.1:8018/proof/effects/unknown", {
-          headers: { Authorization: `Bearer ${token}` },
+          signal:AbortSignal.timeout(1000),headers: { Authorization: `Bearer ${token}` },
         });
         if (r.status === 404) return;
       } catch {}
@@ -63,33 +78,20 @@ async function main() {
       "Private twin startup timed out; ensure port 8018 is free.",
     );
   }
-  async function stop() {
-    if (child && child.exitCode === null) {
-      child.kill("SIGTERM");
-      await new Promise<void>((r) => child!.once("exit", () => r()));
-    }
-  }
+  async function stop() {await stopProofChild(child);}
+  let evidence:Record<string,unknown>|undefined;
   const checks: { name: string; passed: boolean; detail: string }[] = [];
   async function check(name: string, fn: () => Promise<void>, detail: string) {
+    activeCheck++;lastHttp=undefined;
+    console.log(`CHECK ${activeCheck}: ${name}`);
     await fn();
     checks.push({ name, passed: true, detail });
     console.log(`PASS ${name}`);
   }
   try {
     await start();
-    await admin.query(`CREATE SCHEMA ${schema}`);
-    db = new Pool({
-      connectionString: url,
-      options: `-c search_path=${schema}`,
-    });
-    for (const f of [
-      "lib/durable/schema.sql",
-      "lib/workspace/schema.sql",
-      "lib/connectors/schema.sql",
-      "lib/workflows/schema.sql",
-    ])
-      await db.query(await readFile(f, "utf8"));
-    await db.query("INSERT INTO ll_orgs(id) VALUES('local-proof')");
+    fixture=await createInstalledTenantFixture({tenants:['local-proof','other-proof'],salesOrg:'local-proof',seed:async()=>{}});
+    schema=fixture.schema;db=fixture.owner;web=fixture.web('local-proof');workerDb=await fixture.workload('local-proof','worker');
     await db.query(
       "INSERT INTO ll_connector_policies(org_id,connector) VALUES('local-proof','crm'),('local-proof','email')",
     );
@@ -112,11 +114,24 @@ async function main() {
         "INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,$3)",
         [tokenHash(key), subject, role],
       );
-      actors.push(await authenticate(db, key));
+      actors.push(await authenticate(role==="worker"?workerDb:web, key));
     }
     const [crm, email, operator, worker] = actors;
+    assert((await db.query("SELECT to_regprocedure('ll_membership_authority23()') AS installed")).rows[0].installed);
+    const namedKeys: string[] = [], legacyNamedKeys: string[] = [], namedActors = [];
+    for (const subject of ["enquiry-owner@example.test", "enquiry-reviewer@example.test"]) {
+      await db.query("INSERT INTO ll_members(org_id,email,name,password_hash) VALUES('local-proof',$1,$1,'unused')", [subject]);
+      const session=randomBytes(32).toString("base64url"), legacy=randomBytes(32).toString("base64url");
+      await db.query("INSERT INTO ll_sessions(hash,email,expires_at) VALUES($1,$2,now()+interval '1 hour')", [digest(session),subject]);
+      await db.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'operator')", [tokenHash(legacy),subject]);
+      const actor=await memberSession(web,session);assert(actor);namedActors.push(actor);namedKeys.push(session);legacyNamedKeys.push(legacy);
+    }
+    const [namedRequester,namedReviewer]=namedActors;
+    const [requesterSession,reviewerSession]=namedKeys;
+    const [legacyRequesterKey,legacyReviewerKey]=legacyNamedKeys;
     const provider = new FetchSandboxConnectors("http://127.0.0.1:8018", token);
-    const control = new ConnectorControl(db, provider);
+    const control = new ConnectorControl(web, provider);
+    const executor = new ConnectorControl(workerDb, provider);
     async function ready(connector: Connector) {
       const agent = connector === "crm" ? crm : email;
       const a = await control.propose(agent, {
@@ -137,7 +152,7 @@ async function main() {
         `${connector}: exact approval, execute and authoritative read-back`,
         async () => {
           normal = await ready(connector);
-          const a = await control.execute(worker, normal.id);
+          const a = await executor.execute(worker, normal.id);
           assert.equal(a.state, "succeeded");
         },
         "Real LoopLabs service -> HTTP -> existing FetchSandbox engine -> persisted provider state.",
@@ -148,7 +163,7 @@ async function main() {
           const before = JSON.parse(
             await readFile(`${dir}/connector-twin-state.json`, "utf8"),
           );
-          await control.execute(worker, normal!.id);
+          await executor.execute(worker, normal!.id);
           const after = JSON.parse(
             await readFile(`${dir}/connector-twin-state.json`, "utf8"),
           );
@@ -162,7 +177,7 @@ async function main() {
         async () => {
           lost = await ready(connector);
           assert.equal(
-            (await control.execute(worker, lost.id, true)).state,
+            (await executor.execute(worker, lost.id, true)).state,
             "uncertain",
           );
           assert.equal(
@@ -200,7 +215,7 @@ async function main() {
           "crm: later write produces conflict",
           async () => {
             const newer = await ready("crm");
-            await control.execute(worker, newer.id);
+            await executor.execute(worker, newer.id);
             assert.equal(
               (await control.reconcile(operator, lost!.id)).state,
               "conflict",
@@ -257,11 +272,11 @@ async function main() {
             }
           }
           const fault = new ConnectorControl(
-            db!,
+            web,
             new Fault("http://127.0.0.1:8018", token),
           );
           const a = await ready("email");
-          assert.equal((await fault.execute(worker, a.id)).state, "uncertain");
+          assert.equal((await new ConnectorControl(workerDb,new Fault("http://127.0.0.1:8018",token)).execute(worker,a.id)).state,"uncertain");
           assert.equal(
             (await fault.reconcile(operator, a.id)).state,
             "uncertain",
@@ -274,12 +289,12 @@ async function main() {
       async () => {
         const old = await ready("crm"),
           newer = await ready("crm");
-        await control.execute(worker, newer.id);
+        await executor.execute(worker, newer.id);
         const before = JSON.parse(
           await readFile(`${dir}/connector-twin-state.json`, "utf8"),
         );
         assert.equal(
-          (await control.execute(worker, old.id)).state,
+          (await executor.execute(worker, old.id)).state,
           "uncertain",
         );
         const after = JSON.parse(
@@ -289,6 +304,32 @@ async function main() {
       },
       "The fixture enforces an exact source version at write time. This CAS extension is not a live HubSpot feature claim.",
     );
+    await check("destination binding: retargeting cannot reuse approval or rewrite a replay", async () => {
+      const approved = await ready("email");
+      const before = JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8"));
+      const changed = new ConnectorControl(workerDb, new FetchSandboxConnectors("http://127.0.0.1:8018", randomBytes(32).toString("base64url")));
+      const replay = await changed.propose(email, { actionId: approved.id, agentId: email.subject, connector: "email", payload: { template: "case_received" } });
+      assert.equal(replay.payload.binding, approved.payload.binding);
+      assert.equal(replay.payload_hash, approved.payload_hash);
+      assert.equal((await changed.execute(worker, approved.id)).state, "cancelled");
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects, before.effects);
+    }, "Real saved approval and adapter destination change; original ID/hash retained, dispatch cancelled and actual provider effect journal unchanged.");
+    await check("exact request: frozen approval, forgery refusal and actual provider body", async () => {
+      const approved = await ready("email");
+      assert(approved.payload.request);
+      const original = structuredClone(approved.payload.request);
+      const before = JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8"));
+      const adapter = new FetchSandboxConnectors("http://127.0.0.1:8018", token);
+      const altered = {...approved,payload:{...approved.payload,request:{...original,body:{...original.body,subject:"Unapproved change"}}}};
+      await assert.rejects(() => adapter.write(altered,false), /destination changed/);
+      await assert.rejects(() => db!.query("UPDATE ll_connector_actions SET payload=jsonb_set(payload,'{request,body,subject}',$2::jsonb) WHERE id=$1",[approved.id,JSON.stringify("Changed")]), {code:"23514"});
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects,before.effects);
+      const replay = await control.propose(email,{actionId:approved.id,agentId:email.subject,connector:"email",payload:{template:"case_received"}});
+      assert.deepEqual(replay.payload.request,original);assert.equal(replay.payload_hash,approved.payload_hash);
+      assert.equal((await executor.execute(worker,approved.id)).state,"succeeded");
+      const effects=JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8")).effects;
+      assert.deepEqual(effects[approved.id].body,original.body);
+    }, "Real named approval, immutable database refusal, direct adapter refusal before HTTP, stable same-ID replay, and one real twin write equal to the saved request. No live email delivery.");
     for (const stage of ["before", "after"])
       await check(
         `worker SIGKILL ${stage} effect`,
@@ -299,9 +340,10 @@ async function main() {
             process.execPath,
             ["--import", "tsx", "scripts/connector-proof-worker.ts"],
             {
+              timeout:15000,
               env: {
-                ...process.env,
-                LOOPLABS_PROOF_SCHEMA: schema,
+                ...proofChildEnvironment({}),
+                LOOPLABS_PROOF_WORKER_PUBLICATION: await fixture!.publication('local-proof','worker'),
                 LOOPLABS_PROOF_ACTION: a.id,
                 LOOPLABS_PROOF_CRASH: stage,
                 LOOPLABS_PROOF_WORKER_TOKEN: workerToken,
@@ -311,10 +353,10 @@ async function main() {
             },
           );
           crash.stdout?.on("data", (b) => {
-            output += String(b);
+            output = (output + String(b)).slice(-8192);
           });
           crash.stderr?.on("data", (b) => {
-            output += String(b);
+            output = (output + String(b)).slice(-8192);
           });
           try {
             let reached = false;
@@ -337,11 +379,7 @@ async function main() {
               await delay(20);
             }
             assert.equal(reached, true);
-            const exited = new Promise<void>((r) =>
-              crash.once("exit", () => r()),
-            );
-            crash.kill("SIGKILL");
-            await exited;
+            await stopProofChild(crash,'SIGKILL');
             assert.equal(
               (await control.read(operator, a.id)).state,
               "executing",
@@ -351,7 +389,7 @@ async function main() {
               [a.id],
             );
             assert.equal(
-              (await control.execute(worker, a.id)).state,
+              (await executor.execute(worker, a.id)).state,
               "uncertain",
             );
             assert.equal(
@@ -359,24 +397,23 @@ async function main() {
               stage === "before" ? "uncertain" : "succeeded",
             );
           } finally {
-            if (crash.exitCode === null && crash.signalCode === null)
-              crash.kill("SIGKILL");
+            await stopProofChild(crash,'SIGKILL');
           }
         },
         "Terminate a real worker process; lease expiry injected in isolated test schema. Before-effect absence remains uncertain, never automatically retried.",
       );
     let api: ChildProcess | undefined;
     let origin = "";
-    const isolatedUrl = new URL(url);
-    isolatedUrl.searchParams.set("options", `-c search_path=${schema}`);
+
     async function startApi() {
       api = spawn(
         process.execPath,
         ["--import", "tsx", "scripts/workflow-http-proof-server.ts"],
         {
           env: {
-            ...process.env,
-            LOOPLABS_DATABASE_URL: isolatedUrl.toString(),
+            ...proofChildEnvironment({}),
+            LOOPLABS_PROOF_WEB_PUBLICATION: await fixture!.publication('local-proof','web'),
+            LOOPLABS_DURABLE_ORIGIN: "",
             LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018",
             LOOPLABS_CONNECTOR_TWIN_TOKEN: token,
           },
@@ -385,7 +422,7 @@ async function main() {
       );
       let output = "";
       api.stdout!.on("data", (b) => {
-        output += String(b);
+        output = (output + String(b)).slice(-8192);
       });
       for (let i = 0; i < 100; i++) {
         if (api.exitCode !== null)
@@ -399,21 +436,19 @@ async function main() {
       }
       throw new Error("Workflow HTTP harness did not start.");
     }
-    async function stopApi() {
-      if (api && api.exitCode === null && api.signalCode === null) {
-        const done = new Promise<void>((r) => api!.once("exit", () => r()));
-        api.kill("SIGKILL");
-        await done;
-      }
-    }
+    async function stopApi() {await stopProofChild(api);}
     async function http(path: string, key: string, value?: object) {
       const response = await fetch(origin + path, {
-        headers: {
-          Authorization: `Bearer ${key}`,
+        signal:AbortSignal.timeout(10000),headers: {
+          ...(namedKeys.includes(key)?{Cookie:`${WORKSPACE_COOKIE}=${key}`,Origin:origin.replace("127.0.0.1","localhost")}:{Authorization:`Bearer ${key}`}),
           "Content-Type": "application/json",
         },
         ...(value ? { method: "POST", body: JSON.stringify(value) } : {}),
       });
+      const route=path.startsWith('/api/durable/connectors')?'connectors':path.startsWith('/api/durable/workflows')?'workflows':'enquiries';
+      const operation=value&&'operation'in value?value.operation:'read';
+      const operations=['read','prepare','start','propose','approve','execute','reconcile','verify','create'];
+      if(typeof operation==='string'&&operations.includes(operation))lastHttp={route,operation:operation as ProofHttpDiagnostic['operation'],status:response.status};
       return { status: response.status, data: await response.json() };
     }
     try {
@@ -433,7 +468,7 @@ async function main() {
       async function externalAgent(key: string) {
         await execFileAsync(process.execPath, ["scripts/workflow-agent.mjs"], {
           env: {
-            ...process.env,
+            ...proofChildEnvironment({}),
             LOOPLABS_AGENT_ORIGIN: origin,
             LOOPLABS_RUN_ID: runId,
             LOOPLABS_AGENT_KEY: key,
@@ -615,8 +650,9 @@ async function main() {
             process.execPath,
             ["scripts/workflow-agent.mjs"],
             {
+              timeout:15000,maxBuffer:65536,
               env: {
-                ...process.env,
+                ...proofChildEnvironment({}),
                 LOOPLABS_AGENT_ORIGIN: origin,
                 LOOPLABS_RUN_ID: staleRun,
                 LOOPLABS_AGENT_KEY: actorKeys["crm-agent"],
@@ -627,8 +663,9 @@ async function main() {
             process.execPath,
             ["scripts/workflow-agent.mjs"],
             {
+              timeout:15000,maxBuffer:65536,
               env: {
-                ...process.env,
+                ...proofChildEnvironment({}),
                 LOOPLABS_AGENT_ORIGIN: origin,
                 LOOPLABS_RUN_ID: staleRun,
                 LOOPLABS_AGENT_KEY: actorKeys["email-agent"],
@@ -660,8 +697,9 @@ async function main() {
             process.execPath,
             ["scripts/workflow-agent.mjs"],
             {
+              timeout:15000,maxBuffer:65536,
               env: {
-                ...process.env,
+                ...proofChildEnvironment({}),
                 LOOPLABS_AGENT_ORIGIN: origin,
                 LOOPLABS_RUN_ID: newerRun,
                 LOOPLABS_AGENT_KEY: actorKeys["crm-agent"],
@@ -724,16 +762,152 @@ async function main() {
         },
         "A LoopLabs agent key is not a provider credential. This is fixture enforcement, not a customer network audit.",
       );
+      await check(
+        "enquiry: saved plan, independent approvals, lost response and restart through HTTP",
+        async () => {
+          const enquiryKeys: string[] = [];
+          for (const [id, tool] of [["enquiry-crm", "twin.crm"], ["enquiry-email", "twin.email"]]) {
+            const key = randomBytes(32).toString("base64url"); enquiryKeys.push(key);
+            await db!.query("INSERT INTO ll_agents(org_id,id,tools,action_limit) VALUES('local-proof',$1,ARRAY[$2]::text[],20)", [id, tool]);
+            await db!.query("INSERT INTO ll_tokens(hash,org_id,subject,role) VALUES($1,'local-proof',$2,'agent')", [tokenHash(key), id]);
+          }
+          const id = randomUUID();
+          const endpoint = "/api/workspace/enquiries";
+          for (const fixtureId of ["missing", "unmatched", "pricing"]) {
+            const r = await http(endpoint, requesterSession, { operation: "prepare", id: randomUUID(), fixtureId });
+            assert.equal(r.status, 200); assert.ok(r.data.clarification);
+          }
+          const request = { operation: "prepare", id, fixtureId: "service" };
+          // Installed global named-subject classification refuses the legacy
+          // bearer at credential selection, before service authorization.
+          const beforeLegacyPrepare=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+          assert.equal((await http(endpoint, legacyRequesterKey, request)).status,401);
+          assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,beforeLegacyPrepare);
+          assert.equal((await db!.query('SELECT count(*)::int n FROM ll_enquiry_plans WHERE id=$1',[id])).rows[0].n,0);
+          const draft = await http(endpoint, requesterSession, request);
+          assert.equal(draft.status, 200);
+          assert.deepEqual((await db!.query("SELECT membership_owner FROM ll_enquiry_plans WHERE id=$1",[id])).rows[0].membership_owner,{kind:"member",subject:namedRequester.subject,generation:"1"});
+          assert.equal((await http(endpoint, requesterSession, request)).data.saved.plan_hash, draft.data.saved.plan_hash);
+          const start = { operation: "start", id, planHash: draft.data.saved.plan_hash, crmAgent: "enquiry-crm", emailAgent: "enquiry-email" };
+          assert.equal((await http(endpoint, requesterSession, { ...start, planHash: "0".repeat(64) })).status, 409);
+          assert.equal((await http(endpoint, requesterSession, start)).status, 200);
+          const run = (await http(`/api/durable/workflows?run=${id}`, requesterSession)).data;
+          for (const [index, step] of run.steps.entries()) {
+            const a = await http("/api/durable/connectors", enquiryKeys[index], { operation: "propose", actionId: step.action_id, agentId: step.agent_id, connector: step.connector, payload: step.payload });
+            assert.equal(a.status, 200);
+            const beforeDenials=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+            const approval={operation:"approve",actionId:step.action_id,payloadHash:a.data.payload_hash};
+            assert.equal((await http("/api/durable/connectors",requesterSession,approval)).status,403);
+            assert.equal((await http("/api/durable/connectors",legacyReviewerKey,approval)).status,401);
+            assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,beforeDenials);
+            assert.equal((await http("/api/durable/connectors", reviewerSession, { operation: "approve", actionId: step.action_id, payloadHash: a.data.payload_hash })).status, 200);
+            const saved=(await db!.query("SELECT membership_proposal,membership_approval FROM ll_connector_actions WHERE id=$1",[step.action_id])).rows[0];
+            assert.deepEqual(saved.membership_proposal.planOwner,{kind:"member",subject:namedRequester.subject,generation:"1"});
+            assert.deepEqual(saved.membership_approval.approver,{kind:"member",subject:namedReviewer.subject,generation:"1"});assert.equal(saved.membership_approval.payloadHash,a.data.payload_hash);
+          }
+          const execute = (index: number, lostResponse = false) => http("/api/durable/connectors", workerToken, { operation: "execute", actionId: run.steps[index].action_id, lostResponse });
+          assert.equal((await execute(1)).status, 409);
+          assert.equal((await execute(0, true)).data.state, "uncertain");
+          await stopApi(); await startApi();
+          assert.equal((await http(endpoint, requesterSession, start)).data.runId, id);
+          assert.equal((await execute(1)).status, 409);
+          assert.equal((await http("/api/durable/connectors", requesterSession, { operation: "reconcile", actionId: run.steps[0].action_id })).data.state, "succeeded");
+          assert.equal((await execute(1)).data.state, "succeeded");
+          assert.equal((await http("/api/durable/workflows", requesterSession, { operation: "verify", runId: id })).status, 200);
+          assert.equal((await db!.query("SELECT count(*)::int AS n FROM ll_workflow_runs WHERE id=$1", [id])).rows[0].n, 1);
+        },
+        "Real PostgreSQL and FetchSandbox HTTP. A reviewed sample enquiry survives API restart; response loss is reconciled without resending and the acknowledgement stays held until its predecessor is verified. No real delivery or model is used.",
+      );
     } finally {
       await stopApi();
     }
+    const scoped = recordScopes.map(s=>new FetchSandboxConnectors("http://127.0.0.1:8018",token,1500,s));
+    const controls=scoped.map(p=>new ConnectorControl(web,p));
+    await db!.query("INSERT INTO ll_members(org_id,email,name,password_hash) VALUES('local-proof','scope-owner@example.test','Scope owner','unused')");
+    await db!.query("INSERT INTO ll_agent_profiles(org_id,agent_id,name,owner,role,connector) VALUES('local-proof','crm-agent','CRM','scope-owner@example.test','crm_agent','crm_twin'),('local-proof','email-agent','Email','scope-owner@example.test','email_agent','email_twin') ON CONFLICT DO NOTHING");
+    const scopeIds:string[]=[];
+    for(let i=0;i<2;i++){const id=randomUUID(),grants=new ScopeControl(web,scoped[i]);await grants.enroll(operator,id);await grants.grant(operator,id,"crm-agent");await grants.grant(operator,id,"email-agent");scopeIds.push(id);}
+    const scopedRuns:{runId:string;crm:string;email:string}[]=[];
+    await check("record scope: two independent customers save exact plans and complete their own CRM/message effects",async()=>{
+      for(let index=0;index<2;index++){
+        const p=scoped[index],c=controls[index],flow=new WorkflowControl(web,c);
+        const e=new EnquiryControl(web,flow,async()=>{const r=await p.contact();return {id:r.id,email:r.properties.email,lifecycle:r.properties.lifecyclestage,version:r.updatedAt};});
+        const id=randomUUID();await e.prepare(namedRequester,id,"service");const plan=(await e.list(namedRequester)).find(r=>r.id===id);
+        assert.deepEqual((await db!.query("SELECT membership_owner FROM ll_enquiry_plans WHERE id=$1",[id])).rows[0].membership_owner,{kind:"member",subject:namedRequester.subject,generation:"1"});
+        assert.equal(plan.plan.reply.recipient,p.recipient);assert.equal(plan.plan.requests.email.version,"prepared-request-2");
+        await e.start(namedRequester,id,plan.plan_hash,"crm-agent","email-agent");const run=await flow.read(namedRequester,id);
+        for(const step of run.steps){
+          const agent=step.connector==="crm"?crm:email;
+          const a=await c.propose(agent,{actionId:step.action_id,agentId:agent.subject,connector:step.connector,payload:step.payload});
+          await assert.rejects(()=>c.review(namedRequester,a.id,a.payload_hash,true));
+          await c.review(namedReviewer,a.id,a.payload_hash,true);
+          const saved=(await db!.query("SELECT membership_proposal,membership_approval FROM ll_connector_actions WHERE id=$1",[a.id])).rows[0];
+          assert.deepEqual(saved.membership_proposal.planOwner,{kind:"member",subject:namedRequester.subject,generation:"1"});
+          assert.deepEqual(saved.membership_approval.approver,{kind:"member",subject:namedReviewer.subject,generation:"1"});assert.equal(saved.membership_approval.payloadHash,a.payload_hash);
+        }
+        scopedRuns.push({runId:id,crm:run.steps[0].action_id,email:run.steps[1].action_id});
+      }
+      await Promise.all(scopedRuns.map(async(r,index)=>{
+        const c=controls[index],p=scoped[index];assert.equal((await new ConnectorControl(workerDb,p).execute(worker,r.crm)).state,"succeeded");assert.equal((await new ConnectorControl(workerDb,p).execute(worker,r.email)).state,"succeeded");
+        const receipt=await new WorkflowControl(web,c).verify(namedRequester,r.runId);assert.equal(receipt.verified,true);
+      }));
+      const effects=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+      scopedRuns.forEach((r,index)=>{assert.equal(effects[r.crm].recordId,scoped[index].contactId);assert.deepEqual(effects[r.email].body.to,[scoped[index].recipient]);});
+    },"Actual saved plans, independent approvals, concurrent two-record runs and separate provider readback. This is not a capacity benchmark or background worker proof.");
+    await check("record scope: wrong record and tenant cannot exercise the original approval",async()=>{
+      const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+      const a=await controls[0].read(operator,scopedRuns[0].email);
+      await assert.rejects(()=>scoped[1].write(a,false));
+      await assert.rejects(()=>scoped[2].write(a,false));
+      await assert.rejects(()=>controls[2].propose(email,{actionId:randomUUID(),agentId:email.subject,connector:"email",payload:{template:"case_received"}}));
+      const response=await fetch("http://127.0.0.1:8018/email/emails",{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json","Idempotency-Key":`looplabs-${randomUUID()}`,"X-LoopLabs-Record-ID":"2003","X-LoopLabs-Workspace-ID":"local-proof"},body:JSON.stringify({...a.payload.request!.body,to:[scoped[2].recipient]})});assert.equal(response.status,403);
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+    },"Original record and another workspace refused by adapter/controller and actual fixture; no extra provider effects.");
+    await check("record scope: recipient change at the write boundary is refused atomically",async()=>{
+      const a=await controls[1].read(operator,scopedRuns[1].email),before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+      const response=await fetch("http://127.0.0.1:8018/email/emails",{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json","Idempotency-Key":`looplabs-${randomUUID()}`,"X-LoopLabs-Record-ID":scoped[1].contactId,"X-LoopLabs-Workspace-ID":scoped[1].workspaceId,"X-LoopLabs-Proof-Fault":"recipient_changed"},body:JSON.stringify(a.payload.request!.body)});assert.equal(response.status,409);
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+      const refusal=await scoped[1].write(a,false);
+      assert.equal(refusal.outcome,"conflict");
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+      assert.equal((await controls[1].reconcile(operator,scopedRuns[1].crm)).state,"conflict");
+    },"Fixture injects a record-to-recipient change inside the same synchronous provider write, then refuses the send. Earlier contact read alone is not proof.");
+    await check("record scope: restart preserves separate effects and original approvals do not resend",async()=>{
+      const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;await stop();await start();
+      for(let i=0;i<2;i++){await new ConnectorControl(workerDb,scoped[i]).execute(worker,scopedRuns[i].email);await new ConnectorControl(workerDb,scoped[i]).execute(worker,scopedRuns[i].crm);}
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+      assert.equal((await scoped[0].contact()).id,"2001");assert.equal((await scoped[1].contact()).properties.email,"changed@example.test");
+    },"Real process restart retains enrolled records, versions and changed recipient; completed action replay adds no effects.");
+    await check("scope grant: revocation before dispatch and reactivation cannot revive an old exact approval",async()=>{
+      const p=scoped[0],c=controls[0],flow=new WorkflowControl(web,c),id=randomUUID();await flow.create(operator,"crm-agent","email-agent",id,"lead");const step=(await flow.read(operator,id)).steps[0];
+      const a=await c.propose(crm,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});await c.review(operator,a.id,a.payload_hash,true);
+      const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,grants=new ScopeControl(web,p);await grants.setActive(operator,scopeIds[0],false,"crm-agent");
+      assert.equal((await new ConnectorControl(workerDb,p).execute(worker,a.id)).state,"cancelled");await grants.setActive(operator,scopeIds[0],true,"crm-agent");assert.equal((await new ConnectorControl(workerDb,p).execute(worker,a.id)).state,"cancelled");
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);assert.equal(a.payload.scopeGrant?.grantVersion,1);
+    },"Actual persisted grant version change refuses dispatch; reactivation increments the version and does not rewrite the saved approval.");
+    await check("scope grant: revoke after an actual effect then restart keeps uncertainty and adds no sends",async()=>{
+      const p=scoped[0],c=controls[0],flow=new WorkflowControl(web,c),id=randomUUID();await flow.create(operator,"crm-agent","email-agent",id,"lead");const step=(await flow.read(operator,id)).steps[0];
+      const a=await c.propose(crm,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});await c.review(operator,a.id,a.payload_hash,true);
+      const execution=new ConnectorControl(workerDb,p).execute(worker,a.id,true);let effect:unknown=null;for(let n=0;n<100;n++){effect=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects[a.id];if(effect)break;await delay(10);}assert.ok(effect);
+      const grants=new ScopeControl(web,p);await grants.setActive(operator,scopeIds[0],false,"crm-agent");assert.equal((await execution).state,"uncertain");
+      const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;await stop();await start();assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");await grants.setActive(operator,scopeIds[0],true,"crm-agent");assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");await new ConnectorControl(workerDb,p).execute(worker,a.id);
+      assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+    },"Actual HTTP effect precedes a lost response and database grant revocation; original action remains contained after real provider restart and reactivation.");
+    await check("fixture storage: failed persistence cannot attest a volatile effect or permit automatic resend",async()=>{
+      const p=new FetchSandboxConnectors("http://127.0.0.1:8018",token),adapter=p,c=new ConnectorControl(web,adapter),flow=new WorkflowControl(web,c),id=randomUUID();await flow.create(operator,"crm-agent","email-agent",id,"lead");const step=(await flow.read(operator,id)).steps[0];
+      const a=await c.propose(crm,{actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload});await c.review(operator,a.id,a.payload_hash,true);const before=JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects;
+      const original=adapter.request.bind(adapter);adapter.request=async(path,init={})=>original(path,{...init,headers:{...init.headers,...(init.method==="PATCH"?{"X-LoopLabs-Proof-Fault":"storage_failure"}:{})}});
+      assert.equal((await new ConnectorControl(workerDb,p).execute(worker,a.id)).state,"uncertain");assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");
+      const response=await fetch(`http://127.0.0.1:8018/proof/effects/${a.id}`,{headers:{Authorization:`Bearer ${token}`}});assert.equal(response.status,503);assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+      await stop();await start();adapter.request=original;assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");await new ConnectorControl(workerDb,p).execute(worker,a.id);assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
+    },"Inject an actual persistence exception after native mutation: the process refuses volatile readback, returns unknown, and restart never causes an inferred resend. This is a fixture failure check, not production storage certification.");
     let restoreMilliseconds = 0;
     await check(
       "isolated database backup and restore preserves actions and evidence",
       async () => {
         const connection = new URL(url);
         const env = {
-          ...process.env,
+          ...proofChildEnvironment({}),
           PGHOST: connection.hostname,
           PGPORT: connection.port || "5432",
           PGUSER: decodeURIComponent(connection.username),
@@ -745,6 +919,7 @@ async function main() {
             "SELECT id,state,payload_hash FROM ll_connector_actions ORDER BY id",
           )
         ).rows;
+        const expectedEnquiries = (await db!.query("SELECT id,plan_hash,run_id FROM ll_enquiry_plans ORDER BY id")).rows;
         const backup = `${dir}/database.dump`;
         await execFileAsync(
           "pg_dump",
@@ -755,9 +930,11 @@ async function main() {
             `--schema=${schema}`,
             `--file=${backup}`,
           ],
-          { env },
+          { env,timeout:30000,maxBuffer:1048576 },
         );
-        await db!.query("TRUNCATE ll_connector_actions CASCADE");
+        // Stop all active HTTP/child writers before replacing this owned schema.
+        // Original archive evidence is checked first; old authority is then fenced.
+        await db!.query(`DROP SCHEMA ${schema} CASCADE`);
         const started = Date.now();
         await execFileAsync(
           "pg_restore",
@@ -769,7 +946,7 @@ async function main() {
             `--dbname=${connection.pathname.slice(1)}`,
             backup,
           ],
-          { env },
+          { env,timeout:30000,maxBuffer:1048576 },
         );
         restoreMilliseconds = Date.now() - started;
         assert.deepEqual(
@@ -780,29 +957,15 @@ async function main() {
           ).rows,
           expected,
         );
+        assert.deepEqual((await db!.query("SELECT id,plan_hash,run_id FROM ll_enquiry_plans ORDER BY id")).rows, expectedEnquiries);
+        await quarantineRestore(db!,'local-proof',randomUUID(),createHash('sha256').update(await readFile(backup)).digest('hex'));
+        await assert.rejects(()=>control.read(operator,expected[0].id));
+        assert.deepEqual((await db!.query('SELECT id,payload_hash FROM ll_connector_actions ORDER BY id')).rows,expected.map(({id,payload_hash})=>({id,payload_hash})));
       },
       "Actual pg_dump/pg_restore in a dedicated test schema. This is a local drill, not production PITR, host failover or an availability SLA.",
     );
-    const fingerprintFiles = [
-      "lib/workflows/guard.ts",
-      "lib/workflows/service.ts",
-      "app/api/durable/workflows/route.ts",
-      "scripts/workflow-agent.mjs",
-      "scripts/workflow-http-proof-server.ts",
-      "lib/connectors/contracts.ts",
-      "lib/connectors/service.ts",
-      "lib/connectors/twin.ts",
-      "lib/connectors/schema.sql",
-      "lib/workflows/schema.sql",
-      "app/api/durable/connectors/route.ts",
-      "scripts/connector-twin.py",
-    ];
-    const sourceFingerprints: Record<string, string> = {};
-    for (const f of fingerprintFiles)
-      sourceFingerprints[f] = createHash("sha256")
-        .update(await readFile(f))
-        .digest("hex");
-    const evidence = {
+    assert.deepEqual(await validateConnectorProofSources(),sourceFingerprints,"Proof sources changed during the actual run.");
+    evidence = {
       at: new Date().toISOString(),
       scope:
         "Isolated PostgreSQL schema and private FetchSandbox HubSpot Contacts / Resend single-send fixtures. No live CRM, real email, model or money.",
@@ -812,35 +975,24 @@ async function main() {
       limits: [
         "Fixture action journal and contact version are LoopLabs extensions, not live provider parity.",
         "No SSO, failover, production load or real delivery proof.",
-        "Only one sample contact and one fixed message template/recipient.",
+        "Three offline-enrolled test records; two scoped manual runs. Record-scoped background routing, sustained load and live recipients remain unsupported.",
       ],
       providerEffects: Object.keys(
         JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8"))
           .effects,
       ).length,
     };
-    await writeFile(
-      ".local/connector-proof.json",
-      JSON.stringify(evidence, null, 2),
-      { mode: 0o600 },
-    );
-    await mkdir("docs/evidence", { recursive: true });
-    await writeFile(
-      "docs/evidence/connector-proof.json",
-      JSON.stringify(evidence, null, 2) + "\n",
-    );
-    console.log(
-      `Verified ${checks.length} checks; sanitized evidence saved privately and recorded for review.`,
-    );
   } finally {
     await stop();
-    await db?.end();
-    await admin.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-    await admin.end();
+    await fixture?.close();
     await rm(dir, { recursive: true, force: true });
   }
+  if(!evidence)throw Error('Complete connector evidence required');
+  await writeFile(`.local/connector-proof-successor-${randomBytes(8).toString("hex")}.json`,JSON.stringify({...evidence,ownedCleanupVerified:true},null,2),{mode:0o600,flag:'wx'});
+  console.log(`Verified ${checks.length} checks; exclusive private successor receipt saved after owned cleanup.`);
 }
-main().catch((e) => {
-  console.error(e instanceof Error ? e.message : "Connector proof failed.");
+main().catch((error:unknown) => {
+  console.error('CONNECTOR_PROOF_FAILURE '+JSON.stringify(connectorFailureDiagnostic(error,activeCheck,lastHttp)));
+  console.error("Connector proof failed; no successful receipt was produced.");
   process.exitCode = 1;
 });

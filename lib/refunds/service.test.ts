@@ -90,6 +90,10 @@ beforeAll(async () => {
   await db.query(await readFile("lib/durable/schema.sql", "utf8"));
   await db.query(await readFile("lib/workspace/schema.sql", "utf8"));
   await db.query(await readFile("lib/refunds/schema.sql", "utf8"));
+  await db.query(await readFile("lib/connectors/schema.sql", "utf8"));
+  await db.query(await readFile("lib/workflows/schema.sql", "utf8"));
+  await db.query(await readFile("lib/durable/proposal-schema.sql", "utf8"));
+
 }, 20000);
 beforeEach(async () => {
   await db.query("TRUNCATE ll_orgs CASCADE");

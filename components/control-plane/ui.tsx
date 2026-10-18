@@ -56,6 +56,13 @@ const LABELS: Record<string, string> = {
   planned: "Ready to restore",
   resolved: "Reconciled",
   conflict: "Manual review",
+  held: "Needs approval",
+  ready: "Ready to execute",
+  executing: "Applying change",
+  succeeded: "Change confirmed",
+  uncertain: "Outcome uncertain",
+  cancelled: "Cancelled",
+  recovered: "Previous value restored",
 };
 export function Status({ value, label }: { value: string; label?: string }) {
   return (
@@ -158,6 +165,8 @@ export function exportJson(name: string, value: unknown) {
   URL.revokeObjectURL(url);
 }
 
+const activeDialogs: string[] = [];
+let originalBodyOverflow = "";
 export function Modal({
   title,
   subtitle,
@@ -179,10 +188,12 @@ export function Modal({
   close.current = onClose;
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    const overflow = document.body.style.overflow;
+    if (!activeDialogs.length) originalBodyOverflow = document.body.style.overflow;
+    activeDialogs.push(id);
     document.body.style.overflow = "hidden";
     ref.current?.focus();
     const onKey = (e: KeyboardEvent) => {
+      if (activeDialogs.at(-1) !== id) return;
       if (e.key === "Escape") close.current();
       if (e.key !== "Tab") return;
       const els = Array.from(
@@ -211,11 +222,13 @@ export function Modal({
     };
     document.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = overflow;
+      const index = activeDialogs.indexOf(id);
+      if (index !== -1) activeDialogs.splice(index, 1);
+      if (!activeDialogs.length) document.body.style.overflow = originalBodyOverflow;
       document.removeEventListener("keydown", onKey);
       previous?.focus();
     };
-  }, []);
+  }, [id]);
   return (
     <div
       className={`cp-modal-overlay ${drawer ? "is-drawer" : ""}`}
@@ -234,7 +247,7 @@ export function Modal({
         <div className="cp-modal-heading">
           <div>
             <div className="cp-eyebrow">
-              LOOPLABS <ChevronRight size={10} /> PRODUCT TOUR
+              LOOPLABS <ChevronRight size={10} /> WORKSPACE
             </div>
             <h2 id={id}>{title}</h2>
             {subtitle && <p>{subtitle}</p>}

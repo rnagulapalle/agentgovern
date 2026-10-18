@@ -1,0 +1,35 @@
+import {readHistoricalProof} from '../../scripts/historical-proof-sources.mjs';
+import { createHash } from "node:crypto";
+import { expect, it } from "vitest";
+import { validateAdvancedButtonMeasurements } from "./advanced-measurements";
+import proof from "../../docs/evidence/chat-ui-proof.json";
+it("historical retained original-byte UI/model/twin evidence and keeps unsupported hosted execution explicit", async () => {
+ const historical=readHistoricalProof('chat-ui-proof.json');expect(historical).toMatchObject({historical:true,eligible:false,releaseAccepted:false,currentSourceValidated:false});expect(historical.receipt).toEqual(proof);
+  expect(proof.checks.length).toBeGreaterThanOrEqual(20);
+  for (const phrase of ["Installed membership23", "approver deactivation/reactivation", "requester deactivation/reactivation"]) expect(proof.checks.some(c=>c.name.includes(phrase))).toBe(true);
+  validateAdvancedButtonMeasurements((proof as unknown as { advancedButtonMeasurements?: unknown }).advancedButtonMeasurements);
+  expect(proof.checks.some(c=>c.name.includes("guided Submission incomplete view"))).toBe(true);
+  expect(proof.checks.every(c => c.passed)).toBe(true);
+  expect(proof.checks.some(c => c.name.includes("no background route prefetch"))).toBe(true);
+  expect(proof.scope).toContain("Real browser, real Amazon Bedrock");
+  expect(proof.typedRequest).toContain("ask me before sending");
+  expect(proof.blockedRun.state).toBe("active");
+  expect(proof.blockedRun.steps).toHaveLength(2);
+  expect(proof.blockedRun.steps.every(s=>s.state===null)).toBe(true);
+  expect(proof.scopedRuns).toHaveLength(2);
+  expect(proof.scopedRuns.every(r=>r.state==="completed")).toBe(true);
+  expect(Object.keys(proof.scopedEffects)).toHaveLength(4);
+  expect(proof.checks.some(c=>c.name.includes("recipient retargeting/self-approval"))).toBe(true);
+  expect(proof.checks.some(c=>c.name.includes("Confirmed packaged worker SIGKILL and real app restart"))).toBe(true);
+  expect(proof.managedRuns).toHaveLength(2);
+  expect(proof.managedRuns.every(r => r.state === "completed")).toBe(true);
+  expect(proof.checks.some(c => c.name.includes("both browsers away"))).toBe(true);
+  expect(proof.checks.some(c => c.name.includes("worker restart"))).toBe(true);
+  expect(proof.observedRuns).toHaveLength(3);
+  expect(Object.keys(proof.providerEffects)).toHaveLength(5);
+  expect(proof.unsupported.some(s => s.includes("atomic CRM contact-version"))).toBe(true);
+  expect(Object.keys(proof.sourceFingerprints)).toEqual(expect.arrayContaining(["lib/workspace/membership-authority.ts","lib/workspace/membership-authority-schema.sql","lib/quotes/schema.sql","lib/quotes/authority-schema.sql","lib/quotes/plan-v2-schema.sql","lib/quotes/membership-schema.sql","lib/workspace/identity.ts", "lib/durable/recovery.ts", "lib/durable/recovery-schema.sql"]));
+  for (const [file, hash] of Object.entries(proof.sourceFingerprints)) {
+    expect(createHash("sha256").update(historical.sources[file]).digest("hex"), `Archived chat UI source bytes changed for ${file}`).toBe(hash);
+  }
+});

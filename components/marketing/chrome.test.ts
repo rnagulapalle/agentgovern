@@ -16,11 +16,10 @@ describe("shared site navigation", () => {
     expect(html).toContain('aria-expanded="false"');
   });
 
-  it("preserves product destinations and secures links that open another window", () => {
+  it("links public visitors to explanations and invited quote access, not disabled feature routes", () => {
     const html = renderToStaticMarkup(createElement(MarketingFooter));
-    for (const route of ["agents", "gateway", "approvals", "audit", "policies", "runs", "outputs", "reconciliation"]) {
-      expect(html).toContain(`href="/control-plane/${route}"`);
-    }
+    for (const href of ["/#controls", "/#how-it-works", "/#recovery", "/platform", "/control-plane/quotes", "/sign-in", "/contact-sales"]) expect(html).toContain(`href="${href}"`);
+    for (const route of ["agents", "gateway", "approvals", "audit", "policies", "runs", "outputs", "reconciliation"]) expect(html).not.toContain(`href="/control-plane/${route}"`);
     const externalLinks = html.match(/<a[^>]*target="_blank"[^>]*>/g) ?? [];
     expect(externalLinks.length).toBeGreaterThan(0);
     for (const link of externalLinks) expect(link).toContain('rel="noopener noreferrer"');

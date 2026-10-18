@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "scope": "isolated FetchSandbox fixture container only",
+  "imageId": "sha256:82baf78428295ec64caaa0384e7079c02ffc4d5c884db69abdbfd6023254188e",
+  "sources": [
+    {
+      "file": "Dockerfile.connector-twin",
+      "sha256": "c9f0c31ae6df4d21132c9af05fc9c195e8fed0702e562f4d8058debee3240357"
+    },
+    {
+      "file": "scripts/connector-twin-requirements.txt",
+      "sha256": "81a6d2c9679a49dd9cef64f524aed1973eb88362b7435a3434524d9807347ce2"
+    },
+    {
+      "file": "scripts/connector-twin.py",
+      "sha256": "41288420d7bf7712c9e88f47b074afd47cfb5ec170df833c623ada9676a5f863"
+    },
+    {
+      "file": "scripts/staging-twin-controller.mjs",
+      "sha256": "e4baa983f578fbc2bb4fde4c18ebaae88f63dcc45867e11c2e16b54a38315ec3"
+    },
+    {
+      "file": "scripts/staging-twin-proof.mjs",
+      "sha256": "fda22801a91bff0702060ea84271f12846d208f59b38da7b9bdd14ec52610280"
+    },
+    {
+      "file": "docker-compose.temporal-platform.yml",
+      "sha256": "a9e3010d6e5ae61b31dcad09ebe52ec6151e2e07d64a762c0a600133af5f3177"
+    }
+  ],
+  "checks": [
+    "another container reaches private fixture",
+    "missing credential and wrong workspace refused",
+    "duplicate CRM and email retain exact effect/reference",
+    "changed request refused",
+    "effect journal and target survive container SIGKILL",
+    "read-only non-root fixture without published ports"
+  ],
+  "notVerified": [
+    "full eight-service platform",
+    "application approvals and Temporal execution",
+    "remote staging or live provider parity"
+  ]
+}

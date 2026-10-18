@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCompany } from "./company-workspace";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -13,12 +14,14 @@ import {
   ChevronDown,
   ChevronRight,
   CircleHelp,
+  Cloud,
   Command,
   Database,
   GitBranch,
   History,
   LayoutGrid,
   Menu,
+  MessageSquare,
   Network,
   Search,
   Settings2,
@@ -26,6 +29,7 @@ import {
   SlidersHorizontal,
   Undo2,
 } from "lucide-react";
+
 import { useControl } from "./provider";
 import { BrandMark, Modal } from "./ui";
 
@@ -34,10 +38,15 @@ const groups = [
     name: "WORKSPACE",
     items: [
       { key: "overview", label: "Overview", icon: LayoutGrid },
-      { key: "agents", label: "Agents and boundaries", icon: Bot },
-      { key: "connectors", label: "Connectors", icon: Database },
+      { key: "work", label: "Workflow plans", icon: MessageSquare },
+      { key: "quotes", label: "Distributor quotes", icon: BookOpen },
+      { key: "history", label: "Saved decision history", icon: History },
+      { key: "agents", label: "Agents", icon: Bot },
+      { key: "discovery", label: "Cloud inventory", icon: Cloud },
+      { key: "connectors", label: "Connections", icon: Database },
+      { key: "records", label: "Records and access", icon: ShieldCheck },
       { key: "actions", label: "Actions", icon: SlidersHorizontal },
-      { key: "verification", label: "Verification", icon: ShieldCheck },
+      { key: "verification", label: "Verification evidence", icon: ShieldCheck },
       { key: "workflow-runs", label: "Workflow runs", icon: Network },
       { key: "requests", label: "Sales requests", icon: BookOpen },
     ],
@@ -45,7 +54,7 @@ const groups = [
   {
     name: "PREPARED EXAMPLES",
     items: [
-      { key: "workflows", label: "Workflow library", icon: Network },
+      { key: "workflows", label: "Workflow examples", icon: Network },
       { key: "gateway", label: "Model access", icon: Activity },
       { key: "runs", label: "Execution traces", icon: GitBranch },
       { key: "outputs", label: "Output checks", icon: ShieldCheck },
@@ -54,21 +63,39 @@ const groups = [
     ],
   },
 ];
+export function ControlScopeNote({ durable, quoteOnly = false, scriptDemo = false }: { durable: boolean; quoteOnly?: boolean; scriptDemo?: boolean }) {
+  if (scriptDemo) return <p>Prepared samples use simulated business systems. Connected AWS workflows keep running in AWS and may use real business systems. LoopLabs reads their reported history; a configured shared approval connection can send your reviewed decision back. Mandatory execution checks and independent effect verification require separate connections.</p>;
+  if (quoteOnly) return <p>Sample distributor quotes and simulated confirmations. Another named member must approve each exact action. No live customer records change and no customer email is delivered.</p>;
+  return <p>{durable
+    ? "Discounts change a sample record; refunds use a simulated payment provider. Decisions are saved on the server. No real money moves. When configured, AI helps prepare bounded customer acknowledgement plans; it cannot approve or execute actions. Business connectors remain simulated, with no live customer updates or real email delivery."
+    : "These prepared examples use browser-local sample data. Model access, output checks and execution traces are simulated."}</p>;
+}
 export function ControlShell({
   children,
   member,
+  quoteOnly = false,
+  scriptDemo = false,
 }: {
   children: React.ReactNode;
-  member: { name: string; email: string };
+  member: { name: string; email: string; company?: string | null };
+  quoteOnly?: boolean;
+  scriptDemo?: boolean;
 }) {
   const { state, toast } = useControl();
+  const {snapshot:company}=useCompany();
+  const companyName=company?.profile?.name || member.company;
   const pathname = usePathname();
   const section = pathname.split("/")[2] || "overview";
-  const durable = [
+  const durable = scriptDemo || [
     "overview",
+    "history",
+    "work",
+    "quotes",
     "actions",
     "agents",
+    "discovery",
     "connectors",
+    "records",
     "requests",
     "verification",
     "workflow-runs",
@@ -94,9 +121,19 @@ export function ControlShell({
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
   }, [durable]);
+  const savedNavigation = [{ name: "OPERATE", items: [
+    { key: "overview", label: "Overview", icon: LayoutGrid },
+    { key: "agents", label: "Agents", icon: Bot },
+    { key: "activity", label: "Activity", icon: Activity },
+    { key: "approvals", label: "Approvals & outcomes", icon: ShieldCheck },
+  ] }, { name: "CONFIGURE", items: [
+    { key: "connectors", label: "Connections", icon: Database },
+    { key: "policies", label: "Policies", icon: SlidersHorizontal },
+  ] }];
+  const navigation = quoteOnly ? [{ name: "QUOTE WORKSPACE", items: groups[0].items.filter(item => item.key === "quotes") }] : scriptDemo ? savedNavigation : groups;
   const title =
-    groups.flatMap((g) => g.items).find((i) => i.key === section)?.label ||
-    "Example settings";
+    navigation.flatMap((g) => g.items).find((i) => i.key === section)?.label ||
+    (scriptDemo ? ({ quotes: "Quote workspace", actions: "Action details", discovery: "AWS connection", workflows: "Sample workflows", "workflow-runs": "Customer handoffs", history: "Saved decisions", organization: "Organization", reconciliation: "Outcome review", outputs: "Output controls" } as Record<string,string>)[section] || "Workspace" : "Example settings");
   const results = [
     ...state.agents.map((a) => ({
       name: a.name,
@@ -122,7 +159,7 @@ export function ControlShell({
     )
     .slice(0, 8);
   return (
-    <div className="cp-app ph-no-capture" data-private>
+    <div className={`cp-app ph-no-capture${scriptDemo ? " cc-brand-system" : ""}`} data-private>
       <a href="#control-content" className="cp-skip">
         Skip to content
       </a>
@@ -151,19 +188,19 @@ export function ControlShell({
           href={durable ? "/control-plane" : "/control-plane/settings"}
           className="cp-workspace"
         >
-          <span className="cp-workspace-icon">M</span>
+          <span className="cp-workspace-icon">{scriptDemo ? (companyName || "Company").slice(0,1) : "M"}</span>
           <span>
             <strong>
-              {durable ? "LoopLabs workspace" : "Prepared examples"}
+              {quoteOnly ? "Quote workspace" : durable ? (companyName || "Company workspace") : "Prepared examples"}
             </strong>
             <small>
-              {durable ? "Saved controls" : "Browser-local sample data"}
+              {quoteOnly ? "Sample data only" : durable ? "Company administration" : "Browser-local sample data"}
             </small>
           </span>
           <ChevronDown size={14} />
         </Link>
         <nav aria-label="Control plane navigation">
-          {groups.map((group) => (
+          {navigation.map((group) => (
             <div className="cp-nav-group" key={group.name}>
               <div className="cp-nav-label">{group.name}</div>
               {group.items.map((item) => (
@@ -177,6 +214,7 @@ export function ControlShell({
                   }
                   className={`cp-nav-item ${section === item.key ? "is-active" : ""}`}
                   aria-current={section === item.key ? "page" : undefined}
+                  onClick={() => setMenu(false)}
                 >
                   <item.icon size={17} strokeWidth={1.5} />
                   <span>{item.label}</span>
@@ -192,30 +230,31 @@ export function ControlShell({
           ))}
         </nav>
         <div className="cp-sidebar-bottom">
-          <div className="cp-enforcement">
+          <div className="cp-enforcement" hidden={scriptDemo}>
             <div>
               <span className="cp-live-dot" />
-              <strong>Governed by default</strong>
+              <strong>{quoteOnly ? "Quote action controls" : scriptDemo ? "Workspace controls" : "Governed by default"}</strong>
             </div>
-            <p>Identity. Action. Execution. Output.</p>
-            <div className="cp-enforcement-bars">
+            <p>{quoteOnly ? "Independent approval. Verified result." : scriptDemo ? "Named owners. Approval rules. Outcome checks." : "Identity. Action. Execution. Output."}</p>
+            {!scriptDemo && <div className="cp-enforcement-bars">
               {Array.from({ length: 30 }, (_, i) => (
                 <i key={i} style={{ height: 8 + ((i * 7) % 13) }} />
               ))}
-            </div>
+            </div>}
             <span>
-              {durable ? "SAVED WORKSPACE" : "INTERACTIVE DEMO"}{" "}
+              {quoteOnly ? "SAMPLE QUOTE WORKSPACE" : durable ? "SAVED WORKSPACE" : "INTERACTIVE DEMO"}{" "}
               <span>v0.1</span>
             </span>
           </div>
-          <Link
+          {scriptDemo && <Link prefetch={false} href="/control-plane/organization" className={`cp-nav-item ${section === "organization" ? "is-active" : ""}`}><Settings2 size={17} strokeWidth={1.5}/>Organization</Link>}
+          {!quoteOnly && !scriptDemo && <Link
             prefetch={false}
             href="/control-plane/settings"
             className={`cp-nav-item ${section === "settings" ? "is-active" : ""}`}
           >
             <Settings2 size={17} strokeWidth={1.5} />
             Example settings
-          </Link>
+          </Link>}
           <button className="cp-nav-item" onClick={() => setHelp(true)}>
             <CircleHelp size={17} strokeWidth={1.5} />
             Quick guide
@@ -232,6 +271,7 @@ export function ControlShell({
             <span>
               <strong>{member.name}</strong>
               <small>{member.email}</small>
+              {scriptDemo && <small>Company administrator</small>}
             </span>
             <ArrowUpRight size={14} />
           </Link>
@@ -247,14 +287,14 @@ export function ControlShell({
             <Menu size={21} />
           </button>
           <div className="cp-breadcrumb">
-            <span>Workspace</span>
+            <span>{scriptDemo ? companyName || "Company" : "Workspace"}</span>
             <ChevronRight size={12} />
             <strong>{title}</strong>
           </div>
           <div className="cp-topbar-right">
             <span className="cp-environment">
               <i />
-              {durable ? "Saved controls" : "Browser-local sample data"}
+              {quoteOnly ? "Sample data only" : durable ? "Saved controls" : "Browser-local sample data"}
             </span>
             {!durable && (
               <button
@@ -269,7 +309,7 @@ export function ControlShell({
                 </kbd>
               </button>
             )}
-            <Link
+            {!quoteOnly && !scriptDemo && <Link
               prefetch={false}
               className="cp-notifications"
               href={durable ? "/control-plane" : "/control-plane/approvals"}
@@ -279,7 +319,7 @@ export function ControlShell({
             >
               <Bell size={17} />
               {!durable && pending > 0 && <i />}
-            </Link>
+            </Link>}
             <button
               className="cp-button workspace-sign-out"
               onClick={async () => {
@@ -299,10 +339,10 @@ export function ControlShell({
         </main>
         <footer className="cp-app-footer">
           <span>
-            <BrandMark small /> Action, execution, and output controls
+            <BrandMark small /> {scriptDemo ? "Action controls and saved decisions" : "Action, execution, and output controls"}
           </span>
           <span>
-            {durable
+            {scriptDemo ? "Connected activity & saved decisions" : durable
               ? "Sample data · decisions saved on the server"
               : "Sample data · changes saved in this browser"}
           </span>
@@ -358,12 +398,22 @@ export function ControlShell({
       )}
       {help && (
         <Modal
-          title="Meet your control plane"
-          subtitle="One place to decide what agents can access, do, and release."
+          title={quoteOnly ? "Explore quote controls" : "Meet your control plane"}
+          subtitle={quoteOnly ? "Prepare a quote, get independent approval, and verify each result." : "One place to decide what agents can access, do, and release."}
           onClose={() => setHelp(false)}
         >
           <div className="cp-guide">
-            {(durable
+            {(quoteOnly ? [
+              ["01", "Prepare a quote", "Select the enrolled sample quote and describe the discount. Review the quote and exact customer confirmation before submitting."],
+              ["02", "Get independent approval", "The requester cannot approve their own actions. The designated manager reviews and approves the exact quote update."],
+              ["03", "Verify the quote first", "Check the observed quote result. The customer confirmation stays held until the quote is verified and separately approved."],
+              ["04", "Review the saved result", "Check the full result and reopen the saved request. Confirmation acceptance is simulated; it is not customer delivery."],
+            ] : scriptDemo ? [
+              ["01", "Define the agent’s scope", "For AWS agents, review the discovered identity and declared business ownership, then connect history and any supported approval interface. Prepared sample agents use a separately assigned action and request allowance."],
+              ["02", "Review the action", "Review the exact proposed change and the rule holding it. A connected approval authorizes the workflow to continue; it does not prove execution or delivery completed."],
+              ["03", "Follow workflow execution", "Inspect the workflow-reported steps and current approval readback. Mandatory execution checkpoints and independent effect verification are separate capabilities; history alone does not enforce them."],
+              ["04", "Reconcile uncertain outcomes", "Reconciliation checks whether a change happened. Verify the saved result before trying again. Containment stops new work; it does not undo a change already accepted."],
+            ] : durable
               ? [
                   [
                     "01",
@@ -420,11 +470,7 @@ export function ControlShell({
           </div>
           <div className="cp-note">
             <BookOpen size={17} />
-            <p>
-              {durable
-                ? "Discounts use a sample record; refunds use a simulated payment provider. Decisions are saved on the server. No real money moves and no AI model runs."
-                : "These prepared examples use browser-local sample data. Model access, output checks and execution traces are simulated."}
-            </p>
+            <ControlScopeNote durable={durable} quoteOnly={quoteOnly} scriptDemo={scriptDemo} />
           </div>
         </Modal>
       )}

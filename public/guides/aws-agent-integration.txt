@@ -1,0 +1,88 @@
+LoopLabs: AWS workflow builder integration contract
+Version 1 — October 15, 2026
+
+Purpose
+Keep the customer's agent, workflow, tools, business policy and approval experience
+in AWS. Connect available telemetry for observation. Add a separately verified
+execution checkpoint only when the owner chooses enforcement.
+
+Observation release and staged extension
+The current activity reader accepts a narrow supported invocation-event format
+from an administrator-reviewed CloudWatch source. It reads an on-demand 15-minute
+window. It is not a live subscription, full OpenTelemetry reader, retained workflow
+history importer or native execution enforcement gateway. The staged /runs adapter
+is separate from the business-event mapping. Discovery and owner review grant no tool
+execution permission. The staged extension adds customer-reviewed CloudFormation access, owner/source
+onboarding and on-demand 1-hour/24-hour/7-day business-event history. Its mapping
+accepts schema_version "1.0", event_name and timestamp (UTC ISO), stable event/run/
+action IDs, attempt, trace_id, span_id, trigger_channel and reported deployment
+version. Only allowlisted fields are displayed. Production acceptance must be
+verified separately before describing this extension as deployed.
+This document describes the integration contract to build and prove; it is not a statement that every capability below is shipped.
+
+1. Observe available evidence
+Supply the AWS account, region, runtime identity/version and actual telemetry
+source. Do not assume a log-group name or that every AWS-compatible log format
+is supported. Use scoped read access. Never provide credentials in an event.
+Inventory discovery, source access and event-format compatibility are separate
+checks. A discovered agent remains discovered when its telemetry is unavailable.
+Display missing access, unsupported formats, empty windows and delayed or partial
+evidence distinctly. Show the source, observation window and last successful read.
+Do not fabricate tool steps, approvals or outputs from an invocation event.
+
+2. Recommended business event contract
+Use versioned structured events alongside OpenTelemetry traces. Include stable
+run_id, action_id, event_id, attempt number, occurred_at timestamp, agent deployment
+identity/version and trace/span/parent correlation where available. Preserve IDs
+across delivery retries. Separate these events:
+- workflow started and trigger channel (Slack, email or another channel)
+- action proposed, started, completed, failed or uncertain
+- business policy evaluated: rule/version, decision and safe reason code
+- approval requested, approved, rejected or expired
+- output prepared, withheld, sent or failed
+- workflow's final reported outcome
+Emit all required business events; sampled diagnostic traces alone cannot prove a
+complete history. Async delivery can be late, duplicated, incomplete or reordered.
+State sequence/version explicitly when known. Ingestion must deduplicate and keep
+conflicting observations visible rather than silently replacing past evidence.
+
+3. Privacy, retention and interpretation
+Redact before export. Exclude access keys, bearer tokens, connection strings,
+passwords, raw customer messages and unrestricted provider responses. Prefer safe
+summaries, reviewed record references and output references. Sensitive content
+requires a separate access/retention contract; do not send it by default.
+Configure retention and test delivery across restart/termination. A log is a report
+from its source, not a cryptographic receipt or independent provider verification.
+A reported completion is not proof of delivery. A logged approval does not establish
+an authenticated, currently authorized manager identity.
+Telemetry retention does not make the workflow's pending approvals, deduplication
+or continuation state durable. Store that operational state independently.
+
+4. Optional enforcement contract
+Telemetry is not an enforcement mechanism. Add a mandatory checkpoint before each
+protected tool effect, or route the protected operation through a controlled
+gateway. Inventory all writes, including customer/contact creation, CRM mutations
+and outgoing messages. A rejected discount may still have earlier side effects.
+Bind authority to enrolled tenant/workload, run/action, exact operation, target,
+payload, source precondition, policy version, verified approval and expiry.
+Keep existing business rules and one approval authority; do not generate a second
+Slack approval request. LoopLabs may further restrict an existing approval but must
+never override an existing denial. Treat a logged 'approved' flag as observation
+until the named decision is independently authenticated and bound to that action.
+Continue the existing AWS workflow after accepted authorization. Verify effects
+before dependent output. Unknown outcomes require reconciliation, not blind retry.
+Prove direct bypass fails; a voluntary SDK call while usable bypass credentials
+remain is limited cooperative control, not full enforcement.
+Customer-specific additional guards are a later extension, not a prerequisite for
+initial observation or a reason to replace the current business workflow.
+
+5. Onboarding result to show the customer
+Report inventory, invocation visibility, tool visibility, approval visibility,
+output visibility, retained history, effect verification and enforcement separately.
+For each missing capability, explain the evidence gap, owner action, relevant
+integration requirement and verification test. Never mark the agent disconnected
+only because one optional capability is absent. Missing evidence remains unknown.
+
+Reference documentation
+https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability.html
+https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html
