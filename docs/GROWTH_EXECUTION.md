@@ -1,6 +1,6 @@
 # LoopLabs: growth execution and recovery
 
-Updated October 6, 2026 at Raj's request. This operational objective overrides activity-based content targets while retaining research, product-truth and publication gates.
+Established October 6, 2026 at Raj's request; reviewed October 18. This operational objective overrides activity-based content targets while retaining research, product-truth and publication gates.
 
 ## Outcome
 
@@ -8,11 +8,13 @@ Help people with a concrete workflow problem discover relevant LoopLabs proof an
 
 Qualification needs observed evidence: workflow ownership or access to its owner; a recurring consequential action or manual handoff; a specific loss, delay, uncertainty or approval problem; the current workaround; and willingness to explore one bounded pilot. Do not infer a budget, urgency or fit from a job title, comment or anonymous visit. Keep unknown fields unknown.
 
-Measure separately: relevant discovery, proof engagement, accepted sales request, confirmed booking, attended qualified conversation, agreed pilot. Count booking only from an actual calendar reservation or authorized booking record, not a button click. No reliable confirmed/qualified-call baseline has been collected yet. Private contact details and calendar records remain outside public Git; repository reports contain aggregates or anonymized references.
+Measure separately: relevant discovery, proof engagement, accepted sales request, confirmed booking, attended qualified conversation, agreed pilot. Count booking only from an actual calendar reservation or authorized booking record, not a button click. No reliable source-correlated confirmed/qualified-call baseline has been established yet. Private contact details and calendar records remain outside public Git; repository reports contain aggregates or anonymized references.
 
-## Current action plan: October 6–11
+## Original action plan: October 6–11
 
-Targets, not outcomes: five independent operator evaluations, two confirmed qualified calls and one decision on a bounded pilot. These are early experiment goals, not a forecast or guarantee. Current wedge remains CRM updates and dependent customer messages for customer-operations owners; do not market the unmerged enquiry/chat proposal as live automation.
+Targets, not outcomes: five independent operator evaluations, two confirmed qualified calls and one decision on a bounded pilot. These are early experiment goals, not a forecast or guarantee. The initial wedge is CRM updates and dependent customer messages for customer-operations owners. Current capability claims must follow `docs/LOOPLABS_CLAIM_AND_FUNNEL_AUDIT.md`; bounded private-provider proofs do not establish general live automation.
+
+The dates below preserve the original experiment rather than imply completion or a current schedule. The private action queue and latest weekly review govern current priorities, due dates, blockers and measured outcomes.
 
 | Priority | Next action | Owner | Due (Pacific) | Completion evidence |
 |---|---|---|---|---|
