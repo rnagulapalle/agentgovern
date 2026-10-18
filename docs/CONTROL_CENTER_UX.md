@@ -109,3 +109,26 @@ cover two company-assigned teams, page filters, agent purpose saves, organizatio
 saves, unknown approval coverage, desktop/mobile layout and active-nav contrast.
 Fixture previews are illustrative; they do not establish native AWS acceptance or
 production installation. Current receipts are under `.local/acme-admin/`.
+
+
+## Connections discovery consolidation (October 17 candidate)
+
+In the installed company profile, Connections owns platform/account setup, saved
+inventory and agent onboarding review. The legacy Discovery URL redirects to
+Connections, retaining validated account/runtime/version and history-gap context.
+Other installation profiles retain their separately tested three-provider discovery
+workspace; this change does not enable those providers in the company deployment.
+
+One row represents a runtime, with exact saved-version enrollment checked separately.
+An older enrolled version remains available as Open agent; a newer deployment is a
+separate Review update action. Opening an agent preserves its exact version and
+rereads its enrollment. Missing or foreign references never select another agent.
+The history-gap filter reads enrolled history on demand and retains failed reads as
+unknown coverage. Default Connections visits read no history or approval queues.
+Bounded/failed inventory remains explicit. Refresh saved status does not scan AWS.
+
+Onboarding uses the existing source/owner contract in a drawer. Its setup mode does
+not mount approval controls or an execution timeline and returns to saved setup
+readback after onboarding. Activity and approval decisions remain in Agent details.
+No changes to cloud permissions, approval authority or mandatory enforcement are
+introduced. Release and native-browser evidence must be recorded separately.

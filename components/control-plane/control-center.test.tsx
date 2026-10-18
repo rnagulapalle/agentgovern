@@ -17,7 +17,7 @@ function history() {
  return {enrollment:{displayName:"Partner quoting",owner:"owner@example.test",logGroup:"/company/events",enrolledAt:at},checkedAt:at,source:{runtimeArn:arn,enrolledRuntimeVersion:"2",logGroup:"/company/events",startTime:Date.now()-86400000,endTime:Date.now()},events:[{...base,eventId:"start",eventName:"workflow.started",occurredAt:new Date(Date.parse(at)-2000).toISOString()},{...base,eventId:"policy",eventName:"policy.evaluated",occurredAt:new Date(Date.parse(at)-1000).toISOString(),requestedPercent:25,decision:"needs_approval",approvalThreshold:20,maximumDiscount:75},{...base,eventId:"pause",eventName:"workflow.paused",reportedOutcome:"awaiting_approval"}],completeness:"partial",unsupportedRecords:2,duplicateDeliveries:3,conflictingEventIds:[],failures:[],enforcement:"not-established"};
 }
 type Call={path:string;body:Record<string,unknown>|null;method:string};
-async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[])=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals"|"impact"|"impact-other"|"impact-ambiguous"|"pending"|"expired-pending"|"company-save",companyCase=false,showShell=false,fleetCase=false){
+async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[])=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals"|"impact"|"impact-other"|"impact-ambiguous"|"pending"|"expired-pending"|"company-save",companyCase=false,showShell=false,fleetCase=false,queryString=""){
  const esbuild=requireModule(requireModule.resolve("esbuild",{paths:[requireModule.resolve("@temporalio/worker")]}));
  const content=pageName==='organization'?'<CompanyOrganization/>':pageName==='connections'?'<SavedWorkspace section="connections" awsConnections/>':`<ControlCenter page="${pageName}" awsEnabled/>`;
  const member={name:'Raj Nagulapalle',email:'raj@example.test',company:'ACME'};
@@ -27,7 +27,7 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
  const browser=await chromium.launch({headless:true}),calls:Call[]=[];
  try{const page=await browser.newPage({viewport:{width:1440,height:1100},reducedMotion:'reduce'});page.setDefaultTimeout(4000);
  await page.route("https://control-center.test/**",async route=>{
-  const url=new URL(route.request().url()),path=url.pathname,body=route.request().postDataJSON(),method=route.request().method();if(path==="/")return route.fulfill({contentType:"text/html",body:`${showShell?'<div id="app"></div>':'<div class="cp-app cc-brand-system"><div class="cp-content" style="width:100%" id="app"></div></div>'}<script>${bundle.outputFiles[0].text}</script>`});calls.push({path,body,method});let value:unknown,status=200;
+  const url=new URL(route.request().url()),path=url.pathname,body=route.request().postDataJSON(),method=route.request().method();if(path==="/")return route.fulfill({contentType:"text/html",body:`${showShell?'<div id="app"></div>':'<div class="cp-app cc-brand-system"><div class="cp-content" style="width:100%" id="app"></div></div>'}<script>${bundle.outputFiles[0].text}</script>`});calls.push({path,body,method});if(queryString.includes("delayEnrollment=1")&&path==="/api/workspace/discovery/onboarding"&&body?.operation==="enrollment"&&body?.version==="1")await new Promise(resolve=>setTimeout(resolve,150));let value:unknown,status=200;
   if(path==="/api/workspace/company"){if(method==='POST')companyProfile={...body,revision:companyProfile.revision+1} as typeof companyProfile;value={installed:true,profile:companyProfile,members:[{name:'Raj',email:'raj@example.test'},{name:'Pratibha',email:'pratibha@example.test'}]};}
   else if(path==="/api/durable")value={actions:[],agents:[],policy:{auto_limit:15,hard_limit:50,version:2}};
   else if(path==="/api/durable/connectors")value={actions:[],policies:[{connector:"crm",active:true,version:1},{connector:"email",active:true,version:1}]};
@@ -47,7 +47,7 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
   if(failure==='company-save'&&path==='/api/workspace/company'&&method==='POST'){status=409;value={error:'Directory changed. Refresh before saving again.'};}
   await route.fulfill({status,contentType:"application/json",body:JSON.stringify(value)});
  });
- await page.goto("https://control-center.test/");await page.addStyleTag({content:await fixtureStyles});if(["connections","organization"].includes(pageName))await page.getByText("ACME",{exact:true}).first().waitFor();else await page.getByText("On-demand read",{exact:false}).waitFor();await run(page,calls);
+ await page.goto("https://control-center.test/"+queryString);await page.addStyleTag({content:await fixtureStyles});if(["connections","organization"].includes(pageName))await page.getByText("ACME",{exact:true}).first().waitFor();else await page.getByText("On-demand read",{exact:false}).waitFor();await run(page,calls);
  }finally{await browser.close()}
 }
 it("groups deployment versions and keeps identity and enforcement separate",()=>mounted("agents",async(page,calls)=>{
@@ -59,8 +59,9 @@ it("execution review preserves filters, selection and keyboard return focus",()=
 it.each(['history','inventory','malformed'] as const)("%s failure stays unknown instead of a successful empty history",failure=>mounted('activity',async page=>{await page.getByRole('alert').first().waitFor();expect(await page.locator('.cc-execution-row').count()).toBe(0);await page.getByText('Activity could not be fully checked.',{exact:false}).waitFor();},failure),15000);
 it("one failed directory does not erase the separately observed AWS execution",()=>mounted('overview',async page=>{await page.getByRole('alert').waitFor();expect(await page.locator('.cc-execution-row').count()).toBe(1);},'directory'),15000);
 it("nested connection review closes one panel at a time and restores page scroll",()=>mounted('overview',async page=>{
+ expect(await page.getByRole('link',{name:'Review connections',exact:false}).getAttribute('href')).toBe('/control-plane/connectors?coverage=history');
  await page.getByRole('button',{name:'View coverage',exact:true}).click();
- await page.getByRole('button',{name:'Set up AWS connection',exact:true}).click();
+ await page.getByRole('button',{name:'Manage AWS accounts',exact:true}).click();
  expect(await page.getByRole('dialog').count()).toBe(2);
  await page.keyboard.press('Escape');expect(await page.getByRole('dialog').count()).toBe(1);
  expect(await page.evaluate(()=>document.body.style.overflow)).toBe('hidden');
@@ -163,3 +164,13 @@ it('successful Organization save clears the unsaved warning and refresh needs no
 it('failed Organization save keeps the draft and unsaved warning',()=>mounted('organization',async page=>{
  await page.getByLabel('Company name',{exact:true}).fill('Retain my draft');await page.getByRole('button',{name:'Save company directory',exact:true}).click();await page.getByText('Directory changed. Refresh before saving again.',{exact:true}).waitFor();expect(await page.getByLabel('Company name',{exact:true}).inputValue()).toBe('Retain my draft');await page.getByText('Unsaved changes.',{exact:false}).waitFor();await page.getByRole('button',{name:'Refresh',exact:true}).click();await page.getByRole('dialog',{name:'Discard unsaved changes?',exact:true}).waitFor();
 },'company-save',true,true),15000);
+
+
+it("Connections opens an exact saved agent version in its detail drawer",()=>mounted('agents',async(page,calls)=>{
+ await page.getByRole('dialog').waitFor();
+ await expect.poll(()=>calls.some(c=>c.body?.operation==='history'&&c.body.version==='1'),{timeout:4000}).toBe(true);
+ expect(calls.some(c=>c.body?.operation==='onboard'||c.body?.operation==='decide')).toBe(false);
+},undefined,false,false,false,'?'+new URLSearchParams({connectionId:'aws-test',resourceArn:arn,version:'1',delayEnrollment:'1'})),15000);
+it("an unknown linked version offers connection review instead of opening another deployment",()=>mounted('agents',async page=>{
+ await page.getByRole('alert').filter({hasText:'linked deployment is not'}).waitFor();expect(await page.getByRole('dialog').count()).toBe(0);
+},undefined,false,false,false,'?'+new URLSearchParams({connectionId:'aws-test',resourceArn:arn,version:'999'})),15000);
