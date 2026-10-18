@@ -51,7 +51,7 @@ it('malformed snapshots are unknown, not empty successful queues',async()=>mount
 },'malformed'),15000);
 it('connection view does not equate policy availability with live provider health',async()=>mounted('connections',async(page,requests)=>{
  await page.getByText('Sample requests are enabled. Connection health and real delivery have not been checked.').waitFor();
- expect(await page.getByText('An active request policy has not been confirmed.').count()).toBe(1);expect(await page.getByText('Coming soon').count()).toBe(3);
+ expect(await page.getByText('An active request policy has not been confirmed.').count()).toBe(1);expect(await page.getByText('Coming soon',{exact:false}).count()).toBe(2);
  expect(requests.every(r=>r.startsWith('GET '))).toBe(true);
 }),15000);
 
@@ -83,7 +83,7 @@ it('unknown connector still refuses data rather than displaying an empty or succ
 it.each(['connections','policies'] as const)('loading %s is not reported as unavailable configuration',async section=>{
  let release!:()=>void;const deferred=new Promise<void>(resolve=>{release=resolve});
  try{await mounted(section,async page=>{
-   await page.getByRole('button',{name:'Refresh saved status'}).waitFor();
+   await page.getByRole('button',{name:section==='connections'?'Refresh sample system status':'Refresh saved status'}).waitFor();
    if(section==='connections')expect(await page.getByText('Loading configuration…',{exact:true}).count()).toBe(3);
    else await page.getByText('Loading pricing rules…',{exact:true}).waitFor();
    expect(await page.getByText('Configuration could not be confirmed. Refresh to try again.').count()).toBe(0);
@@ -96,8 +96,8 @@ it.each(['connections','policies'] as const)('loading %s is not reported as unav
 
 it('explicit AWS installation shows a setup link without claiming controlled execution or enabling other clouds', () => {
  const html=renderToStaticMarkup(<SavedWorkspace section="connections" awsConnections />);
- expect(html).toContain('Set up AWS connection');expect(html).toContain('Set up AWS connection');expect(html).toContain('Execution controls require separate verified onboarding');
- expect((html.match(/>Coming soon</g)||[]).length).toBe(2);
+ expect(html).toContain('Manage AWS accounts');expect(html).toContain('Discovered agents');expect(html).toContain('Discovery does not enable execution controls');
+ expect((html.match(/Coming soon/g)||[]).length).toBe(2);
 });
 
 it.each(['overview','policies'] as const)('AWS availability stays consistent in the installed %s view', section => {
@@ -111,7 +111,7 @@ it('connections prioritizes platforms and agents without a model planning panel'
  const html=renderToStaticMarkup(<SavedWorkspace section="connections" awsConnections />);
  const headings=[...html.matchAll(/<h2[^>]*>(.*?)<\/h2>/g)].map(m=>m[1]);
  expect(headings).toEqual(['Agent platforms','Discovered agents','Business systems']);
- expect(html).not.toContain('<h2>Model planning</h2>');expect(html).toContain('View discovered agents');expect(html).toContain('Discovery does not enable execution controls');
+ expect(html).not.toContain('<h2>Model planning</h2>');expect(html).toContain('All discovered agents');expect(html).toContain('Discovery does not enable execution controls');
  expect(html).not.toContain('Capabilities and availability');
 });
 it('the product capability overview appears on the workspace overview only',()=>{
@@ -119,4 +119,4 @@ it('the product capability overview appears on the workspace overview only',()=>
  for(const section of ['policies','connections'] as const)expect(renderToStaticMarkup(<SavedWorkspace section={section}/>)).not.toContain('Capabilities and availability');
 });
 
-it('AWS Connections describes observed cloud activity separately from the sample business systems',()=>{const h=renderToStaticMarkup(<SavedWorkspace section="connections" awsConnections/>);expect(h).toContain('AWS connections observe saved inventory and enrolled workflow activity');expect(h).toContain('sample business systems below');expect(h).toContain('Execution controls require separate verified onboarding');});
+it('AWS Connections describes observed cloud activity separately from the sample business systems',()=>{const h=renderToStaticMarkup(<SavedWorkspace section="connections" awsConnections/>);expect(h).toContain('AWS connections observe saved inventory and enrolled workflow activity');expect(h).toContain('sample business systems below');expect(h).toContain('Discovery does not enable execution controls');});
