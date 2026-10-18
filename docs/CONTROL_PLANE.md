@@ -1,3 +1,20 @@
+## Policy and reviewer evidence presentation (October 18, local patch)
+
+The execution timeline presents the workflow's `policy.evaluated` fields: requested
+percentage, approval threshold, decline threshold, rule ID/version and reported
+decision. Missing fields remain “Not reported”; this is neither an enumeration of
+all internal checks nor independent enforcement evidence. AWS runtime inventory
+cannot supply these business rules on its own. Additional per-rule evaluations
+would require a reviewed workflow event contract and producer instrumentation.
+
+A uniquely matched shared approval record supplies policy version, requester,
+`decidedBy` and `decidedAt`. Neither agent ownership nor the eligible-reviewer list
+is substituted for the actual decision maker. No matching record means reviewer
+and saved decision unavailable, even when history reports an approval. The review
+panel separates proposed change, decision/reviewer, and connection rules. This
+presentation patch changes no approval authority, bridge command or workflow.
+It has not established deployed acceptance or historical record recovery.
+
 ## CIO fleet visibility patch (October 17, candidate)
 
 Cloud business declarations now retain explicit owner, department and purpose through additive migration 31. Existing migration 30 is unchanged. Source labels participate in dashboard grouping and filters; saved company assignments override them. These are display labels, not company membership or approval grants. The dashboard reads every deployment returned in saved inventory rather than selecting the first three or five, and keeps incomplete approval coverage distinct from zero.

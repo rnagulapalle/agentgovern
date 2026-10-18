@@ -38,6 +38,11 @@ export function telemetrySteps(events:WorkflowTelemetryEvent[]) {
   return {...step,first,last,title:step.action?(first.actionName??"Tool action").replaceAll("_"," "):eventLabels[first.eventName],state:step.action?state:null};
  });
 }
+/** Routine interpretation is background work. Retain incomplete/error/conflicting
+ * interpretation in the journey; all original events remain in technical details. */
+export function telemetryTimelineSteps(events: WorkflowTelemetryEvent[], conflict = false) {
+ return telemetrySteps(events).filter(step => conflict || step.first.actionName !== "classify" || step.state !== "Completed");
+}
 export function telemetryDecision(events:WorkflowTelemetryEvent[],decision:string|null|undefined){
  if(events.some(e=>e.eventName==="approval.rejected"))return "Manager rejected";
  if(events.some(e=>e.eventName==="approval.expired"))return "Approval expired";
@@ -50,7 +55,7 @@ export function telemetryDecision(events:WorkflowTelemetryEvent[],decision:strin
 }
 
 const actionCopy: Record<string, [string, string]> = {
- classify: ["Understand the request", "Identify what the customer is asking for."],
+ classify: ["Interpret the request", "The agent interprets what the customer is asking for."],
  resolve_customer: ["Find the customer", "Look up the customer in the connected CRM."],
  load_base_quote: ["Read the existing quote", "Inspect the quote values used by this request."],
  policy_check: ["Evaluate discount policy", "The workflow reports its internal policy check."],
@@ -70,7 +75,7 @@ export function telemetryStepCopy(step: ReturnType<typeof telemetrySteps>[number
  const lifecycleTitle=step.first.eventName==="workflow.started"?"Request received":step.first.eventName==="workflow.finished"?({completed:"Request completed",declined:"Request blocked by policy",rejected:"Request rejected",failed:"Request failed"} as Record<string,string>)[step.first.reportedOutcome??""]??"Review the reported outcome":step.first.eventName==="policy.evaluated"?"Check the approval rules":null;
  const title=known?.[0]??lifecycleTitle??step.title;
  const detail=known?.[1]??(step.first.eventName==="workflow.started"?"The workflow received the request.":step.first.eventName==="workflow.finished"?"The workflow reported its final outcome.":step.first.eventName==="workflow.paused"?"The workflow is waiting before it continues.":null);
- const provider=step.first.provider?({hubspot:"HubSpot",slack:"Slack",gmail:"Gmail",anthropic:"Anthropic",pricing:"Pricing service"} as Record<string,string>)[step.first.provider]??step.first.provider:null;
+ const provider=step.first.actionName==="classify"?null:step.first.provider?({hubspot:"HubSpot",slack:"Slack",gmail:"Gmail",anthropic:"Anthropic",pricing:"Pricing service"} as Record<string,string>)[step.first.provider]??step.first.provider:null;
  const tone=step.first.eventName==="workflow.finished"&&step.first.reportedOutcome==="failed"?"attention":step.first.eventName==="workflow.finished"&&["declined","rejected"].includes(step.first.reportedOutcome??"")?"blocked":step.first.eventName==="workflow.finished"&&step.first.reportedOutcome==="completed"?"done":step.state==="Outcome uncertain"||step.state==="Failed"||step.first.eventName==="customer_output.failed"?"attention":step.state==="Withheld"||step.first.eventName==="approval.rejected"||step.first.eventName==="customer_output.withheld"?"blocked":step.state==="Completed"||["customer_output.sent","approval.approved"].includes(step.first.eventName)?"done":"neutral";
  return {title,detail,provider,tone};
 }
