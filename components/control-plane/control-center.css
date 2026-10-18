@@ -191,3 +191,51 @@
 .cc-workspace .cc-overview-samples{font-size:var(--text-label);color:var(--cp-muted)}
 @media(max-width:1100px){.cc-workspace .cc-department-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:750px){.cc-workspace .cc-overview-priority,.cc-workspace .cc-department-grid{grid-template-columns:1fr}.cc-workspace .cc-admin-stats{grid-template-columns:1fr 1fr}.cc-workspace .cc-admin-stats>div{border-bottom:1px solid var(--cp-line)}.cc-workspace .cc-admin-stats>div:nth-child(2){border-right:0}.cc-workspace .cc-admin-stats>div:nth-child(n+3){border-bottom:0}.cc-workspace .cc-business-request,.cc-workspace .cc-overview-empty,.cc-workspace .cc-overview-visibility,.cc-workspace .cc-overview-followup,.cc-workspace .cc-department-card{padding:16px}}
+
+/* One agent, one contextual drawer. Operational tabs appear after onboarding. */
+.cc-workspace .cc-agent-context { display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--cp-muted);font-size:14px; }
+.cc-workspace .cc-agent-context>span:first-child { display:inline-flex;align-items:center;gap:7px; }
+.cp-app .cc-workspace .cc-agent-tabs { display:flex;gap:20px;border-bottom:1px solid var(--cp-line);overflow-x:auto; }
+.cp-app .cc-workspace .cc-agent-tabs button { flex-shrink:0;min-height:44px;padding:10px 0;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--cp-muted);font-size:16px;font-weight:500; }
+.cp-app .cc-workspace .cc-agent-tabs button[aria-pressed=true] { color:var(--cp-ink);border-bottom-color:var(--cp-ink); }
+.cc-workspace .cc-agent-overview { display:grid;gap:18px; }
+.cc-workspace .cc-agent-overview[hidden] { display:none; }
+.cc-workspace .cc-agent-card { padding:20px;border:1px solid var(--cp-line);background:var(--cp-paper);border-radius:3px;min-width:0; }
+.cp-app .cc-workspace .cc-agent-card h3 { display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:18px;font-weight:600; }
+.cc-workspace .cc-agent-card>p { font-size:16px;line-height:1.6;margin:8px 0 16px; }
+.cc-workspace .cc-agent-card .cc-facts { display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0 0; }
+.cc-workspace .cc-agent-card .cc-facts>div { display:block;padding:0;border:0; }
+.cc-workspace .cc-agent-card .cc-facts dt { font-size:14px;color:var(--cp-muted);margin-bottom:5px; }
+.cc-workspace .cc-agent-card .cc-facts dd { text-align:left;font-size:16px;color:var(--cp-ink);line-height:1.5;margin:0;overflow-wrap:anywhere; }
+.cc-workspace .cc-agent-card .cc-agent-help { font-size:14px;color:var(--cp-muted);padding-top:16px;border-top:1px solid var(--cp-line);margin:18px 0 0; }
+.cc-workspace .cc-agent-card small { display:block;color:var(--cp-muted);font-size:14px;line-height:1.6; }
+.cc-workspace .cc-agent-source { padding:14px 0;border-top:1px solid var(--cp-line);border-bottom:1px solid var(--cp-line);font-size:14px;color:var(--cp-muted); }
+.cc-workspace .cc-agent-source>summary { cursor:pointer;font-weight:500;min-height:28px; }
+.cc-workspace .cc-agent-source .cc-section { padding:16px 0; }
+.cc-workspace .cc-agent-source .cc-section>p { font-size:14px;line-height:1.6;margin:8px 0 16px; }
+.cc-workspace .cc-agent-intro { padding:18px 20px;background:#f5f5f4;border:1px solid var(--cp-line);border-radius:3px; }
+.cp-app .cc-workspace .cc-agent-intro h3 { font-size:20px;font-weight:600;margin:0 0 8px; }
+.cc-workspace .cc-agent-intro p { font-size:14px;color:var(--cp-muted);line-height:1.6;margin:0; }
+.cc-workspace .cc-agent-intro .cc-agent-stale { margin-top:12px;padding-top:12px;border-top:1px solid var(--cp-line); }
+.cc-workspace .cc-agent-stale a { color:var(--cp-ink);text-decoration:underline; }
+@media(max-width:600px) { .cc-workspace .cc-agent-card { padding:16px; }.cc-workspace .cc-agent-card .cc-facts { grid-template-columns:1fr;gap:14px; }.cp-app .cc-workspace .cc-agent-tabs { gap:18px; } }
+
+/* Overview waits for the company and bounded source reads before presenting
+   counts or empty states. Skeletons are decorative, never substitute data. */
+.cc-workspace .cc-overview-loading { display:grid;gap:22px; }
+.cc-workspace .cc-loading-message { display:flex;gap:12px;align-items:flex-start;color:var(--cp-ink);padding:16px 18px;background:var(--cp-paper);border:1px solid var(--cp-line);border-radius:3px; }
+.cc-workspace .cc-loading-message>svg { flex-shrink:0;margin-top:3px;animation:cc-loading-spin 1.8s linear infinite; }
+.cc-workspace .cc-loading-message strong { font-size:16px;font-weight:600; }
+.cc-workspace .cc-loading-message p { font-size:14px;line-height:1.6;color:var(--cp-muted);margin:4px 0 0; }
+.cc-loading-shapes { display:grid;gap:22px; }
+.cc-skeleton { display:block;height:14px;width:100%;border-radius:3px;background:#e8e7e3;animation:cc-loading-pulse 1.8s ease-in-out infinite; }
+.cc-skeleton-label { width:55%; }.cc-skeleton-title { width:38%;height:20px; }.cc-skeleton-value { width:30%;height:32px; }
+.cc-loading-scope { display:grid;gap:18px;padding-top:16px;border-top:1px solid var(--cp-line); }
+.cc-loading-scope>div { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px; }.cc-loading-scope>div>span { height:44px; }
+.cc-loading-stats { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--cp-line);background:var(--cp-paper); }
+.cc-loading-stats>div { display:grid;gap:16px;padding:20px;border-right:1px solid var(--cp-line); }.cc-loading-stats>div:last-child { border-right:0; }
+.cc-loading-panels { display:grid;grid-template-columns:1.5fr 1fr;gap:18px; }.cc-loading-panels>div { display:grid;gap:22px;padding:22px;border:1px solid var(--cp-line);background:var(--cp-paper); }
+@keyframes cc-loading-pulse { 50% { opacity:.45; } }@keyframes cc-loading-spin { to { transform:rotate(360deg); } }
+@media(max-width:900px) { .cc-loading-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }.cc-loading-stats>div:nth-child(2) { border-right:0; }.cc-loading-stats>div:nth-child(-n+2) { border-bottom:1px solid var(--cp-line); }.cc-loading-panels { grid-template-columns:1fr; } }
+@media(max-width:600px) { .cc-loading-scope>div { grid-template-columns:1fr;gap:10px; }.cc-loading-stats>div { padding:16px; } }
+@media(prefers-reduced-motion:reduce) { .cc-workspace .cc-loading-message>svg,.cc-skeleton { animation:none; } }

@@ -9,17 +9,18 @@ import {businessDisplay} from "@/lib/workspace/business-display";
 import { Modal,PageTitle } from "./ui";
 type Scope={department:string;team:string;environment:string};
 type SourceLabels={key:string;metadata?:CloudRuntimeMetadata|null};
-type CompanyContextValue={sources:SourceLabels[];setSources:(sources:SourceLabels[])=>void;snapshot:CompanySnapshot|null;error:string;busy:boolean;scope:Scope;setScope:(scope:Scope)=>void;reload:()=>Promise<void>;save:(profile:CompanyProfile)=>Promise<void>};
+type CompanyContextValue={sources:SourceLabels[];setSources:(sources:SourceLabels[])=>void;snapshot:CompanySnapshot|null;error:string;busy:boolean;loading:boolean;scope:Scope;setScope:(scope:Scope)=>void;reload:()=>Promise<void>;save:(profile:CompanyProfile)=>Promise<void>};
 const defaultScope={department:"all",team:"all",environment:"all"};
-const CompanyContext=createContext<CompanyContextValue>({sources:[],setSources:()=>{},snapshot:null,error:"",busy:false,scope:defaultScope,setScope:()=>{},reload:async()=>{},save:async()=>{throw Error("Company directory is not connected.");}});
+const CompanyContext=createContext<CompanyContextValue>({sources:[],setSources:()=>{},snapshot:null,error:"",busy:false,loading:false,scope:defaultScope,setScope:()=>{},reload:async()=>{},save:async()=>{throw Error("Company directory is not connected.");}});
 export const useCompany=()=>useContext(CompanyContext);
 export function CompanyWorkspaceProvider({children,enabled=true}:{children:React.ReactNode;enabled?:boolean}){
  const [sources,setSources]=useState<SourceLabels[]>([]);
+ const [loading,setLoading]=useState(enabled);
  const [snapshot,setSnapshot]=useState<CompanySnapshot|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false),[scope,setScope]=useState(defaultScope);
- const reload=useCallback(async()=>{try{const r=await fetch('/api/workspace/company',{cache:'no-store'}),v=await workspaceJson(r);if(!r.ok)throw Error(v.error);setSnapshot(v as CompanySnapshot);setError("");}catch(e){setSnapshot(null);setError(e instanceof Error?e.message:"Company directory unavailable.");}},[]);
+ const reload=useCallback(async()=>{setLoading(true);try{const r=await fetch('/api/workspace/company',{cache:'no-store'}),v=await workspaceJson(r);if(!r.ok)throw Error(v.error);setSnapshot(v as CompanySnapshot);setError("");}catch(e){setSnapshot(null);setError(e instanceof Error?e.message:"Company directory unavailable.");}finally{setLoading(false);}},[]);
  useEffect(()=>{if(enabled)void reload()},[reload,enabled]);
  const save=async(profile:CompanyProfile)=>{setBusy(true);try{const r=await fetch('/api/workspace/company',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(profile)}),v=await workspaceJson(r);if(!r.ok)throw Error(v.error);setSnapshot(v as CompanySnapshot);setError("");}finally{setBusy(false)}};
- return <CompanyContext.Provider value={{sources,setSources,snapshot,error,busy,scope,setScope,reload,save}}>{children}</CompanyContext.Provider>;
+ return <CompanyContext.Provider value={{sources,setSources,snapshot,error,busy,loading,scope,setScope,reload,save}}>{children}</CompanyContext.Provider>;
 }
 export function CompanyScope(){const {snapshot,error,scope,setScope,sources}=useCompany(),p=snapshot?.profile;
  const labels=sources.map(s=>businessDisplay(p??null,s.key,s.metadata));

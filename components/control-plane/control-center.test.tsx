@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import { chromium, type Page } from "@playwright/test";
 import { createRequire } from "node:module";
-import { mkdir,readFile } from "node:fs/promises";
+import { mkdir,readFile,writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 const requireModule = createRequire(import.meta.url);
 const fixtureStyles=(async()=>{
@@ -17,18 +17,20 @@ function history() {
  return {enrollment:{displayName:"Partner quoting",owner:"owner@example.test",logGroup:"/company/events",enrolledAt:at},checkedAt:at,source:{runtimeArn:arn,enrolledRuntimeVersion:"2",logGroup:"/company/events",startTime:Date.now()-86400000,endTime:Date.now()},events:[{...base,eventId:"start",eventName:"workflow.started",occurredAt:new Date(Date.parse(at)-2000).toISOString()},{...base,eventId:"policy",eventName:"policy.evaluated",occurredAt:new Date(Date.parse(at)-1000).toISOString(),requestedPercent:25,decision:"needs_approval",approvalThreshold:20,maximumDiscount:75},{...base,eventId:"pause",eventName:"workflow.paused",reportedOutcome:"awaiting_approval"}],completeness:"partial",unsupportedRecords:2,duplicateDeliveries:3,conflictingEventIds:[],failures:[],enforcement:"not-established"};
 }
 type Call={path:string;body:Record<string,unknown>|null;method:string};
-async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[])=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals"|"impact"|"impact-other"|"impact-ambiguous"|"pending"|"expired-pending"|"company-save",companyCase=false,showShell=false,fleetCase=false,queryString=""){
+async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"policies"|"connections"|"organization",run:(page:Page,calls:Call[],releaseLoading:()=>void)=>Promise<void>,failure?:"history"|"directory"|"inventory"|"malformed"|"approvals"|"impact"|"impact-other"|"impact-ambiguous"|"pending"|"expired-pending"|"company-save"|"discovered"|"discovered-stale",companyCase=false,showShell=false,fleetCase=false,queryString=""){
  const esbuild=requireModule(requireModule.resolve("esbuild",{paths:[requireModule.resolve("@temporalio/worker")]}));
  const content=pageName==='organization'?'<CompanyOrganization/>':pageName==='connections'?'<SavedWorkspace section="connections" awsConnections/>':`<ControlCenter page="${pageName}" awsEnabled/>`;
  const member={name:'Raj Nagulapalle',email:'raj@example.test',company:'ACME'};
  const wrapped=showShell?`<ControlProvider><ControlShell scriptDemo member={${JSON.stringify(member)}}>${content}</ControlShell></ControlProvider>`:content;
  const bundle=await esbuild.build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{ControlCenter}from'./components/control-plane/control-center';import{ControlShell}from'./components/control-plane/shell';import{ControlProvider}from'./components/control-plane/provider';import{SavedWorkspace}from'./components/control-plane/saved-workspace';import{CompanyWorkspaceProvider,CompanyOrganization}from'./components/control-plane/company-workspace';createRoot(document.getElementById('app')).render(<CompanyWorkspaceProvider enabled={${companyCase}}>${wrapped}</CompanyWorkspaceProvider>);`,resolveDir:process.cwd(),loader:"tsx"},bundle:true,platform:"browser",format:"iife",write:false,loader:{".css":"empty"},jsx:"automatic",alias:{"@":resolve(".")},plugins:[{name:'fixture-location',setup(build: {onResolve:(a:unknown,b:()=>unknown)=>void;onLoad:(a:unknown,b:()=>unknown)=>void}){build.onResolve({filter:/^next\/navigation$/},()=>({path:'navigation',namespace:'fixture'}));build.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:`export const usePathname=()=>${JSON.stringify('/control-plane/'+(pageName==='overview'?'':pageName==='connections'?'connectors':pageName))};`}))}}],define:{"process.env":"{}","process.env.NODE_ENV":'"test"'}});
  let companyProfile={name:'ACME',revision:1,departments:[{id:'sales',name:'Sales',businessUnit:''},{id:'support',name:'Support',businessUnit:''}],teams:[{id:'revenue',name:'Revenue operations',departmentId:'sales'},{id:'care',name:'Customer operations',departmentId:'support'}],assignments:[{agentKey:JSON.stringify(['aws-test',arn]),teamId:'revenue',purpose:'Prepare customer quotes',environment:'production'},{agentKey:JSON.stringify(['aws-test',arn+'-support']),teamId:'care',purpose:'Triage support requests',environment:'sandbox'}]};
+ let releaseLoading=()=>{};const loadingGate=new Promise<void>(resolve=>{releaseLoading=resolve;});const inspectLoading=new URLSearchParams(queryString).get("inspectLoading");
  const browser=await chromium.launch({headless:true}),calls:Call[]=[];
  try{const page=await browser.newPage({viewport:{width:1440,height:1100},reducedMotion:'reduce'});page.setDefaultTimeout(4000);
  await page.route("https://control-center.test/**",async route=>{
-  const url=new URL(route.request().url()),path=url.pathname,body=route.request().postDataJSON(),method=route.request().method();if(path==="/")return route.fulfill({contentType:"text/html",body:`${showShell?'<div id="app"></div>':'<div class="cp-app cc-brand-system"><div class="cp-content" style="width:100%" id="app"></div></div>'}<script>${bundle.outputFiles[0].text}</script>`});calls.push({path,body,method});if(queryString.includes("delayEnrollment=1")&&path==="/api/workspace/discovery/onboarding"&&body?.operation==="enrollment"&&body?.version==="1")await new Promise(resolve=>setTimeout(resolve,150));let value:unknown,status=200;
-  if(path==="/api/workspace/company"){if(method==='POST')companyProfile={...body,revision:companyProfile.revision+1} as typeof companyProfile;value={installed:true,profile:companyProfile,members:[{name:'Raj',email:'raj@example.test'},{name:'Pratibha',email:'pratibha@example.test'}]};}
+  const url=new URL(route.request().url()),path=url.pathname,body=route.request().postDataJSON(),method=route.request().method();if(path==="/")return route.fulfill({contentType:"text/html",body:`${showShell?'<div id="app"></div>':'<div class="cp-app cc-brand-system"><div class="cp-content" style="width:100%" id="app"></div></div>'}<script>${bundle.outputFiles[0].text}</script>`});calls.push({path,body,method});if(queryString.includes("delayEnrollment=1")&&path==="/api/workspace/discovery/onboarding"&&body?.operation==="enrollment"&&body?.version==="1")await new Promise(resolve=>setTimeout(resolve,150));if(inspectLoading&&((inspectLoading==="accounts"&&path==="/api/workspace/discovery"&&!url.search)||(inspectLoading==="company"&&path==="/api/workspace/company")))await loadingGate;let value:unknown,status=200;
+  if(path==="/api/workspace/discovery/owners")value={owners:[{name:"Raj",email:"raj@example.test"}]};
+  else if(path==="/api/workspace/company"){if(method==='POST')companyProfile={...body,revision:companyProfile.revision+1} as typeof companyProfile;value={installed:true,profile:companyProfile,members:[{name:'Raj',email:'raj@example.test'},{name:'Pratibha',email:'pratibha@example.test'}]};}
   else if(path==="/api/durable")value={actions:[],agents:[],policy:{auto_limit:15,hard_limit:50,version:2}};
   else if(path==="/api/durable/connectors")value={actions:[],policies:[{connector:"crm",active:true,version:1},{connector:"email",active:true,version:1}]};
   else if(path==="/api/workspace/agents"){value={agents:[],owners:[]};if(failure==="directory"){status=503;value={error:"Directory unavailable"}}}
@@ -39,6 +41,8 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
   else {status=404;value={error:"Unexpected endpoint"}}
   if((failure==='pending'||failure==='expired-pending')&&path.endsWith('/approvals'))value={connected:true,canReview:true,reviewer:'manager@example.test',requests:body?.version==='2'?[{id:'request-one',runId:'run-one',revision:'a'.repeat(64),policyVersion:'policy-2',status:'pending',title:'Review customer discount',reason:'25% exceeds delegated authority.',action:'Update quote',system:'CRM',before:'USD 1200.00',after:'USD 900.00',requestedBy:'customer@example.test',allowedReviewers:['manager@example.test'],expiresAt:new Date(Date.now()+(failure==='pending'?3600000:-3600000)).toISOString(),decidedBy:null,decidedAt:null,channel:'slack',executionStatus:'held'}]:[]};
   if(failure?.startsWith('impact')&&path.endsWith('/approvals')){const a={runId:failure==='impact-other'?'other-run':'run-one',before:'USD 1200.00',after:'USD 900.00',status:'approved',executionStatus:'completed'};value={connected:true,requests:failure==='impact-ambiguous'?[a,a]:[a]};}
+  if(failure?.startsWith('discovered')&&path.endsWith('/onboarding')&&body?.operation==='enrollment')value={enrollment:null};
+  if(failure==='discovered'&&path==='/api/workspace/discovery'&&url.search){const inventory=value as {stale:boolean;records:{stale:boolean;observedInCurrentScan:boolean}[]};inventory.stale=false;inventory.records.forEach(r=>{r.stale=false;r.observedInCurrentScan=true;});}
   if(fleetCase&&path==="/api/workspace/discovery"&&url.search){const v=value as {records:unknown[]};v.records.unshift(...Array.from({length:7},(_,i)=>({record:{resourceArn:arn+'-fleet'+i,resourceId:'fleet_agent_'+i,version:'1',declaredMetadata:{schemaVersion:'2',source:'aws-runtime-declaration',metadataVersion:'1',organization:'Acme',ownerOrganization:null,ownerTeam:i%2?'care':'sales-ops',department:i%2?'Support':'Sales',owner:'Raj',purpose:'Serve customers',environment:'production',onCallStatus:'unassigned'}},stale:false,observedInCurrentScan:true})));}
   if(fleetCase&&body?.resourceArn!==arn&&path.endsWith('/onboarding'))value={enrollment:null};
   if(fleetCase&&body?.operation==='history'&&body.resourceArn===arn){const h=history();value={...h,events:h.events.map(e=>({...e,reportedDeploymentVersion:'1'}))};}
@@ -47,11 +51,11 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
   if(failure==='company-save'&&path==='/api/workspace/company'&&method==='POST'){status=409;value={error:'Directory changed. Refresh before saving again.'};}
   await route.fulfill({status,contentType:"application/json",body:JSON.stringify(value)});
  });
- await page.goto("https://control-center.test/"+queryString);await page.addStyleTag({content:await fixtureStyles});if(["connections","organization"].includes(pageName))await page.getByText("ACME",{exact:true}).first().waitFor();else await page.getByText("On-demand read",{exact:false}).waitFor();await run(page,calls);
+ await page.goto("https://control-center.test/"+queryString);await page.addStyleTag({content:await fixtureStyles});if(inspectLoading)await page.getByText("Loading your workspace…",{exact:true}).waitFor();else if(["connections","organization"].includes(pageName))await page.getByText("ACME",{exact:true}).first().waitFor();else await page.getByText("On-demand read",{exact:false}).waitFor();await run(page,calls,releaseLoading);
  }finally{await browser.close()}
 }
 it("groups deployment versions and keeps identity and enforcement separate",()=>mounted("agents",async(page,calls)=>{
- expect(await page.locator('.cc-agent-row').count()).toBe(1);await page.getByRole('button',{name:/Partner quoting/}).click();await page.getByRole('dialog').waitFor();await page.getByText('Purpose has not been provided',{exact:false}).waitFor();expect(await page.getByText('Not verified',{exact:true}).count()).toBe(1);await page.getByRole('heading',{name:'AWS-reported business details'}).waitFor();const metadata=page.locator('section').filter({has:page.getByRole('heading',{name:'AWS-reported business details'})});expect(await metadata.innerText()).toContain('Acme Revenue Operations');expect(await metadata.innerText()).toContain('Sales Support and Quote Operations');expect(await metadata.innerText()).toContain('unassigned');expect(await metadata.innerText()).toContain('do not assign company teams');await page.screenshot({path:'.local/v16-metadata/agent-details-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:900});await page.getByText('Metadata version',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:'.local/v16-metadata/agent-details-mobile.png',fullPage:false});expect(await page.locator('[role=dialog]').evaluate(e=>e.getBoundingClientRect().right<=innerWidth+1)).toBe(true);expect(calls.filter(c=>c.body?.operation==='enrollment').map(c=>c.body?.version)).toEqual(['2']);expect(calls.some(c=>c.body?.operation==='history')).toBe(true);
+ expect(await page.locator('.cc-agent-row').count()).toBe(1);await page.getByRole('button',{name:/Partner quoting/}).click();await page.getByRole('dialog').waitFor();await page.getByText('Purpose has not been provided',{exact:false}).waitFor();expect(await page.getByText('Not verified',{exact:true}).count()).toBe(1);await page.getByText('AWS-reported details & technical identity',{exact:true}).click();await page.getByRole('heading',{name:'AWS-reported business details'}).waitFor();const metadata=page.locator('section').filter({has:page.getByRole('heading',{name:'AWS-reported business details'})});expect(await metadata.innerText()).toContain('Acme Revenue Operations');expect(await metadata.innerText()).toContain('Sales Support and Quote Operations');expect(await metadata.innerText()).toContain('unassigned');expect(await metadata.innerText()).toContain('do not assign company teams');await page.screenshot({path:'.local/v16-metadata/agent-details-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:900});await page.getByText('Metadata version',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:'.local/v16-metadata/agent-details-mobile.png',fullPage:false});expect(await page.locator('[role=dialog]').evaluate(e=>e.getBoundingClientRect().right<=innerWidth+1)).toBe(true);expect(calls.filter(c=>c.body?.operation==='enrollment').map(c=>c.body?.version)).toEqual(['2']);expect(calls.some(c=>c.body?.operation==='history')).toBe(true);
 }),15000);
 it("execution review preserves filters, selection and keyboard return focus",()=>mounted("activity",async(page,calls)=>{
  await page.getByLabel('Search activity').fill('Q-test');const trigger=page.getByRole('button',{name:/25% discount/});await trigger.click();await page.getByRole('dialog').waitFor();await page.getByRole('button',{name:'Review this execution’s approvals'}).click();await page.getByText('No shared approval request was returned for this execution.',{exact:false}).waitFor();expect(calls.find(c=>c.path.endsWith('/approvals'))?.body).toMatchObject({connectionId:'aws-test',resourceArn:arn,version:'2',operation:'list'});await page.getByRole('button',{name:'Back to execution',exact:true}).click();await page.getByRole('button',{name:'Close dialog',exact:true}).click();expect(await page.getByLabel('Search activity').inputValue()).toBe('Q-test');expect(await trigger.evaluate(e=>e===document.activeElement)).toBe(true);expect(calls.every(c=>c.method==='GET'||['enrollment','history','list'].includes(String(c.body?.operation)))).toBe(true);
@@ -116,7 +120,7 @@ it('source departments filter all eight rows without granting company membership
  expect(await page.locator('.cc-agent-row').count()).toBe(4);
  await page.getByLabel('Environment',{exact:true}).selectOption('production');
  expect(await page.locator('.cc-agent-row').count()).toBe(4);
- await page.getByRole('button',{name:/fleet agent 0/}).click();await page.getByText('Raj',{exact:true}).waitFor();
+ await page.getByRole('button',{name:/fleet agent 0/}).click();await page.getByText('AWS-reported agent details',{exact:true}).click();await page.getByText('Raj',{exact:true}).waitFor();
 },undefined,false,false,true),20000);
 it('uses the retained reported v1 approval connection for a run read under inventory v2',()=>mounted('activity',async(page,calls)=>{
  await page.getByRole('button',{name:/25% discount/}).click();await page.getByRole('button',{name:'Review this execution’s approvals'}).click();
@@ -174,3 +178,83 @@ it("Connections opens an exact saved agent version in its detail drawer",()=>mou
 it("an unknown linked version offers connection review instead of opening another deployment",()=>mounted('agents',async page=>{
  await page.getByRole('alert').filter({hasText:'linked deployment is not'}).waitFor();expect(await page.getByRole('dialog').count()).toBe(0);
 },undefined,false,false,false,'?'+new URLSearchParams({connectionId:'aws-test',resourceArn:arn,version:'999'})),15000);
+
+it('execution drawer separates summary, business context and timeline without changing approvals',()=>mounted('activity',async(page,calls)=>{
+ await mkdir('.local/execution-detail-hierarchy',{recursive:true});
+ await page.getByRole('button',{name:/25% discount/}).click();
+ await page.getByText('USD 900.00',{exact:true}).waitFor();
+ const summary=page.getByRole('region',{name:'Request summary',exact:true});
+ expect(await summary.innerText()).toContain('25% discount');
+ const title=summary.locator('h4');
+ expect(await title.evaluate(e=>getComputedStyle(e).fontSize)).toBe('24px');
+ expect(await page.locator('.aws-execution-section-heading h4').first().evaluate(e=>getComputedStyle(e).fontWeight)).toBe('600');
+ expect(await page.locator('.aws-timeline-title time').first().evaluate(e=>getComputedStyle(e).fontSize)).toBe('14px');
+ expect(await page.getByRole('region',{name:'Execution timeline'}).isVisible()).toBe(true);
+ const evidence=page.locator('.aws-execution-evidence');expect(await evidence.getAttribute('open')).toBe(null);
+ await evidence.locator('summary').click();await evidence.getByText('This trace does not independently verify its effects.',{exact:false}).waitFor();
+ await evidence.locator('summary').click();
+ await summary.scrollIntoViewIfNeeded();
+ await page.locator('[role=dialog]').evaluate(e=>e.scrollTop=0);
+ await page.screenshot({path:'.local/execution-detail-hierarchy/desktop.png',fullPage:true});
+ await writeFile('.local/execution-detail-hierarchy/preview.html','<meta charset="utf-8"><title>LoopLabs — Execution detail preview (sample data)</title>'+(await page.content()).replace(/<script[\s\S]*?<\/script>/g,''));
+ await page.setViewportSize({width:390,height:900});
+ expect(await page.locator('[role=dialog]').evaluate(e=>e.scrollWidth<=e.clientWidth+1)).toBe(true);
+ await page.screenshot({path:'.local/execution-detail-hierarchy/mobile.png',fullPage:true});
+ expect(calls.some(c=>c.body?.operation==='decide')).toBe(false);
+},'pending'),20000);
+
+it('discovered agent opens minimal onboarding and consent stays aligned beside its label',()=>mounted('agents',async(page,calls)=>{
+ await mkdir('.local/agent-drawer-hierarchy',{recursive:true});
+ await page.getByRole('button',{name:/partner quote/i}).click();
+ await page.getByRole('heading',{name:'Complete agent onboarding',exact:true}).waitFor();
+ await page.getByLabel('Agent name',{exact:true}).waitFor();
+ expect(await page.getByRole('navigation',{name:'Agent details'}).count()).toBe(0);
+ expect(await page.getByRole('heading',{name:'Agent activity',exact:true}).isVisible()).toBe(false);
+ await writeFile('.local/agent-drawer-hierarchy/preview.html','<meta charset="utf-8"><title>LoopLabs — Agent onboarding preview (sample data)</title>'+(await page.content()).replace(/<script[\s\S]*?<\/script>/g,''));
+ const consent=page.getByRole('checkbox');
+ const box=await consent.boundingBox();const text=await page.locator('.aws-onboarding-consent span').boundingBox();
+ expect(box?.width).toBe(18);expect(box?.height).toBe(18);expect(text!.x).toBeGreaterThan(box!.x+box!.width);expect(Math.abs(text!.y-box!.y)).toBeLessThan(5);
+ await page.getByLabel('Accountable owner',{exact:true}).selectOption('raj@example.test');
+ await page.getByLabel('CloudWatch workflow log group',{exact:true}).fill('/company/events');
+ expect(await page.locator('.aws-onboarding-form').evaluate(e=>(e as HTMLFormElement).checkValidity())).toBe(false);
+ await consent.check();expect(await page.locator('.aws-onboarding-form').evaluate(e=>(e as HTMLFormElement).checkValidity())).toBe(true);expect(await page.getByRole('button',{name:'Onboard for observation',exact:true}).isEnabled()).toBe(true);
+ await page.locator('[role=dialog]').evaluate(e=>e.scrollTop=0);
+ await page.screenshot({path:'.local/agent-drawer-hierarchy/onboarding-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:900});expect(await page.locator('[role=dialog]').evaluate(e=>e.scrollWidth<=e.clientWidth+1)).toBe(true);
+ await page.screenshot({path:'.local/agent-drawer-hierarchy/onboarding-mobile.png',fullPage:true});
+ expect(calls.some(c=>['onboard','decide','history'].includes(String(c.body?.operation)))).toBe(false);
+},'discovered'),15000);
+
+it('stale discovered agents require refreshed discovery before offering onboarding',()=>mounted('agents',async(page,calls)=>{
+ await page.getByRole('button',{name:/partner quote/i}).click();await page.getByText('Discovery needs a refresh before new onboarding.',{exact:false}).waitFor();
+ expect(await page.getByLabel('Agent name',{exact:true}).count()).toBe(0);expect(await page.getByRole('link',{name:'Review connection',exact:true}).getAttribute('href')).toBe('/control-plane/connectors');
+ expect(calls.some(c=>['onboard','decide','history'].includes(String(c.body?.operation)))).toBe(false);
+},'discovered-stale'),15000);
+
+it.each(['accounts','company'] as const)('Overview waits for %s before showing counts or empty states',source=>mounted('overview',async(page,calls,releaseLoading)=>{
+ await mkdir('.local/overview-loading',{recursive:true});
+ expect(await page.getByRole('region',{name:'Overview data'}).getAttribute('aria-busy')).toBe('true');
+ expect(await page.locator('.cc-admin-stats').count()).toBe(0);expect(await page.locator('.cc-overview-empty').count()).toBe(0);
+ expect(await page.getByRole('button',{name:'Reading…',exact:true}).isEnabled()).toBe(false);
+ await page.screenshot({path:'.local/overview-loading/'+source+'-desktop.png',fullPage:true});
+ await writeFile('.local/overview-loading/preview.html','<meta charset="utf-8"><title>LoopLabs — Overview loading preview</title>'+(await page.content()).replace(/<script[\s\S]*?<\/script>/g,''));
+ await page.setViewportSize({width:390,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ expect(await page.locator('.cc-skeleton').first().evaluate(e=>getComputedStyle(e).animationName)).toBe('none');
+ await page.screenshot({path:'.local/overview-loading/'+source+'-mobile.png',fullPage:true});
+ releaseLoading();await page.getByText('On-demand read',{exact:false}).waitFor();
+ expect(await page.locator('.cc-overview-loading').count()).toBe(0);expect(await page.locator('.cc-admin-stats').isVisible()).toBe(true);
+ expect(await page.getByRole('button',{name:'Refresh view',exact:true}).isEnabled()).toBe(true);
+ expect(calls.some(c=>c.body?.operation==='decide')).toBe(false);
+},undefined,true,false,false,'?inspectLoading='+source),15000);
+it('failed Overview read leaves loading and shows incomplete coverage rather than waiting forever',()=>mounted('overview',async(page,_calls,releaseLoading)=>{
+ releaseLoading();await page.getByText('AWS account …9012: Access refused',{exact:true}).waitFor();
+ expect(await page.locator('.cc-overview-loading').count()).toBe(0);expect(await page.getByRole('button',{name:'Refresh view',exact:true}).isEnabled()).toBe(true);
+ await page.getByRole('heading',{name:'Approval coverage is incomplete',exact:true}).waitFor();
+},'inventory',false,false,false,'?inspectLoading=accounts'),15000);
+it('Overview refresh returns to skeletons until the new read settles',()=>mounted('overview',async page=>{
+ let releaseRead=()=>{};const hold=new Promise<void>(resolve=>{releaseRead=resolve;});
+ await page.route('https://control-center.test/api/workspace/discovery',async route=>{await hold;await route.fallback();});
+ await page.getByRole('button',{name:'Refresh view',exact:true}).click();await page.getByText('Loading your workspace…',{exact:true}).waitFor();
+ expect(await page.locator('.cc-admin-stats').count()).toBe(0);
+ releaseRead();await page.getByText('On-demand read',{exact:false}).waitFor();expect(await page.locator('.cc-admin-stats').isVisible()).toBe(true);
+}),15000);
