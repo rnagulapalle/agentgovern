@@ -182,3 +182,77 @@
 .aws-human-timeline .aws-request-context>p { font-size:var(--text-label);line-height:1.6; }
 .aws-human-timeline .aws-request-context .aws-request-metadata { font-size:var(--text-label); }
 .aws-human-timeline .aws-request-context small { font-size:var(--text-label); }
+
+/* Execution detail hierarchy: summary, business context, then a readable journey.
+   Scope every reset to the trace so shared page headings and controls stay intact. */
+.aws-run-trace .aws-execution-overview { padding:20px;background:#f5f5f4;border:1px solid #dedbd2;border-radius:4px; }
+.aws-run-trace .aws-trace-heading { align-items:start;gap:12px; }
+.aws-run-trace .aws-trace-heading .aws-eyebrow { font-size:12px;font-weight:600;letter-spacing:.1em;color:#68665f; }
+.aws-run-trace .aws-trace-heading h4 { font-size:24px;line-height:1.3;font-weight:600;letter-spacing:-.025em;margin:8px 0 0;color:#1c1917; }
+.aws-run-trace .aws-trace-outcome { display:inline-flex;align-items:center;gap:7px;border:0;border-radius:3px;padding:5px 9px;margin:14px 0 0;background:#e9e9e5;color:#484b45;font-size:14px;font-weight:500;line-height:1.5; }
+.aws-run-trace .aws-outcome-dot { flex-shrink:0;margin:0; }
+.aws-run-trace .aws-trace-outcome[data-outcome="waiting"] { background:#fbf0dc;color:#80591a; }
+.aws-run-trace .aws-trace-outcome[data-outcome="completed"] { background:#e8f1eb;color:#28583e; }
+.aws-run-trace .aws-trace-outcome[data-outcome="blocked"] { background:#f8e9e3;color:#8c483a; }
+.aws-execution-facts { display:grid;grid-template-columns:1fr 1.4fr;gap:14px;padding-top:16px;margin-top:16px;border-top:1px solid #dedbd2; }
+.aws-execution-facts dt { font-size:14px;color:#68665f; }
+.aws-execution-facts dd { margin:4px 0 0;font-size:16px;font-weight:500;color:#1c1917; }
+.aws-run-trace .aws-business-impact { padding:24px 0;border-bottom:1px solid #dedbd2;margin-bottom:24px; }
+.aws-execution-section-heading { display:flex;gap:10px;align-items:center;margin-bottom:12px; }
+.aws-section-marker { display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#eeedeb;border:1px solid #dedbd2;color:#68665f;font-size:12px;font-weight:600;border-radius:3px;flex-shrink:0; }
+.aws-run-trace .aws-execution-section-heading h4 { font-size:18px;line-height:1.4;font-weight:600;color:#1c1917;margin:0; }
+.aws-run-trace .aws-business-impact>p { font-size:16px;line-height:1.6;margin:6px 0; }
+.aws-run-trace .aws-business-impact>.aws-field-help { font-size:14px;color:#68665f;line-height:1.6; }
+.aws-run-trace .aws-business-summary { background:#fafaf9;border:0;border-radius:3px;margin:14px 0;padding:16px; }
+.aws-run-trace .aws-timeline-caption { font-size:14px;color:#68665f;margin:0 0 20px; }
+.aws-run-trace .aws-human-timeline { padding:0;margin:0; }
+.aws-run-trace .aws-human-timeline>li { grid-template-columns:28px minmax(0,1fr);gap:14px;padding:0 0 16px; }
+.aws-run-trace .aws-human-timeline>li:not(:last-child)::before { left:13px;top:28px;bottom:0;background:#dedbd2; }
+.aws-run-trace .aws-timeline-node { width:28px;height:28px;font-size:13px; }
+.aws-run-trace .aws-timeline-content { min-width:0;padding:2px 0 16px;border-bottom:1px solid #eeedeb; }
+.aws-run-trace .aws-human-timeline>li:last-child .aws-timeline-content { border-bottom:0; }
+.aws-run-trace .aws-timeline-title { gap:12px;align-items:baseline; }
+.aws-run-trace .aws-timeline-title strong { font-size:16px;font-weight:600;line-height:1.5;color:#1c1917; }
+.aws-run-trace .aws-timeline-title time { font-size:14px;color:#68665f;line-height:1.5;white-space:nowrap;font-variant-numeric:tabular-nums; }
+.aws-run-trace .aws-request-context { padding:12px 14px;margin:10px 0 0;border:1px solid #e2e2dc;background:#fafaf9;border-radius:3px; }
+.aws-run-trace .aws-request-context>p { font-size:16px;line-height:1.6;margin:0; }
+.aws-run-trace .aws-request-context .aws-request-metadata { display:flex;gap:12px;flex-wrap:wrap;font-size:14px;color:#68665f;margin-top:8px; }
+.aws-run-trace .aws-request-context small { display:block;font-size:14px;line-height:1.6;color:#68665f;margin-top:8px; }
+.aws-run-trace .aws-timeline-content>p { font-size:14px;line-height:1.6;margin:5px 0;color:#68665f; }
+.aws-run-trace .aws-timeline-meta { font-size:14px;gap:8px;margin-top:8px; }
+.aws-run-trace .aws-timeline-meta .aws-status { border:0;background:#f0f0ec;color:#55594f;font-size:13px;line-height:1.4;padding:3px 7px; }
+.aws-run-trace .aws-human-timeline [data-tone="done"] .aws-status { background:#e8f1eb;color:#28583e; }
+.aws-run-trace .aws-execution-evidence,.aws-run-trace .aws-trace-technical { padding:14px 0;margin:0;border-top:1px solid #dedbd2;color:#68665f;font-size:14px;line-height:1.6; }
+.aws-run-trace .aws-execution-evidence summary,.aws-run-trace .aws-trace-technical summary { cursor:pointer;min-height:28px;font-weight:500; }
+.aws-run-trace .aws-execution-evidence p { margin:10px 0; }
+.aws-run-trace .aws-execution-evidence h4 { font-size:14px;font-weight:600;margin-top:12px; }
+@media(max-width:640px) {
+ .aws-run-trace .aws-execution-overview { padding:16px; }
+ .aws-execution-facts { grid-template-columns:1fr;gap:12px; }
+ .aws-run-trace .aws-timeline-title { flex-direction:column;gap:2px; }
+ .aws-run-trace .aws-human-timeline>li { gap:10px; }
+}
+
+.aws-execution-browser.is-detail-view { border:0;border-radius:0;overflow:visible; }
+
+.aws-run-trace .aws-outcome-label { font-size:12px;color:#68665f;margin:14px 0 4px; }
+.aws-run-trace .aws-outcome-label+.aws-trace-outcome { margin-top:0; }
+
+/* Keep onboarding a form, with consent aligned beside its copy rather than
+   inheriting the shared full-width text-input sizing. */
+.aws-workflow-observation .aws-onboarding-form { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 16px;align-items:end; }
+.aws-workflow-observation .aws-onboarding-form label { min-width:0;flex:none;font-size:14px;color:#68665f; }
+.aws-workflow-observation .aws-onboarding-form input:not([type=checkbox]),.aws-workflow-observation .aws-onboarding-form select { font:inherit;font-size:16px;color:#1c1917;border-radius:3px;min-height:44px; }
+.aws-workflow-observation .aws-onboarding-form .aws-source-field,.aws-workflow-observation .aws-onboarding-help,.aws-workflow-observation .aws-onboarding-evidence,.aws-workflow-observation .aws-onboarding-consent { grid-column:1/-1; }
+.aws-workflow-observation .aws-onboarding-help,.aws-workflow-observation .aws-onboarding-evidence { font-size:14px;line-height:1.6;color:#68665f;margin:0; }
+.aws-workflow-observation .aws-onboarding-evidence summary { cursor:pointer; }
+.aws-workflow-observation .aws-onboarding-evidence p { margin-top:8px; }
+.cp-app .aws-workflow-observation .aws-onboarding-form .aws-onboarding-consent { display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;align-items:start;justify-content:start;padding:14px;background:#f5f5f4;border:1px solid #dedbd2;border-radius:3px;font-size:14px;line-height:1.6;color:#1c1917; }
+.cp-app .aws-workflow-observation .aws-onboarding-consent input[type=checkbox] { appearance:auto;display:block;width:18px;height:18px;min-width:18px;min-height:18px;padding:0;margin:2px 0 0;accent-color:#1c1917; }
+.aws-workflow-observation .aws-onboarding-form>.cp-button { justify-self:start; }
+.aws-workflow-observation.is-setup>h2 { font-size:18px;line-height:1.4;font-weight:600;margin:0 0 8px; }
+.aws-workflow-observation.is-setup>p { font-size:14px;line-height:1.6;color:#68665f; }
+.aws-workflow-observation.is-setup>details>summary { font-size:14px;font-weight:500;cursor:pointer;padding:12px 0; }
+@media(max-width:600px) { .aws-workflow-observation .aws-onboarding-form { grid-template-columns:minmax(0,1fr); }.aws-workflow-observation .aws-onboarding-form>.cp-button { width:100%; } }
+
+.cp-app .aws-workflow-observation.is-compact { border:0;padding:0;background:transparent; }

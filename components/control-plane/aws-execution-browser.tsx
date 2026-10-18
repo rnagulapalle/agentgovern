@@ -28,7 +28,7 @@ export function AwsExecutionBrowser({ runs, runtimeVersion, onQuote, initialSele
   const selected = runs.find(run => run.id === selectedId);
   const requestContext=selected?telemetryRequestContext(selected):null;
 
-  return <div className={`aws-execution-browser${selected ? " has-selection" : ""}`}>
+  return <div className={`aws-execution-browser${detailsOnly ? " is-detail-view" : ""}${selected ? " has-selection" : ""}`}>
     <div className="aws-execution-list" aria-label="Workflow executions" hidden={detailsOnly}>
       <div className="aws-execution-columns" aria-hidden="true"><span>Request / channel</span><span>Decision</span><span>Outcome / started</span></div>
       {runs.map(run => <button type="button" className="aws-execution-summary aws-execution" key={run.id}
@@ -41,15 +41,13 @@ export function AwsExecutionBrowser({ runs, runtimeVersion, onQuote, initialSele
     </div>
     <aside id={traceId} className="aws-run-trace" aria-label="Execution trace">
       {selected ? <>
-        <div className="aws-trace-heading"><div><span className="aws-eyebrow">SELECTED EXECUTION</span><h4>{telemetryRequestLabel(selected)}</h4></div>{!detailsOnly && <button type="button" className="cp-button secondary" onClick={() => setSelectedId(null)}>Close trace</button>}</div>
-        <p className="aws-trace-outcome" data-outcome={telemetryOutcomeGroup(selected)}><span className="aws-outcome-dot" aria-hidden="true"/>{selected.status}</p>
-        <dl className="aws-business-summary"><div><dt>Requested through</dt><dd className="aws-channel">{selected.trigger}</dd></div></dl>
+        <section className="aws-execution-overview" aria-label="Request summary"><div className="aws-trace-heading"><div><span className="aws-eyebrow">REQUEST SUMMARY</span><h4>{telemetryRequestLabel(selected)}</h4></div>{!detailsOnly && <button type="button" className="cp-button secondary" onClick={() => setSelectedId(null)}>Close trace</button>}</div>
+        <p className="aws-outcome-label">Last reported status</p><p className="aws-trace-outcome" data-outcome={telemetryOutcomeGroup(selected)}><span className="aws-outcome-dot" aria-hidden="true"/>{selected.status}</p>
+        <dl className="aws-execution-facts"><div><dt>Requested through</dt><dd className="aws-channel">{selected.trigger}</dd></div><div><dt>Started</dt><dd>{new Date(selected.startedAt ?? selected.events[0].occurredAt).toLocaleString()}</dd></div></dl></section>
         <ExecutionBusinessContext key={selected.id+":"+selected.events[0]?.reportedDeploymentVersion} runId={selected.id} reference={executionReference(selected.events,references)}/>
-        <h4>Execution steps</h4>
-        <p className="aws-field-help">Last reported state, not a live approval queue. Reported by the AWS workflow. This trace does not independently verify its effects.</p>
-        {selected.quoteIds.length > 0 ? <p>Related quote: {selected.quoteIds.map(id => <button key={id} className="cp-button secondary" onClick={() => onQuote(id)}>{id}</button>)}</p> : <p className="aws-field-help">A related business record was not included in these workflow events.</p>}
-        {!selected.startObserved && <p>The execution start was not observed. The displayed time is its first observed event.</p>}
-        {selected.policy && <details className="aws-evidence-note"><summary>Approval rules for this request</summary><p className="aws-field-help">Policy reported by the agent: {selected.policy.approvalThreshold !== null ? `manager approval from ${selected.policy.approvalThreshold}%.` : "Approval threshold not reported."} {selected.policy.maximumDiscount !== null ? `Requests above ${selected.policy.maximumDiscount}% are denied.` : ""}</p></details>}
+        <section className="aws-execution-journey" aria-label="Execution timeline"><div className="aws-execution-section-heading"><span className="aws-section-marker" aria-hidden="true">02</span><h4>Execution steps</h4></div>
+        <p className="aws-timeline-caption">Workflow-reported progress · {telemetrySteps(selected.events).length} steps</p>
+        {selected.quoteIds.length > 0 ? <p>Related quote: {selected.quoteIds.map(id => <button key={id} className="cp-button secondary" onClick={() => onQuote(id)}>{id}</button>)}</p> : null}
         <ol className="aws-execution-steps aws-human-timeline" aria-label={`Execution steps for ${selected.id}`}>{telemetrySteps(selected.events).map((step,index) => {
           const copy=telemetryStepCopy(step);
           return <li key={step.key} data-tone={copy.tone}><span className="aws-timeline-node" aria-hidden="true">{copy.tone==="done"?"✓":index+1}</span>
@@ -57,7 +55,13 @@ export function AwsExecutionBrowser({ runs, runtimeVersion, onQuote, initialSele
             {step.first.eventName==="workflow.started"&&requestContext?<div className="aws-request-context"><p>{requestContext.description}</p><p className="aws-request-metadata"><span className="aws-channel">{requestContext.channel}</span>{requestContext.version&&<span>Reported version {requestContext.version}</span>}</p><small>Original request text wasn’t shared by this workflow. Time shown is when processing started.</small></div>:copy.detail&&<p>{copy.detail}</p>}<div className="aws-timeline-meta">{step.state&&<span className="aws-status">{step.first.actionName==="request_approval"&&step.state==="Completed"?"Request sent":step.state}</span>}{copy.provider&&<span>{copy.provider}</span>}{step.first.attempt>1&&<span>Attempt {step.first.attempt}</span>}</div>
             {step.last.reasonCode&&<details><summary>Reported reason</summary><p>{step.last.reasonCode.replaceAll("_"," ")}</p></details>}</div>
           </li>;
-        })}</ol>
+        })}</ol></section>
+        <details className="aws-evidence-note aws-execution-evidence"><summary>Source coverage &amp; approval rules</summary>
+          <p>Last reported state, not a live approval queue. Reported by the AWS workflow. This trace does not independently verify its effects.</p>
+          {selected.quoteIds.length===0 && <p>A related business record was not included in these workflow events.</p>}
+          {!selected.startObserved && <p>The execution start was not observed. The displayed time is its first observed event.</p>}
+          {selected.policy && <div><h4>Approval rules for this request</h4><p>Policy reported by the agent: {selected.policy.approvalThreshold !== null ? `manager approval from ${selected.policy.approvalThreshold}%.` : "Approval threshold not reported."} {selected.policy.maximumDiscount !== null ? `Requests above ${selected.policy.maximumDiscount}% are denied.` : ""}</p></div>}
+        </details>
         <details className="aws-trace-technical"><summary>Technical details · {selected.events.length} source events</summary><p>Execution reference: {selected.id}</p><p>Trace: {selected.events[0].traceId}</p><p>Enrolled runtime version: {runtimeVersion}. Deployment versions are reported by the source.</p><ol>{selected.events.map(event => <li key={event.eventId}>{eventLabels[event.eventName]}{event.actionName ? ` · ${event.actionName.replaceAll("_", " ")}` : ""} · {event.occurredAt} · Attempt {event.attempt}</li>)}</ol></details>
       </> : <div className="aws-trace-empty"><span className="aws-eyebrow">EXECUTION TRACE</span><h4>Select an execution</h4><p>See its policy decision, approval events, tool steps and reported outcome here.</p></div>}
     </aside>

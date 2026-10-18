@@ -132,3 +132,47 @@ not mount approval controls or an execution timeline and returns to saved setup
 readback after onboarding. Activity and approval decisions remain in Agent details.
 No changes to cloud permissions, approval authority or mandatory enforcement are
 introduced. Release and native-browser evidence must be recorded separately.
+
+
+## Execution detail presentation (October 17 local candidate)
+
+The shared AWS execution trace separates a shaded request summary, business-impact
+section and chronological timeline. The summary labels its outcome as last reported
+status. Explicit heading weights and reading sizes survive the site reset; timeline
+markers occupy a separate gutter and timestamps use the quieter metadata scale.
+Source coverage, missing business references and reported policy rules remain
+available in a secondary disclosure. The existing exact-run approval enrichment
+and approval action routing are unchanged. Preview values are fixture data; native
+Chrome preview acceptance is visual only and does not establish production release
+or workflow/approval execution.
+
+
+## Agent drawer hierarchy (October 17 local candidate)
+
+Discovered agents open a minimal observation-onboarding drawer rather than empty
+operational tabs. Stale inventory links back to Connections for fresh discovery
+before a new onboarding form is offered; existing enrollment remains available.
+The drawer reuses the server-backed enrollment check and source/owner contract.
+It does not grant authority from provider-declared metadata. Closing an unenrolled
+agent drawer rereads the page so saved onboarding can be reflected.
+
+Enrolled agents keep Overview, Activity, Approvals and Business details. Overview
+groups purpose, company ownership and coverage with left-aligned label/value pairs;
+AWS declarations and technical identity sit in a disclosure. Source editing is
+a secondary action, avoiding a fifth wrapping tab. Consent retains the required
+checkbox and uses an explicit 18px control beside its text. The compact onboarding
+presentation is used for discovered agents; other connection flows retain their
+existing headings and contracts. Production release and native AWS onboarding
+acceptance remain separate from local presentation/fixture checks.
+
+
+## Overview loading (October 17 local candidate)
+
+The installed company Overview shows decorative responsive skeletons and a polite
+loading status until company metadata and the bounded connected-source reads have
+settled. Counts, coverage conclusions, company filters and empty-state messages
+are withheld during that period. Refresh returns to the same loading presentation.
+Failed source reads exit loading into the existing explicit coverage errors; they
+are not reported as successful reads. Reduced-motion preferences disable the pulse
+and spinner animations. Loading adds no source requests, permissions or mutations.
+Other dashboard routes retain their existing loading behavior.
