@@ -176,3 +176,14 @@ Failed source reads exit loading into the existing explicit coverage errors; the
 are not reported as successful reads. Reduced-motion preferences disable the pulse
 and spinner animations. Loading adds no source requests, permissions or mutations.
 Other dashboard routes retain their existing loading behavior.
+
+## Administrator reading scale — October 17
+
+The shared control workspace uses Geist at 18px for body text and request names,
+16px for labels and metadata, 17px for navigation, 24px for section headings,
+36px for page titles and summary numbers. Mobile page titles use 32px. Overview
+card headings use 18px semibold. Execution timeline text and history setup forms
+use the same body and metadata tokens. The existing content width, black primary
+buttons, source labels and authority boundaries are unchanged. Browser-fixture
+checks measure the scale across administrator pages and phone overflow;
+production browser observation is separate from these checks.
