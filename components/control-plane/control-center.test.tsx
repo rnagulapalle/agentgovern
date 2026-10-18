@@ -27,7 +27,7 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
  const browser=await chromium.launch({headless:true}),calls:Call[]=[];
  try{const page=await browser.newPage({viewport:{width:1440,height:1100},reducedMotion:'reduce'});page.setDefaultTimeout(4000);
  await page.route("https://control-center.test/**",async route=>{
-  const url=new URL(route.request().url()),path=url.pathname,body=route.request().postDataJSON(),method=route.request().method();if(path==="/")return route.fulfill({contentType:"text/html",body:`${showShell?'<div id="app"></div>':'<div class="cp-app cc-brand-system"><div class="cp-content" style="width:100%" id="app"></div></div>'}<script>${bundle.outputFiles[0].text}</script>`});calls.push({path,body,method});let value:unknown,status=200;
+  const url=new URL(route.request().url()),path=url.pathname,body=route.request().postDataJSON(),method=route.request().method();if(path==="/")return route.fulfill({contentType:"text/html",body:`${showShell?'<div id="app"></div>':'<div class="cp-app cc-brand-system"><div class="cp-content" style="width:100%" id="app"></div></div>'}<script>${bundle.outputFiles[0].text}</script>`});calls.push({path,body,method});if(queryString.includes("delayEnrollment=1")&&path==="/api/workspace/discovery/onboarding"&&body?.operation==="enrollment"&&body?.version==="1")await new Promise(resolve=>setTimeout(resolve,150));let value:unknown,status=200;
   if(path==="/api/workspace/company"){if(method==='POST')companyProfile={...body,revision:companyProfile.revision+1} as typeof companyProfile;value={installed:true,profile:companyProfile,members:[{name:'Raj',email:'raj@example.test'},{name:'Pratibha',email:'pratibha@example.test'}]};}
   else if(path==="/api/durable")value={actions:[],agents:[],policy:{auto_limit:15,hard_limit:50,version:2}};
   else if(path==="/api/durable/connectors")value={actions:[],policies:[{connector:"crm",active:true,version:1},{connector:"email",active:true,version:1}]};
@@ -168,9 +168,9 @@ it('failed Organization save keeps the draft and unsaved warning',()=>mounted('o
 
 it("Connections opens an exact saved agent version in its detail drawer",()=>mounted('agents',async(page,calls)=>{
  await page.getByRole('dialog').waitFor();
- expect(calls.some(c=>c.body?.operation==='history'&&c.body.version==='1')).toBe(true);
+ await expect.poll(()=>calls.some(c=>c.body?.operation==='history'&&c.body.version==='1'),{timeout:4000}).toBe(true);
  expect(calls.some(c=>c.body?.operation==='onboard'||c.body?.operation==='decide')).toBe(false);
-},undefined,false,false,false,'?'+new URLSearchParams({connectionId:'aws-test',resourceArn:arn,version:'1'})),15000);
+},undefined,false,false,false,'?'+new URLSearchParams({connectionId:'aws-test',resourceArn:arn,version:'1',delayEnrollment:'1'})),15000);
 it("an unknown linked version offers connection review instead of opening another deployment",()=>mounted('agents',async page=>{
  await page.getByRole('alert').filter({hasText:'linked deployment is not'}).waitFor();expect(await page.getByRole('dialog').count()).toBe(0);
 },undefined,false,false,false,'?'+new URLSearchParams({connectionId:'aws-test',resourceArn:arn,version:'999'})),15000);
