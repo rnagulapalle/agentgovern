@@ -1,0 +1,69 @@
+{
+  "contract": "isolated-chrome-sales-handoff-1",
+  "production": false,
+  "browser": "Raj Chrome via extension",
+  "capturedUtc": "2026-10-19T09:39:37.673826+00:00",
+  "scope": "Synthetic inquiry in disposable workspace; loopback HTTP browser and verified TLS database; no production inquiry or calendar booking",
+  "sourceFingerprints": {
+    "app/api/sales/route.ts": "334f5e84b73db7a0de9678d8361f1cd30aeae112da783b9884dbc2465eb1662e",
+    "lib/workspace/sales.ts": "a3d2a6601186279b75284f9301934ab48ff7e213cd79d008634dfad5ea3368ad",
+    "lib/workspace/sales-handoff.ts": "07d64f276e18d9a31e858d67cd9bf321890338ee14d7cce29285ebff7d7a009f",
+    "components/marketing/sales-form.tsx": "60eb2b641d3365eb3a28744a72b7b818d3e0e540173ad4c4035c4d65e5f87033",
+    "app/sales.css": "feb6d76635c30d40640a8d4d6972dcd31e45861ffd4e54f23b7c0742082e96ee",
+    "app/contact-sales/page.tsx": "efdf63c1e7b2d2d462700cdc6666b3fce6a2d11cfb1af1973bf2161c305fbace"
+  },
+  "beforeVisual": {
+    "functionalResult": "committed reference matched",
+    "visualResult": "failed: sticky header hides title at retained scroll; calendar CTA unstyled",
+    "measured": {
+      "scrollY": 165.5,
+      "statusTop": 5.5,
+      "headerBottom": 99,
+      "ctaHeight": 20.5
+    },
+    "production": false
+  },
+  "afterVisible": {
+    "production": false,
+    "synthetic": true,
+    "href": "https://cal.com/rajnagulapalle?metadata%5Blooplabs_intake_ref%5D=df036dbe-2067-43c5-81f2-9d27fc7ec518",
+    "visual": {
+      "ctaBackground": "rgb(28, 25, 23)",
+      "ctaColor": "rgb(255, 255, 255)",
+      "ctaHeight": 57,
+      "documentWidth": 1642,
+      "focusedHeading": true,
+      "headerBottom": 99,
+      "headingTop": 128,
+      "viewportWidth": 1651
+    },
+    "statusText": "We have your request.\n\nChoose a time to walk through one workflow with us. Your request is saved for the founders to review.\n\nYour meeting is booked only when the calendar confirms your selected time.\n\nChoose a time \u2197",
+    "calendarOpened": false
+  },
+  "afterDatabase": {
+    "passed": true,
+    "production": false,
+    "browser": "Raj Chrome via extension",
+    "rowCount": 1,
+    "committedReferenceMatchesVisibleCalendarLink": true,
+    "serverConfiguredWorkspaceMatched": true,
+    "noProductionInquiry": true,
+    "noCalendarBooking": true,
+    "intakeRef": "df036dbe-2067-43c5-81f2-9d27fc7ec518",
+    "completedUtc": "2026-10-19T09:37:05.794Z"
+  },
+  "databaseLifecycle": {
+    "status": "passed",
+    "production": false,
+    "exit_code": 0,
+    "pgReady": true,
+    "wrongPasswordRefused": true,
+    "plaintextRefused": true,
+    "ownedCleanupTerminal": true,
+    "ownedDataRemoved": true,
+    "completed_utc": "2026-10-19T09:37:08Z"
+  },
+  "ownedSchemaCleanup": true,
+  "screenshot": "docs/evidence/sales-handoff-native-20261019-focus.png",
+  "screenshotSha256": "a37cb9525646157def5c88c5af1e78bb0392d30c7e2a966c0c74b2eb78abafc5"
+}

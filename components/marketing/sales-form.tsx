@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { COMPANY_SIZES } from "@/lib/workspace/sales-options";
 import { track } from "@/lib/analytics";
 import {
@@ -9,9 +9,14 @@ import {
 } from "@/lib/workspace/sales-handoff";
 
 export function SalesRequestSaved({ receipt }: { receipt: SalesReceipt }) {
+  const title = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    title.current?.focus({ preventScroll: true });
+    title.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, []);
   return (
     <div className="sales-success" role="status">
-      <h2>We have your request.</h2>
+      <h2 ref={title} tabIndex={-1}>We have your request.</h2>
       <p>
         Choose a time to walk through one workflow with us. Your request is
         saved for the founders to review.
@@ -20,7 +25,7 @@ export function SalesRequestSaved({ receipt }: { receipt: SalesReceipt }) {
         Your meeting is booked only when the calendar confirms your selected time.
       </p>
       <a
-        className="cp-button cp-button-dark"
+        className="sales-cta"
         href={salesCalendarHref(receipt)}
         target="_blank"
         rel="noopener noreferrer"

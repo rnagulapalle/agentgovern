@@ -83,3 +83,35 @@ reports approval identity/audit/conditional-rule friction; it is a self-reported
 community observation, not a qualified LoopLabs prospect or a verified product gap.
 Keep the bounded uncertain-CRM-write/held-message experiment; no broad approval
 article or superiority claim follows from these sources.
+
+
+## Native Chrome visual follow-through
+
+The first synthetic form completed its transaction/reference checks, but visual
+inspection found two separate gaps: the retained scroll could leave the result
+under the sticky header, and the calendar link inherited an unstyled control-plane
+class on the public page. Those findings superseded b1a78d1 before release; its CI
+was canceled, not counted as a full pass.
+
+The result now focuses its heading with8rem scroll clearance and uses the existing
+public `sales-cta` brand rule. Actual Mac Chrome observed the focused heading
+at128px below a99px header, a57px black/white calendar button and no horizontal
+overflow at the measured desktop viewport. The visible opaque reference matched
+exactly one committed synthetic row; no external calendar was opened. TLS database
+password/plaintext refusals and owned cleanup passed. The browser used local HTTP
+only; this is not production HTTPS or native calendar delivery acceptance.
+
+An initial fixture127.0.0.1 Origin was correctly refused; using Next's verified
+canonical localhost Origin resolved setup without weakening CSRF. The genuine
+observations, source fingerprints and screenshot are retained in
+`docs/evidence/sales-handoff-native-20261019-focus.json` and its PNG. A source-bound
+regression test retains the observed earlier visual failure and corrected result;
+it does not infer commercial conversion from a synthetic request.
+
+The focus successor discovery run again passed30assertions against current source,
+with its own TLS/cleanup receipt. The connector36-check receipt remains applicable
+because its closed-source fingerprints did not change.96focused evidence/refusal
+tests pass. Private CI prerequisites carry the exact measured compiled route bytes,
+with unchanged provider bytes and only exact-object GetObject for the existing CI
+role; no public ACL or trust change. Final full CI/activation remain separate gates
+in the private nightly receipt.
