@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {Bot,ChevronRight,Workflow,Users,Server} from 'lucide-react';
 import type {CompanyProfile} from '@/lib/workspace/company-profile-contract';
 import type {CloudRuntimeMetadata} from '@/lib/workspace/cloud-runtime-metadata';
-import {workflowDeclaration} from '@/lib/workspace/workflow-catalog';
+import {workflowDeclaration} from '@/lib/workspace/company-profile-contract';
 import {businessDisplay} from '@/lib/workspace/business-display';
 export type CatalogRow={key:string;name:string;reference:{version:string};declaredMetadata?:CloudRuntimeMetadata|null;enrollment:{owner:string}|null;stale:boolean};
 export function WorkflowCatalogView<T extends CatalogRow>({rows,profile,onOpen,loading=false,query=""}:{rows:T[];profile:CompanyProfile|null;onOpen:(row:T)=>void;loading?:boolean;query?:string}){

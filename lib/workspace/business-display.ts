@@ -1,5 +1,4 @@
-import {businessProfile,type CompanyProfile} from './company-profile-contract';
-import {workflowDeclaration} from './workflow-catalog';
+import {businessProfile,workflowDeclaration,type CompanyProfile} from './company-profile-contract';
 import type {CloudRuntimeMetadata} from './cloud-runtime-metadata';
 /** Display/filter labels only. This never changes membership or execution authority. */
 export function businessDisplay(profile:CompanyProfile|null,key:string,metadata?:CloudRuntimeMetadata|null){

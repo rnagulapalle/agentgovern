@@ -1,7 +1,7 @@
 "use client";
 
 import {WorkflowCatalogView} from "./workflow-catalog-view";
-import {workflowDeclaration} from "@/lib/workspace/workflow-catalog";
+import {workflowDeclaration} from "@/lib/workspace/company-profile-contract";
 import Link from "next/link";
 import { RuntimeMetadata } from "./runtime-metadata";
 import type { CloudRuntimeMetadata } from "@/lib/workspace/cloud-runtime-metadata";

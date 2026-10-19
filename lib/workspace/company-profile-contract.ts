@@ -24,3 +24,5 @@ export function parseCompanyProfile(value: unknown): CompanyProfile {
 }
 export function businessProfile(profile:CompanyProfile|null,agentKey:string){const assignment=profile?.assignments.find(a=>a.agentKey===agentKey)??null;const team=profile?.teams.find(t=>t.id===assignment?.teamId)??null;const department=profile?.departments.find(d=>d.id===team?.departmentId)??null;return {assignment,team,department};}
 export function businessScopeMatches(profile:CompanyProfile|null,agentKey:string,scope:{department:string;team:string;environment:string}){const b=businessProfile(profile,agentKey);return(scope.department==="all"||b.department?.id===scope.department||scope.department==="unassigned"&&!b.department)&&(scope.team==="all"||b.team?.id===scope.team||scope.team==="unassigned"&&!b.team)&&(scope.environment==="all"||(b.assignment?.environment??"unknown")===scope.environment);}
+
+export function workflowDeclaration(profile:CompanyProfile|null,key:string,version?:string){return profile?.catalog?.find(w=>JSON.stringify([w.connectionId,w.resourceArn])===key&&(!version||w.version===version))??null;}

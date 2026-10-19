@@ -15,4 +15,4 @@ export function importWorkflowCatalog(value:unknown,connectionId:string,profile:
  if(other.length){if(!object(value.summary)||value.summary.operator_runtime_count!==other.length)throw Error('Classify supporting runtimes before importing.');for(const r of other){if(!object(r))throw Error('Invalid supporting runtime.');catalog.push({connectionId,resourceArn:`arn:aws:bedrock-agentcore:${value.region}:${value.account}:runtime/${r.agentRuntimeId}`,version:String(r.agentRuntimeVersion),title:String(r.agentRuntimeName).replaceAll('_',' '),kind:'operator',owner:'',department:'',team:'',purpose:'Operational controls for the business workflow.',roles:[],source:'company-declared'});}}
  return parseCompanyProfile({...profile,catalog:[...(profile.catalog??[]).filter(w=>w.connectionId!==connectionId),...catalog]});
 }
-export function workflowDeclaration(profile:CompanyProfile|null,key:string,version?:string){return profile?.catalog?.find(w=>JSON.stringify([w.connectionId,w.resourceArn])===key&&(!version||w.version===version))??null;}
+export {workflowDeclaration} from "./company-profile-contract";
