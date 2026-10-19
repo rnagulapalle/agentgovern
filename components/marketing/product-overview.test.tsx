@@ -47,6 +47,8 @@ describe("product evaluation scope", () => {
   it("discloses sample systems beside the sales invitation", () => {
     const html = renderToStaticMarkup(<ContactSales />);
     expect(html).toContain("CRM and messaging twins");
+    expect(html).toContain("Refunds are not available in this deployment.");
+    expect(html).not.toContain("simulated payment provider");
     expect(html).toContain("No real money moves or customer email is delivered.");
     expect(html).toContain("bounded pilot if there is a fit");
     expect(html).toContain('href="https://cal.com/rajnagulapalle"');

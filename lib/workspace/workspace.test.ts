@@ -20,6 +20,7 @@ import { passwordHash, passwordMatches, signIn } from "./auth";
 import { digest, memberSession, WORKSPACE_COOKIE } from "./identity";
 import { agentDirectory, parseAgent, registerAgent } from "./agents";
 import { parseSales, submitSales } from "./sales";
+import { parseSalesReceipt, salesCalendarHref } from "./sales-handoff";
 import { safeNext } from "./navigation";
 import { createInstalledTenantFixture } from "./installed-tenant-fixture";
 import { configureTenantContext } from "./tenant-context";
@@ -391,6 +392,40 @@ describe("agent provisioning boundary", () => {
   });
 });
 describe("sales intake and redirects", () => {
+  it("returns the actual committed tenant-bound reference and no contact data through the public route", async () => {
+    const response = await sales(req("/api/sales", lead));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    const receipt = parseSalesReceipt(await response.json());
+    const row = (await owner.query("SELECT id,org_id,email,workflow FROM ll_sales_requests WHERE id=$1", [receipt.intakeRef])).rows;
+    expect(row).toEqual([{id:receipt.intakeRef,org_id:"local-proof",email:lead.email.toLowerCase(),workflow:lead.workflow}]);
+    expect((await fixture.web("other").query("SELECT id FROM ll_sales_requests WHERE id=$1",[receipt.intakeRef])).rows).toEqual([]);
+    expect([...new URL(salesCalendarHref(receipt)).searchParams]).toEqual([["metadata[looplabs_intake_ref]",receipt.intakeRef]]);
+    const second = parseSalesReceipt(await (await sales(req("/api/sales", lead))).json());
+    expect(second.intakeRef).not.toBe(receipt.intakeRef);
+    for (const injected of [{org:"other"},{intakeRef:receipt.intakeRef},{source:"trusted_partner"},{bookingUrl:"https://foreign.example"}]) {
+      const rejected = await sales(req("/api/sales",{...lead,...injected}));
+      expect(rejected.status).toBe(400);
+      expect(await rejected.json()).not.toHaveProperty("intakeRef");
+    }
+  });
+
+  it("does not return a receipt or retain intake/tenant-throttle writes when COMMIT fails", async () => {
+    // A deferred owner-created fixture constraint fails at COMMIT, after the
+    // product INSERT. This is not a stubbed transaction or production trigger.
+    await owner.query(`CREATE FUNCTION ll_test_sales_commit_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.company='Commit refusal fixture' THEN RAISE EXCEPTION 'fixture commit refusal'; END IF; RETURN NEW; END $$`);
+    await owner.query(`CREATE CONSTRAINT TRIGGER ll_test_sales_commit_failure AFTER INSERT ON ll_sales_requests DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION ll_test_sales_commit_failure()`);
+    try {
+      const result = await sales(req("/api/sales",{...lead,company:"Commit refusal fixture"}));
+      expect(result.status).toBe(503);
+      expect(await result.json()).not.toHaveProperty("intakeRef");
+      expect((await owner.query("SELECT count(*)::int n FROM ll_sales_requests WHERE company='Commit refusal fixture'")).rows[0].n).toBe(0);
+      expect((await owner.query("SELECT count(*)::int n FROM ll_tenant_access_attempts WHERE key='sales-global'")).rows[0].n).toBe(0);
+    } finally {
+      await owner.query("DROP TRIGGER ll_test_sales_commit_failure ON ll_sales_requests");
+      await owner.query("DROP FUNCTION ll_test_sales_commit_failure()");
+    }
+  });
   it("validates bounded contact data and stores an inquiry without claiming email delivery", async () => {
     for (const change of [
       { email: "invalid" },

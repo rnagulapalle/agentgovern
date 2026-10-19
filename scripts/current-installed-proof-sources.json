@@ -5,6 +5,7 @@
       "app/api/durable/connectors/route.ts",
       "app/api/durable/route.ts",
       "app/api/durable/workflows/route.ts",
+      "app/api/sales/route.ts",
       "app/api/workspace/agents/route.ts",
       "app/api/workspace/company/route.ts",
       "app/api/workspace/discovery/activity/route.ts",
@@ -17,6 +18,7 @@
       "app/api/workspace/quotes/setup/route.ts",
       "app/api/workspace/quotes/verification/route.ts",
       "app/api/workspace/session/route.ts",
+      "app/contact-sales/page.tsx",
       "app/control-plane/[section]/page.tsx",
       "app/control-plane/actions/page.tsx",
       "app/control-plane/activity/page.tsx",
@@ -73,6 +75,7 @@
       "components/control-plane/workspace-overview.tsx",
       "components/marketing/chrome.tsx",
       "components/marketing/product-overview.tsx",
+      "components/marketing/sales-form.tsx",
       "instrumentation.ts",
       "lib/analytics.ts",
       "lib/connectors/catalog.ts",
@@ -194,6 +197,9 @@
       "lib/workspace/owned-private-file.ts",
       "lib/workspace/presentation.ts",
       "lib/workspace/response.ts",
+      "lib/workspace/sales-handoff.ts",
+      "lib/workspace/sales-options.ts",
+      "lib/workspace/sales.ts",
       "lib/workspace/tenant-bootstrap.ts",
       "lib/workspace/tenant-context.ts",
       "lib/workspace/web-recovery-deployment.ts",
@@ -1386,7 +1392,7 @@
   },
   "edges": [
     {
-      "from": "app/api/workspace/company/route.ts",
+      "from": "app/api/sales/route.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
     {
@@ -1466,7 +1472,7 @@
       "to": "lib/workspace/identity.ts"
     },
     {
-      "from": "app/api/workspace/company/route.ts",
+      "from": "app/api/sales/route.ts",
       "to": "lib/durable/http.ts"
     },
     {
@@ -1476,6 +1482,66 @@
     {
       "from": "lib/durable/http.ts",
       "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "app/api/sales/route.ts",
+      "to": "lib/workspace/sales.ts"
+    },
+    {
+      "from": "lib/workspace/sales.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/workspace/sales.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/sales.ts",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "lib/workspace/sales.ts",
+      "to": "lib/workspace/sales-options.ts"
+    },
+    {
+      "from": "app/contact-sales/page.tsx",
+      "to": "components/marketing/chrome.tsx"
+    },
+    {
+      "from": "components/marketing/chrome.tsx",
+      "to": "components/brand/loop-mark.tsx"
+    },
+    {
+      "from": "components/marketing/chrome.tsx",
+      "to": "lib/site.ts"
+    },
+    {
+      "from": "app/contact-sales/page.tsx",
+      "to": "components/marketing/sales-form.tsx"
+    },
+    {
+      "from": "components/marketing/sales-form.tsx",
+      "to": "lib/workspace/sales-options.ts"
+    },
+    {
+      "from": "components/marketing/sales-form.tsx",
+      "to": "lib/analytics.ts"
+    },
+    {
+      "from": "components/marketing/sales-form.tsx",
+      "to": "lib/workspace/sales-handoff.ts"
+    },
+    {
+      "from": "app/contact-sales/page.tsx",
+      "to": "app/sales.css"
+    },
+    {
+      "from": "app/api/workspace/company/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "app/api/workspace/company/route.ts",
+      "to": "lib/durable/http.ts"
     },
     {
       "from": "app/api/workspace/company/route.ts",
@@ -3648,14 +3714,6 @@
     {
       "from": "components/control-plane/workspace-gate.tsx",
       "to": "components/marketing/chrome.tsx"
-    },
-    {
-      "from": "components/marketing/chrome.tsx",
-      "to": "components/brand/loop-mark.tsx"
-    },
-    {
-      "from": "components/marketing/chrome.tsx",
-      "to": "lib/site.ts"
     },
     {
       "from": "components/control-plane/workspace-gate.tsx",
@@ -18483,6 +18541,7 @@
     "app/api/durable/refunds/route.ts": "fcdd7df26762dc9be63ae89409c2b04d33e2ecacb8e390609c6c1007bd2d311d",
     "app/api/durable/route.ts": "7bcdbf6718446dcc082f5bd79efe66f679cad5711e4fbed9747dcc5014186eff",
     "app/api/durable/workflows/route.ts": "2a448b416ad2f70e87bbea03afdffd2dd0d2814fdd64fd40c4bb1660d194ba64",
+    "app/api/sales/route.ts": "334f5e84b73db7a0de9678d8361f1cd30aeae112da783b9884dbc2465eb1662e",
     "app/api/workspace/agents/route.ts": "29c130f1ea1b824edf9a4a84198d0b3c99559fdb28c7ae7144a7361f3e3b6e81",
     "app/api/workspace/company/route.ts": "9c095bd8e18378387919d33322fcead69757b97060a410b06adf6b7c2af46e8a",
     "app/api/workspace/discovery/activity/route.ts": "8b6369914ba33c062c6a80ad14eee0bd8c914124be6fce87be7a6e67e5419fa2",
@@ -18497,6 +18556,7 @@
     "app/api/workspace/quotes/verification/route.ts": "1386e0ab2f169a7a842258fd19d7d7ebae2842d843017a70cda9701a46a9a7ea",
     "app/api/workspace/records/route.ts": "7c49b2287d84c7cfdb6d4e29bd52b0b2a9fc23ed8a3f4f822040a8cc1684abd6",
     "app/api/workspace/session/route.ts": "5194c1a54bde45b893cb398075b4a625edca806d4b41efc53d824698842b55ce",
+    "app/contact-sales/page.tsx": "efdf63c1e7b2d2d462700cdc6666b3fce6a2d11cfb1af1973bf2161c305fbace",
     "app/control-plane/[section]/page.tsx": "e0e210f25e986b5d7429477532aef332844f843ab283346334f977bc075a47dd",
     "app/control-plane/actions/page.tsx": "d7ed38ab4b0f698f266cfdb4609307cc6f5d3e2d592c376ca3a422e70b90b8d7",
     "app/control-plane/activity/page.tsx": "fc3be688e95df4cc206bc9df61a361de20a9153b312cd820956a543b52f2bffe",
@@ -18511,7 +18571,7 @@
     "app/control-plane/quotes/page.tsx": "959e496795d77d13557b7f6d7f66933cff5701cfe79cf384a2ed2d03d2002cce",
     "app/control-plane/work/page.tsx": "d56f08ebfbfcb7deed94fb1a73de0fd1be9dc1f40f065871b7fcb31a02ceb617",
     "app/control-plane/workflow-runs/page.tsx": "df2bfa6088f195cd1fdd1f31ac4abae07ef1da2b8d168ffdc21cb8ada36e1def",
-    "app/sales.css": "688fb553b999966168eea82cdba0564e052bada3b9240c74c696210b5109bec6",
+    "app/sales.css": "feb6d76635c30d40640a8d4d6972dcd31e45861ffd4e54f23b7c0742082e96ee",
     "components/brand/loop-mark.tsx": "a520ee6e522a488f2e081d217f219099f48e3eca4cf5c67104eacea7616bdf79",
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
     "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
@@ -18555,6 +18615,7 @@
     "components/control-plane/workspace-overview.tsx": "a15f1c75b912dddef7a41e1d97d8887a0421a0d32ca13e23f11f50fec82a413e",
     "components/marketing/chrome.tsx": "515e22fb0e36006fe345cf0c458c2f7bbcd0e8a419827c5041708d4bb7e0c613",
     "components/marketing/product-overview.tsx": "2211c7d2eacba47c5ef3da9399813bb72e9c429cc43c77863448ab293c82efab",
+    "components/marketing/sales-form.tsx": "60eb2b641d3365eb3a28744a72b7b818d3e0e540173ad4c4035c4d65e5f87033",
     "current-profile-image-bytes-component.mjs": "d9612f5d505a9e957b859be6010a352270e2ed389d150bb1779f6386de491e59",
     "docs/evidence/historical-chat-artifact-sources-v1.json.gz": "98cdb5fa86b3ca17d5523e95e1479251f05293a2f0a0c1452ed2f3ecf3a59cb1",
     "install-order.json": "3e6c0b898fd23454acfca056d1785449a934db73b02446b019086f9ed13c4621",
@@ -18718,8 +18779,9 @@
     "lib/workspace/quote-workload-installation.ts": "d7b76e3d524bc285382b28f91862681297ffb07765eefad1a067f000f1428a58",
     "lib/workspace/recovery-capture.ts": "a8a03c53658b485af49636b2d54e6cb9c69dc6369b331bfab8ae4720de2be08d",
     "lib/workspace/response.ts": "5854dd6e0d588cd62ad1e643746d2f2a96993ce131146ee90f929b34bad35a18",
+    "lib/workspace/sales-handoff.ts": "07d64f276e18d9a31e858d67cd9bf321890338ee14d7cce29285ebff7d7a009f",
     "lib/workspace/sales-options.ts": "000dc67e6a6d3be9dfafdabd2fb970442ddb13ea4b13d74bc89eca65a8078bd9",
-    "lib/workspace/sales.ts": "2f6a4f710988e33b86c30f6c1ee13227a39eb7002b5785f76bf97da6844b888b",
+    "lib/workspace/sales.ts": "a3d2a6601186279b75284f9301934ab48ff7e213cd79d008634dfad5ea3368ad",
     "lib/workspace/schema.sql": "5efa86906dd872f6eb059cb4be7c73a1790b5fd4b5910dc480f7e1b4e231725e",
     "lib/workspace/tenant-bootstrap.ts": "b2b4e85ee7d5a4409bcc04a3dc6a0b46c839ac3acd4f9d5f26e686c055fb2ee3",
     "lib/workspace/tenant-context.ts": "09e7b6c172663fdf59c74289715df64b6099c07ea275a7429ee6c7c66671f7a2",
@@ -18769,7 +18831,7 @@
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "dd52215fc26cf7250a9cbf214276e9604f1795ce1ec59faf4e2c76469ace8b7d",
+    "scripts/current-proof-source-registry.mjs": "29ba5204ff0c7ec5eab3f53718f12d212c1d608af8e16e7e69a230476df6af0a",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "acb5818ca827703ea9b0edc931dfc3c57b23e7511a36fd4391f7ec344d171f6a",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
