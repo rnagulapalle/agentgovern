@@ -18655,7 +18655,7 @@
     "components/control-plane/connector-actions-workspace.tsx": "0e3c49545f9ec160bb7b0acadce0a45907b10040a9f2250a9062dae1920945ff",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
     "components/control-plane/control-center.css": "79fc1f37a3c1ec2bf4d85002789aa9f32b7f702563ff726dfc94d5828cbfd53e",
-    "components/control-plane/control-center.tsx": "d97223c6275763f88e73c7611d43d957b1ac0a2b3057f211a8af42918ddbb914",
+    "components/control-plane/control-center.tsx": "65ae9156908a7a162bc87f3004a287f0842d308763a7a0441e29b596a287d144",
     "components/control-plane/discount-approval-brief.tsx": "8d44b575118d60b1e6a22cbc07e4fa7b9ba03c90eedacc2d2490e5d0b98f1378",
     "components/control-plane/discount-history.tsx": "c38c42a43b51b8c18d2fb8f8bb77834edc62e523035a4b3cfe8ec65cbf328100",
     "components/control-plane/discovery-workspace.css": "20ad17ba73848f87282575b3333fbf67eb2b433fdcb9468c3349b19411cd2fc9",

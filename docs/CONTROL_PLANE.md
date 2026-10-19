@@ -190,3 +190,8 @@ The AWS setup's previous “Refresh agent list” reread saved evidence; the cor
 “Scan AWS for updates” invokes the existing scoped scan. Ordinary page refresh
 still reads saved evidence and never invokes agents. Runtime READY, declared roles,
 confirmed ownership, approval integration and observed effects remain separate.
+
+A rescan does not copy an older version's history or approval connection into a
+new deployment version. When no history source has been read in the selected
+scope, Recent business requests is unknown, not zero. Existing saved history and
+version-scoped approvals remain separate from the current declaration catalog.

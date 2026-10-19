@@ -302,3 +302,5 @@ it('previews a local inventory and saves only minimized company declarations fro
  await page.getByText('Workflow catalog saved.',{exact:false}).waitFor();
  const save=calls.find(c=>c.path==='/api/workspace/company'&&c.method==='POST');expect(save?.body?.catalog).toHaveLength(1);expect(JSON.stringify(save?.body)).not.toContain('must-stay-local');expect(JSON.stringify(save?.body)).not.toContain('environmentVariables');
 },undefined,true,true));
+
+it("does not report zero requests when discovered deployments have no connected history",()=>mounted("overview",async page=>{expect(await page.locator(".cc-admin-stats strong").nth(2).innerText()).toBe("—");expect(await page.getByText("No history sources read",{exact:true}).count()).toBe(1);},"discovered"));
