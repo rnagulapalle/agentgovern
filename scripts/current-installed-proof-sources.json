@@ -18781,7 +18781,7 @@
     "lib/workspace/response.ts": "5854dd6e0d588cd62ad1e643746d2f2a96993ce131146ee90f929b34bad35a18",
     "lib/workspace/sales-handoff.ts": "07d64f276e18d9a31e858d67cd9bf321890338ee14d7cce29285ebff7d7a009f",
     "lib/workspace/sales-options.ts": "000dc67e6a6d3be9dfafdabd2fb970442ddb13ea4b13d74bc89eca65a8078bd9",
-    "lib/workspace/sales.ts": "e2a70f2056219512ca1c99185e5075c63cb7083bbffde55986a81b65674548a1",
+    "lib/workspace/sales.ts": "a3d2a6601186279b75284f9301934ab48ff7e213cd79d008634dfad5ea3368ad",
     "lib/workspace/schema.sql": "5efa86906dd872f6eb059cb4be7c73a1790b5fd4b5910dc480f7e1b4e231725e",
     "lib/workspace/tenant-bootstrap.ts": "b2b4e85ee7d5a4409bcc04a3dc6a0b46c839ac3acd4f9d5f26e686c055fb2ee3",
     "lib/workspace/tenant-context.ts": "09e7b6c172663fdf59c74289715df64b6099c07ea275a7429ee6c7c66671f7a2",

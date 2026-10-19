@@ -45,10 +45,10 @@ export function parseSales(input: Record<string, unknown>) {
 export async function submitSales(db: Pool, input: Record<string, unknown>) {
   const v = parseSales(input);
   const binding = await assertTenantPool(db);
-  const c = await db.connect();
   // This opaque identifier is also the calendar correlation reference. It is
   // returned only after COMMIT; it never grants read or workflow authority.
   const intakeRef = randomUUID();
+  const c = await db.connect();
   try {
     await c.query("BEGIN");
     if (!(await throttle(c, "sales-global", 10, 300))) {
