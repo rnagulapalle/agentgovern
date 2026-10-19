@@ -82,7 +82,7 @@ High confidence: displayed counts, bounded release receipts and current source d
 | Restaurant watch | BaselineOct3 | Continue secondary watch; unavailable live data is not14unchanged observations |
 | Product Hunt | CanceledOct4 | Stop; preserve draft |
 
-All22 expected prior scheduled slots have journal rows in the current rolling-seven-day audit. Earlier October11 gaps are outside that window and remain historically unverified. Completed rows are not a declaration that all their partial actions succeeded. Shared queue and private receipts remain the deduplication authority.
+All22 expected prior scheduled slots have journal rows in the current rolling-seven-day audit. Completion ordering is a separate check:21have an after-slot receipt; the October14 watchdog row completed11:28:06UTC before its11:30UTC slot. Its after-slot completion remains unverified, not successful or backfilled. Earlier October11 gaps are outside that window and remain historically unverified. Completed rows are not a declaration that all their partial actions succeeded. Shared queue and private receipts remain the deduplication authority.
 
 ## AEO completion receipt
 
