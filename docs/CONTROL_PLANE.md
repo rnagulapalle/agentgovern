@@ -1,3 +1,23 @@
+## Exact approval reference correlation (October 18)
+
+An execution's reported approval IDs now constrain its review panel and business
+impact readback, in addition to the existing saved deployment/version and run ID.
+When one reported ID exists, a different approval on the same run cannot supply
+reviewer/value evidence or appear as its review target. Multiple reported requests
+remain separate review records; the business summary does not select one arbitrarily.
+Legacy histories with no approval ID retain unique-run matching, and ambiguity
+remains unavailable. This changes presentation correlation, not server approval
+permissions, revision checks or external compare-and-set behavior.
+
+Historical recovery remains a workflow contract gap: the signed bridge supports a
+bounded list, without guaranteed historical request lookup or retention. An
+approval event can remain visible while its record is absent from that list. No
+record means the reviewer/value readback is unavailable, not that approval was
+undone. A future historical lookup must bind tenant, deployment version, run and
+approval ID, return a signed retained record with policy/revision/decision identity
+and time, and never make a finalized request actionable again. No such endpoint,
+retention guarantee or workflow producer change is implemented by this patch.
+
 ## Policy and reviewer evidence presentation (October 18, local patch)
 
 The execution timeline presents the workflow's `policy.evaluated` fields: requested
