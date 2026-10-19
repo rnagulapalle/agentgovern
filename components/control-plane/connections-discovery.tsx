@@ -1,4 +1,5 @@
 "use client";
+import {WorkflowCatalogImport} from "./workflow-catalog-import";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Bot, Cloud, RefreshCw } from "lucide-react";
@@ -88,6 +89,7 @@ export function ConnectionsDiscovery({enabled}:{enabled:boolean}){
       {!loading&&!visible.length&&<p>{errors.length?"Inventory could not be fully checked. Retry before concluding there are no agents to review.":coverage?"No history gaps found among the loaded deployments.":"No saved agents in this account scope. Manage AWS accounts to run discovery."}</p>}
       <p className="saved-workspace-scope">Refreshing saved status does not scan AWS for new agents. Use Manage AWS accounts to verify access and refresh discovery. Discovery does not enable execution controls.</p></>}
     </section>
+    <WorkflowCatalogImport connections={accounts}/>
     {setup&&<Modal drawer wide title="AWS account connection" onClose={()=>{setSetup(false);setRefresh(n=>n+1);}}><AwsConnectionJourney onAgentSelect={reference=>{setSetup(false);setReview(reference);setRefresh(n=>n+1);}}/></Modal>}
     {review&&<Modal drawer wide title="Review agent connection" onClose={()=>{setReview(null);setRefresh(n=>n+1);}}><div className="cp-durable"><p>Review this exact deployment’s owner and history source. Activity and approval decisions are available from Agent details.</p><p>AWS · Version {review.version}</p><RuntimeMetadata metadata={selectedRecord?.record.declaredMetadata??null} version={review.version}/><AwsWorkflowHistory reference={review} name={selected?.enrollment?.displayName??(selected?awsAgentName(selected.record.record.resourceId):"AWS agent")} mode="setup"/><AgentBusinessEditor agentKey={JSON.stringify([review.connectionId,review.resourceArn])}/><Link className="cp-button cp-button-dark" href={agentDestination(review)}>Open agent details <ArrowRight size={16} aria-hidden="true"/></Link><p className="saved-workspace-scope">An existing version’s approval connection does not authorize a newer version. Mandatory execution control remains unverified.</p></div></Modal>}
   </>;

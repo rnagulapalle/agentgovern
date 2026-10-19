@@ -170,3 +170,28 @@ pnpm build
 ```
 
 The control-plane tests cover the allow / approval / block boundary, tool and role restrictions, budget refusal, cascading suspension, approval replay, policy invalidation, containment, version-safe recovery, concurrent-write protection, irreversible effects, and sensitive-output persistence.
+
+## Company workflow catalog and explicit AWS synchronization
+
+The Agents view separates company-declared business workflows, internal agent
+roles and supporting operator runtimes. Connections accepts a bounded deployment
+inventory file, parses it locally and transmits only workflow identity/version,
+name, owner/team/department, purpose and role names. Raw environment variables,
+input schemas, commands and credentials are not imported. These declarations are
+business metadata, never enrollment, membership, approval or execution authority.
+Changed declarations must match this company's current observed runtime/version
+in a scan less than15minutes old. Existing declarations survive unrelated directory
+edits; a different runtime version shows missing definitions rather than reusing
+an old role inventory. Imported definitions use the existing revision-checked
+company directory; no migration or new database grant is added.
+
+The dashboard exposes last AWS scan time/completeness and an explicit scan action.
+The AWS setup's previous “Refresh agent list” reread saved evidence; the corrected
+“Scan AWS for updates” invokes the existing scoped scan. Ordinary page refresh
+still reads saved evidence and never invokes agents. Runtime READY, declared roles,
+confirmed ownership, approval integration and observed effects remain separate.
+
+A rescan does not copy an older version's history or approval connection into a
+new deployment version. When no history source has been read in the selected
+scope, Recent business requests is unknown, not zero. Existing saved history and
+version-scoped approvals remain separate from the current declaration catalog.

@@ -75,3 +75,11 @@ measurement remain unimplemented. The founder calendar currently lists generic
 15- and 30-minute events; profile-to-event query forwarding was observed with a
 synthetic reference, without submitting a booking. This is not provider payload
 or production form-to-booking acceptance.
+
+The company directory may include a minimized, company-declared workflow catalog.
+Connections imports deployment inventory only after local preview; saving requires
+current same-company observed deployment versions. The dedicated company-body
+reader admits at most256KiB; ordinary action APIs keep their8KiB limit. A stale
+revision, foreign runtime, old scan or changed version refuses the catalog update
+without granting any execution or membership authority. Internal roles are not
+AWS runtime instances or verified capabilities.

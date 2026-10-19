@@ -1,16 +1,16 @@
-import {businessProfile,type CompanyProfile} from './company-profile-contract';
+import {businessProfile,workflowDeclaration,type CompanyProfile} from './company-profile-contract';
 import type {CloudRuntimeMetadata} from './cloud-runtime-metadata';
 /** Display/filter labels only. This never changes membership or execution authority. */
 export function businessDisplay(profile:CompanyProfile|null,key:string,metadata?:CloudRuntimeMetadata|null){
- const b=businessProfile(profile,key),companyTeam=b.team;
+ const b=businessProfile(profile,key),companyTeam=b.team,declared=workflowDeclaration(profile,key);
  return {
-  team:companyTeam?.name??metadata?.ownerTeam??null,
-  teamId:companyTeam?.id??(metadata?.ownerTeam?`aws-team:${metadata.ownerTeam}`:'unassigned'),
-  department:b.department?.name??metadata?.department??null,
-  departmentId:b.department?.id??(metadata?.department?`aws-department:${metadata.department}`:'unassigned'),
+  team:companyTeam?.name??(declared?.team||metadata?.ownerTeam||null),
+  teamId:companyTeam?.id??((declared?.team||metadata?.ownerTeam)?`aws-team:${declared?.team||metadata?.ownerTeam}`:'unassigned'),
+  department:b.department?.name??(declared?.department||metadata?.department||null),
+  departmentId:b.department?.id??((declared?.department||metadata?.department)?`aws-department:${declared?.department||metadata?.department}`:'unassigned'),
   environment:b.assignment?.environment??metadata?.environment??'unknown',
-  purpose:b.assignment?.purpose||metadata?.purpose||'',
-  source:companyTeam?'Company assigned':metadata?.ownerTeam?'AWS reported':'Not assigned',
+  purpose:b.assignment?.purpose||declared?.purpose||metadata?.purpose||'',
+  source:companyTeam?'Company assigned':declared?'Company declared':metadata?.ownerTeam?'AWS reported':'Not assigned',
  };
 }
 export function displayScopeMatches(value:ReturnType<typeof businessDisplay>,scope:{department:string;team:string;environment:string}){
