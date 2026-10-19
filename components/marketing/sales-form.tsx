@@ -2,31 +2,40 @@
 import { useState } from "react";
 import { COMPANY_SIZES } from "@/lib/workspace/sales-options";
 import { track } from "@/lib/analytics";
+import {
+  parseSalesReceipt,
+  salesCalendarHref,
+  type SalesReceipt,
+} from "@/lib/workspace/sales-handoff";
+
+export function SalesRequestSaved({ receipt }: { receipt: SalesReceipt }) {
+  return (
+    <div className="sales-success" role="status">
+      <h2>We have your request.</h2>
+      <p>
+        Choose a time to walk through one workflow with us. Your request is
+        saved for the founders to review.
+      </p>
+      <p>
+        Your meeting is booked only when the calendar confirms your selected time.
+      </p>
+      <a
+        className="cp-button cp-button-dark"
+        href={salesCalendarHref(receipt)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => track("demo_booking_clicked", { source: "sales_request" })}
+      >
+        Choose a time ↗
+      </a>
+    </div>
+  );
+}
 export function SalesForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
-  if (done)
-    return (
-      <div className="sales-success" role="status">
-        <h2>We have your request.</h2>
-        <p>
-          Choose a time to walk through one workflow with us. Your request is
-          saved for the founders to review.
-        </p>
-        <a
-          className="cp-button cp-button-dark"
-          href="https://cal.com/rajnagulapalle"
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() =>
-            track("demo_booking_clicked", { source: "sales_request" })
-          }
-        >
-          Choose a time ↗
-        </a>
-      </div>
-    );
+  const [receipt, setReceipt] = useState<SalesReceipt | null>(null);
+  if (receipt) return <SalesRequestSaved receipt={receipt} />;
   return (
     <form
       className="sales-form"
@@ -45,7 +54,7 @@ export function SalesForm() {
           });
           const v = await r.json();
           if (!r.ok) throw new Error(v.error);
-          setDone(true);
+          setReceipt(parseSalesReceipt(v));
           track("sales_request_submitted", { source: "contact_sales" });
         } catch (e) {
           setError(

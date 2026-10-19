@@ -46,6 +46,9 @@ export async function submitSales(db: Pool, input: Record<string, unknown>) {
   const v = parseSales(input);
   const binding = await assertTenantPool(db);
   const c = await db.connect();
+  // This opaque identifier is also the calendar correlation reference. It is
+  // returned only after COMMIT; it never grants read or workflow authority.
+  const intakeRef = randomUUID();
   try {
     await c.query("BEGIN");
     if (!(await throttle(c, "sales-global", 10, 300))) {
@@ -59,7 +62,7 @@ export async function submitSales(db: Pool, input: Record<string, unknown>) {
       "INSERT INTO ll_sales_requests(org_id,id,email,name,company,company_size,role,workflow) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
       [
         binding.org,
-        randomUUID(),
+        intakeRef,
         v.email.toLowerCase(),
         v.name,
         v.company,
@@ -69,6 +72,7 @@ export async function submitSales(db: Pool, input: Record<string, unknown>) {
       ],
     );
     await c.query("COMMIT");
+    return { received: true as const, intakeRef };
   } catch (e) {
     await c.query("ROLLBACK");
     throw e;

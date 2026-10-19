@@ -56,3 +56,22 @@ Authentication design references: [OWASP authentication guidance](https://cheats
 Regression tests cover anonymous server-rendered gates, database failure, revoked members, tenant-scoped sales requests, bounded public intake, CSRF, login throttling, hashed credentials, cookie expiry/logout, named approval revocation, restricted agent registration and key authority. Existing durable/refund adversarial tests remain mandatory. Browser verification checks both founder identities, private API denial, unified workflows, logout and 390px layouts. A local browser walkthrough registered an agent owned by Pratibha, replayed a held request, approved as Pratibha, interrupted execution and verified one effect; the scoped agent key was denied execution. Private workspace text is masked in session replay and excluded from automatic interaction capture. Releases require `pnpm quality` and `./deploy.sh`.
 
 Migration 4 adds shared CRM/messaging actions, policies and protected event history, and extends supported profile roles. Existing migrations 1–3 remain byte-for-byte unchanged. Use `pnpm connectors:setup` with migration-owner access, then run the private twins. The runtime role cannot update/delete their events. See [CONNECTOR_VERIFICATION.md](CONNECTOR_VERIFICATION.md).
+
+
+## October 19: accepted sales reference
+
+The public sales transaction now returns its server-generated UUID only after the
+inquiry commits. The form passes that opaque reference to the existing founder
+calendar as `metadata[looplabs_intake_ref]`, without contact details, workflow text
+or tenant identifiers in the URL. The reference grants no read, approval or
+execution authority. Input cannot choose a reference, tenant, source or calendar
+destination. Existing explicit INSERT grants and FORCE RLS remain unchanged; no
+schema migration is required.
+
+The success message distinguishes a saved inquiry from a calendar-confirmed time.
+Neither is an attended or qualified call. Signed provider-event persistence, an
+exact LoopLabs event binding, native delivery and authorized aggregate intake
+measurement remain unimplemented. The founder calendar currently lists generic
+15- and 30-minute events; profile-to-event query forwarding was observed with a
+synthetic reference, without submitting a booking. This is not provider payload
+or production form-to-booking acceptance.

@@ -6,9 +6,12 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     sameOrigin(request, true);
-    await submitSales(await tenantContext().sales(), await body(request));
+    const receipt = await submitSales(
+      await tenantContext().sales(),
+      await body(request),
+    );
     return Response.json(
-      { received: true },
+      receipt,
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (e) {
