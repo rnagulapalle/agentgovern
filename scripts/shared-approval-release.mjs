@@ -12,12 +12,20 @@ export function validateApprovalAttachment(source,rows){
  const u=new URL(row.endpoint);assert.equal(u.protocol,'https:');assert(!u.username&&!u.password&&!u.port&&!u.search&&!u.hash);assert(/^[a-z0-9]+\.execute-api\.us-west-2\.amazonaws\.com$/.test(u.hostname));assert.equal(u.pathname,'/looplabs/approval-bridge');
  return {source,target:approvalTarget,environment:JSON.stringify(rows)};
 }
-export async function readApprovalAttachment(){
- const pointer='/srv/looplabs-production/config/shared-approvals-current';let link;try{link=await lstat(pointer);}catch(e){if(e.code==='ENOENT')return null;throw e;}
- assert(link.isSymbolicLink()&&link.uid===1001);const source=await readlink(pointer);assert(/^\/srv\/looplabs-production\/config\/shared-approvals-[a-f0-9]{16}$/.test(source));
+async function readApprovalDirectory(source){
+ assert(/^\/srv\/looplabs-production\/config\/shared-approvals-[a-f0-9]{16}$/.test(source));
  const st=await lstat(source);assert(st.isDirectory()&&!st.isSymbolicLink()&&st.uid===1001&&(st.mode&0o777)===0o700);assert.equal(await realpath(source),source);
  async function file(name){const p=join(source,name),s=await lstat(p);assert(s.isFile()&&!s.isSymbolicLink()&&s.nlink===1&&s.uid===1001&&(s.mode&0o777)===0o600&&s.size<16384);assert.equal(await realpath(p),p);return readFile(p,'utf8');}
  const result=validateApprovalAttachment(source,JSON.parse(await file('bindings.json')));assert(/^[a-f0-9]{64,128}\s*$/.test(await file('signing.hex')));return result;
+}
+export async function readApprovalAttachment(){
+ const pointer='/srv/looplabs-production/config/shared-approvals-current';let link;try{link=await lstat(pointer);}catch(e){if(e.code==='ENOENT')return null;throw e;}
+ assert(link.isSymbolicLink()&&link.uid===1001);return readApprovalDirectory(await readlink(pointer));
+}
+export async function readInstalledApprovalAttachment(mounts,readDirectory=readApprovalDirectory){
+ assert(Array.isArray(mounts));const found=mounts.filter(m=>m.Destination===approvalTarget);assert(found.length<=1,'Ambiguous installed approval mount');if(!found.length)return null;
+ const source=found[0].Source;assert(/^\/srv\/looplabs-production\/config\/shared-approvals-[a-f0-9]{16}$/.test(source));
+ const attachment=await readDirectory(source);assert.equal(attachment.source,source);approvalVolume(attachment);withoutApprovalMount(mounts,attachment);return attachment;
 }
 export function approvalVolume(a){assert(a?.target===approvalTarget);validateApprovalAttachment(a.source,JSON.parse(a.environment));return {type:'bind',source:a.source,target:a.target,read_only:true,bind:{create_host_path:false,propagation:'rprivate'}};}
 export function approvalEnvironment(environment,attachment){if(!attachment)return environment;approvalVolume(attachment);return {...environment,LOOPLABS_EXTERNAL_APPROVAL_BRIDGES:attachment.environment};}

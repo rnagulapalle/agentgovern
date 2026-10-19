@@ -225,3 +225,14 @@ for another decision. Execution history remains the place to inspect continuatio
 and the customer response. This patch changes no approval authority, workflow
 state or provider behavior. Its deployment and native validation are recorded
 separately from this note.
+
+
+### Reviewed attachment replacement
+
+The release reads the installed approval attachment from the web container's exact
+observed mount, separately from the requested attachment pointer. Both directories
+must pass the same owner, permissions, fixed-path and binding validation. Duplicate,
+writable or foreign mounts refuse activation. A version replacement preserves the
+old binding environment and old read-only directory in the rollback configuration;
+it does not infer prior approval authority for a new version. This is release-path
+validation, not evidence of native approval decisions or provider effects.
