@@ -36,7 +36,14 @@ money or customer email.
   reviewed web dependency graph. Regenerated construction descriptors describe
   source inputs, not a new provider or execution acceptance receipt.
 - Focused ESLint, TypeScript, repository policy and diff hygiene pass locally.
-  Full candidate CI and production deployment are separate subsequent gates.
+  Full candidate CI and production deployment are separate subsequent gates. Initial
+  f554635 CI refused two stale source-evidence checks (3,383tests passed,2failed),
+  so that revision was not eligible for release. Genuine successor connector proof
+  passed36checks; discovery browser proof passed30assertions with ownedTLS,
+  password/plaintext refusal and cleanup.94focused evidence/negative tests pass.
+  The authenticated299-file CI archive now carries the exact newly measured
+  compiled discovery bytes; provider bytes are unchanged. Historical receipts are
+  retained and the prior approval-reference receipt is explicitly refused as current.
 - Authenticated Chrome observed a synthetic metadata reference preserved in both
   existing founder profile event links. No inquiry or booking was submitted in
   production, no account webhook/event configured, no attendee data transmitted.
@@ -58,8 +65,16 @@ A browser-observed URL is weaker than a signed provider delivery. The next
 engineering step is the actual signed receiver/store with additive reviewed
 migration, exact event/organizer config, tenant-scoped lookup, concurrency,
 cancellation and reschedule proof. Native configuration waits for its verified
-HTTPS deployment. Accepted-intake totals remain unknown while the founder inbox
-is intentionally unavailable in the deployment profile.
+HTTPS deployment. The founder inbox remains intentionally unavailable in the deployment profile.
+An operator-only aggregate read at09:00UTC used the existing production bootstrap
+and scoped role: zero accepted inquiry rows all-time and inOctober12–18 for the
+configured sales workspace.12bundled library sources matched currentproduction
+c0ad416; activation stayed unchanged. No grants, prospect-data endpoint or
+production inquiry were added. These are row counts, not unique independent
+prospects, direct calendar bookings, attendance or qualification. Product booking
+measurement still requires the signed receiver. The private receiver currently
+expects64hexreferences, so its port must explicitly adopt the actual UUID contract;
+its prior25-test receipt does not prove compatibility.
 
 Fresh [AWS guidance](https://aws.amazon.com/blogs/machine-learning/trust-in-depth-giving-agents-more-autonomy-without-losing-control/)
 reinforces native policy/approval overlap. A
