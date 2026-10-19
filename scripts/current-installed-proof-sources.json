@@ -70,6 +70,8 @@
       "components/control-plane/screens.tsx",
       "components/control-plane/shell.tsx",
       "components/control-plane/ui.tsx",
+      "components/control-plane/workflow-catalog-import.tsx",
+      "components/control-plane/workflow-catalog-view.tsx",
       "components/control-plane/workflow-workspace.tsx",
       "components/control-plane/workspace-gate.tsx",
       "components/control-plane/workspace-overview.tsx",
@@ -182,6 +184,7 @@
       "lib/workspace/cloud-runtime-metadata-migration.ts",
       "lib/workspace/cloud-runtime-metadata-schema.sql",
       "lib/workspace/cloud-runtime-metadata.ts",
+      "lib/workspace/company-body.ts",
       "lib/workspace/company-profile-contract.ts",
       "lib/workspace/company-profile-migration.ts",
       "lib/workspace/company-profile-schema.sql",
@@ -203,6 +206,7 @@
       "lib/workspace/tenant-bootstrap.ts",
       "lib/workspace/tenant-context.ts",
       "lib/workspace/web-recovery-deployment.ts",
+      "lib/workspace/workflow-catalog.ts",
       "lib/workspace/workflow-telemetry-view.ts",
       "lib/workspace/workflow-telemetry.ts",
       "middleware.ts",
@@ -952,6 +956,7 @@
       "lib/workspace/tenant-installer.ts",
       "lib/workspace/tenant-read-inventory.ts",
       "lib/workspace/web-recovery-deployment.ts",
+      "lib/workspace/workflow-catalog.ts",
       "lib/workspace/workflow-telemetry-view.ts",
       "lib/workspace/workflow-telemetry.ts",
       "next.config.mjs",
@@ -1564,6 +1569,14 @@
       "to": "lib/workspace/company-profile-contract.ts"
     },
     {
+      "from": "app/api/workspace/company/route.ts",
+      "to": "lib/workspace/company-body.ts"
+    },
+    {
+      "from": "lib/workspace/company-body.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
       "from": "app/control-plane/organization/page.tsx",
       "to": "components/control-plane/company-workspace.tsx"
     },
@@ -1589,6 +1602,14 @@
     },
     {
       "from": "lib/workspace/business-display.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "lib/workspace/business-display.ts",
+      "to": "lib/workspace/workflow-catalog.ts"
+    },
+    {
+      "from": "lib/workspace/workflow-catalog.ts",
       "to": "lib/workspace/company-profile-contract.ts"
     },
     {
@@ -1634,6 +1655,30 @@
     {
       "from": "app/control-plane/activity/page.tsx",
       "to": "components/control-plane/control-center.tsx"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "components/control-plane/workflow-catalog-view.tsx"
+    },
+    {
+      "from": "components/control-plane/workflow-catalog-view.tsx",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "components/control-plane/workflow-catalog-view.tsx",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
+    },
+    {
+      "from": "components/control-plane/workflow-catalog-view.tsx",
+      "to": "lib/workspace/workflow-catalog.ts"
+    },
+    {
+      "from": "components/control-plane/workflow-catalog-view.tsx",
+      "to": "lib/workspace/business-display.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
+      "to": "lib/workspace/workflow-catalog.ts"
     },
     {
       "from": "components/control-plane/control-center.tsx",
@@ -2250,6 +2295,22 @@
     {
       "from": "components/control-plane/saved-workspace.tsx",
       "to": "components/control-plane/connections-discovery.tsx"
+    },
+    {
+      "from": "components/control-plane/connections-discovery.tsx",
+      "to": "components/control-plane/workflow-catalog-import.tsx"
+    },
+    {
+      "from": "components/control-plane/workflow-catalog-import.tsx",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "components/control-plane/workflow-catalog-import.tsx",
+      "to": "lib/workspace/workflow-catalog.ts"
+    },
+    {
+      "from": "components/control-plane/workflow-catalog-import.tsx",
+      "to": "components/control-plane/company-workspace.tsx"
     },
     {
       "from": "components/control-plane/connections-discovery.tsx",
@@ -12185,6 +12246,14 @@
     },
     {
       "from": "lib/workspace/business-display.ts",
+      "to": "lib/workspace/workflow-catalog.ts"
+    },
+    {
+      "from": "lib/workspace/workflow-catalog.ts",
+      "to": "lib/workspace/company-profile-contract.ts"
+    },
+    {
+      "from": "lib/workspace/business-display.ts",
       "to": "lib/workspace/cloud-runtime-metadata.ts"
     },
     {
@@ -18543,7 +18612,7 @@
     "app/api/durable/workflows/route.ts": "2a448b416ad2f70e87bbea03afdffd2dd0d2814fdd64fd40c4bb1660d194ba64",
     "app/api/sales/route.ts": "334f5e84b73db7a0de9678d8361f1cd30aeae112da783b9884dbc2465eb1662e",
     "app/api/workspace/agents/route.ts": "29c130f1ea1b824edf9a4a84198d0b3c99559fdb28c7ae7144a7361f3e3b6e81",
-    "app/api/workspace/company/route.ts": "9c095bd8e18378387919d33322fcead69757b97060a410b06adf6b7c2af46e8a",
+    "app/api/workspace/company/route.ts": "2916690f1e9f6d433bfdfca70deff00723d3e495ca4d8abb1ac51b869c942b25",
     "app/api/workspace/discovery/activity/route.ts": "8b6369914ba33c062c6a80ad14eee0bd8c914124be6fce87be7a6e67e5419fa2",
     "app/api/workspace/discovery/approvals/route.ts": "4a5021a0bcaa8cacdb90fd321dd24423e6e9d945823f211937fb7fbc54f3d8fc",
     "app/api/workspace/discovery/onboarding/route.ts": "47b36a284f3f0c5276dd0e0a6204dcc748750f466c872e1d6aa05c3b054ccae8",
@@ -18576,17 +18645,17 @@
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
     "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
     "components/control-plane/agents-workspace.tsx": "60059f9dd43bfa3fc5c04c836899c08da4ddc68b3d631c07df8858385b968b7f",
-    "components/control-plane/aws-connection-journey.tsx": "9e665d8c6d3bc33955d6560edf359325cba679086788c1ebd50f2819dc2e92ed",
+    "components/control-plane/aws-connection-journey.tsx": "ae2b1adea24783c0f5fc2668ee6f36612fe876f7b29cae8155b0051b6c4ab5d7",
     "components/control-plane/aws-execution-browser.tsx": "49be3f2afae44ebc927882d2a3e10692bc5c5c9eae6aabcc7bada405e567ebf0",
     "components/control-plane/aws-workflow-history.tsx": "bd3c2bebf84c67368800282cbcfc26f98f16621d65ecbe3370211611c8226a41",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
-    "components/control-plane/company-workspace.tsx": "c00789a264f50b640712080a6cf26cca3b454ab268368ce8b5f8e2fc775827e4",
-    "components/control-plane/connections-discovery.css": "ce532006e21000092c1f70b66bbac7e9bbae106d104a97cbed50ad78c875b1f3",
-    "components/control-plane/connections-discovery.tsx": "16c5e5c31d947ed6c5c7845caaa2624f01a365593cc25f5c0ecd12dace34b4ca",
+    "components/control-plane/company-workspace.tsx": "c37374118e8e4f1bae8138f8a1f3a938975e4a22ceb160fea71eeaad7cdc11c2",
+    "components/control-plane/connections-discovery.css": "bbecb73c8ead3622e54626a217404cc6cdcaed7a44ac5f1875b680398ee7a03f",
+    "components/control-plane/connections-discovery.tsx": "2e16380de2772fa641e74b26ed9665056679613d83e6e73e0044241cbe0f935c",
     "components/control-plane/connector-actions-workspace.tsx": "0e3c49545f9ec160bb7b0acadce0a45907b10040a9f2250a9062dae1920945ff",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
-    "components/control-plane/control-center.css": "addabc8bcb825af33e390a3e0aa0942ad15f7854c7d24d18e226aac9604f9c01",
-    "components/control-plane/control-center.tsx": "b30d6be65937dab4e2934b1393b1331510f091e5d2c9fe87e994daa46acd1b61",
+    "components/control-plane/control-center.css": "79fc1f37a3c1ec2bf4d85002789aa9f32b7f702563ff726dfc94d5828cbfd53e",
+    "components/control-plane/control-center.tsx": "d97223c6275763f88e73c7611d43d957b1ac0a2b3057f211a8af42918ddbb914",
     "components/control-plane/discount-approval-brief.tsx": "8d44b575118d60b1e6a22cbc07e4fa7b9ba03c90eedacc2d2490e5d0b98f1378",
     "components/control-plane/discount-history.tsx": "c38c42a43b51b8c18d2fb8f8bb77834edc62e523035a4b3cfe8ec65cbf328100",
     "components/control-plane/discovery-workspace.css": "20ad17ba73848f87282575b3333fbf67eb2b433fdcb9468c3349b19411cd2fc9",
@@ -18610,6 +18679,8 @@
     "components/control-plane/screens.tsx": "8012e435d8a2ac823ade4c2e51fefd1891f167c1bb0efcbf6f4be8dd05cdcc1a",
     "components/control-plane/shell.tsx": "12913d7e8ea396c1a814a184c94b8c95cc462f68ca76ab1c5855bbe8d8336dde",
     "components/control-plane/ui.tsx": "c923100ad0cb557532ad432d5e436abbab6a89e7b8ffb9f00652543c32e340e3",
+    "components/control-plane/workflow-catalog-import.tsx": "b8a54a3f377aed48b175a2b582852344e5c6f1195f29b0c881ce1c84a087ab85",
+    "components/control-plane/workflow-catalog-view.tsx": "7cb3548652041ced8dc531a89f081d6f1b669f6f0adc9f71bdff4c1b3551b1bf",
     "components/control-plane/workflow-workspace.tsx": "98922abdd9abaf7b4659ac0897ad3256d584195b643af76f2e8a9de757a4bc91",
     "components/control-plane/workspace-gate.tsx": "a29c737a46790dc6d1b6bf13eb95fc3aac9ba8bf2910e2951b891641327b5466",
     "components/control-plane/workspace-overview.tsx": "a15f1c75b912dddef7a41e1d97d8887a0421a0d32ca13e23f11f50fec82a413e",
@@ -18726,7 +18797,7 @@
     "lib/workspace/aws-authorization-contract.ts": "473a6c00918aab5d5d86c1c37bb180f0d74bdcb0401c37588dd927f75b6cfd82",
     "lib/workspace/aws-guided-access.ts": "faf94eaa55607db84c4500ed34f3179186dd545975263ecd2134440404fce5cb",
     "lib/workspace/aws-journey.ts": "824c105cb97238b05dadf4e91331fb2cd5db8e468e31b909049905daf4e7a940",
-    "lib/workspace/business-display.ts": "279856fe16fa569d9a6ac6bba8ff8ee1a8ebf618c09559bcb762edef2c201a0c",
+    "lib/workspace/business-display.ts": "4d8f695da7e023a3b741ff5f9ad76bf330490ffef9b1f4cd25ad76fb65df6bcb",
     "lib/workspace/cloud-activity.ts": "7df8d7ef9e73fd374a57a40b9ce203e8dc077728b599286a6f01e42b3d4fc50d",
     "lib/workspace/cloud-aws-cli.ts": "21307a9373acb8787bb94f802aaa227bb8f856e3648574ae06eb6142cc8e5a5c",
     "lib/workspace/cloud-azure-binding.ts": "9147b0bc4dac0570e0a3b4d076788b1ab35cd05705fd2a90eceeb56127ef19b5",
@@ -18757,10 +18828,11 @@
     "lib/workspace/cloud-runtime-metadata-migration.ts": "da64a87d17307c0cb4f7ba64574c3f4bb9194f7ae38533389cc42f3f646b7a78",
     "lib/workspace/cloud-runtime-metadata-schema.sql": "cae72ecb2fe099e49fa9fb0d90e4a2f06ea23b0e46da35caa5e6bbdfc2392bd3",
     "lib/workspace/cloud-runtime-metadata.ts": "cad78b7a0499c1e2826d2824182782d141864a185736c408df8d05aed67765da",
-    "lib/workspace/company-profile-contract.ts": "afd1c2b96249f670052ba169b07a7e40c3aa8e0e26bc25ee931eb7a9a260286b",
+    "lib/workspace/company-body.ts": "29e225ef9f74f648c3566d89e8010851c97e9cccb1dcd35ba483fe5270df9115",
+    "lib/workspace/company-profile-contract.ts": "48634027d745422489c06ee1896536bb4067e7bc59023c85264b5d93524fb383",
     "lib/workspace/company-profile-migration.ts": "e5aa7ee47d9fc738530dc2aa92be4133a0307daa3ffebb1282c63aa5131c03de",
     "lib/workspace/company-profile-schema.sql": "64a8c04785a8fe968b9727895bf7b243f588f20cec8375038ef6cf30166809f8",
-    "lib/workspace/company-profile.ts": "05c3a69eb49e23fa086470eebcd66b383592706140b03869d5b539b6fe557bb5",
+    "lib/workspace/company-profile.ts": "cad79a38c8778749c2ca1e08e60d2a3f6b7467a68eb580bda9d0eb1fc2d72303",
     "lib/workspace/connection-navigation.ts": "8ea6b49fd8a50ad6559db3e26f33a1049d6c9d43814580b2c3b51f5ec5b2cdb9",
     "lib/workspace/deployment-capabilities.ts": "64f1661622013b77e764394aeac35390e9d8809fc19cc1321c3e65e90c4f3bba",
     "lib/workspace/execution-approval-match.ts": "5a701761720589f0747b52a0cad435827197416cbd517ecd06660dee22ceeda5",
@@ -18788,6 +18860,7 @@
     "lib/workspace/tenant-installer.ts": "53c0281769d918cde4b519471b17e158300ee984d63c1fa7d52872a2a98821ce",
     "lib/workspace/tenant-read-inventory.ts": "191962730ba0a45c9959ae1d9505c64fbf78dc2cf63f8139ae8b1d2b4b237261",
     "lib/workspace/web-recovery-deployment.ts": "40a4f402e95fd524414ea10ecd77b916ecd61193cffeedc7f86f9a56dd6c183b",
+    "lib/workspace/workflow-catalog.ts": "fc8db21e3a14b9e1fea99e85c212c89bfe896c91b9f934eb37f6dae04e394707",
     "lib/workspace/workflow-telemetry-view.ts": "91ce966ea5d0dd527092135544be620173d1e0609d2eb4d991127b7bb969ebe1",
     "lib/workspace/workflow-telemetry.ts": "34b8e8970f77391330341c0b89413445179f53e6015e409c52bfc23edffd8495",
     "middleware.ts": "b44f47c87927a0088d6e11a41b06282ba098b6670ce2e40a9fbc105bb1f9630f",
@@ -18833,7 +18906,7 @@
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
     "scripts/current-proof-source-registry.mjs": "29ba5204ff0c7ec5eab3f53718f12d212c1d608af8e16e7e69a230476df6af0a",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
-    "scripts/discovery-browser-proof.mjs": "acb5818ca827703ea9b0edc931dfc3c57b23e7511a36fd4391f7ec344d171f6a",
+    "scripts/discovery-browser-proof.mjs": "25beba194dd1e3fcb40034ee085e704441950a96f3dbb2b29f073c9aa203955b",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
     "scripts/discovery-installed-source-contract.mjs": "9ddb87a895e6c15c31cd188f4217e8efd5ff46234fe2d17e3bd87b7895b86d39",
     "scripts/gateway-bypass-record.mjs": "1ef2b20fa85cd2c0478885e35a436893f5091e7f9ad30b5a1dbed748c8d3774f",

@@ -27,3 +27,28 @@ it('AWS business assignments require the company’s actual saved connection and
 });
 
 it('the migration library preserves ACME and rejects invalid role, company and owner contexts',async()=>{const c=await fixture.owner.connect(),role=(await fixture.web('acme').query('SELECT current_user role')).rows[0].role;try{expect(await installCompanyDirectory(c,role,'acme','Preserve saved company')).toMatchObject({repeated:true,seeded:false,executionAuthorityGranted:false});await expect(installCompanyDirectory(c,'invalid role','acme','ACME')).rejects.toThrow();await expect(installCompanyDirectory(c,role,'foreign','ACME')).rejects.toThrow();await expect(installCompanyDirectory(c,role,'acme',' ')).rejects.toThrow();}finally{c.release();}const web=await fixture.web('acme').connect();try{await expect(installCompanyDirectory(web,role,'acme','ACME')).rejects.toThrow();}finally{web.release();}});
+it('binds role imports to the current company scan/version, rejects foreign and stale claims, and preserves declarations on later directory edits',async()=>{
+ const arn='arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/test-abcdefghij';const scan=randomUUID();
+ await fixture.owner.query("INSERT INTO ll_cloud_connections(org_id,id,account_id,region,created_by)VALUES('acme','catalog','123456789012','us-west-2','raj@example.test'),('other','foreign-catalog','123456789012','us-west-2','other@example.test')");
+ await fixture.owner.query("INSERT INTO ll_cloud_scans(org_id,connection_id,id,observed_at,completeness,failures,canonical_sha256)VALUES('acme','catalog',$1,now(),'complete-api-traversal','{}',$2)",[scan,'a'.repeat(64)]);
+ await fixture.owner.query("INSERT INTO ll_cloud_runtime_observations(org_id,connection_id,scan_id,resource_id,resource_arn,version)VALUES('acme','catalog',$1,'test-abcdefghij',$2,'2')",[scan,arn]);
+ const current=(await(await get()).json()).profile;
+ const declaration={connectionId:'catalog',resourceArn:arn,version:'2',title:'Customer care',kind:'workflow',owner:'Raj',department:'Support',team:'Care',purpose:'Prepare a reply',roles:['intake','research'],source:'company-declared'};
+ expect((await post({...current,catalog:[{...declaration,version:'1'}]})).status).toBe(409);
+ expect((await post({name:'Other',revision:0,departments:[],teams:[],assignments:[],catalog:[declaration]},other)).status).toBe(409);
+ expect((await post({...current,catalog:[declaration]})).status).toBe(200);
+ const saved=(await(await get()).json()).profile;expect(saved.catalog[0]).toEqual(declaration);
+ expect((await post({...current,catalog:[declaration]})).status).toBe(409);
+ expect((await post({...saved,name:'ACME company'})).status).toBe(200);
+ const none=await(await get(other)).json();expect(none.profile?.catalog).toBeUndefined();
+});
+it('rejects catalog changes based on an old scan without losing the previously saved catalog',async()=>{
+ const arn='arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/old-abcdefghij';const scan=randomUUID();
+ await fixture.owner.query("INSERT INTO ll_cloud_connections(org_id,id,account_id,region,created_by)VALUES('acme','old-catalog','123456789012','us-west-2','raj@example.test')");
+ await fixture.owner.query("INSERT INTO ll_cloud_scans(org_id,connection_id,id,observed_at,completeness,failures,canonical_sha256)VALUES('acme','old-catalog',$1,now()-interval '1 day','complete-api-traversal','{}',$2)",[scan,'b'.repeat(64)]);
+ await fixture.owner.query("INSERT INTO ll_cloud_runtime_observations(org_id,connection_id,scan_id,resource_id,resource_arn,version)VALUES('acme','old-catalog',$1,'old-abcdefghij',$2,'1')",[scan,arn]);
+ const current=(await(await get()).json()).profile;
+ const stale={...current.catalog[0],connectionId:'old-catalog',resourceArn:arn,version:'1'};
+ expect((await post({...current,catalog:[...current.catalog,stale]})).status).toBe(409);
+ expect((await(await get()).json()).profile).toEqual(current);
+});

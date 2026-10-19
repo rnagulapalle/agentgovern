@@ -1,3 +1,7 @@
 .connections-toolbar{display:flex;align-items:end;gap:16px;flex-wrap:wrap;margin:24px 0}.connections-toolbar label{display:grid;gap:8px;flex:1;min-width:180px}.connections-toolbar select{padding:12px;border:1px solid var(--cp-line);background:var(--cp-paper);color:var(--cp-ink);font:inherit}.connections-agent{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;padding:24px 0;border-top:1px solid var(--cp-line)}.connections-agent h3{display:flex;align-items:center;gap:10px}.connections-agent-actions{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:12px}.connections-status{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.connections-agent p{overflow-wrap:anywhere}@media(max-width:640px){.connections-agent{grid-template-columns:1fr}.connections-agent-actions{align-items:start}.connections-toolbar{align-items:stretch;flex-direction:column}.connections-toolbar label{min-width:0}}
 
 .aws-journey-account .aws-workspace-grid{grid-template-columns:minmax(0,1fr)}
+
+#workflow-catalog label{display:block;margin:16px 0;font-size:16px}
+#workflow-catalog input,#workflow-catalog select{display:block;width:100%;max-width:100%;min-width:0;margin-top:8px;font-size:16px}
+#workflow-catalog button{white-space:normal;max-width:100%}

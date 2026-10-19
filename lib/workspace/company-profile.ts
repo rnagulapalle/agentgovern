@@ -20,6 +20,12 @@ export async function companyDirectory(db:Pool,actor:Actor,input?:unknown):Promi
    else{let key;try{key=JSON.parse(assignment.agentKey);}catch{throw new ControlError(400,"Choose an agent from this company’s saved inventory.");}if(!Array.isArray(key)||key.length!==2||key.some(x=>typeof x!=="string"))throw new ControlError(400,"Choose an agent from this company’s saved inventory.");found=Boolean((await c.query("SELECT 1 FROM ll_cloud_runtime_observations WHERE org_id=$1 AND connection_id=$2 AND resource_arn=$3 LIMIT 1",[actor.orgId,...key])).rows[0]);}
    if(!found)throw new ControlError(404,"An assigned agent is not in this company’s saved inventory.");
   }
+  for(const declaration of next.catalog??[]){
+   const previous=row.company_profile?.catalog?.find((w:{connectionId:string;resourceArn:string})=>w.connectionId===declaration.connectionId&&w.resourceArn===declaration.resourceArn);
+   if(previous&&JSON.stringify(previous)===JSON.stringify(declaration))continue;
+   const observed=(await c.query(`SELECT 1 FROM ll_cloud_runtime_observations o JOIN ll_cloud_scans s ON s.org_id=o.org_id AND s.connection_id=o.connection_id AND s.id=o.scan_id WHERE o.org_id=$1 AND o.connection_id=$2 AND o.resource_arn=$3 AND o.version=$4 AND s.id=(SELECT id FROM ll_cloud_scans WHERE org_id=$1 AND connection_id=$2 ORDER BY observed_at DESC,recorded_at DESC,id DESC LIMIT 1) AND s.observed_at>now()-interval '15 minutes' LIMIT 1`,[actor.orgId,declaration.connectionId,declaration.resourceArn,declaration.version])).rows[0];
+   if(!observed)throw new ControlError(409,"Refresh discovery first. A workflow declaration must match this company’s current observed deployment version.");
+  }
   if(next.revision===Number.MAX_SAFE_INTEGER)throw new ControlError(409,"The company directory revision cannot advance. Contact the installation owner.");
   next.revision++;
   await c.query("UPDATE ll_orgs SET company_profile=$2::jsonb WHERE id=$1",[actor.orgId,JSON.stringify(next)]);

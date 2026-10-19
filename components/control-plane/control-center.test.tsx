@@ -8,7 +8,7 @@ const fixtureStyles=(async()=>{
  const postcss=requireModule('postcss'),tailwind=requireModule('tailwindcss');
  const global=await postcss([tailwind({config:resolve('tailwind.config.ts'),content:[{raw:'<span class="sr-only"></span>',extension:'html'}]})]).process(await readFile('app/globals.css','utf8'),{from:resolve('app/globals.css')});
  const font=(await readFile('node_modules/geist/dist/fonts/geist-sans/Geist-Regular.woff2')).toString('base64');
- return global.css+`@font-face{font-family:Geist;src:url(data:font/woff2;base64,${font}) format('woff2');font-weight:400;font-display:block}:root{--font-geist-sans:Geist;--font-geist-mono:monospace}`+await readFile('app/control-plane/control-plane.css','utf8')+await readFile('components/control-plane/discovery-workspace.css','utf8')+await readFile('components/control-plane/control-center.css','utf8')+await readFile('components/control-plane/saved-workspace.css','utf8');
+ return global.css+`@font-face{font-family:Geist;src:url(data:font/woff2;base64,${font}) format('woff2');font-weight:400;font-display:block}:root{--font-geist-sans:Geist;--font-geist-mono:monospace}`+await readFile('app/control-plane/control-plane.css','utf8')+await readFile('components/control-plane/discovery-workspace.css','utf8')+await readFile('components/control-plane/control-center.css','utf8')+await readFile('components/control-plane/saved-workspace.css','utf8')+await readFile('components/control-plane/connections-discovery.css','utf8');
 })();
 const arn="arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/partner_quote-abcdefghij";
 const at=new Date().toISOString();
@@ -24,6 +24,7 @@ async function mounted(pageName:"overview"|"agents"|"activity"|"approvals"|"poli
  const wrapped=showShell?`<ControlProvider><ControlShell scriptDemo member={${JSON.stringify(member)}}>${content}</ControlShell></ControlProvider>`:content;
  const bundle=await esbuild.build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{ControlCenter}from'./components/control-plane/control-center';import{ControlShell}from'./components/control-plane/shell';import{ControlProvider}from'./components/control-plane/provider';import{SavedWorkspace}from'./components/control-plane/saved-workspace';import{CompanyWorkspaceProvider,CompanyOrganization}from'./components/control-plane/company-workspace';createRoot(document.getElementById('app')).render(<CompanyWorkspaceProvider enabled={${companyCase}}>${wrapped}</CompanyWorkspaceProvider>);`,resolveDir:process.cwd(),loader:"tsx"},bundle:true,platform:"browser",format:"iife",write:false,loader:{".css":"empty"},jsx:"automatic",alias:{"@":resolve(".")},plugins:[{name:'fixture-location',setup(build: {onResolve:(a:unknown,b:()=>unknown)=>void;onLoad:(a:unknown,b:()=>unknown)=>void}){build.onResolve({filter:/^next\/navigation$/},()=>({path:'navigation',namespace:'fixture'}));build.onLoad({filter:/.*/,namespace:'fixture'},()=>({contents:`export const usePathname=()=>${JSON.stringify('/control-plane/'+(pageName==='overview'?'':pageName==='connections'?'connectors':pageName))};`}))}}],define:{"process.env":"{}","process.env.NODE_ENV":'"test"'}});
  let companyProfile={name:'ACME',revision:1,departments:[{id:'sales',name:'Sales',businessUnit:''},{id:'support',name:'Support',businessUnit:''}],teams:[{id:'revenue',name:'Revenue operations',departmentId:'sales'},{id:'care',name:'Customer operations',departmentId:'support'}],assignments:[{agentKey:JSON.stringify(['aws-test',arn]),teamId:'revenue',purpose:'Prepare customer quotes',environment:'production'},{agentKey:JSON.stringify(['aws-test',arn+'-support']),teamId:'care',purpose:'Triage support requests',environment:'sandbox'}]};
+ if(queryString.includes('catalog=1'))Object.assign(companyProfile,{catalog:[{connectionId:'aws-test',resourceArn:arn,version:'2',title:'Customer quote workflow',kind:'workflow',owner:'Raj',department:'Sales',team:'Revenue operations',purpose:'Prepare quotes',roles:['quote-research','quote-review'],source:'company-declared'},{connectionId:'aws-test',resourceArn:arn+'-support',version:'2',title:'Operations helper',kind:'operator',owner:'',department:'',team:'',purpose:'Operational controls',roles:[],source:'company-declared'}]});
  let releaseLoading=()=>{};const loadingGate=new Promise<void>(resolve=>{releaseLoading=resolve;});const inspectLoading=new URLSearchParams(queryString).get("inspectLoading");
  const browser=await chromium.launch({headless:true}),calls:Call[]=[];
  try{const page=await browser.newPage({viewport:{width:1440,height:1100},reducedMotion:'reduce'});page.setDefaultTimeout(4000);
@@ -107,7 +108,7 @@ it.each(['overview','agents','activity','approvals','connections','policies','or
 it('failed approval reads stay unknown while separately observed activity remains visible',()=>mounted('overview',async page=>{expect(await page.locator('.cc-admin-stats strong').nth(1).innerText()).toBe('—');expect(await page.locator('.cc-execution-row').count()).toBe(2);await page.getByRole('heading',{name:'Approval coverage is incomplete',exact:true}).waitFor();},'approvals',true),15000);
 
 it('shows all eight saved deployments and never calls incomplete approval coverage zero',()=>mounted('overview',async(page,calls)=>{
- expect(await page.locator('.cc-admin-stats strong').first().innerText()).toBe('8');
+ expect(await page.locator('.cc-admin-stats strong').first().innerText()).toBe('—');expect(await page.getByText('8 deployments · workflow definitions needed',{exact:true}).count()).toBe(1);
  expect(await page.locator('.cc-admin-stats strong').nth(1).innerText()).toBe('—');
  expect(calls.filter(c=>c.body?.operation==='enrollment').some(c=>String(c.body?.resourceArn).endsWith('-fleet6'))).toBe(true);
  expect(await page.locator('.cc-execution-row').count()).toBe(1);
@@ -269,3 +270,35 @@ it('does not attach a same-run approval when its request ID differs from reporte
  expect(await page.locator('.aws-business-impact').getByText('manager@example.test',{exact:true}).count()).toBe(0);
  expect(calls.every(c=>c.body?.operation!=='decide')).toBe(true);
 },'impact-id-mismatch'),15000);
+it('separates workflow roles and operator runtimes, searches internal roles and retains owner provenance',()=>mounted('agents',async page=>{
+ await page.getByRole('button',{name:/Customer quote workflow/}).waitFor();
+ expect(await page.locator('.cc-stat-grid strong').allTextContents()).toEqual(['1','2','1']);
+ await page.getByRole('button',{name:'Agent roles',exact:true}).click();
+ expect(await page.getByRole('button',{name:/quote-research/}).count()).toBe(1);
+ expect(await page.getByRole('button',{name:/quote-review/}).count()).toBe(1);
+ await page.getByLabel('Search agents',{exact:true}).fill('quote-review');
+ expect(await page.getByRole('button',{name:/quote-research/}).count()).toBe(0);
+ await page.getByLabel('Search agents',{exact:true}).fill('');
+ await page.getByRole('button',{name:/quote-review/}).click();
+ await page.getByRole('dialog').waitFor();expect(await page.getByText('Raj · company supplied',{exact:true}).count()).toBe(1);
+ expect(await page.getByText('2 internal agent roles',{exact:true}).count()).toBe(1);
+ await page.getByRole('button',{name:'Close dialog'}).click();
+ await page.getByRole('button',{name:'Supporting runtimes',exact:true}).click();
+ expect(await page.getByRole('button',{name:/Operations helper/}).count()).toBe(1);
+ await page.setViewportSize({width:390,height:900});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+},undefined,true,false,false,'?catalog=1'));
+it('exposes an explicit AWS scan separately from reloading the saved dashboard',()=>mounted('agents',async(page,calls)=>{
+ await page.getByRole('button',{name:'Scan AWS for updates',exact:true}).click();
+ await page.getByRole('button',{name:'Scan AWS for updates',exact:true}).waitFor();
+ expect(calls.some(c=>c.path==='/api/workspace/discovery'&&c.body?.operation==='scan'&&c.body?.connectionId==='aws-test')).toBe(true);
+}));
+it('previews a local inventory and saves only minimized company declarations from Connections',()=>mounted('connections',async(page,calls)=>{
+ await page.getByLabel('Catalog AWS source',{exact:true}).selectOption('aws-test');
+ const file={account:'123456789012',region:'us-west-2',business_workflows:[{runtime_id:'partner_quote-abcdefghij',runtime_name:'Partner quoting',runtime_version:'2',owner_person:'Raj',department:'Sales',team:'Revenue operations',agents:['research','quote'],agent_count:2}],runtimes:[{agentRuntimeId:'partner_quote-abcdefghij',agentRuntimeName:'Partner quoting',agentRuntimeVersion:'2',environmentVariables:{SECRET:'must-stay-local'}}],summary:{operator_runtime_count:0}};
+ await page.getByLabel('Deployment inventory JSON',{exact:true}).setInputFiles({name:'deployment.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(file))});
+ await page.getByText('1 workflows · 2 declared agent roles',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Save workflow catalog',exact:true}).click();
+ await page.getByText('Workflow catalog saved.',{exact:false}).waitFor();
+ const save=calls.find(c=>c.path==='/api/workspace/company'&&c.method==='POST');expect(save?.body?.catalog).toHaveLength(1);expect(JSON.stringify(save?.body)).not.toContain('must-stay-local');expect(JSON.stringify(save?.body)).not.toContain('environmentVariables');
+},undefined,true,true));
