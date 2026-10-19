@@ -277,3 +277,10 @@
 .aws-review-values dt { color:#66655f; font-size:16px; }
 .aws-review-values dd { margin:0; overflow-wrap:anywhere; }
 @media(max-width:600px) { .aws-review-grid { grid-template-columns:1fr; } .aws-review-heading,.aws-review-toolbar { flex-wrap:wrap; } .aws-review-values { grid-template-columns:1fr; gap:6px; } .aws-review-values dd { margin-bottom:12px; } }
+
+.aws-history-version-coverage { padding:16px;border:1px solid var(--cp-border,#dedbd2);border-radius:8px;margin:16px 0;background:var(--cp-panel,#fff); }
+.aws-history-version-coverage h4 { font-size:var(--text-body);font-weight:600;margin:0 0 12px; }
+.aws-history-version-coverage dl { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0; }
+.aws-history-version-coverage dt,.aws-history-version-coverage p { color:var(--cp-muted);font-size:var(--text-body); }
+.aws-history-version-coverage dd { margin:6px 0 0;font-size:var(--text-body);font-weight:600;overflow-wrap:anywhere; }
+@media(max-width:640px) { .aws-history-version-coverage dl { grid-template-columns:1fr;gap:12px; } }

@@ -195,3 +195,10 @@ A rescan does not copy an older version's history or approval connection into a
 new deployment version. When no history source has been read in the selected
 scope, Recent business requests is unknown, not zero. Existing saved history and
 version-scoped approvals remain separate from the current declaration catalog.
+
+History reads now show the enrolled deployment version, the number of supported
+events reporting that version, and every version reported in the selected read.
+Events from other versions remain visible as retained history; they do not verify
+activity for the enrolled deployment. These labels use workflow-reported versions,
+not independent runtime attestation. Empty and partial reads preserve their
+existing uncertainty notices. No approval or execution authority changes.
