@@ -73,7 +73,7 @@ export async function prepareQualityFixtures(archiveArg,outputArg,appArg=process
  await restoreProviderGitStructure(join(root,'provider'),manifest.providerCommit);
  // These are exact previously measured bytes, never a synthetic stand-in or a
  // newly generated build asserted to match a historical browser receipt.
- const receipt=JSON.parse(await readFile(join(app,'docs/evidence/discovery-installed-browser-v3-20261019-workflow-catalog-closure-proof.json')));
+ const receipt=JSON.parse(await readFile(join(app,'docs/evidence/discovery-installed-browser-v3-20261019-workflow-directory-proof.json')));
  for(const [path,expected]of Object.entries(receipt.compiledArtifacts)){
   assert(/^\.next\/server\/app\/(?:api\/workspace\/discovery\/(?:owners\/)?route|control-plane\/discovery\/page)\.js$/.test(path));
   const source=join(root,'measured-discovery',path);assert.equal(sha(await readFile(source)),expected);
