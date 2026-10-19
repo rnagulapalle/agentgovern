@@ -37,3 +37,7 @@ nginx/certs/*.pem
 *.pem
 
 /.worker/
+
+# Python verification artifacts
+__pycache__/
+*.pyc

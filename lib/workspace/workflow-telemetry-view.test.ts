@@ -1,5 +1,5 @@
 import {it,expect} from "vitest";
-import {telemetryRuns,telemetryTimelineSteps,eventLabels,telemetrySteps,telemetryDecision,telemetryStepCopy,telemetryRequestLabel,telemetryOutcomeGroup,telemetryRequestContext} from "./workflow-telemetry-view";
+import {telemetryRuns,telemetryTimelineSteps,eventLabels,telemetrySteps,telemetryDecision,telemetryStepCopy,telemetryRequestLabel,telemetryOutcomeGroup,telemetryRequestContext,telemetryStepSummary} from "./workflow-telemetry-view";
 import {projectWorkflowEvent,workflowEventNames,type WorkflowTelemetryWindow} from "./workflow-telemetry";
 function event(event_name:string,extra:Record<string,unknown>={}){return projectWorkflowEvent(JSON.stringify({schema_version:"1.0",event_name,event_id:"event-1",run_id:"run-1",action_id:null,timestamp:"2026-10-15T12:00:00.000001Z",attempt:1,trace_id:"a".repeat(32),span_id:"b".repeat(16),trigger_channel:"slack",agent_deployment_version:"10",...extra}))!;}
 function window(events:WorkflowTelemetryWindow['events'],conflictingEventIds:string[]=[]):WorkflowTelemetryWindow{return{source:{runtimeArn:"arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/agent-1234567890",enrolledRuntimeVersion:"10",logGroup:"/company/events",startTime:1,endTime:2},events,completeness:"partial",unsupportedRecords:0,duplicateDeliveries:0,conflictingEventIds,failures:[],enforcement:"not-established"};}
@@ -91,3 +91,15 @@ it("omits routine interpretation from the journey while retaining evidence and i
   expect(steps).toHaveLength(1);expect(telemetryStepCopy(steps[0])).toMatchObject({title:"Interpret the request",provider:null});
  }
 });
+
+it('names cancellation roles and policy without implying a refund payment or discount',()=>{
+ const policy=event('policy.evaluated',{event_id:'policy',rule_id:'cancellation-policy',rule_version:'acme-cxl-2026-10',decision:'needs_approval'});
+ const role=event('action.completed',{event_id:'role',action_id:'role-one',action_name:'gift-card-desk',provider:'internal'});
+ const r=telemetryRuns(window([policy,role]))[0];expect(telemetryRequestLabel(r)).toBe('Cancel subscription');expect(telemetryRequestContext(r).description).toContain('subscription cancellation');expect(telemetryStepCopy(telemetrySteps([policy])[0]).title).toBe('Check cancellation rules');
+ expect(telemetryStepCopy(telemetrySteps([role])[0]).detail).toContain('Availability alone does not make this an eligible refund method');
+ expect(telemetryStepCopy(telemetrySteps([event('action.completed',{action_id:'offer',action_name:'zendesk.refund_offer',provider:'zendesk'})])[0])).toMatchObject({title:'Offer eligible refund methods',provider:'Zendesk',detail:expect.stringContaining('not a refund payment')});
+ expect(telemetryDecision([],'allow')).toBe('Allowed by workflow policy');
+ const refund=telemetryRuns(window([policy,event('action.proposed',{event_id:'refund',action_id:'refund',action_name:'stripe.refund_original_payment',provider:'stripe'})]))[0];expect(telemetryRequestLabel(refund)).toBe('Cancellation refund');
+});
+
+it("separates declared-role progress from external tool steps",()=>{const r=telemetryRuns(window([event('action.completed',{event_id:'role',action_id:'role_123',action_name:'ticket-context',provider:'internal'}),event('action.completed',{event_id:'tool',action_id:'action_123',action_name:'zendesk.create_ticket',provider:'zendesk'})]))[0];expect(telemetryStepSummary(r)).toBe('1 role steps · 1 tool steps');});

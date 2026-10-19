@@ -202,3 +202,18 @@ Events from other versions remain visible as retained history; they do not verif
 activity for the enrolled deployment. These labels use workflow-reported versions,
 not independent runtime attestation. Empty and partial reads preserve their
 existing uncertainty notices. No approval or execution authority changes.
+
+### Cancellation adapter boundary
+
+The optional cancellation integration accepts the same bounded business-event
+schema as quote history. Its four declared-role steps are distinguished from
+provider tool steps. Cancellation policy cards omit discount fields when no
+such values were reported. Events remain source-reported and do not independently
+verify provider effects.
+
+The protected release attachment accepts at most the two explicitly reviewed
+quote/cancellation runtimes, one binding per runtime, with distinct protected key
+files. It preserves the installed attachment for rollback. The cancellation
+relay can invoke a fixed named AgentCore endpoint rather than DEFAULT; caller
+input cannot select the endpoint. These contracts require separate native
+and Chrome acceptance before a deployment is described as verified.

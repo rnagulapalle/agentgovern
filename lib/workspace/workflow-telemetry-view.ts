@@ -49,12 +49,31 @@ export function telemetryDecision(events:WorkflowTelemetryEvent[],decision:strin
  if(events.some(e=>e.eventName==="approval.approved"))return "Manager approved";
  if(decision==="decline")return "Denied by policy";
  if(decision==="needs_approval")return "Manager approval required";
+ if(decision==="allow")return "Allowed by workflow policy";
+ if(decision==="review_required")return "Review required";
  if(decision==="auto_approve")return "Automatically approved";
  if(decision==="invalid")return "More details needed";
  return "Decision not reported";
 }
 
 const actionCopy: Record<string, [string, string]> = {
+ "ticket-context":["Review the support case","Find the customer’s ticket or establish that a case must be opened."],
+ "policy-research":["Research cancellation eligibility","Check the subscription and product’s cancellation and refund terms."],
+ "gift-card-desk":["Check gift-card availability","Check the gift-card service. Availability alone does not make this an eligible refund method."],
+ "case-decision":["Prepare the case decision","Combine the reported evidence and select the workflow’s next action."],
+ "zendesk.create_ticket":["Open the support case","Create a ticket for this cancellation request."],
+ "zendesk.acknowledge":["Acknowledge the request","Publish the acknowledgement on the support ticket. A ticket reply alone does not verify email delivery."],
+ "zendesk.policy_note":["Record the policy findings","Save the workflow’s policy research on the support case."],
+ "stripe.cancel_subscription_exception":["Cancel the reviewed subscription","Apply the cancellation after the workflow’s required exception approval."],
+ "stripe.cancel_subscription":["Cancel the subscription","Apply the subscription cancellation allowed by the workflow."],
+ "zendesk.refund_offer":["Offer eligible refund methods","Publish the refund offer. This is not a refund payment."],
+ "zendesk.cancellation_confirmed":["Confirm cancellation","Publish the cancellation result on the ticket."],
+ "slack.post_case":["Update the operations conversation","Publish the case outcome in the connected Slack conversation."],
+ "stripe.refund_original_payment":["Refund the original payment","Issue the approved or policy-allowed refund through Stripe."],
+ "stripe.issue_store_credit":["Issue store credit","Apply the allowed credit to the customer’s Stripe balance."],
+ "square.issue_gift_card":["Issue a gift card","Issue an eligible gift-card refund through Square."],
+ "zendesk.refund_confirmation":["Confirm the refund on the case","Publish the reported refund result on the support ticket."],
+ "slack.post_refund":["Update the refund conversation","Publish the reported refund result in Slack."],
  classify: ["Interpret the request", "The agent interprets what the customer is asking for."],
  resolve_customer: ["Find the customer", "Look up the customer in the connected CRM."],
  load_base_quote: ["Read the existing quote", "Inspect the quote values used by this request."],
@@ -72,14 +91,15 @@ const actionCopy: Record<string, [string, string]> = {
 };
 export function telemetryStepCopy(step: ReturnType<typeof telemetrySteps>[number]) {
  const known=step.action&&step.first.actionName?actionCopy[step.first.actionName]:null;
- const lifecycleTitle=step.first.eventName==="workflow.started"?"Request received":step.first.eventName==="workflow.finished"?({completed:"Request completed",declined:"Request blocked by policy",rejected:"Request rejected",failed:"Request failed"} as Record<string,string>)[step.first.reportedOutcome??""]??"Review the reported outcome":step.first.eventName==="policy.evaluated"?"Check the approval rules":null;
+ const lifecycleTitle=step.first.eventName==="workflow.started"?"Request received":step.first.eventName==="workflow.finished"?({completed:"Request completed",declined:"Request blocked by policy",rejected:"Request rejected",failed:"Request failed"} as Record<string,string>)[step.first.reportedOutcome??""]??"Review the reported outcome":step.first.eventName==="policy.evaluated"?(step.first.ruleId==="cancellation-policy"?"Check cancellation rules":"Check the approval rules"):null;
  const title=known?.[0]??lifecycleTitle??step.title;
  const detail=known?.[1]??(step.first.eventName==="workflow.started"?"The workflow received the request.":step.first.eventName==="workflow.finished"?"The workflow reported its final outcome.":step.first.eventName==="workflow.paused"?"The workflow is waiting before it continues.":null);
- const provider=step.first.actionName==="classify"?null:step.first.provider?({hubspot:"HubSpot",slack:"Slack",gmail:"Gmail",anthropic:"Anthropic",pricing:"Pricing service"} as Record<string,string>)[step.first.provider]??step.first.provider:null;
+ const provider=step.first.actionName==="classify"?null:step.first.provider?({hubspot:"HubSpot",slack:"Slack",gmail:"Gmail",anthropic:"Anthropic",pricing:"Pricing service",stripe:"Stripe",zendesk:"Zendesk",square:"Square"} as Record<string,string>)[step.first.provider]??step.first.provider:null;
  const tone=step.first.eventName==="workflow.finished"&&step.first.reportedOutcome==="failed"?"attention":step.first.eventName==="workflow.finished"&&["declined","rejected"].includes(step.first.reportedOutcome??"")?"blocked":step.first.eventName==="workflow.finished"&&step.first.reportedOutcome==="completed"?"done":step.state==="Outcome uncertain"||step.state==="Failed"||step.first.eventName==="customer_output.failed"?"attention":step.state==="Withheld"||step.first.eventName==="approval.rejected"||step.first.eventName==="customer_output.withheld"?"blocked":step.state==="Completed"||["customer_output.sent","approval.approved"].includes(step.first.eventName)?"done":"neutral";
  return {title,detail,provider,tone};
 }
 export function telemetryRequestLabel(run: ReturnType<typeof telemetryRuns>[number]) {
+ if(run.policy?.ruleId==="cancellation-policy")return run.events.some(e=>e.actionName==="stripe.refund_original_payment"||e.actionName==="stripe.issue_store_credit"||e.actionName==="square.issue_gift_card")?"Cancellation refund":"Cancel subscription";
  if(run.policy?.requestedPercent!=null)return `${run.policy.requestedPercent}% discount`;
  if(run.events.some(e=>e.actionName==="send_quote"||e.actionName==="price"))return "Prepare a quote";
  return "Workflow execution";
@@ -94,7 +114,7 @@ export function telemetryOutcomeGroup(run: ReturnType<typeof telemetryRuns>[numb
 
 /** Summary of observed fields, not a reconstruction of the original message. */
 export function telemetryRequestContext(run: ReturnType<typeof telemetryRuns>[number]) {
- const description=run.policy?.requestedPercent!=null
+ const description=run.policy?.ruleId==="cancellation-policy"?"The workflow reports a subscription cancellation or its refund continuation.":run.policy?.requestedPercent!=null
   ? `A ${run.policy.requestedPercent}% discount was requested.`
   :run.events.some(event=>event.actionName==="price")&&run.events.some(event=>event.actionName==="send_quote")
    ?"The workflow reports steps to prepare pricing and send a quote."
@@ -104,3 +124,5 @@ export function telemetryRequestContext(run: ReturnType<typeof telemetryRuns>[nu
  const started=run.events.find(event=>event.eventName==="workflow.started");
  return {description,channel:run.trigger,startedAt:started?.occurredAt??null,version:started?.reportedDeploymentVersion??null,messageAvailable:false as const};
 }
+
+export function telemetryStepSummary(run:ReturnType<typeof telemetryRuns>[number]){const steps=telemetryTimelineSteps(run.events,run.conflict).filter(s=>s.action),roles=steps.filter(s=>s.first.actionId?.startsWith("role_")).length,tools=steps.length-roles;return roles?`${roles} role steps · ${tools} tool steps`:tools?`${tools} tool steps`:"Tool steps not reported";}

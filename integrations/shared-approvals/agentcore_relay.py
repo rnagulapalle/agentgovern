@@ -9,9 +9,10 @@ import json
 import re
 
 
-def relay(event, client, *, runtime_arn, session_id):
+def relay(event, client, *, runtime_arn, session_id, qualifier="DEFAULT"):
     failure = dict(statusCode=503, headers={"content-type":"application/json", "cache-control":"no-store"}, body='{"error":"Workflow response uncertain; read current approval before another decision."}')
     try:
+        if not isinstance(qualifier,str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,47}",qualifier): raise ValueError()
         if not re.fullmatch(r"arn:aws:bedrock-agentcore:[a-z]{2}-[a-z]+-\d:\d{12}:runtime/[A-Za-z0-9_-]+", runtime_arn) or not isinstance(session_id,str) or not 33 <= len(session_id) <= 256:
             raise ValueError()
         if event.get("rawPath") != "/looplabs/approval-bridge" or event.get("requestContext",{}).get("http",{}).get("method") != "POST":
@@ -24,7 +25,7 @@ def relay(event, client, *, runtime_arn, session_id):
         raw = base64.b64decode(body,validate=True) if event.get("isBase64Encoded") else body.encode()
         if not 0 < len(raw) <= 16384: return dict(statusCode=413,body="Body too large")
         envelope = dict(method="POST",path="/looplabs/approval-bridge",headers={"x-looplabs-signature":signature,"x-looplabs-response-envelope":"1"},raw_body=raw.decode("utf8"))
-        result = client.invoke_agent_runtime(agentRuntimeArn=runtime_arn,runtimeSessionId=session_id,qualifier="DEFAULT",contentType="application/json",payload=json.dumps(envelope).encode())
+        result = client.invoke_agent_runtime(agentRuntimeArn=runtime_arn,runtimeSessionId=session_id,qualifier=qualifier,contentType="application/json",payload=json.dumps(envelope).encode())
         stream=result["response"]
         try: data=stream.read(196609)
         finally: stream.close()
@@ -45,4 +46,4 @@ def lambda_handler(event, context):
     import boto3
     from botocore.config import Config
     client = boto3.client("bedrock-agentcore",region_name=os.environ["AWS_REGION"],config=Config(connect_timeout=2,read_timeout=8,retries={"total_max_attempts":1}))
-    return relay(event,client,runtime_arn=os.environ["APPROVAL_RUNTIME_ARN"],session_id=os.environ["APPROVAL_RUNTIME_SESSION_ID"])
+    return relay(event,client,runtime_arn=os.environ["APPROVAL_RUNTIME_ARN"],session_id=os.environ["APPROVAL_RUNTIME_SESSION_ID"],qualifier=os.environ.get("APPROVAL_RUNTIME_QUALIFIER","DEFAULT"))

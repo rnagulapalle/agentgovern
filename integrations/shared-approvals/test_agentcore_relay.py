@@ -16,6 +16,9 @@ def event(): return dict(rawPath="/looplabs/approval-bridge",requestContext={"ht
 class Tests(unittest.TestCase):
     def test_fixed_native_target_and_original_bytes(self):
         c=Client();r=relay(event(),c,runtime_arn=ARN,session_id=SESSION);self.assertEqual(r["statusCode"],200);self.assertNotIn("set-cookie",r["headers"]);payload=json.loads(c.calls[0]["payload"]);self.assertEqual(payload["path"],"/looplabs/approval-bridge");self.assertEqual(payload["raw_body"],event()["body"]);self.assertEqual(c.calls[0]["runtimeSessionId"],SESSION)
+    def test_named_endpoint_is_fixed_by_configuration_not_caller(self):
+        c=Client();e=event();e["queryStringParameters"]={"qualifier":"DEFAULT"};r=relay(e,c,runtime_arn=ARN,session_id=SESSION,qualifier="looplabs_cancel_v4");self.assertEqual(r["statusCode"],200);self.assertEqual(c.calls[0]["qualifier"],"looplabs_cancel_v4")
+        c=Client();self.assertEqual(relay(event(),c,runtime_arn=ARN,session_id=SESSION,qualifier="bad/endpoint")["statusCode"],503);self.assertFalse(c.calls)
     def test_timeout_no_retry(self):
         c=Client(True);self.assertEqual(relay(event(),c,runtime_arn=ARN,session_id=SESSION)["statusCode"],503);self.assertEqual(len(c.calls),1)
     def test_missing_signature_no_runtime_invocation(self):
