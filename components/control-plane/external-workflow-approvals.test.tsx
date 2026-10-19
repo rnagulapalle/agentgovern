@@ -7,11 +7,11 @@ import { approvalHash,type ExternalApproval } from "../../lib/workspace/external
 const requireModule=createRequire(import.meta.url);
 const ref={connectionId:"aws-fixture",resourceArn:"arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/test-agent-123",version:"1",scanId:"00000000-0000-4000-8000-000000000001"};
 function request():ExternalApproval{const a:ExternalApproval={id:"approval-1",runId:"run-1",revision:"",policyVersion:"policy-2",status:"pending",title:"Review 25% discount",reason:"25% exceeds the 20% delegated authority",action:"Update CRM and send quote",system:"HubSpot, Gmail, Slack",before:"0% discount",after:"25% discount",requestedBy:"requester@example.test",allowedReviewers:["manager@example.test"],expiresAt:"2030-01-01T00:00:00Z",decidedBy:null,decidedAt:null,channel:"slack",executionStatus:"held"};a.revision=approvalHash(a);return a;}
-async function mounted(run:(page:Page,calls:Record<string,unknown>[],set:(a:ExternalApproval|ExternalApproval[])=>void)=>Promise<void>,options:{self?:boolean;connected?:boolean;lost?:boolean;runId?:string}={}){
+async function mounted(run:(page:Page,calls:Record<string,unknown>[],set:(a:ExternalApproval|ExternalApproval[])=>void)=>Promise<void>,options:{self?:boolean;connected?:boolean;lost?:boolean;runId?:string;approvalIds?:string[]}={}){
  const browser=await chromium.launch({headless:true});try{
  const page=await browser.newPage();const initial=request();if(options.self){initial.requestedBy="manager@example.test";initial.revision=approvalHash(initial);}let saved=[initial];const calls:Record<string,unknown>[]=[];
  const esbuild=requireModule(requireModule.resolve("esbuild", {paths:[requireModule.resolve("@temporalio/worker")]}));
- const bundle=await esbuild.build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{ExternalWorkflowApprovals}from'./components/control-plane/external-workflow-approvals';createRoot(document.getElementById('root')).render(React.createElement(ExternalWorkflowApprovals,{reference:${JSON.stringify(ref)},runId:${JSON.stringify(options.runId)},onDecision:()=>{document.getElementById('refresh-count').textContent+='1'}}));`,resolveDir:process.cwd(),loader:"tsx"},alias:{"@":resolve(".")},bundle:true,write:false,format:"iife",jsx:"automatic",define:{"process.env.NODE_ENV":'"production"'}});
+ const bundle=await esbuild.build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{ExternalWorkflowApprovals}from'./components/control-plane/external-workflow-approvals';createRoot(document.getElementById('root')).render(React.createElement(ExternalWorkflowApprovals,{reference:${JSON.stringify(ref)},runId:${JSON.stringify(options.runId)},approvalIds:${JSON.stringify(options.approvalIds)},onDecision:()=>{document.getElementById('refresh-count').textContent+='1'}}));`,resolveDir:process.cwd(),loader:"tsx"},alias:{"@":resolve(".")},bundle:true,write:false,format:"iife",jsx:"automatic",define:{"process.env.NODE_ENV":'"production"'}});
  await page.route('https://approval-fixture.test/**',async route=>{const req=route.request();if(req.method()==='GET')return route.fulfill({contentType:'text/html',body:'<div id="root"></div><span id="refresh-count"></span>'});const v=req.postDataJSON();calls.push(v);if(v.operation==='decide'){if(options.lost)return route.fulfill({status:503,contentType:'text/html',body:'Unavailable'});saved=saved.map(a=>a.id===v.id?{...a,status:v.decision,decidedBy:'manager@example.test',decidedAt:new Date().toISOString(),executionStatus:'running'}:a);}await route.fulfill({contentType:'application/json',body:JSON.stringify({connected:options.connected!==false,requests:options.connected===false?[]:saved,reviewer:'manager@example.test',canReview:true})});});
  await page.clock.install();await page.goto('https://approval-fixture.test/');await page.addScriptTag({content:bundle.outputFiles[0].text});await page.getByRole('heading',{name:'Workflow approvals',exact:true}).waitFor();await run(page,calls,a=>{saved=Array.isArray(a)?a:[a];});
  }finally{await browser.close();}}
@@ -64,3 +64,17 @@ it('lays out labeled policy and reviewer evidence on desktop and mobile',()=>mou
  await page.setViewportSize({width:740,height:1100});await page.screenshot({path:'.local/approval-evidence-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'.local/approval-evidence-mobile.png',fullPage:true});
 }),20000);
+
+it('does not offer another approval from the same run when history names an exact request',()=>mounted(async(page,calls)=>{
+ await page.getByRole('heading',{name:'Approval record unavailable',exact:true}).waitFor();
+ expect(await page.getByRole('button',{name:'Review decision',exact:true}).count()).toBe(0);
+ expect(calls.every(c=>c.operation==='list')).toBe(true);
+},{runId:'run-1',approvalIds:['different-approval']}),20000);
+it('shows only the reported request when two approvals share a run',()=>mounted(async(page,calls,set)=>{
+ await page.getByRole('heading',{name:'Approval record unavailable',exact:true}).waitFor();
+ const second={...request(),id:'approval-2',title:'Exact reported request'};second.revision=approvalHash(second);
+ set([request(),second]);await page.clock.fastForward(15001);await page.getByRole('heading',{name:'Exact reported request',exact:true}).waitFor();
+ expect(await page.getByRole('heading',{name:'Review 25% discount',exact:true}).count()).toBe(0);
+ expect(await page.getByRole('button',{name:'Review decision',exact:true}).count()).toBe(1);
+ expect(calls.every(c=>c.operation==='list')).toBe(true);
+},{runId:'run-1',approvalIds:['approval-2']}),20000);

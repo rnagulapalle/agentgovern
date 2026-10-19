@@ -185,6 +185,7 @@
       "lib/workspace/company-profile.ts",
       "lib/workspace/connection-navigation.ts",
       "lib/workspace/deployment-capabilities.ts",
+      "lib/workspace/execution-approval-match.ts",
       "lib/workspace/execution-reference.ts",
       "lib/workspace/external-approvals.ts",
       "lib/workspace/identity.ts",
@@ -928,6 +929,7 @@
       "lib/workspace/company-profile-schema.sql",
       "lib/workspace/connection-navigation.ts",
       "lib/workspace/deployment-capabilities.ts",
+      "lib/workspace/execution-approval-match.ts",
       "lib/workspace/execution-reference.ts",
       "lib/workspace/external-approvals.ts",
       "lib/workspace/identity.ts",
@@ -1589,6 +1591,30 @@
     },
     {
       "from": "components/control-plane/control-center.tsx",
+      "to": "lib/workspace/execution-approval-match.ts"
+    },
+    {
+      "from": "lib/workspace/execution-approval-match.ts",
+      "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "lib/workspace/external-approvals.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/execution-approval-match.ts",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "lib/workspace/workflow-telemetry.ts",
+      "to": "lib/workspace/cloud-discovery.ts"
+    },
+    {
+      "from": "lib/workspace/cloud-discovery.ts",
+      "to": "lib/workspace/cloud-runtime-metadata.ts"
+    },
+    {
+      "from": "components/control-plane/control-center.tsx",
       "to": "lib/workspace/execution-reference.ts"
     },
     {
@@ -1630,10 +1656,6 @@
     {
       "from": "lib/workspace/cloud-inventory.ts",
       "to": "lib/workspace/cloud-discovery.ts"
-    },
-    {
-      "from": "lib/workspace/cloud-discovery.ts",
-      "to": "lib/workspace/cloud-runtime-metadata.ts"
     },
     {
       "from": "lib/workspace/cloud-inventory.ts",
@@ -1708,20 +1730,12 @@
       "to": "lib/workspace/workflow-telemetry.ts"
     },
     {
-      "from": "lib/workspace/workflow-telemetry.ts",
-      "to": "lib/workspace/cloud-discovery.ts"
-    },
-    {
       "from": "components/control-plane/control-center.tsx",
       "to": "lib/workspace/company-profile-contract.ts"
     },
     {
       "from": "components/control-plane/control-center.tsx",
       "to": "lib/workspace/external-approvals.ts"
-    },
-    {
-      "from": "lib/workspace/external-approvals.ts",
-      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "components/control-plane/control-center.tsx",
@@ -1761,6 +1775,10 @@
     },
     {
       "from": "components/control-plane/aws-execution-browser.tsx",
+      "to": "lib/workspace/execution-approval-match.ts"
+    },
+    {
+      "from": "components/control-plane/aws-execution-browser.tsx",
       "to": "lib/workspace/execution-reference.ts"
     },
     {
@@ -1774,6 +1792,10 @@
     {
       "from": "components/control-plane/execution-business-context.tsx",
       "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "components/control-plane/execution-business-context.tsx",
+      "to": "lib/workspace/execution-approval-match.ts"
     },
     {
       "from": "components/control-plane/execution-business-context.tsx",
@@ -1798,6 +1820,10 @@
     {
       "from": "components/control-plane/external-workflow-approvals.tsx",
       "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "components/control-plane/external-workflow-approvals.tsx",
+      "to": "lib/workspace/execution-approval-match.ts"
     },
     {
       "from": "components/control-plane/external-workflow-approvals.tsx",
@@ -11937,6 +11963,18 @@
     },
     {
       "from": "components/control-plane/external-workflow-approvals.tsx",
+      "to": "lib/workspace/execution-approval-match.ts"
+    },
+    {
+      "from": "lib/workspace/execution-approval-match.ts",
+      "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "lib/workspace/execution-approval-match.ts",
+      "to": "lib/workspace/workflow-telemetry.ts"
+    },
+    {
+      "from": "components/control-plane/external-workflow-approvals.tsx",
       "to": "lib/workspace/response.ts"
     },
     {
@@ -11973,6 +12011,10 @@
     },
     {
       "from": "components/control-plane/aws-execution-browser.tsx",
+      "to": "lib/workspace/execution-approval-match.ts"
+    },
+    {
+      "from": "components/control-plane/aws-execution-browser.tsx",
       "to": "lib/workspace/execution-reference.ts"
     },
     {
@@ -11994,6 +12036,10 @@
     {
       "from": "components/control-plane/execution-business-context.tsx",
       "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "components/control-plane/execution-business-context.tsx",
+      "to": "lib/workspace/execution-approval-match.ts"
     },
     {
       "from": "components/control-plane/execution-business-context.tsx",
@@ -18471,7 +18517,7 @@
     "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
     "components/control-plane/agents-workspace.tsx": "60059f9dd43bfa3fc5c04c836899c08da4ddc68b3d631c07df8858385b968b7f",
     "components/control-plane/aws-connection-journey.tsx": "9e665d8c6d3bc33955d6560edf359325cba679086788c1ebd50f2819dc2e92ed",
-    "components/control-plane/aws-execution-browser.tsx": "4b29c08fe029be78c39524352ef64b081ecc95a4f8f42bed52ce99855560d7d8",
+    "components/control-plane/aws-execution-browser.tsx": "49be3f2afae44ebc927882d2a3e10692bc5c5c9eae6aabcc7bada405e567ebf0",
     "components/control-plane/aws-workflow-history.tsx": "bd3c2bebf84c67368800282cbcfc26f98f16621d65ecbe3370211611c8226a41",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
     "components/control-plane/company-workspace.tsx": "c00789a264f50b640712080a6cf26cca3b454ab268368ce8b5f8e2fc775827e4",
@@ -18480,7 +18526,7 @@
     "components/control-plane/connector-actions-workspace.tsx": "0e3c49545f9ec160bb7b0acadce0a45907b10040a9f2250a9062dae1920945ff",
     "components/control-plane/connectors-workspace.tsx": "e5d420b7a57544fb10ce6dab764282fbc5d1c91f5f8190ec0d1860c7935f851e",
     "components/control-plane/control-center.css": "addabc8bcb825af33e390a3e0aa0942ad15f7854c7d24d18e226aac9604f9c01",
-    "components/control-plane/control-center.tsx": "b6e8e3ef5fcfda36cca112a4035ee4fbaddc4e3bc86f31a4eb47156bf29b788e",
+    "components/control-plane/control-center.tsx": "b30d6be65937dab4e2934b1393b1331510f091e5d2c9fe87e994daa46acd1b61",
     "components/control-plane/discount-approval-brief.tsx": "8d44b575118d60b1e6a22cbc07e4fa7b9ba03c90eedacc2d2490e5d0b98f1378",
     "components/control-plane/discount-history.tsx": "c38c42a43b51b8c18d2fb8f8bb77834edc62e523035a4b3cfe8ec65cbf328100",
     "components/control-plane/discovery-workspace.css": "20ad17ba73848f87282575b3333fbf67eb2b433fdcb9468c3349b19411cd2fc9",
@@ -18489,8 +18535,8 @@
     "components/control-plane/enquiry-execution.tsx": "127a84fdf2915f275194d8b9096f76318d59fe9446884703da4f1bb193982496",
     "components/control-plane/enquiry-progress.tsx": "d75ce63d60927b6c4f8f8807a642936e427040e4de0b65d3195ee1b7d76d6b36",
     "components/control-plane/enquiry-workspace.tsx": "fc4c0434be27e3dbdb2620eca709cb0dd87994d7d07fd2d56cfe2e4945a175a0",
-    "components/control-plane/execution-business-context.tsx": "d6d9a1c5f8a4ba4243aa9f1b1f2b6b8419736a911cf2b330fd7edda64b5c0252",
-    "components/control-plane/external-workflow-approvals.tsx": "2a83aacc039a49ca426698662b52d925dcde15eedf3dd7c2a9cf39024c3265e7",
+    "components/control-plane/execution-business-context.tsx": "4e877eab169946453a4cbfc9e41272dbbf4ffd168457c7a450984a5ccce93a7d",
+    "components/control-plane/external-workflow-approvals.tsx": "7ecbfb5163faa3cf577cacb2071c0b512bfeab58564ef872f9965131c0b1d224",
     "components/control-plane/project-discovery-workspace.tsx": "687f021a0b6ecaa5ae1aded40c30ed8875c81b6875c9fea1997014d4d5699854",
     "components/control-plane/provider.tsx": "dd9c3ae5b8fcc20a01117f4b293282a42fd7d89d9d93a40f306381d9934d64da",
     "components/control-plane/quote-workflow-view.tsx": "835149a7c08bd9d42826edc7428b76a09c768dbdb526565f531635210e7913af",
@@ -18656,6 +18702,7 @@
     "lib/workspace/company-profile.ts": "05c3a69eb49e23fa086470eebcd66b383592706140b03869d5b539b6fe557bb5",
     "lib/workspace/connection-navigation.ts": "8ea6b49fd8a50ad6559db3e26f33a1049d6c9d43814580b2c3b51f5ec5b2cdb9",
     "lib/workspace/deployment-capabilities.ts": "64f1661622013b77e764394aeac35390e9d8809fc19cc1321c3e65e90c4f3bba",
+    "lib/workspace/execution-approval-match.ts": "5a701761720589f0747b52a0cad435827197416cbd517ecd06660dee22ceeda5",
     "lib/workspace/execution-reference.ts": "914d422f206610cc34622e7ac047d8339b8e89f62dfff377c5f78d1847a83a46",
     "lib/workspace/external-approvals.ts": "8e344de0fd9f1763631fce00502a06b59665f86fc3549467134bc2ec8d0a8d93",
     "lib/workspace/identity.ts": "35d890f5d1d3d086158f020542d90db077c80dc7a2644caf3c01a556efad1da2",

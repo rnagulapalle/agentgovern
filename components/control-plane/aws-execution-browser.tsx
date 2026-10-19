@@ -1,6 +1,7 @@
 "use client";
 
 import type {ActivityReference} from "@/lib/workspace/cloud-activity";
+import {executionApprovalIds} from '@/lib/workspace/execution-approval-match';
 import {executionReference} from "@/lib/workspace/execution-reference";
 import {ExecutionBusinessContext} from "./execution-business-context";
 import { useId, useState } from "react";
@@ -44,7 +45,7 @@ export function AwsExecutionBrowser({ runs, runtimeVersion, onQuote, initialSele
         <section className="aws-execution-overview" aria-label="Request summary"><div className="aws-trace-heading"><div><span className="aws-eyebrow">REQUEST SUMMARY</span><h4>{telemetryRequestLabel(selected)}</h4></div>{!detailsOnly && <button type="button" className="cp-button secondary" onClick={() => setSelectedId(null)}>Close trace</button>}</div>
         <p className="aws-outcome-label">Last reported status</p><p className="aws-trace-outcome" data-outcome={telemetryOutcomeGroup(selected)}><span className="aws-outcome-dot" aria-hidden="true"/>{selected.status}</p>
         <dl className="aws-execution-facts"><div><dt>Requested through</dt><dd className="aws-channel">{selected.trigger}</dd></div><div><dt>Started</dt><dd>{new Date(selected.startedAt ?? selected.events[0].occurredAt).toLocaleString()}</dd></div></dl></section>
-        <ExecutionBusinessContext key={selected.id+":"+selected.events[0]?.reportedDeploymentVersion} runId={selected.id} reference={executionReference(selected.events,references)}/>
+        <ExecutionBusinessContext key={selected.id+":"+selected.events[0]?.reportedDeploymentVersion} runId={selected.id} approvalIds={executionApprovalIds(selected.events)} reference={executionReference(selected.events,references)}/>
         <section className="aws-execution-journey" aria-label="Execution timeline"><div className="aws-execution-section-heading"><span className="aws-section-marker" aria-hidden="true">02</span><h4>Execution steps</h4></div>
         <p className="aws-timeline-caption">Workflow-reported progress · {telemetryTimelineSteps(selected.events,selected.conflict).length} steps</p>
         {selected.quoteIds.length > 0 ? <p>Related quote: {selected.quoteIds.map(id => <button key={id} className="cp-button secondary" onClick={() => onQuote(id)}>{id}</button>)}</p> : null}
