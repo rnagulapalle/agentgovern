@@ -5,14 +5,9 @@ import {executionApprovalIds} from '@/lib/workspace/execution-approval-match';
 import {executionReference} from "@/lib/workspace/execution-reference";
 import {ExecutionBusinessContext} from "./execution-business-context";
 import { useId, useState } from "react";
-import { eventLabels, telemetryDecision, telemetryRuns, telemetryTimelineSteps, telemetryStepCopy, telemetryRequestLabel, telemetryOutcomeGroup, telemetryRequestContext } from "@/lib/workspace/workflow-telemetry-view";
+import { eventLabels, telemetryDecision, telemetryRuns, telemetryTimelineSteps, telemetryStepCopy, telemetryRequestLabel, telemetryOutcomeGroup, telemetryRequestContext, telemetryStepSummary } from "@/lib/workspace/workflow-telemetry-view";
 
 type Run = ReturnType<typeof telemetryRuns>[number];
-
-function toolSummary(run: Run) {
-  const count = telemetryTimelineSteps(run.events,run.conflict).filter(step => step.action).length;
-  return count ? `${count} tool steps` : "Tool steps not reported";
-}
 
 /** Presentation selection never changes a saved run or sends an approval. */
 export function AwsExecutionBrowser({ runs, runtimeVersion, onQuote, initialSelectedId = null, detailsOnly = false, references=[] }: {
@@ -35,7 +30,7 @@ export function AwsExecutionBrowser({ runs, runtimeVersion, onQuote, initialSele
       {runs.map(run => <button type="button" className="aws-execution-summary aws-execution" key={run.id}
         aria-label={`Review ${telemetryRequestLabel(run)} · ${run.id}`} aria-pressed={selected?.id === run.id}
         aria-controls={traceId} onClick={() => setSelectedId(run.id)}>
-        <span><strong>{telemetryRequestLabel(run)}</strong><small><span className="aws-channel">{run.trigger}</span> · {toolSummary(run)}</small></span>
+        <span><strong>{telemetryRequestLabel(run)}</strong><small><span className="aws-channel">{run.trigger}</span> · {telemetryStepSummary(run)}</small></span>
         <span>{telemetryDecision(run.events, run.policy?.decision)}</span>
         <span><span>{run.status}</span><time dateTime={run.startedAt ?? run.events[0].occurredAt}>{new Date(run.startedAt ?? run.events[0].occurredAt).toLocaleString()}</time></span>
       </button>)}
@@ -54,7 +49,7 @@ export function AwsExecutionBrowser({ runs, runtimeVersion, onQuote, initialSele
           return <li key={step.key} data-tone={copy.tone}><span className="aws-timeline-node" aria-hidden="true">{copy.tone==="done"?"✓":index+1}</span>
             <div className="aws-timeline-content"><div className="aws-timeline-title"><strong>{copy.title}</strong><time dateTime={step.first.occurredAt}>{new Date(step.first.occurredAt).toLocaleTimeString()}</time></div>
             {step.first.eventName==="workflow.started"&&requestContext?<div className="aws-request-context"><p>{requestContext.description}</p><p className="aws-request-metadata"><span className="aws-channel">{requestContext.channel}</span>{requestContext.version&&<span>Reported version {requestContext.version}</span>}</p><small>Original request text wasn’t shared by this workflow. Time shown is when processing started.</small></div>:copy.detail&&<p>{copy.detail}</p>}<div className="aws-timeline-meta">{step.state&&<span className="aws-status">{step.first.actionName==="request_approval"&&step.state==="Completed"?"Request sent":step.state}</span>}{copy.provider&&copy.provider!=="internal"&&<span>{copy.provider}</span>}{step.first.attempt>1&&<span>Attempt {step.first.attempt}</span>}</div>
-            {step.first.eventName==="policy.evaluated"&&<section className="aws-policy-evidence" aria-label="Policy checked"><h5>Policy checked</h5><dl className="aws-review-grid"><div><dt>Requested discount</dt><dd>{step.first.requestedPercent!==null?`${step.first.requestedPercent}%`:"Not reported"}</dd></div><div><dt>Manager review from</dt><dd>{step.first.approvalThreshold!==null?`${step.first.approvalThreshold}%`:"Not reported"}</dd></div><div><dt>Denied above</dt><dd>{step.first.maximumDiscount!==null?`${step.first.maximumDiscount}%`:"Not reported"}</dd></div><div><dt>Decision</dt><dd>{telemetryDecision([],step.first.decision)}</dd></div><div><dt>Rule</dt><dd>{step.first.ruleId??"Not reported"}</dd></div><div><dt>Rule version</dt><dd>{step.first.ruleVersion??"Not reported"}</dd></div></dl><p className="aws-field-help">Reported by the workflow · this is not a list of every internal rule or proof of enforcement.</p></section>}
+            {step.first.eventName==="policy.evaluated"&&<section className="aws-policy-evidence" aria-label="Policy checked"><h5>Policy checked</h5><dl className="aws-review-grid">{(step.first.requestedPercent!==null||step.first.approvalThreshold!==null||step.first.maximumDiscount!==null)&&<><div><dt>Requested discount</dt><dd>{step.first.requestedPercent!==null?`${step.first.requestedPercent}%`:"Not reported"}</dd></div><div><dt>Manager review from</dt><dd>{step.first.approvalThreshold!==null?`${step.first.approvalThreshold}%`:"Not reported"}</dd></div><div><dt>Denied above</dt><dd>{step.first.maximumDiscount!==null?`${step.first.maximumDiscount}%`:"Not reported"}</dd></div></>}<div><dt>Decision</dt><dd>{telemetryDecision([],step.first.decision)}</dd></div><div><dt>Rule</dt><dd>{step.first.ruleId??"Not reported"}</dd></div><div><dt>Rule version</dt><dd>{step.first.ruleVersion??"Not reported"}</dd></div></dl><p className="aws-field-help">Reported by the workflow · this is not a list of every internal rule or proof of enforcement.</p></section>}
             {step.first.eventName==="approval.approved"&&<p className="aws-field-help">The workflow reported approval. See the matched approval record above for the reviewer; this event does not identify them.</p>}
             {step.last.reasonCode&&<details><summary>Reported reason</summary><p>{step.last.reasonCode.replaceAll("_"," ")}</p></details>}</div>
           </li>;

@@ -26,3 +26,10 @@ describe('installed approval attachment replacement',()=>{
   const read=async()=>{throw Error('private directory verification refused');};expect(await readInstalledApprovalAttachment([],read)).toBeNull();await expect(readInstalledApprovalAttachment([mount],read)).rejects.toThrow('private directory verification refused');
  });
 });
+
+it('preserves the quote binding beside one separately keyed cancellation binding',()=>{
+ const cancellation={...row,resourceArn:'arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/acme_product_cancellation-OXtwF22hKd',version:'4',endpoint:'https://cancel.execute-api.us-west-2.amazonaws.com/looplabs/approval-bridge',secretPath:'/run/looplabs-approvals/cancellation-signing.hex'};
+ const a=validateApprovalAttachment(source,[row,cancellation]);expect(JSON.parse(a.environment)).toEqual([row,cancellation]);
+ for(const patch of [{secretPath:row.secretPath},{resourceArn:cancellation.resourceArn.replace('342206308838','123456789012')},{reviewers:[]},{allowSelfReview:undefined}])expect(()=>validateApprovalAttachment(source,[row,{...cancellation,...patch}])).toThrow();
+ expect(()=>validateApprovalAttachment(source,[row,cancellation,cancellation])).toThrow();expect(()=>validateApprovalAttachment(source,[])).toThrow();
+});
