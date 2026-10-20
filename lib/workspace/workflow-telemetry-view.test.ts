@@ -1,5 +1,5 @@
 import {it,expect} from "vitest";
-import {telemetryRuns,telemetryTimelineSteps,eventLabels,telemetrySteps,telemetryDecision,telemetryStepCopy,telemetryRequestLabel,telemetryOutcomeGroup,telemetryRequestContext,telemetryStepSummary} from "./workflow-telemetry-view";
+import {telemetryRuns,telemetryTimelineSteps,eventLabels,telemetrySteps,telemetryDecision,telemetryStepCopy,telemetryRequestLabel,telemetryOutcomeGroup,telemetryRequestContext,telemetryStepSummary,telemetryStepAgent} from "./workflow-telemetry-view";
 import {projectWorkflowEvent,workflowEventNames,type WorkflowTelemetryWindow} from "./workflow-telemetry";
 function event(event_name:string,extra:Record<string,unknown>={}){return projectWorkflowEvent(JSON.stringify({schema_version:"1.0",event_name,event_id:"event-1",run_id:"run-1",action_id:null,timestamp:"2026-10-15T12:00:00.000001Z",attempt:1,trace_id:"a".repeat(32),span_id:"b".repeat(16),trigger_channel:"slack",agent_deployment_version:"10",...extra}))!;}
 function window(events:WorkflowTelemetryWindow['events'],conflictingEventIds:string[]=[]):WorkflowTelemetryWindow{return{source:{runtimeArn:"arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/agent-1234567890",enrolledRuntimeVersion:"10",logGroup:"/company/events",startTime:1,endTime:2},events,completeness:"partial",unsupportedRecords:0,duplicateDeliveries:0,conflictingEventIds,failures:[],enforcement:"not-established"};}
@@ -103,3 +103,22 @@ it('names cancellation roles and policy without implying a refund payment or dis
 });
 
 it("separates declared-role progress from external tool steps",()=>{const r=telemetryRuns(window([event('action.completed',{event_id:'role',action_id:'role_123',action_name:'ticket-context',provider:'internal'}),event('action.completed',{event_id:'tool',action_id:'action_123',action_name:'zendesk.create_ticket',provider:'zendesk'})]))[0];expect(telemetryStepSummary(r)).toBe('1 role steps · 1 tool steps');});
+
+it("attributes only explicit reported roles and preserves generic legacy/tool/policy/approval fallback",()=>{
+ const role=event("action.completed",{action_id:"role_123",action_name:"policy-research",provider:"internal"});
+ expect(telemetryStepAgent(telemetrySteps([role])[0])).toEqual({label:"Reported agent role",name:"Policy research",sourceName:"policy-research",reported:true});
+ for(const e of [event("workflow.started"),event("policy.evaluated",{rule_id:"cancellation-policy"}),event("approval.approved"),event("action.completed",{action_id:"tool_1",action_name:"stripe.refund_original_payment",provider:"stripe"}),event("action.completed",{action_id:"role_1"})]){
+  expect(telemetryStepAgent(telemetrySteps([e])[0])).toMatchObject({name:"Workflow agent",sourceName:null,reported:false});
+ }
+ expect(telemetrySteps([role,event("policy.evaluated")]).map(s=>telemetryStepAgent(s).reported)).toEqual([true,false]);
+ expect(telemetryStepAgent(telemetrySteps([role])[0],true).reported).toBe(false);
+});
+it("does not label inconsistent names or deployment versions as one reported role",()=>{
+ const a=event("action.started",{action_id:"role_1",action_name:"ticket-context"});
+ for(const change of [{action_name:"case-decision"},{agent_deployment_version:"11"}]){
+  const b=event("action.completed",{event_id:"b",action_id:"role_1",action_name:"ticket-context",...change});
+  expect(telemetryStepAgent(telemetrySteps([a,b])[0]).reported).toBe(false);
+ }
+ const other=event("action.completed",{event_id:"other",run_id:"other-run",action_id:"role_1",action_name:"case-decision"});
+ expect(telemetrySteps([a,other]).map(s=>telemetryStepAgent(s).name)).toEqual(["Ticket context","Case decision"]);
+});

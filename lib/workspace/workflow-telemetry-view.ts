@@ -126,3 +126,14 @@ export function telemetryRequestContext(run: ReturnType<typeof telemetryRuns>[nu
 }
 
 export function telemetryStepSummary(run:ReturnType<typeof telemetryRuns>[number]){const steps=telemetryTimelineSteps(run.events,run.conflict).filter(s=>s.action),roles=steps.filter(s=>s.first.actionId?.startsWith("role_")).length,tools=steps.length-roles;return roles?`${roles} role steps · ${tools} tool steps`:tools?`${tools} tool steps`:"Tool steps not reported";}
+
+/** Attribute only an explicit role action, never an adjacent policy/tool event,
+ * a provider name, a declared catalog role, or a human approval identity. */
+export function telemetryStepAgent(step: ReturnType<typeof telemetrySteps>[number], conflict = false) {
+ const name = step.first.actionName;
+ const reported = !conflict && step.action && step.first.actionId?.startsWith("role_") && name
+  && step.events.every(event => event.actionName === name && event.reportedDeploymentVersion === step.first.reportedDeploymentVersion);
+ return reported
+  ? {label:"Reported agent role",name:name.charAt(0).toUpperCase()+name.slice(1).replaceAll(/[_-]/g," "),sourceName:name,reported:true}
+  : {label:"Handled by",name:"Workflow agent",sourceName:null,reported:false};
+}

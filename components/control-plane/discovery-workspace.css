@@ -284,3 +284,8 @@
 .aws-history-version-coverage dt,.aws-history-version-coverage p { color:var(--cp-muted);font-size:var(--text-body); }
 .aws-history-version-coverage dd { margin:6px 0 0;font-size:var(--text-body);font-weight:600;overflow-wrap:anywhere; }
 @media(max-width:640px) { .aws-history-version-coverage dl { grid-template-columns:1fr;gap:12px; } }
+
+/* Role attribution is separate from progress, provider and approval identity. */
+.aws-step-agent { display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:8px 0 10px;font-size:var(--text-label);line-height:1.5;color:var(--cp-muted); }
+.aws-step-agent strong { color:var(--cp-ink);font-weight:600; }
+.aws-step-agent[data-reported="true"] strong { background:#edf3ef;border:1px solid #d7e3da;border-radius:4px;padding:2px 7px;color:#315542; }

@@ -243,3 +243,11 @@ and [Claude Sonnet 4.5 announcement](https://www.anthropic.com/news/claude-sonne
 Sample spend is not provider pricing; client/account availability must be verified
 separately. No reference-dashboard people, organization, credentials or infrastructure
 identifiers were copied into the sample data.
+
+### Timeline role attribution (October 20, 2026)
+Explicit `role_` action IDs with a consistent reported action name and deployment
+version display a reported agent-role label. Tool, policy and approval events do
+not inherit that role from neighboring steps or the workflow catalog. Older events
+without role attribution retain their timeline and show “Workflow agent / Name not
+reported.” Conflicting evidence does not establish a named role. This is source
+attribution, not verified agent identity, human reviewer identity or proof of effect.
