@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { it, expect } from "vitest";
-import evidence from "../../docs/evidence/connector-proof-20261020-coding-controls.json";
+import evidence from "../../docs/evidence/connector-proof-20261020-agent-attribution.json";
 it("publishes only recorded passing proof for the exact connector implementation", async () => {
   expect(evidence.checks.length).toBeGreaterThanOrEqual(36);
   expect(evidence.checks.every((c) => c.passed === true)).toBe(true);
