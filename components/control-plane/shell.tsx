@@ -56,6 +56,7 @@ const groups = [
     items: [
       { key: "workflows", label: "Workflow examples", icon: Network },
       { key: "gateway", label: "Model access", icon: Activity },
+      { key: "coding-agents", label: "Coding agents", icon: Command },
       { key: "runs", label: "Execution traces", icon: GitBranch },
       { key: "outputs", label: "Output checks", icon: ShieldCheck },
       { key: "reconciliation", label: "Recovery example", icon: Undo2 },
@@ -125,6 +126,7 @@ export function ControlShell({
     { key: "overview", label: "Overview", icon: LayoutGrid },
     { key: "agents", label: "Agents", icon: Bot },
     { key: "activity", label: "Activity", icon: Activity },
+    { key: "coding-agents", label: "Coding agents", icon: Command },
     { key: "approvals", label: "Approvals & outcomes", icon: ShieldCheck },
   ] }, { name: "CONFIGURE", items: [
     { key: "connectors", label: "Connections", icon: Database },
@@ -294,7 +296,7 @@ export function ControlShell({
           <div className="cp-topbar-right">
             <span className="cp-environment">
               <i />
-              {quoteOnly ? "Sample data only" : durable ? "Saved controls" : "Browser-local sample data"}
+              {section === "coding-agents" ? "Interactive sample" : quoteOnly ? "Sample data only" : durable ? "Saved controls" : "Browser-local sample data"}
             </span>
             {!durable && (
               <button
@@ -342,7 +344,7 @@ export function ControlShell({
             <BrandMark small /> {scriptDemo ? "Action controls and saved decisions" : "Action, execution, and output controls"}
           </span>
           <span>
-            {scriptDemo ? "Connected activity & saved decisions" : durable
+            {section === "coding-agents" ? "Session-only demo · no connected coding clients" : scriptDemo ? "Connected activity & saved decisions" : durable
               ? "Sample data · decisions saved on the server"
               : "Sample data · changes saved in this browser"}
           </span>

@@ -23,6 +23,7 @@
       "app/control-plane/actions/page.tsx",
       "app/control-plane/activity/page.tsx",
       "app/control-plane/agents/page.tsx",
+      "app/control-plane/coding-agents/page.tsx",
       "app/control-plane/connectors/page.tsx",
       "app/control-plane/control-plane.css",
       "app/control-plane/history/page.tsx",
@@ -40,6 +41,8 @@
       "components/control-plane/aws-execution-browser.tsx",
       "components/control-plane/aws-workflow-history.tsx",
       "components/control-plane/cloud-owner-review.tsx",
+      "components/control-plane/coding-agents-workspace.css",
+      "components/control-plane/coding-agents-workspace.tsx",
       "components/control-plane/company-workspace.tsx",
       "components/control-plane/connections-discovery.css",
       "components/control-plane/connections-discovery.tsx",
@@ -80,6 +83,7 @@
       "components/marketing/sales-form.tsx",
       "instrumentation.ts",
       "lib/analytics.ts",
+      "lib/coding-agents/demo.ts",
       "lib/connectors/catalog.ts",
       "lib/connectors/content.ts",
       "lib/connectors/contracts.ts",
@@ -1396,6 +1400,50 @@
   },
   "edges": [
     {
+      "from": "app/control-plane/coding-agents/page.tsx",
+      "to": "components/control-plane/coding-agents-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/coding-agents-workspace.tsx",
+      "to": "lib/coding-agents/demo.ts"
+    },
+    {
+      "from": "components/control-plane/coding-agents-workspace.tsx",
+      "to": "components/control-plane/ui.tsx"
+    },
+    {
+      "from": "components/control-plane/ui.tsx",
+      "to": "lib/control-plane/model.ts"
+    },
+    {
+      "from": "lib/control-plane/model.ts",
+      "to": "lib/engine/evaluate.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/registry.ts"
+    },
+    {
+      "from": "lib/engine/registry.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "lib/engine/evaluate.ts",
+      "to": "lib/engine/hash.ts"
+    },
+    {
+      "from": "lib/control-plane/model.ts",
+      "to": "lib/engine/types.ts"
+    },
+    {
+      "from": "components/control-plane/coding-agents-workspace.tsx",
+      "to": "components/control-plane/coding-agents-workspace.css"
+    },
+    {
       "from": "app/api/sales/route.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
@@ -1610,34 +1658,6 @@
     {
       "from": "components/control-plane/company-workspace.tsx",
       "to": "components/control-plane/ui.tsx"
-    },
-    {
-      "from": "components/control-plane/ui.tsx",
-      "to": "lib/control-plane/model.ts"
-    },
-    {
-      "from": "lib/control-plane/model.ts",
-      "to": "lib/engine/evaluate.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/registry.ts"
-    },
-    {
-      "from": "lib/engine/registry.ts",
-      "to": "lib/engine/types.ts"
-    },
-    {
-      "from": "lib/engine/evaluate.ts",
-      "to": "lib/engine/hash.ts"
-    },
-    {
-      "from": "lib/control-plane/model.ts",
-      "to": "lib/engine/types.ts"
     },
     {
       "from": "app/control-plane/organization/page.tsx",
@@ -18621,6 +18641,7 @@
     "app/control-plane/actions/page.tsx": "d7ed38ab4b0f698f266cfdb4609307cc6f5d3e2d592c376ca3a422e70b90b8d7",
     "app/control-plane/activity/page.tsx": "fc3be688e95df4cc206bc9df61a361de20a9153b312cd820956a543b52f2bffe",
     "app/control-plane/agents/page.tsx": "ec10ce3c5a745284691f8abaa712a2394922ef20f5e883499f0f83937e17996a",
+    "app/control-plane/coding-agents/page.tsx": "9792eb5b822099db2936d9e5138475e6392a98bb13f9c01b4d6a25a4b13e1d74",
     "app/control-plane/connectors/page.tsx": "ff2c3744eae14158c36dc1c38ae473385c51b46d43ea921de00a59e40ba8c2da",
     "app/control-plane/control-plane.css": "2cd5918b34f9675f1ef729369384f8cf9a0bfa61f593c407788342eb60fcd51f",
     "app/control-plane/discovery/page.tsx": "5bdb74c5679d74f3ee77b7ac06a62b07f4a62821e565d0c397a373b7f65f1d56",
@@ -18640,6 +18661,8 @@
     "components/control-plane/aws-execution-browser.tsx": "26ed2c061628ec30eadcc232cbc89a94d860e31485431046b43fba963310a9bf",
     "components/control-plane/aws-workflow-history.tsx": "8c239a758d6df376331e1992aeb5187ed7b495f10d2e9d8921cee0e18e3ca3f5",
     "components/control-plane/cloud-owner-review.tsx": "dccd743bcb7eb7780ec2dcfbfe121d16316f653890faefc007821a0a0a36a1bd",
+    "components/control-plane/coding-agents-workspace.css": "b06771a897ca3c2ece2a6248a05ce91af6fffb0d8a5b44830f22121d77335877",
+    "components/control-plane/coding-agents-workspace.tsx": "a74e43dd3f2596f83a3780258f7cc4fb828f8a508bfb0d474d42e7f0e95fe91d",
     "components/control-plane/company-workspace.tsx": "c37374118e8e4f1bae8138f8a1f3a938975e4a22ceb160fea71eeaad7cdc11c2",
     "components/control-plane/connections-discovery.css": "bbecb73c8ead3622e54626a217404cc6cdcaed7a44ac5f1875b680398ee7a03f",
     "components/control-plane/connections-discovery.tsx": "2e16380de2772fa641e74b26ed9665056679613d83e6e73e0044241cbe0f935c",
@@ -18668,7 +18691,7 @@
     "components/control-plane/saved-workspace.css": "5fc109ac2f30b10f9b7faf9ca812647254ce179beed4d70dbdce3c9760cda782",
     "components/control-plane/saved-workspace.tsx": "4e2a38c13259c63a3c72ee5dfdcfe00ac8acba7ec136c2ce79d2f23fadbf1b4f",
     "components/control-plane/screens.tsx": "8012e435d8a2ac823ade4c2e51fefd1891f167c1bb0efcbf6f4be8dd05cdcc1a",
-    "components/control-plane/shell.tsx": "12913d7e8ea396c1a814a184c94b8c95cc462f68ca76ab1c5855bbe8d8336dde",
+    "components/control-plane/shell.tsx": "5cd5c90f8d012798784481f018df0c22a18350f1a95bb134b14578a7575f312b",
     "components/control-plane/ui.tsx": "c923100ad0cb557532ad432d5e436abbab6a89e7b8ffb9f00652543c32e340e3",
     "components/control-plane/workflow-catalog-import.tsx": "a66b29952045117b513033ee3116de342b532a5715dc739555b0b604cdb46672",
     "components/control-plane/workflow-catalog-view.tsx": "5d641079d5435bf846311841df9df8d057c72443303535fce42c5317bfd6800f",
@@ -18683,6 +18706,7 @@
     "install-order.json": "3e6c0b898fd23454acfca056d1785449a934db73b02446b019086f9ed13c4621",
     "instrumentation.ts": "de978ea9fdb19208b48df6b454989dfc9f064c87397eb07769230bad3813e7fc",
     "lib/analytics.ts": "4e0970fca48cd652730ad5c1ebef97181e44e1f98849185479bb8ed1244b480c",
+    "lib/coding-agents/demo.ts": "59fccbae2f32263f5f8b2ff7105b2ced00cf2334beb5f76d5a58365ff9719311",
     "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
     "lib/connectors/content.ts": "891cb662e2ee4cd397b28e3433453ca5c60c8468ab0e016cb9fecf8e10597ba0",
     "lib/connectors/contracts.ts": "45a2e5a89a381ba5db3fd344fb4ce1ca929b6d1063ea14de113fa86edc22b1dc",
@@ -18825,7 +18849,7 @@
     "lib/workspace/company-profile-schema.sql": "64a8c04785a8fe968b9727895bf7b243f588f20cec8375038ef6cf30166809f8",
     "lib/workspace/company-profile.ts": "cad79a38c8778749c2ca1e08e60d2a3f6b7467a68eb580bda9d0eb1fc2d72303",
     "lib/workspace/connection-navigation.ts": "8ea6b49fd8a50ad6559db3e26f33a1049d6c9d43814580b2c3b51f5ec5b2cdb9",
-    "lib/workspace/deployment-capabilities.ts": "64f1661622013b77e764394aeac35390e9d8809fc19cc1321c3e65e90c4f3bba",
+    "lib/workspace/deployment-capabilities.ts": "24145559b72e98ca4e4aec77dccc20b7d320c56ece8c0dddb628ec4caa854ba7",
     "lib/workspace/execution-approval-match.ts": "5a701761720589f0747b52a0cad435827197416cbd517ecd06660dee22ceeda5",
     "lib/workspace/execution-reference.ts": "914d422f206610cc34622e7ac047d8339b8e89f62dfff377c5f78d1847a83a46",
     "lib/workspace/external-approvals.ts": "8e344de0fd9f1763631fce00502a06b59665f86fc3549467134bc2ec8d0a8d93",
@@ -18895,7 +18919,7 @@
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
-    "scripts/current-proof-source-registry.mjs": "29ba5204ff0c7ec5eab3f53718f12d212c1d608af8e16e7e69a230476df6af0a",
+    "scripts/current-proof-source-registry.mjs": "eca1abf91448225e77ece0f63ff2b27b6f562d011ebc07110e1d518e0db7083b",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
     "scripts/discovery-browser-proof.mjs": "25beba194dd1e3fcb40034ee085e704441950a96f3dbb2b29f073c9aa203955b",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
