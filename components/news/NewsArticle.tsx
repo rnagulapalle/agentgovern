@@ -151,19 +151,19 @@ export function NewsArticleShell({
         )}
 
         <div className="card mt-8 p-6 text-center">
-          <p className="text-[16px] font-medium text-fg">See the controls in the interactive product tour</p>
+          <p className="text-[16px] font-medium text-fg">Review the product and its current scope</p>
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Link
-              href="/control-plane"
+              href="/platform"
               className={marketingPrimaryButton}
             >
-              Explore the product tour
+              View the product overview
             </Link>
             <Link
-              href="/#demo"
+              href="/contact-sales"
               className={marketingSecondaryButton}
             >
-              Book a demo
+              Discuss one workflow
             </Link>
           </div>
         </div>
