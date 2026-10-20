@@ -40,3 +40,10 @@ it('administrator persona appears only in installed saved workspace and never ch
 });
 
 it("ACME is the shared company label while named administrators keep their identities",()=>{for(const name of ["Raj Nagulapalle","Pratibha"]){const h=renderToStaticMarkup(<ControlShell member={{name,email:name+"@example.test",company:"ACME"}} scriptDemo>Content</ControlShell>);expect(h).toContain("ACME");expect(h).toContain(name);expect(h).toContain("Company administrator");expect(h).toContain("/control-plane/organization");expect(h).not.toContain("Import agents</span>");}});
+
+it('coding control sample has its own navigation and does not inherit saved evidence labels',()=>{
+ location.path='/control-plane/coding-agents';
+ const h=renderToStaticMarkup(<ControlShell member={member} scriptDemo>Content</ControlShell>);
+ expect(h).toContain('href="/control-plane/coding-agents"');expect(h).toContain('Coding agents');expect(h).toContain('Interactive sample');expect(h).toContain('Session-only demo');expect(h).not.toContain('Connected activity &amp; saved decisions');
+ const quote=renderToStaticMarkup(<ControlShell member={member} quoteOnly>Content</ControlShell>);expect(quote).not.toContain('href="/control-plane/coding-agents"');
+});

@@ -89,3 +89,12 @@ it('shared workflow approvals permit only exact POST in the AWS-enabled control 
 });
 
 it("company directory is an authenticated GET/POST surface only in the control profile",()=>{for(const method of ["GET","POST"])expect(decide("isolated-control-demo-1","/api/workspace/company",method)).toBe("allow");for(const method of ["DELETE","PATCH","PUT"])expect(decide("isolated-control-demo-1","/api/workspace/company",method)).toBe("deny");expect(decide(profile,"/api/workspace/company","GET")).toBe("deny");expect(decide("isolated-control-demo-1","/control-plane/organization","GET")).toBe("allow");expect(decide(profile,"/control-plane/organization","GET")).toBe("deny");});
+
+it('coding-agent demo is a read-only page in the control profile and never a new provider API',()=>{
+ const path='/control-plane/coding-agents';
+ for(const method of ['GET','HEAD'])expect(decide('isolated-control-demo-1',path,method)).toBe('allow');
+ for(const method of ['POST','PUT','DELETE','PATCH'])expect(decide('isolated-control-demo-1',path,method)).toBe('deny');
+ for(const profile of ['isolated-quote-demo-1','','unknown'])expect(decide(profile,path,'GET')).toBe('deny');
+ expect(decide('isolated-control-demo-1','/api/workspace/coding-agents','POST')).toBe('deny');
+ expect(decide('isolated-control-demo-1',path+'/execute','GET')).toBe('deny');
+});

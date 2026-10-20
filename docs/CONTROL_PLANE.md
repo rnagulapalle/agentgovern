@@ -217,3 +217,29 @@ files. It preserves the installed attachment for rollback. The cancellation
 relay can invoke a fixed named AgentCore endpoint rather than DEFAULT; caller
 input cannot select the endpoint. These contracts require separate native
 and Chrome acceptance before a deployment is described as verified.
+
+## Coding-agent controls demonstration (October 19, 2026)
+
+`/control-plane/coding-agents` is an invited-workspace presentation demo. The
+control-demo profile permits GET/HEAD for this exact page; the quote profile and
+new provider APIs remain denied. The sidebar labels it Coding agents, and its
+header/footer explicitly distinguish session-only samples from connected evidence.
+
+The page uses fictional Acme engineers and illustrative monthly usage. It has
+people/budget controls, real model names, a versioned skills/prompt library and a
+fixed-request simulator. Editing limits or model/skill/prompt allowances affects
+React state only and resets on reload. Validation rejects invalid limits, empty
+allowances and prompt/skill mismatch. The deterministic evaluator demonstrates
+model/skill/prompt refusals, token/spend exhaustion, a secret-category refusal and
+production review. It never sends a model request or grants execution approval.
+Prior simulation results remain unchanged when demo configuration changes.
+
+No model gateway, client installation, actual token accounting, rate enforcement,
+team reservation, secret detector, durable audit or provider billing reconciliation
+is connected by this page. Codex, Claude Code and Cursor are client examples, not
+verified integrations. A preset secret category is not analysis of actual input.
+Model names are sourced from the official [GPT-5.2-Codex model reference](https://developers.openai.com/api/docs/models/gpt-5.2-codex)
+and [Claude Sonnet 4.5 announcement](https://www.anthropic.com/news/claude-sonnet-4-5).
+Sample spend is not provider pricing; client/account availability must be verified
+separately. No reference-dashboard people, organization, credentials or infrastructure
+identifiers were copied into the sample data.
