@@ -19,7 +19,7 @@ describe("published agent taxonomy article", () => {
     expect(html).toContain("No real money moved");
     expect(html).toContain("not an independently audited benchmark");
     const data = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)?.[1] ?? "null");
-    expect(data[0]).toMatchObject({ "@type": "Article", url: `https://looplabs.run${path}`, datePublished: "2026-10-20", author: { name: "LoopLabs" } });
+    expect(data[0]).toMatchObject({ "@type": "Article", url: `https://looplabs.run${path}`, datePublished: "2026-10-21", author: { name: "LoopLabs" } });
     expect(data[1]["@type"]).toBe("BreadcrumbList");
     expect(html).not.toContain("Explore the product tour");
     expect(html).toContain('href="/contact-sales"');

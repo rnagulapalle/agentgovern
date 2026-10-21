@@ -1,7 +1,7 @@
 ---
 title: "LangChain vs LangGraph vs Deep Agents: Agent Types Explained"
 description: "Understand agents, workflows, subagents, skills and managed hosting through a cancellation approval example, with a checklist for testing what actually ran."
-published: "2026-10-20"
+published: "2026-10-21"
 category: "governance"
 tags: "LangChain vs LangGraph, Deep Agents, Managed Deep Agents, AI agent types, multi-agent workflows, agent approval testing"
 relatedGuide: "/refund-ticket-agent-above-limit"
