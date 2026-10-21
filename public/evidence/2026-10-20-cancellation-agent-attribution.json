@@ -1,0 +1,40 @@
+{
+  "schema": "looplabs-public-rehearsal-summary-1",
+  "observed_date": "2026-10-20",
+  "publisher": "LoopLabs",
+  "scope": "One internally observed test-mode cancellation and original-payment refund continuation; not an independently audited benchmark",
+  "method": [
+    "Compared cancellation timeline before and after source-reported role attribution was added",
+    "Checked unchanged step sequence and source-event count",
+    "Observed named role labels and generic actor fallbacks in authenticated Chrome",
+    "Read back one original-payment refund independently from Stripe in test mode"
+  ],
+  "cancellation": {
+    "displayed_steps": 17,
+    "source_reported_role_labels": [
+      "ticket-context",
+      "policy-research",
+      "gift-card-desk",
+      "case-decision"
+    ],
+    "generic_actor_steps": 13,
+    "unique_source_events": 23,
+    "same_step_sequence_before_after": true
+  },
+  "refund_continuation": {
+    "currency": "USD",
+    "amount_minor": 500,
+    "provider_mode": "test",
+    "provider_readback_status": "succeeded",
+    "observed_refund_count": 1,
+    "real_money_moved": false
+  },
+  "limitations": [
+    "Logical role labels do not establish independent models or autonomous agents",
+    "Missing actor metadata remained generic",
+    "Only the original-payment refund path was exercised",
+    "Gift-card and concurrent approval behavior not established by this rehearsal",
+    "No general LangChain or Managed Deep Agents integration claim",
+    "Private raw logs and identifiers are withheld; this summary is not a cryptographic receipt"
+  ]
+}
