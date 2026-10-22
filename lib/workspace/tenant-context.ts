@@ -25,6 +25,8 @@ export class TenantContext {
  }
  private salesOrg:string|undefined;
  async configureSales(org:string){if(this.salesOrg)throw new ControlError(503,'Sales workspace is immutable.');await this.selected(org);this.salesOrg=org;}
+ // Server-only webhook resolver. It does not consume public sales form admission.
+ async booking(){if(!this.salesOrg)throw new ControlError(503,'Booking receiver unavailable.');return this.selected(this.salesOrg);}
  async sales(){if(!this.salesOrg)throw new ControlError(503,'Sales intake unavailable.');await this.admit('sales',digest('public-sales'));return this.selected(this.salesOrg);}
  private async selected(org:unknown){if(typeof org!=='string'||!this.pools.has(org))throw new ControlError(401,'Valid workspace credentials are required.');const db=this.pools.get(org)!;await assertTenantPool(db,org);return db;}
  async login(value:Record<string,unknown>){
