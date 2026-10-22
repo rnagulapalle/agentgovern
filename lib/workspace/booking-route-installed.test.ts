@@ -1,7 +1,7 @@
 /** Actual Next Request/Response handler, owned config, actual configured tenant
  * context and PostgreSQL store. Optional schema/grants now use the owner-only extension;
  * this is not base catalog/recovery, network/TLS or native calendar acceptance. */
-import {afterAll,beforeAll,expect,it} from 'vitest';
+import {afterAll,beforeAll,beforeEach,expect,it} from 'vitest';
 import {createHmac} from 'node:crypto';
 import {mkdtemp,writeFile,chmod,rm,realpath} from 'node:fs/promises';
 import {tmpdir} from 'node:os';import {join} from 'node:path';
@@ -25,6 +25,8 @@ beforeAll(async()=>{
  dir=await realpath(await mkdtemp(join(tmpdir(),'ll-booking-installed-route-')));await chmod(dir,0o700);file=join(dir,'config.json');await writeFile(file,JSON.stringify(config),{mode:0o600});process.env.LOOPLABS_BOOKING_CONFIG=file;
 },60000);
 afterAll(async()=>{if(previous===undefined)delete process.env.LOOPLABS_BOOKING_CONFIG;else process.env.LOOPLABS_BOOKING_CONFIG=previous;await fixture?.close();if(dir)await rm(dir,{recursive:true,force:true});},60000);
+// Reset only disposable-fixture admission windows between independent cases.
+beforeEach(async()=>{await fixture.owner.query('DELETE FROM ll_access_attempts');});
 it('stores an actual signed POST in configured sales tenant and strips attendee content',async()=>{const r=await post(sample('created'));expect(r.status).toBe(200);expect(r.headers.get('cache-control')).toBe('no-store');expect(await r.json()).toEqual({received:true,replay:false});const a=await rows('created');expect(a).toHaveLength(1);expect(a[0]).toMatchObject({org_id:'route_a',state:'reserved',intake_ref:localRef,classification:'test'});expect(JSON.stringify(a)).not.toContain('never-store');expect((await fixture.web('route_b').query("SELECT uid FROM ll_booking_reservations WHERE uid='created'")).rows).toHaveLength(0);});
 it('8 parallel signed POSTs yield one stored delivery and seven replay acknowledgments',async()=>{const values=await Promise.all(Array.from({length:8},()=>post(sample('parallel'))));expect(values.every(v=>v.status===200)).toBe(true);const results=await Promise.all(values.map(v=>v.json()));expect(results.filter(v=>v.replay===false)).toHaveLength(1);expect(results.filter(v=>v.replay===true)).toHaveLength(7);expect(await rows('parallel')).toHaveLength(1);});
 it('refuses changed-body signature without any database delivery',async()=>{const before=await counts(),body=Buffer.from(JSON.stringify(sample('bad-signature')));const r=await POST(request(body,'0'.repeat(64)));expect(r.status).toBe(400);expect(await counts()).toBe(before);expect(await rows('bad-signature')).toHaveLength(0);});
@@ -35,3 +37,11 @@ it('actual SQL failure returns503 without private details or partial delivery; r
 it('fails closed without owned configuration even with installed context',async()=>{const before=await counts();delete process.env.LOOPLABS_BOOKING_CONFIG;try{expect((await post(sample('disabled'))).status).toBe(503);expect(await counts()).toBe(before);}finally{process.env.LOOPLABS_BOOKING_CONFIG=file;}});
 
 it('current actual installation inventory refuses fixture-added booking tables',async()=>{const installed=fixture.captureRecovery();await expect(installed.verify(fixture.owner)).rejects.toThrow('Reviewed tenant inventory mismatch');});
+
+it('shared real sales admission bounds booking writes and allows retry after window expiry',async()=>{
+ for(let i=0;i<10;i++)expect((await post(sample('budget-'+i))).status).toBe(200);
+ const before=await counts();expect((await post(sample('budget-denied'))).status).toBe(429);expect(await counts()).toBe(before);expect(await rows('budget-denied')).toHaveLength(0);
+ // Owner fault/time setup in the disposable fixture, never a runtime bypass.
+ await fixture.owner.query("UPDATE ll_access_attempts SET window_start=now()-interval '301 seconds'");
+ expect((await post(sample('budget-denied'))).status).toBe(200);expect(await rows('budget-denied')).toHaveLength(1);
+});

@@ -13,8 +13,9 @@ export async function receiveBooking(request:Request){
   const reader=request.body?.getReader();if(!reader)throw new ControlError(400,'Booking body required.');
   const chunks:Buffer[]=[];let size=0;try{while(true){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;if(size>131072){await reader.cancel();throw new ControlError(413,'Booking body too large.');}chunks.push(Buffer.from(part.value));}}finally{reader.releaseLock();}
   const event=normalizeBooking(Buffer.concat(chunks),request.headers.get('x-cal-signature-256'),request.headers.get('x-cal-webhook-version'),config);
-  // Resolve only the configured sales workspace, after signature and scope checks.
-  const db=await tenantContext().booking();const result=await persistBooking(db,config,event);
+  // Reuse configured sales admission after signature/scope checks. The shared
+  // ten-per-five-minute budget may return429; no booking write occurs then.
+  const db=await tenantContext().sales();const result=await persistBooking(db,config,event);
   return Response.json(result,{headers:{'Cache-Control':'no-store'}});
  }catch(e){return failure(e);}
 }

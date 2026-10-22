@@ -20,8 +20,9 @@ inventory, source/restore catalogs, explicit web column grants and default worke
 scheduler denial. Do not edit released SQL or add broad read/write grants. The
 normal installer must recognize the optional schema before it can be deployed.
 The candidate store uses the existing registered web pool and revalidates the
-acquired client. No browser field selects a tenant, and the webhook resolver does
-not consume public sales form admission.
+acquired client. No browser field selects a tenant, and the webhook resolver reuses existing sales admission. Signed deliveries and
+public sales intake share the existing ten-per-five-minute budget; saturation
+returns429 before booking writes. Native provider retry behavior is untested.
 
 Measured: actual route tests with real owned config files and mocked tenant/store
 interfaces; store control-flow tests with a query double; normalizer and capability
@@ -55,3 +56,14 @@ These tests do NOT establish normal installer/migration inventory, source/restor
 Reconciled the existing candidate onto main14ee612 without changing frozen install-order or global table/recovery catalogs. The new owner-only installBookingMeasurement helper verifies released prerequisite digests, exact installed restricted web-role/workspace/database binding, migration32 digest, owner/table column inventory, forced tenant RLS and exact policies before granting reviewed columns. It rejects broad table/PUBLIC grants and does not enable the route or grant workflow execution. Six actual PostgreSQL tests cover wrong-tenant binding with no created tables, first/repeated/concurrent installation, worker/scheduler/peer denial, owner-only admission, cross-tenant writes, altered digest/future column/policy and broad ACL refusal.
 
 The nine actual POST/configured-context/PostgreSQL tests now call this helper instead of manually applying schema/grants. The final15-test run supersedes the initial6-test observation; do not sum them. Dedicated PostgreSQL17 fixture was stopped and removed. These establish only this optional extension and direct-handler composition. Frozen-base/composed source catalog admission, recovery capture/restore/regrant, profiles, network/TLS/native calendar and candidate CI/release remain unproved. The existing inventory refusal check remains in place; endpoint remains denied. Initial changed-test lint found an unused readFile import; removed and rechecked. No public or account mutation.
+
+## October22 watchdog CI recovery
+
+The first candidate CI failed three retained source-proof checks because the new
+TenantContext.booking method changed the shared source closure. Removed that new
+method and reused the existing server-configured sales resolver and admission
+control, preserving tenant-context.ts byte-for-byte against released main. No
+receipt hashes, proof gates or limits were rewritten. Signed delivery admission
+now shares the existing sales budget (10 per five minutes);429 makes no booking
+write and must be retried. Dedicated webhook admission is not implemented and
+native provider retry/delivery acceptance remains unproved.
