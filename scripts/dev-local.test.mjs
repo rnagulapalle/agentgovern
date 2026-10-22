@@ -28,4 +28,8 @@ describe('Local developer installation boundaries',()=>{
   expect(()=>developerEnvironment({LOOPLABS_DEPLOYMENT_PROFILE:'isolated-control-demo-1'},'',state)).toThrow();
   expect(()=>developerEnvironment({},'LOOPLABS_DEPLOYMENT_PROFILE=\n',state)).toThrow();
  });
+ it('clears integrations from merged Next development env files',()=>{
+  const env=developerEnvironment({},'LOOPLABS_CHAT_MODEL=old\nLOOPLABS_CHAT_MODEL=hosted\nLOOPLABS_FETCHSANDBOX_BINDING=private\nAWS_PROFILE=production',state);
+  expect(env.LOOPLABS_CHAT_MODEL).toBe('');expect(env.LOOPLABS_FETCHSANDBOX_BINDING).toBe('');expect(env.AWS_PROFILE).toBe('');expect(env.NODE_ENV).toBe('development');
+ });
 });

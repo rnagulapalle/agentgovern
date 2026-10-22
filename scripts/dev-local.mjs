@@ -121,7 +121,10 @@ export async function runDeveloper(mode){
  if(mode==='stop'){command(join(bin,'pg_ctl'),['-D',join(root,'postgres'),'-m','fast','-w','stop']);console.log('Local developer database stopped; data retained.');return;}
  await startDatabase(root,bin);
  const installed=await bootstrapTenantContext(state.webFile);await installed.close();
- const text=await exists(join(cwd,'.env.local'))?await readFile(join(cwd,'.env.local'),'utf8'):'';
+ // Include every file Next loads in development, from lowest to highest
+ // precedence, so a hidden .env file cannot re-enable a hosted integration.
+ const texts=await Promise.all(['.env','.env.development','.env.local','.env.development.local'].map(async name=>await exists(join(cwd,name))?await readFile(join(cwd,name),'utf8'):''));
+ const text=texts.join('\n');
  const env=developerEnvironment(process.env,text,state);
  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--hostname','127.0.0.1','-p','3007'],{stdio:'inherit',env});
  for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>child.kill(signal));

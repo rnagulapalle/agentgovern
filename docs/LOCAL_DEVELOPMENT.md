@@ -39,7 +39,7 @@ Repeated setup preserves the accounts and checks the existing installation. If s
 
 ## Existing twin and limits
 
-If your connector twin already runs, keep its existing loopback `LOOPLABS_CONNECTOR_TWIN_URL` and token in `.env.local`. The launcher accepts a local HTTP twin only; hosted bindings, AWS identities, planners and background workers are not activated. Remove old explicit `LOOPLABS_WORKSPACE_ID` or `LOOPLABS_RECOVERY_EPOCH` entries and unset `LOOPLABS_DEPLOYMENT_PROFILE` before using this separate local setup; a different configured authority fence or deployment restriction must not be silently overridden.
+If your connector twin already runs, keep its existing loopback `LOOPLABS_CONNECTOR_TWIN_URL` and token in `.env.local`. The launcher accepts a local HTTP twin only; hosted bindings, AWS identities, planners and background workers are not activated. It checks all four Next development environment files without rewriting them. Remove old explicit `LOOPLABS_WORKSPACE_ID` or `LOOPLABS_RECOVERY_EPOCH` entries and unset `LOOPLABS_DEPLOYMENT_PROFILE` before using this separate local setup; a different configured authority fence or deployment restriction must not be silently overridden.
 
 This starts the scoped web workspace, not a complete workflow rehearsal. Existing twin preparation is separate. Native AWS discovery, model planning, background execution, live CRM/email delivery and cancellation/refund acceptance are not established by this setup. An empty inventory is expected until local test agents/records are enrolled.
 
