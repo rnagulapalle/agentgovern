@@ -17,6 +17,29 @@ permissions:
   contents: read
 
 jobs:
+  linux-developer-setup:
+    name: linux-developer-setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: sudo apt-get update && sudo apt-get install -y postgresql postgresql-contrib libpq-dev openssl
+      - run: pnpm install --frozen-lockfile
+      - name: Prove fresh Linux tenant setup and authenticated HTTP access
+        run: node scripts/dev-local-proof.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-developer-setup-receipt
+          path: .local/development/acceptance.json
+          include-hidden-files: true
+
   quality-gates:
     name: quality-gates
     runs-on: ubuntu-latest

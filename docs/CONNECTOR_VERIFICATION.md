@@ -41,11 +41,16 @@ The single-process private twin atomically persists engine state and its fixture
 
 ## Run and prove
 
+For a fresh developer checkout, first follow [local development](LOCAL_DEVELOPMENT.md).
+The legacy connector setup below does not publish the tenant installation now
+required by server startup. Use `pnpm dev:setup` and `pnpm dev:local` for the local
+web workspace; keep existing twin preparation separate.
+
 ```sh
 pnpm connectors:setup
 pnpm connectors:twin
-# Another terminal:
-pnpm dev
+# Another terminal, after local tenant setup:
+pnpm dev:local
 ```
 
 Keep credentials in ignored private files. Production twin mounts only its dedicated connector state/credential directory. Never give an agent a twin, database, operator or worker credential.
