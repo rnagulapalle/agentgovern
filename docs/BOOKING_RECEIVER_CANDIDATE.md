@@ -67,3 +67,20 @@ receipt hashes, proof gates or limits were rewritten. Signed delivery admission
 now shares the existing sales budget (10 per five minutes);429 makes no booking
 write and must be retried. Dedicated webhook admission is not implemented and
 native provider retry/delivery acceptance remains unproved.
+
+## October23 optional inventory checker
+
+`verifyBookingTenantInventory` composes the independently reviewed base ledger
+with exactly the two booking tables and the source digest of migration32. The
+base verifier and frozen read allowlists remain unchanged. Actual installed-role
+tests accept the catalog after repeated optional installation and refuse extra,
+missing or renamed columns, missing tables/ledger, altered digest, disabled RLS,
+disabled FORCE RLS and an unrelated table. Supplying the observed extended ledger
+as the reviewed base is refused.
+
+This checker is an offline composition primitive. It is not yet wired into
+normal installer admission, restore/regrant or runtime capability profiles. It
+does not independently verify column types, constraints or policy expressions;
+the existing owner helper separately checks the exact tenant policy and broad
+grants. Native HTTPS/provider delivery remains untested; the endpoint remains
+denied. See the separate October23 watchdog receipts for tests and quality status.
