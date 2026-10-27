@@ -3,7 +3,9 @@ import { SITE } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/control-plane", "/sign-in", "/api/"] }],
+    // Crawlers must reach the login-gated HTML to read its noindex metadata.
+    // Authentication and capability checks, not robots.txt, protect workspace data.
+    rules: [{ userAgent: "*", allow: "/", disallow: ["/api/"] }],
     sitemap: `${SITE.url}/sitemap.xml`,
     host: SITE.url,
   };

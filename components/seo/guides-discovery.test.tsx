@@ -5,10 +5,21 @@ import BlogArticlePage, { generateMetadata } from "@/app/blog/[slug]/page";
 import { SeoPageShell } from "@/components/seo/SeoPageShell";
 import { listNewsSlugs, loadNewsPost, newsPath } from "@/lib/news-markdown";
 import sitemap from "@/app/sitemap";
+import robots from "@/app/robots";
+import { readFile } from "node:fs/promises";
 
 const slug = "2026-09-30-what-is-an-agent-control-plane";
 
 describe("public guide discovery", () => {
+  it("lets crawlers read private-page noindex without listing private URLs in the sitemap", async () => {
+    expect(robots().rules).toEqual([{ userAgent: "*", allow: "/", disallow: ["/api/"] }]);
+    for (const file of ["app/control-plane/layout.tsx", "app/sign-in/page.tsx"]) {
+      expect(await readFile(file, "utf8")).toMatch(/robots:\s*\{\s*index:\s*false,\s*follow:\s*false\s*\}/);
+    }
+    for (const entry of sitemap()) {
+      expect(entry.url).not.toMatch(/\/control-plane(?:[/?]|$)|\/sign-in(?:[/?]|$)|\/api\//);
+    }
+  });
   it("links to published starting guides with their actual titles and keeps the industry guides", () => {
     const html = renderToStaticMarkup(<GuidesPage />);
     for (const name of [slug, "2026-09-30-agent-permissions-approvals-recovery", "2026-10-20-langchain-langgraph-deep-agents-types"]) {
