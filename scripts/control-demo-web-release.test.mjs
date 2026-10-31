@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {execFileSync,spawnSync} from 'node:child_process';
+import {ownedBuilder,builderMemoryBytes} from './staging-owned-builder.mjs';
 import {readFile} from 'node:fs/promises';
 import {describe,it,expect,vi} from 'vitest';
-import {parseContainerEnvironment,webProfileEnvironment,composeEnvironment,assertResolvedEnvironment,assertHostConfigurationUnchanged,assertProfileOnlyChange,changedControlDemoSource,assertPublicFooterDestinations,plannerRefreshOverride,withRenewalLock} from './control-demo-web-release.mjs';
+import {publicAnalyticsBuildArguments,parseContainerEnvironment,webProfileEnvironment,composeEnvironment,assertResolvedEnvironment,assertHostConfigurationUnchanged,assertProfileOnlyChange,changedControlDemoSource,assertPublicFooterDestinations,plannerRefreshOverride,withRenewalLock} from './control-demo-web-release.mjs';
 describe('bounded existing-installation control demo release',()=>{
  it('changes only reviewed profile; rejects changed secrets, absent authority and unknown old profiles',()=>{
   const before=['LOOPLABS_DEPLOYMENT_PROFILE=isolated-quote-demo-1','TOKEN=private-test-value','ROLE=role1'];
@@ -66,4 +69,32 @@ it('explicit AWS UX release enables only the named flag and preserves exact roll
  expect(webProfileEnvironment(before,'isolated-control-demo-1')).toEqual(parseContainerEnvironment(before));
  expect(()=>webProfileEnvironment(before,'isolated-control-demo-1','enabled')).toThrow();
  expect(()=>webProfileEnvironment(before,'isolated-quote-demo-1',true)).toThrow();
+});
+
+const publicProjectKey='phc_'+'a'.repeat(32);
+it('passes only explicit public project configuration through the actual owned builder call',async()=>{
+ const analyticsArgs=publicAnalyticsBuildArguments({NEXT_PUBLIC_POSTHOG_KEY:publicProjectKey,PRIVATE_TOKEN:'must-not-forward'});
+ const source=await readFile(new URL('./control-demo-web-release.mjs',import.meta.url),'utf8');
+ const start=source.indexOf('builder.build('),call=source.slice(start,source.indexOf(';const image=',start));
+ const calls=[],docker=(...args)=>{calls.push(args);return args[0]==='inspect'?JSON.stringify({Memory:builderMemoryBytes,MemorySwap:builderMemoryBytes}):'';};
+ const builder=ownedBuilder(docker,'ll-platform-0123456789ab-build');builder.start();
+ vm.runInNewContext(call,{builder,analyticsArgs,commit:'a'.repeat(40),sourceSha:'b'.repeat(64),tag:'synthetic-nonexecuting-evaluation'},{timeout:1000});builder.close();
+ const build=calls.find(args=>args[0]==='buildx'&&args[1]==='build');
+ expect(build.filter(x=>x==='--build-arg')).toHaveLength(2);
+ expect(build).toContain('NEXT_PUBLIC_POSTHOG_KEY='+publicProjectKey);expect(build).toContain('NEXT_PUBLIC_POSTHOG_HOST=/ph');
+ expect(build.join(' ')).not.toContain('must-not-forward');expect(build.join(' ')).not.toContain('PRIVATE_TOKEN');
+});
+it('refuses missing, malformed and shell-active public values and unreviewed collection hosts',()=>{
+ for(const key of [undefined,'','server-secret','phc_short','phc_'+'a'.repeat(129),publicProjectKey+"';touch /tmp/unsafe;#",publicProjectKey+'\n',123])expect(()=>publicAnalyticsBuildArguments({NEXT_PUBLIC_POSTHOG_KEY:key})).toThrow();
+ for(const host of ['', 'https://unreviewed.example', '/ph?token=private',123])expect(()=>publicAnalyticsBuildArguments({NEXT_PUBLIC_POSTHOG_KEY:publicProjectKey,NEXT_PUBLIC_POSTHOG_HOST:host})).toThrow();
+});
+it('validates both release boundaries without printing rejected configuration',async()=>{
+ const file=new URL('./control-demo-web-release.mjs',import.meta.url),env={PATH:process.env.PATH,NEXT_PUBLIC_POSTHOG_KEY:publicProjectKey};
+ expect(execFileSync(process.execPath,[file.pathname,'analytics-check'],{env,encoding:'utf8'})).toBe('');
+ const rejected='private-do-not-print',result=spawnSync(process.execPath,[file.pathname,'analytics-check'],{env:{...env,NEXT_PUBLIC_POSTHOG_KEY:rejected},encoding:'utf8'});
+ expect(result.status).toBe(1);expect(result.stdout+result.stderr).not.toContain(rejected);
+ const shell=await readFile(new URL('./deploy-control-demo.sh',import.meta.url),'utf8');
+ expect(shell.indexOf('analytics-check')).toBeLessThan(shell.indexOf('node scripts/release-ci.mjs'));
+ expect(shell).toContain("NEXT_PUBLIC_POSTHOG_KEY='$NEXT_PUBLIC_POSTHOG_KEY' NEXT_PUBLIC_POSTHOG_HOST='$NEXT_PUBLIC_POSTHOG_HOST' node --import tsx scripts/control-demo-web-release.mjs build");
+ expect(shell).toContain('readonly NEXT_PUBLIC_POSTHOG_KEY NEXT_PUBLIC_POSTHOG_HOST');
 });

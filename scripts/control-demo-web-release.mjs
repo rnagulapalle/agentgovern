@@ -11,6 +11,13 @@ import {selectInternalTlsApplicationRoot} from './persistent-internal-tls-genera
 import {installedAssemblySourceSnapshot as snapshotSource} from './staging-installed-source-snapshot.mjs';
 export const authority='/srv/looplabs-production/releases/d4ee705d806f74d2433e298f08cc761ad1fba45a';
 const targetProfile='isolated-control-demo-1';
+// Explicit public browser configuration only; never copy runtime credentials.
+export function publicAnalyticsBuildArguments(environment){
+ const key=environment?.NEXT_PUBLIC_POSTHOG_KEY,host=environment?.NEXT_PUBLIC_POSTHOG_HOST??'/ph';
+ assert(typeof key==='string'&&/^phc_[A-Za-z0-9]{16,128}$/.test(key),'Explicit PostHog public project key required');
+ assert.equal(host,'/ph','Use the existing same-origin analytics proxy');
+ return ['--build-arg','NEXT_PUBLIC_POSTHOG_KEY='+key,'--build-arg','NEXT_PUBLIC_POSTHOG_HOST='+host];
+}
 export function parseContainerEnvironment(entries){
  assert(Array.isArray(entries)&&entries.length>0,'Observed container environment required');const result={};
  for(const entry of entries){assert(typeof entry==='string'&&!entry.includes('\0'),'Malformed environment entry');const at=entry.indexOf('=');assert(at>0,'Explicit environment value required');const key=entry.slice(0,at);assert(/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)&&!['__proto__','constructor','prototype'].includes(key),'Invalid environment key');assert(!Object.hasOwn(result,key),'Duplicate environment key');result[key]=entry.slice(at+1);}
@@ -82,16 +89,17 @@ async function activateOwnedWebSource(candidate,imageId){
 
 
 export async function buildControlDemoWeb(){
+ const analyticsArgs=publicAnalyticsBuildArguments(process.env);
  assert.equal(process.platform,'linux');assert.equal(process.arch,'x64');assert.equal(process.getuid(),1001);
  const source=process.cwd();assert(/^\/srv\/looplabs-production\/web-releases\/[a-f0-9]{40}\/app$/.test(source));const commit=source.split('/').at(-2);
  const snapshot=await snapshotSource(source),bytes=JSON.stringify(snapshot,null,2)+'\n',sourceSha=sha(bytes);await writeFile('../source-before.json',bytes,{mode:0o600,flag:'wx'});
  const docker=(...args)=>execFileSync('/usr/bin/docker',args,{encoding:'utf8',timeout:900000,maxBuffer:64*1024**2,stdio:['ignore','pipe','pipe']}).trim();
  const name='ll-platform-'+randomBytes(6).toString('hex')+'-build',builder=ownedBuilder(docker,name),tag='looplabs-control-demo:'+commit;
- try{builder.start();builder.build('-f','Dockerfile','--label','looplabs.assembly.owner=ll-platform-27ec7699f577','--label','looplabs.web.release.commit='+commit,'--label','looplabs.web.release.source.sha256='+sourceSha,'-t',tag,'.');const image=docker('image','inspect',tag,'--format','{{.Id}}');assert(/^sha256:[a-f0-9]{64}$/.test(image));assert.deepEqual(await snapshotSource(source),snapshot);const receipt={contract:'owned-control-demo-web-build-1',commit,source,sourceSha256:sourceSha,image,buildPassed:true,activated:false};await writeFile('../build-receipt.json',JSON.stringify(receipt,null,2)+'\n',{mode:0o600,flag:'wx'});return receipt;}finally{builder.close();}
+ try{builder.start();builder.build(...analyticsArgs,'-f','Dockerfile','--label','looplabs.assembly.owner=ll-platform-27ec7699f577','--label','looplabs.web.release.commit='+commit,'--label','looplabs.web.release.source.sha256='+sourceSha,'-t',tag,'.');const image=docker('image','inspect',tag,'--format','{{.Id}}');assert(/^sha256:[a-f0-9]{64}$/.test(image));assert.deepEqual(await snapshotSource(source),snapshot);const receipt={contract:'owned-control-demo-web-build-1',commit,source,sourceSha256:sourceSha,image,publicAnalytics:{host:'/ph',configurationSha256:sha(JSON.stringify(analyticsArgs))},buildPassed:true,activated:false};await writeFile('../build-receipt.json',JSON.stringify(receipt,null,2)+'\n',{mode:0o600,flag:'wx'});return receipt;}finally{builder.close();}
 }
 export async function releaseControlDemoWeb(){
  const source=process.cwd();assert(/^\/srv\/looplabs-production\/web-releases\/[a-f0-9]{40}\/app$/.test(source));const candidate=source.split('/').at(-2),build=JSON.parse((await privateFile(join(dirname(source),'build-receipt.json'))).bytes);
  assert.equal(build.contract,'owned-control-demo-web-build-1');assert.equal(build.commit,candidate);assert.equal(build.source,source);assert.equal(build.buildPassed,true);assert.equal(sha(JSON.stringify(await snapshotSource(source),null,2)+'\n'),build.sourceSha256);
  return withRenewalLock('/srv/looplabs-production/config',()=>activateOwnedWebSource(candidate,build.image));
 }
-if(process.argv[1]===fileURLToPath(import.meta.url)){try{assert.equal(process.argv.length,3);assert(['build','activate'].includes(process.argv[2]));if(process.argv[2]==='build')console.log(JSON.stringify(await buildControlDemoWeb()));else await releaseControlDemoWeb();}catch{console.error('Control demo web release refused. No credentials printed. Inspect the private build/activation receipts and retained renewal lock before retry.');process.exitCode=1;}}
+if(process.argv[1]===fileURLToPath(import.meta.url)){try{assert.equal(process.argv.length,3);assert(['build','activate','analytics-check'].includes(process.argv[2]));if(process.argv[2]==='analytics-check')publicAnalyticsBuildArguments(process.env);else if(process.argv[2]==='build')console.log(JSON.stringify(await buildControlDemoWeb()));else await releaseControlDemoWeb();}catch{console.error('Control demo web release refused. No credentials printed. Inspect the private build/activation receipts and retained renewal lock before retry.');process.exitCode=1;}}
