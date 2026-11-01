@@ -37,7 +37,8 @@ export class WorkflowControl {
   ) {
     const emailPayload = emailContent ? {template:"reviewed_acknowledgement_v2" as const,...reviewedMessageV2(emailContent)} : {template:"case_received" as const};
     const create = async (c: PoolClient) => {
-      await this.connectors.authority(c, actor, ["operator"]);
+      await this.connectors.authority(c, actor, ["operator"],{operation:"propose",agentId:crmAgent,connector:"crm"});
+      await this.connectors.authority(c, actor, ["operator"],{operation:"propose",agentId:emailAgent,connector:"email"});
       if (!["lead", "customer"].includes(lifecycle))
         throw new ControlError(400, "Choose a supported contact lifecycle.");
       if (
@@ -183,11 +184,7 @@ export class WorkflowControl {
     if (!/^[0-9a-f-]{36}$/i.test(id))
       throw new ControlError(400, "Choose a valid workflow.");
     return transaction(this.db, actor.orgId, async (c) => {
-      await this.connectors.authority(c, actor, [
-        "operator",
-        "agent",
-        "worker",
-      ]);
+      await this.connectors.identity(c,actor,["operator","agent","worker"]);
       if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal", "quote-temporal"].includes(actor.subject)) await managedWorker(c, actor, id);
       const run = (
         await c.query(
@@ -196,6 +193,7 @@ export class WorkflowControl {
         )
       ).rows[0];
       if (run?.workflow_kind === "distributor-quote") {
+        await this.connectors.authority(c,actor,["operator","agent","worker"]);
         const quotes=this.quotes;
         if(actor.role!=="operator" && !(actor.role==="worker" && actor.subject==="quote-temporal"))throw new ControlError(403,"A current named quote owner or exact bound quote workload is required.");
         if(!quotes || quotes.authority.db!==this.db)throw new ControlError(503,"Server-owned quote review authority is required.");
@@ -220,6 +218,9 @@ export class WorkflowControl {
           !steps.some((s) => s.agent_id === actor.subject))
       )
         throw new ControlError(404, "Workflow not found.");
+      // An incomplete graph carries no record context; only an administrator may inspect it.
+      if(steps.length===0)await this.connectors.authority(c,actor,["operator","agent","worker"]);
+      for(const step of steps)if(actor.role!=="agent"||step.agent_id===actor.subject)await this.connectors.authority(c,actor,["operator","agent","worker"],{operation:"read",agentId:step.agent_id,connector:step.connector});
       // Agents receive only their own immutable step instructions, never peer action payloads.
       return {
         ...run,
@@ -366,7 +367,7 @@ export class WorkflowControl {
       await control.reconcile(actor, step.action_id);
     }
     return transaction(this.db, actor.orgId, async (c) => {
-      await this.connectors.authority(c, actor, ["operator", "worker"]);
+      for(const step of run.steps)await this.connectors.authority(c,actor,["operator","worker"],{operation:"reconcile",agentId:step.agent_id,connector:step.connector});
       if (actor.role === "worker") await managedWorker(c, actor, id);
       const state = (
         await c.query(

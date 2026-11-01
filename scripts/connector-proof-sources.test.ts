@@ -15,7 +15,7 @@ test('closed source registry covers actual transitive child/bootstrap imports an
  const {seen:closure,edges}=await actualClosure(),inventory=new Set<string>(connectorProofSources);
  for(const file of closure)expect(inventory.has(file),`Unmeasured dependency ${file}`).toBe(true);
  const schemas=JSON.parse(await readFile('install-order.json','utf8')) as string[];for(const file of schemas)expect(inventory.has(file)).toBe(true);
- const construction=['install-order.json','lib/durable/tenant-boundary-prototype-schema.sql','lib/enquiries/runner.ts','package.json','pnpm-lock.yaml','runtime/temporal/record-routing.ts','scripts/connector-twin.py','tsconfig.json'];
+ const construction=['lib/workspace/connector-member-access-schema.sql','install-order.json','lib/durable/tenant-boundary-prototype-schema.sql','lib/enquiries/runner.ts','package.json','pnpm-lock.yaml','runtime/temporal/record-routing.ts','scripts/connector-twin.py','tsconfig.json'];
  expect([...inventory].sort()).toEqual([...new Set([...closure,...schemas,...construction])].sort());
  for(const file of ['lib/workspace/tenant-bootstrap.ts','lib/workspace/owned-private-file.ts','lib/workspace/tenant-context.ts','lib/durable/pg-transport.ts','lib/durable/tenant-pool.ts'])expect(closure.has(file)).toBe(true);
  expect(inventory.has('lib/workspace/tenant-config.ts')).toBe(false);

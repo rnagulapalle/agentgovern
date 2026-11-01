@@ -1,3 +1,4 @@
+import fetchsandbox from "../../demo-companies/fetchsandbox/company.json";
 import { beforeAll,afterAll,it,expect,vi } from 'vitest';
 import { randomBytes,randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
@@ -51,4 +52,22 @@ it('rejects catalog changes based on an old scan without losing the previously s
  const stale={...current.catalog[0],connectionId:'old-catalog',resourceArn:arn,version:'1'};
  expect((await post({...current,catalog:[...current.catalog,stale]})).status).toBe(409);
  expect((await(await get()).json()).profile).toEqual(current);
+});
+
+it('persists FetchSandbox reference metadata through the existing directory for both members without changing native inventory or effects',async()=>{
+ const before=(await(await get()).json()).profile;
+ const inventory=(await fixture.owner.query("SELECT * FROM ll_cloud_runtime_observations ORDER BY org_id,connection_id,resource_arn")).rows;
+ const next={...structuredClone(fetchsandbox),revision:before.revision,catalog:before.catalog};
+ expect((await post(next)).status).toBe(200);
+ const first=(await(await get()).json()).profile;
+ expect(first.reference.employees).toHaveLength(240);expect(first.reference.workflows).toHaveLength(32);
+ expect((await(await get(pratibha)).json()).profile).toEqual(first);
+ expect((await fixture.owner.query("SELECT company_profile FROM ll_orgs WHERE id='acme'")).rows[0].company_profile).toEqual(first);
+ expect(first.catalog).toEqual(before.catalog);
+ expect((await fixture.owner.query("SELECT * FROM ll_cloud_runtime_observations ORDER BY org_id,connection_id,resource_arn")).rows).toEqual(inventory);
+ expect((await post(next,pratibha)).status).toBe(409);
+ expect((await(await get(other)).json()).profile).toBeNull();
+ expect((await post({...first,reference:{...first.reference,permissions:['approve']}})).status).toBe(400);
+ expect((await(await get()).json()).profile).toEqual(first);
+ for(const table of ['ll_actions','ll_effects','ll_connector_actions','ll_tokens'])expect((await fixture.owner.query(`SELECT count(*)::int n FROM ${table}`)).rows[0].n).toBe(0);
 });

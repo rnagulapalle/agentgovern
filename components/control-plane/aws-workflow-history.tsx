@@ -9,7 +9,7 @@ import { telemetryRuns, telemetryOutcomeGroup, telemetryRequestLabel } from "@/l
 import { AwsExecutionBrowser } from "./aws-execution-browser";
 async function operation(value:object){const r=await fetch("/api/workspace/discovery/onboarding",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(value),cache:"no-store"});const data=await workspaceJson(r);if(!r.ok)throw Object.assign(Error(data.error),{status:r.status});return data;}
 export type History=WorkflowTelemetryWindow&{checkedAt:string;enrollment:{displayName:string;owner:string;logGroup:string;enrolledAt:string}};
-export function AwsWorkflowHistory({reference,name,onCoverage,mode="full",references,onHistory,compact=false}:{reference:ActivityReference;name:string;compact?:boolean;mode?:"full"|"activity"|"setup";references?:ActivityReference[];onHistory?:(history:History)=>void;onCoverage?:(value:Partial<AwsConnectionCoverage>)=>void}){
+export function AwsWorkflowHistory({reference,name,businessName,onCoverage,mode="full",references,onHistory,compact=false}:{reference:ActivityReference;name:string;businessName?:string;compact?:boolean;mode?:"full"|"activity"|"setup";references?:ActivityReference[];onHistory?:(history:History)=>void;onCoverage?:(value:Partial<AwsConnectionCoverage>)=>void}){
  const viewId=useId();
  const historyCallback=useRef(onHistory);historyCallback.current=onHistory;
  const [view,setView]=useState("activity");
@@ -56,7 +56,7 @@ export function AwsWorkflowHistory({reference,name,onCoverage,mode="full",refere
  return <section className={`cp-panel cp-durable-card aws-workflow-observation${mode==="setup"?" is-setup":""}${compact?" is-compact":""}`} aria-label="AWS workflow observation">{!compact&&<h2>{history||enrollment ? "Agent workspace" : enrollmentChecked?setupAllowed?"Connect this agent’s history":"Agent connection needs attention":"Checking saved agent…"}</h2>}<p>{compact?"Observation only. Shared approvals and execution controls are configured separately.":"Your workflow stays in AWS. History, shared approvals and mandatory execution enforcement are separate connections."}</p>
   {error&&<p role="alert" className="cp-durable-message is-error">{error}</p>}{notice&&<p role="status" className="cp-durable-message">{notice}</p>}
   {!enrollmentChecked&&!history&&<p role="status">Checking saved onboarding before offering setup.</p>}
-  {enrollment&&<div className="aws-agent-facts"><strong>{enrollment.displayName}</strong><span>Owner: {enrollment.owner}</span><span>Agent version {reference.version} · onboarding saved</span></div>}
+  {enrollment&&<div className="aws-agent-facts"><strong>{businessName??enrollment.displayName}</strong><span>Owner: {enrollment.owner}</span><span>Agent version {reference.version} · onboarding saved</span></div>}
   {enrollmentChecked&&!setupAllowed&&!enrollment&&<button className="cp-button secondary" disabled={busy} onClick={()=>setLookupAttempt(n=>n+1)}>Retry saved agent check</button>}
   {setupAllowed&&!enrollment&&historySetup}
   {enrollment&&mode==="full"&&<nav className="aws-workspace-views" aria-label="Agent workspace views">{["activity","approvals"].map(value=><button type="button" key={value} aria-pressed={view===value} aria-controls={`${viewId}-${value}`} onClick={()=>setView(value)}>{value==="activity"?"Activity":"Approvals"}</button>)}</nav>}
