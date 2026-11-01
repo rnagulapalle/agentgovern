@@ -1,3 +1,4 @@
+import {connectorMemberPolicyEnabled,connectorMemberContext,connectorParticipantsAllowed,memberConnectorAllowed,connectorCompletionIdentity,type MemberConnectorOperation} from "../workspace/connector-member-access";
 import { NativeQuoteMailConnector } from "./native-quote-mail";
 import { NativeQuoteConnector } from "./native-quote";
 import { isQuoteAction, type QuoteActionBoundary, type QuoteStep } from "./quote-action";
@@ -10,7 +11,7 @@ import { managedWorker, dispatchOwnership, managedOwnerActive } from "../enquiri
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
-import { authorize, tokenHash } from "../durable/service";
+import { authorizeIdentity, tokenHash } from "../durable/service";
 import { ControlError, type Actor } from "../durable/contracts";
 import { activeApprover } from "../workspace/identity";
 import {
@@ -37,14 +38,14 @@ export class ConnectorControl {
       return context?context.run(c,actor,()=>callback(c)):callback(c);
     });
   }
-  async authority(c: PoolClient, actor: Actor, roles: Actor["role"][]) {
-    if (actor.orgId !== this.provider.workspaceId)
-      throw new ControlError(
-        403,
-        "Connector is not assigned to this workspace.",
-      );
-    if (!(await namedActorCurrent(c, actor))) throw new ControlError(403, "Current named workspace session is required.");
-    await authorize(c, actor, roles, actor.role === "worker" && ["enquiry-runner", "enquiry-temporal", "quote-temporal"].includes(actor.subject) ? (actor.subject === "quote-temporal" ? "quotes" : "enquiries") : undefined);
+  async identity(c:PoolClient,actor:Actor,roles:Actor["role"][]){
+    if(actor.orgId!==this.provider.workspaceId)throw new ControlError(403,"Connector is not assigned to this workspace.");
+    if(!await namedActorCurrent(c,actor))throw new ControlError(403,"Current named workspace session is required.");
+    await authorizeIdentity(c,actor,roles,actor.role==="worker"&&["enquiry-runner","enquiry-temporal","quote-temporal"].includes(actor.subject)?actor.subject==="quote-temporal"?"quotes":"enquiries":undefined);
+  }
+  async authority(c:PoolClient,actor:Actor,roles:Actor["role"][],access?:{operation:MemberConnectorOperation;agentId:string;connector:string}){
+    await this.identity(c,actor,roles);
+    if(actor.role==="operator"&&!await memberConnectorAllowed(c,actor.orgId,actor.subject,access?()=>connectorMemberContext(this.provider,access.operation,access.agentId,access.connector):undefined))throw new ControlError(403,"This member cannot perform that tool operation on this record.");
   }
   async get(c: PoolClient, actor: Actor, id: string): Promise<ConnectorAction> {
     const a = (
@@ -97,6 +98,7 @@ export class ConnectorControl {
     if (isQuoteAction(a)) {
       if (!this.quoteBoundary || !(await this.quoteBoundary.matches(c,actor,a,provider,freshQuoteSource))) return false;
     } else if (!bindingMatches(this.provider, a) || !requestMatches(this.provider, a) || !(await scopedGrantMatches(c,actor.orgId,a,this.provider))) return false;
+    if(!await connectorParticipantsAllowed(c,actor.orgId,a,()=>connectorMemberContext(provider,"read",a.agent_id,a.connector),approval))return false;
     if (!(await managedOwnerActive(c, actor.orgId, a.id)) || !(await connectorMembershipCurrent(c, actor.orgId, a, approval))) return false;
     const row = (
       await c.query(
@@ -134,7 +136,8 @@ export class ConnectorControl {
           (p.payload as { lifecycle: string }).lifecycle
         : sameRequestSnapshot(preparedRequest("email",old.payload,this.provider.contactId ?? "1001",this.provider.recordScope),preparedRequest("email",p.payload,this.provider.contactId ?? "1001",this.provider.recordScope)));
     const previous = await this.inTransaction(actor, async (c) => {
-      await this.authority(c, actor, ["agent", "operator"]);
+      await this.authority(c, actor, ["agent", "operator"],{operation:"propose",agentId:p.agentId,connector:p.connector});
+      if(!await connectorParticipantsAllowed(c,actor.orgId,{agent_id:p.agentId,connector:p.connector,proposed_by:actor.subject},()=>connectorMemberContext(this.provider,"propose",p.agentId,p.connector),false))throw new ControlError(403,"The agent owner or requester lacks current record authority.");
       await workflowProposal(c, actor.orgId, p);
       if (actor.role === "agent" && actor.subject !== p.agentId)
         throw new ControlError(403, "Agent identity must match the request.");
@@ -167,8 +170,9 @@ export class ConnectorControl {
     const scoped = { ...p.payload, ...(p.connector === "crm" && typeof sourceVersion === "string" ? { sourceVersion } : {}), binding };
     const request = preparedRequest(p.connector,scoped,this.provider.contactId ?? "1001",this.provider.recordScope);
     return this.inTransaction(actor, async (c) => {
-      await this.authority(c, actor, ["agent", "operator"]);
+      await this.authority(c, actor, ["agent", "operator"],{operation:"propose",agentId:p.agentId,connector:p.connector});
       if (binding !== this.provider.bindingId) throw new ControlError(409, "Connector destination changed during preparation. Prepare fresh work.");
+      if(!await connectorParticipantsAllowed(c,actor.orgId,{agent_id:p.agentId,connector:p.connector,proposed_by:actor.subject},()=>connectorMemberContext(this.provider,"propose",p.agentId,p.connector),false))throw new ControlError(403,"The agent owner or requester lacks current record authority.");
       const scopeGrant = this.provider.recordScope ? await currentScopeGrant(c,actor.orgId,p.agentId,this.provider) : null;
       if (this.provider.recordScope && !scopeGrant) throw new ControlError(403,"An active enrolled record grant is required for this agent.");
       const payload = {...scoped,request,...(scopeGrant?{scopeGrant}:{})};
@@ -278,8 +282,9 @@ export class ConnectorControl {
   }
   async review(actor: Actor, id: string, hash: string, approve: boolean) {
     return this.inTransaction(actor, async (c) => {
-      await this.authority(c, actor, ["operator"]);
+      await this.identity(c,actor,["operator"]);
       const a = await this.get(c, actor, id);
+      await this.authority(c, actor, ["operator"],{operation:"review",agentId:a.agent_id,connector:a.connector});
       if (a.payload_hash !== hash)
         throw new ControlError(409, "Approval does not match the request.");
       const fresh = isQuoteAction(a) && "contract" in a.payload && a.payload.contract === "quote-step-1" ? await this.freshQuoteSource(a.payload.step) : true;
@@ -325,9 +330,11 @@ export class ConnectorControl {
   }
   async execute(actor: Actor, id: string, loseResponse = false) {
     const claim = await this.inTransaction(actor, async (c) => {
-      await this.authority(c, actor, ["operator", "worker"]);
-      if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal", "quote-temporal"].includes(actor.subject)) await managedWorker(c, actor, id, true);
+      await this.identity(c,actor,["operator","worker"]);
+      if(actor.role==="worker"&&["enquiry-runner","enquiry-temporal","quote-temporal"].includes(actor.subject))await managedWorker(c,actor,id,true);
       const a = await this.get(c, actor, id);
+      await this.authority(c, actor, ["operator", "worker"],{operation:"execute",agentId:a.agent_id,connector:a.connector});
+      if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal", "quote-temporal"].includes(actor.subject)) await managedWorker(c, actor, id, true);
       await dispatchOwnership(c, actor, id);
       if (
         a.state === "executing" &&
@@ -385,9 +392,16 @@ export class ConnectorControl {
       };
     }
     return this.inTransaction(actor, async (c) => {
-      await this.authority(c, actor, ["operator", "worker"]);
-      if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal", "quote-temporal"].includes(actor.subject)) await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
+      if(actor.role === "operator" && await connectorMemberPolicyEnabled(c,actor.orgId)){
+        // claim is closure-owned, never request input. No new effect or success is
+        // authorized by this completion-only evidence path.
+        if(a.lease_token === claim.lease_token && a.state === "executing" &&
+          (!await connectorCompletionIdentity(c,actor)||!await memberConnectorAllowed(c,actor.orgId,actor.subject,connectorMemberContext(this.provider,"execute",a.agent_id,a.connector))))
+          return this.state(c,actor,a,"uncertain","Member authority changed after dispatch. Verify the effect; do not resend.",observed);
+      }
+      await this.authority(c, actor, ["operator", "worker"],{operation:"execute",agentId:a.agent_id,connector:a.connector});
+      if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal", "quote-temporal"].includes(actor.subject)) await managedWorker(c, actor, id, true);
       if (a.lease_token !== claim.lease_token || a.state !== "executing")
         return { ...a, lease_token: null };
       if (
@@ -427,9 +441,11 @@ export class ConnectorControl {
   }
   async reconcile(actor: Actor, id: string) {
     const before = await this.inTransaction(actor, async (c) => {
-      await this.authority(c, actor, ["operator", "worker"]);
-      if (actor.role === "worker") await managedWorker(c, actor, id, true);
+      await this.identity(c,actor,["operator","worker"]);
+      if(actor.role==="worker")await managedWorker(c,actor,id,true);
       const a = await this.get(c, actor, id);
+      await this.authority(c, actor, ["operator", "worker"],{operation:"reconcile",agentId:a.agent_id,connector:a.connector});
+      if (actor.role === "worker") await managedWorker(c, actor, id, true);
       if (isQuoteAction(a) && !(((a.connector === "quote" && this.provider instanceof NativeQuoteConnector) || (a.connector === "email" && this.provider instanceof NativeQuoteMailConnector)) && this.quoteBoundary?.policy)) throw new ControlError(503,"Quote effect verification is not enabled; do not resend.");
       if (!["executing", "uncertain", "succeeded"].includes(a.state)) return { ...a, lease_token: null };
       if (isQuoteAction(a) ? !(await this.valid(c,actor,a,true,false)) : !bindingMatches(this.provider, a) || !requestMatches(this.provider,a) || !(await scopedGrantMatches(c,actor.orgId,a,this.provider))) return this.state(c, actor, a, "uncertain", "Saved request, record grant or destination changed. Restore the original reviewed contract before verifying the effect; do not resend.");
@@ -462,9 +478,9 @@ export class ConnectorControl {
       };
     }
     return this.inTransaction(actor, async (c) => {
-      await this.authority(c, actor, ["operator", "worker"]);
-      if (actor.role === "worker") await managedWorker(c, actor, id, true);
       const a = await this.get(c, actor, id);
+      await this.authority(c, actor, ["operator", "worker"],{operation:"reconcile",agentId:a.agent_id,connector:a.connector});
+      if (actor.role === "worker") await managedWorker(c, actor, id, true);
       if (!["executing", "uncertain", "succeeded"].includes(a.state))
         return { ...a, lease_token: null };
       if (isQuoteAction(a) ? !(await this.valid(c,actor,a,true,false)) : !bindingMatches(this.provider, a) || !requestMatches(this.provider,a) || !(await scopedGrantMatches(c,actor.orgId,a,this.provider)) || !(await connectorMembershipCurrent(c,actor.orgId,a,true))) return this.state(c, actor, a, "uncertain", "Request, record grant or destination changed during effect verification. Do not resend.",o);
@@ -473,7 +489,10 @@ export class ConnectorControl {
   }
   async read(actor: Actor, id: string) {
     return this.inTransaction(actor, async (c) => {
-      await this.authority(c, actor, ["agent", "operator", "worker"]);
+      await this.identity(c,actor,["agent","operator","worker"]);
+      if(actor.role==="worker"&&["enquiry-runner","enquiry-temporal","quote-temporal"].includes(actor.subject))await managedWorker(c,actor,id,true);
+      const a = await this.get(c,actor,id);
+      await this.authority(c, actor, ["agent", "operator", "worker"],{operation:"read",agentId:a.agent_id,connector:a.connector});
       if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal", "quote-temporal"].includes(actor.subject)) await managedWorker(c, actor, id, true);
       return { ...(await this.get(c, actor, id)), lease_token: null };
     });
