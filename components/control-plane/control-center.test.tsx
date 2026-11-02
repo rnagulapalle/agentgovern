@@ -304,3 +304,15 @@ it('previews a local inventory and saves only minimized company declarations fro
 },undefined,true,true));
 
 it("does not report zero requests when discovered deployments have no connected history",()=>mounted("overview",async page=>{expect(await page.locator(".cc-admin-stats strong").nth(2).innerText()).toBe("—");expect(await page.getByText("No history sources read",{exact:true}).count()).toBe(1);},"discovered"));
+
+it('uses the matched company workflow label in the drawer and history without rewriting enrollment authority',()=>mounted('agents',async(page,calls)=>{
+ await page.getByRole('button',{name:/Customer quote workflow/}).click();
+ await page.getByRole('dialog',{name:'Customer quote workflow',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Activity',exact:true}).click();
+ await page.locator('.aws-agent-facts strong').getByText('Customer quote workflow',{exact:true}).waitFor();
+ expect(calls.some(c=>c.body?.operation==='onboard'||c.body?.operation==='decide')).toBe(false);
+ await page.getByRole('button',{name:'Overview',exact:true}).click();
+ await page.getByRole('button',{name:'Edit name, owner & history source',exact:false}).click();
+ expect(await page.getByLabel('Agent name',{exact:true}).inputValue()).toBe('Partner quoting');
+ expect(calls.some(c=>c.body?.operation==='onboard')).toBe(false);
+},undefined,true,false,false,'?catalog=1'),15000);

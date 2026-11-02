@@ -1,3 +1,6 @@
+import {acquireConnectorTwinLease} from "./owned-connector-twin-lease";
+import {spawnOwnedPythonFixture} from "./owned-python-fixture";
+import {proveConnectorMembers} from "./connector-member-proof";
 import {validateInstalledProofConstruction} from './current-proof-source-registry.mjs';
 import { readFile, writeFile, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { randomUUID, randomBytes, createHash } from "node:crypto";
@@ -34,6 +37,7 @@ async function main() {
       "A dedicated test database is required; no live workspace will be modified.",
     );
   if(process.env.NODE_ENV!=='test')throw Error('Explicit disposable proof context required.');
+  let lease:Awaited<ReturnType<typeof acquireConnectorTwinLease>>|undefined;
   let fixture:Awaited<ReturnType<typeof createInstalledTenantFixture>>|undefined;
   let db:Pool|undefined,web:Pool,workerDb:Pool,schema:string,child:ChildProcess|undefined;
   await mkdir(".local", { recursive: true, mode: 0o700 });
@@ -51,17 +55,7 @@ async function main() {
   ];
   await writeFile(`${dir}/connector-twin-records.json`,JSON.stringify({records:recordScopes}),{mode:0o600});
   async function start() {
-    const backend =
-      process.env.FETCHSANDBOX_BACKEND_PATH ||
-      `${process.env.HOME}/sandbox/backend`;
-    child = spawn(
-      `${backend}/.venv/bin/python`,
-      ["scripts/connector-twin.py"],
-      {
-        env: proofChildEnvironment({LOOPLABS_CONNECTOR_STATE_DIR: dir,FETCHSANDBOX_BACKEND_PATH:backend}),
-        stdio: ["ignore", "pipe", "pipe"],
-      },
-    );
+    child = await spawnOwnedPythonFixture(["scripts/connector-twin.py"],dir);
     child.stderr?.resume();child.stdout?.resume();
     for (let i = 0; i < 80; i++) {
       if (child.exitCode !== null)
@@ -89,6 +83,7 @@ async function main() {
     console.log(`PASS ${name}`);
   }
   try {
+    lease=await acquireConnectorTwinLease();
     await start();
     fixture=await createInstalledTenantFixture({tenants:['local-proof','other-proof'],salesOrg:'local-proof',seed:async()=>{}});
     schema=fixture.schema;db=fixture.owner;web=fixture.web('local-proof');workerDb=await fixture.workload('local-proof','worker');
@@ -901,6 +896,7 @@ async function main() {
       const response=await fetch(`http://127.0.0.1:8018/proof/effects/${a.id}`,{headers:{Authorization:`Bearer ${token}`}});assert.equal(response.status,503);assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
       await stop();await start();adapter.request=original;assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");await new ConnectorControl(workerDb,p).execute(worker,a.id);assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
     },"Inject an actual persistence exception after native mutation: the process refuses volatile readback, returns unknown, and restart never causes an inferred resend. This is a fixture failure check, not production storage certification.");
+    const fetchsandboxMembers=await proveConnectorMembers({owner:db!,web:fixture.web('other-proof'),context:fixture.context,provider:scoped[2],check,effectCount:async()=>Object.keys(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects).length});
     let restoreMilliseconds = 0;
     await check(
       "isolated database backup and restore preserves actions and evidence",
@@ -966,6 +962,7 @@ async function main() {
     );
     assert.deepEqual(await validateConnectorProofSources(),sourceFingerprints,"Proof sources changed during the actual run.");
     evidence = {
+      fetchsandboxMembers,
       at: new Date().toISOString(),
       scope:
         "Isolated PostgreSQL schema and private FetchSandbox HubSpot Contacts / Resend single-send fixtures. No live CRM, real email, model or money.",
@@ -975,7 +972,7 @@ async function main() {
       limits: [
         "Fixture action journal and contact version are LoopLabs extensions, not live provider parity.",
         "No SSO, failover, production load or real delivery proof.",
-        "Three offline-enrolled test records; two scoped manual runs. Record-scoped background routing, sustained load and live recipients remain unsupported.",
+        "Three offline-enrolled test records; two legacy scoped runs and one separate FetchSandbox named-member workflow plus lifecycle cases. Record-scoped background routing, sustained load and live recipients remain unsupported.",
       ],
       providerEffects: Object.keys(
         JSON.parse(await readFile(`${dir}/connector-twin-state.json`, "utf8"))
@@ -986,6 +983,7 @@ async function main() {
     await stop();
     await fixture?.close();
     await rm(dir, { recursive: true, force: true });
+    await lease?.release();
   }
   if(!evidence)throw Error('Complete connector evidence required');
   await writeFile(`.local/connector-proof-successor-${randomBytes(8).toString("hex")}.json`,JSON.stringify({...evidence,ownedCleanupVerified:true},null,2),{mode:0o600,flag:'wx'});

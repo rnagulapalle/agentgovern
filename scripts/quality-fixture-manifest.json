@@ -2,9 +2,9 @@
   "contract": "private-quality-fixtures-1",
   "region": "us-west-2",
   "bucket": "looplabs-m7-code-962639302232-f08cb8f0",
-  "key": "quality-fixtures/19333954f9a678d60bea03edb622e37dbf2725849a3581848085181457d5067c.tar.gz",
-  "sha256": "19333954f9a678d60bea03edb622e37dbf2725849a3581848085181457d5067c",
-  "inventorySha256": "b84aa01116eaa27d4512e30f8ed52290e43201d2ea78601b95ec11e200907a02",
+  "key": "quality-fixtures/a2445a2bbebdb13f70cb1e1ca6df245d6551b19199e98d682169a38202ef7837.tar.gz",
+  "sha256": "a2445a2bbebdb13f70cb1e1ca6df245d6551b19199e98d682169a38202ef7837",
+  "inventorySha256": "0a2a2f7bc9e897a7863a17c3b072593e842d872a354b2e18b6bd95aeda640b3f",
   "providerCommit": "08372aadbaa6fb8f37368c6900323b8619c10f2c",
   "files": 299
 }
