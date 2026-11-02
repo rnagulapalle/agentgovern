@@ -1,3 +1,23 @@
+## Bounded campaign review snapshots (November 1)
+
+Shared approval records accept an exact `after` snapshot up to 32,768 characters.
+The four-action campaign preparation record exceeded the old 500-character
+limit and was refused before it could be displayed. Only this field's bound is
+extended: other text fields, control-character rejection, exact keys, revision
+hashes, response signatures and the 131,072-byte total response cap remain.
+Oversized or malformed snapshots are refused, never truncated. A large list can
+still exceed the response cap and be unavailable; do not treat that as an empty
+approval list or retry a decision automatically.
+
+Parser and signed-client checks are separate from a deployed connection and an
+authenticated human decision. Native requester metadata must still be bound by
+its invoking integration; a customer email is not identity attestation.
+
+The release attachment additionally permits the exact campaign-preparation
+runtime beside the existing quote and cancellation bindings, with a separate
+`preparation-signing.hex` key and `allowSelfReview: false`. This code does not
+install a binding, enroll a runtime, invoke work or grant access by itself.
+
 ## Exact approval reference correlation (October 18)
 
 An execution's reported approval IDs now constrain its review panel and business
@@ -251,3 +271,12 @@ not inherit that role from neighboring steps or the workflow catalog. Older even
 without role attribution retain their timeline and show “Workflow agent / Name not
 reported.” Conflicting evidence does not establish a named role. This is source
 attribution, not verified agent identity, human reviewer identity or proof of effect.
+
+The separately named November 1 Meta-preparation discovery successor preserves
+its own receipt, seven screenshots and cleanup evidence. The maintained producer
+measured 30 discovery assertions against 202 source files on a disposable verified
+TLS database. Its three observed build artifacts replace only those artifacts in
+the private CI fixture archive; the other 296 fixture files retain their original
+bytes. This scope does not establish hosted approval acceptance or native Meta
+execution. The prior company-member discovery receipt remains historical and is
+explicitly refused against the changed parser source.

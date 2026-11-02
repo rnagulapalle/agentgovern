@@ -19376,7 +19376,7 @@
     "lib/workspace/deployment-capabilities.ts": "24145559b72e98ca4e4aec77dccc20b7d320c56ece8c0dddb628ec4caa854ba7",
     "lib/workspace/execution-approval-match.ts": "5a701761720589f0747b52a0cad435827197416cbd517ecd06660dee22ceeda5",
     "lib/workspace/execution-reference.ts": "914d422f206610cc34622e7ac047d8339b8e89f62dfff377c5f78d1847a83a46",
-    "lib/workspace/external-approvals.ts": "8e344de0fd9f1763631fce00502a06b59665f86fc3549467134bc2ec8d0a8d93",
+    "lib/workspace/external-approvals.ts": "1f9c1bb9498ec71342876e151964999e143c6c8037112cecfaa0e572582a0cd1",
     "lib/workspace/identity.ts": "1a48b7a41079acb85488c035e25b44e9782d981b1731dd6676d697bdc5681095",
     "lib/workspace/installed-tenant-fixture.ts": "7e3d9869ccdc2d3ac1229a57d4af24d29c0d658ec9bb7861767f066d2f185ea3",
     "lib/workspace/membership-authority-schema.sql": "8bd2aa1b66479d9c8a5ba5137ac5fb7fb1eb08f2bc6ccd222d117b57af6d932c",

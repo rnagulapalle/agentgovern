@@ -33,3 +33,11 @@ it('preserves the quote binding beside one separately keyed cancellation binding
  for(const patch of [{secretPath:row.secretPath},{resourceArn:cancellation.resourceArn.replace('342206308838','123456789012')},{reviewers:[]},{allowSelfReview:undefined}])expect(()=>validateApprovalAttachment(source,[row,{...cancellation,...patch}])).toThrow();
  expect(()=>validateApprovalAttachment(source,[row,cancellation,cancellation])).toThrow();expect(()=>validateApprovalAttachment(source,[])).toThrow();
 });
+
+it('adds only the exact preparation runtime with its separate key and independent review',()=>{
+ const cancellation={...row,resourceArn:'arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/acme_product_cancellation-OXtwF22hKd',secretPath:'/run/looplabs-approvals/cancellation-signing.hex'};
+ const preparation={...row,resourceArn:'arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/acme_ad_campaign_preparation-d4VxBH8KHG',version:'5',secretPath:'/run/looplabs-approvals/preparation-signing.hex',allowSelfReview:false};
+ expect(JSON.parse(validateApprovalAttachment(source,[row,cancellation,preparation]).environment)).toEqual([row,cancellation,preparation]);
+ for(const patch of [{resourceArn:preparation.resourceArn+'other'},{secretPath:row.secretPath},{allowSelfReview:true}])expect(()=>validateApprovalAttachment(source,[row,cancellation,{...preparation,...patch}])).toThrow();
+ expect(()=>validateApprovalAttachment(source,[row,cancellation,preparation,preparation])).toThrow();
+});
