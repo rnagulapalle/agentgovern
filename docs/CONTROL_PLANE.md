@@ -13,6 +13,11 @@ Parser and signed-client checks are separate from a deployed connection and an
 authenticated human decision. Native requester metadata must still be bound by
 its invoking integration; a customer email is not identity attestation.
 
+The release attachment additionally permits the exact campaign-preparation
+runtime beside the existing quote and cancellation bindings, with a separate
+`preparation-signing.hex` key and `allowSelfReview: false`. This code does not
+install a binding, enroll a runtime, invoke work or grant access by itself.
+
 ## Exact approval reference correlation (October 18)
 
 An execution's reported approval IDs now constrain its review panel and business
