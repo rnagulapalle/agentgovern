@@ -12,7 +12,7 @@ async function context(request: NextRequest,id?:string,proposal=false,operation?
   if(operation!==undefined && (typeof operation!=="string" || !["propose","contain","enable","approve","reject","execute","reconcile"].includes(operation)))throw new ControlError(400,"Unknown action.");
   return {
     actor,
-    service: new ConnectorControl(db, id?await savedProvider(db,actor,proposal?"proposal":"action",id):connectorProvider()),
+    service: new ConnectorControl(db, id?await savedProvider(db,actor,proposal?"proposal":"action",id,null,false,undefined,operation==='propose'?'propose':operation==='approve'||operation==='reject'?'review':operation==='execute'?'execute':operation==='reconcile'?'reconcile':'read'):connectorProvider()),
   };
 }
 export async function GET(request: NextRequest) {

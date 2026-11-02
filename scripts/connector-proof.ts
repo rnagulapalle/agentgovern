@@ -400,14 +400,14 @@ async function main() {
     let api: ChildProcess | undefined;
     let origin = "";
 
-    async function startApi() {
+    async function startApi(org="local-proof") {
       api = spawn(
         process.execPath,
         ["--import", "tsx", "scripts/workflow-http-proof-server.ts"],
         {
           env: {
             ...proofChildEnvironment({}),
-            LOOPLABS_PROOF_WEB_PUBLICATION: await fixture!.publication('local-proof','web'),
+            LOOPLABS_PROOF_WEB_PUBLICATION: await fixture!.publication(org,'web'),
             LOOPLABS_DURABLE_ORIGIN: "",
             LOOPLABS_CONNECTOR_TWIN_URL: "http://127.0.0.1:8018",
             LOOPLABS_CONNECTOR_TWIN_TOKEN: token,
@@ -896,7 +896,7 @@ async function main() {
       const response=await fetch(`http://127.0.0.1:8018/proof/effects/${a.id}`,{headers:{Authorization:`Bearer ${token}`}});assert.equal(response.status,503);assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
       await stop();await start();adapter.request=original;assert.equal((await c.reconcile(operator,a.id)).state,"uncertain");await new ConnectorControl(workerDb,p).execute(worker,a.id);assert.deepEqual(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects,before);
     },"Inject an actual persistence exception after native mutation: the process refuses volatile readback, returns unknown, and restart never causes an inferred resend. This is a fixture failure check, not production storage certification.");
-    const fetchsandboxMembers=await proveConnectorMembers({owner:db!,web:fixture.web('other-proof'),context:fixture.context,provider:scoped[2],check,effectCount:async()=>Object.keys(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects).length});
+    const fetchsandboxMembers=await proveConnectorMembers({owner:db!,web:fixture.web('other-proof'),context:fixture.context,provider:scoped[2],check,withApi:async run=>{await startApi('other-proof');try{await run(async(path,key,value)=>{const response=await fetch(origin+path,{signal:AbortSignal.timeout(10000),headers:{Cookie:`${WORKSPACE_COOKIE}=${key}`,Origin:origin.replace('127.0.0.1','localhost'),'Content-Type':'application/json'},...(value?{method:'POST',body:JSON.stringify(value)}:{})});const data=await response.json();console.log('FETCHSANDBOX_MEMBER_HTTP',JSON.stringify({error:response.ok?undefined:data.error,route:path.split('?')[0],operation:value&&'operation'in value?value.operation:'read',status:response.status}));return{status:response.status,data};});}finally{await stopApi();}},effectCount:async()=>Object.keys(JSON.parse(await readFile(`${dir}/connector-twin-state.json`,"utf8")).effects).length});
     let restoreMilliseconds = 0;
     await check(
       "isolated database backup and restore preserves actions and evidence",

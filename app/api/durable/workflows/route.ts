@@ -15,7 +15,7 @@ async function context(r: NextRequest,id?:string|null,p?:Record<string,unknown>)
     actor,
     service: new WorkflowControl(
       db,
-      new ConnectorControl(db, id?await savedProvider(db,actor,"run",id):connectorProvider()),
+      new ConnectorControl(db, id?await savedProvider(db,actor,"run",id,null,false,undefined,p?.operation==='verify'?'reconcile':'read'):connectorProvider()),
     ),
   };
 }

@@ -186,3 +186,32 @@ build, 45 rendered internal destinations and diff hygiene. The current HTTP and
 discovery receipts retain 119 and 202 matching source fingerprints respectively.
 This is candidate validation, not a production permission deployment or native
 agent acceptance. Exact commit and remote CI state are recorded on issue 142/PR.
+
+### November 2: employee API acceptance extension
+
+The November 1 member proof called the services directly. A new installed-database
+test reproduced an API-routing gap: an employee could read the action through
+`ConnectorControl`, but the saved-provider lookup required company administration.
+The extension resolves saved record authority before the existing operation check.
+Restricted members receive filtered agent/run lists; registration, record enrollment,
+grant changes and company administration retain their administrator checks.
+Administrators retain the configured-workspace boundary; employee runs resolve
+their own saved record and require permission for every displayed step.
+
+The focused employee/quote regression suite passed 41 tests. The existing connector
+HTTP harness passed 43 checks against the current source, including actual Next
+handlers with named cookie sessions, an administrator-prepared enquiry plan,
+separate requester/reviewer/executor/observer grants, two private CRM/message
+effects, exact readback, replay, revocation and containment. The retained successor
+is `docs/evidence/connector-proof-20261102-member-api.json`; earlier receipts remain
+unchanged. Test identities and provider effects are disposable synthetic fixtures.
+
+This does not install hosted employee accounts or permissions, enable the contained
+email policy, establish live HubSpot/Resend parity, or close quote/cancellation,
+native-agent or both-account UI acceptance. No additional AWS infrastructure is
+created. Release and hosted installation remain separate gates on issue 142.
+
+The November 2 local `pnpm quality` run passed: 384 files, 3,560 tests,
+94.26% statement coverage, existing coverage thresholds, database refusal/cleanup,
+worker bundles, production build and 45 rendered destinations. This candidate
+is not deployed; GitHub CI and hosted employee acceptance remain separate.

@@ -238,6 +238,7 @@
     ],
     "ack": [
       "Dockerfile.temporal",
+      "lib/connectors/catalog.ts",
       "lib/connectors/content.ts",
       "lib/connectors/contracts.ts",
       "lib/connectors/email-observation.ts",
@@ -248,6 +249,7 @@
       "lib/connectors/quote-action.ts",
       "lib/connectors/record-scope.ts",
       "lib/connectors/request.ts",
+      "lib/connectors/routing.ts",
       "lib/connectors/scopes.ts",
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
@@ -259,6 +261,7 @@
       "lib/durable/tenant-boundary-prototype-schema.sql",
       "lib/durable/tenant-pool.ts",
       "lib/durable/workload-pool.ts",
+      "lib/enquiries/contracts.ts",
       "lib/enquiries/dispatch.ts",
       "lib/orchestration/admission.ts",
       "lib/orchestration/quote-contract.ts",
@@ -326,6 +329,7 @@
     ],
     "quote": [
       "Dockerfile.temporal",
+      "lib/connectors/catalog.ts",
       "lib/connectors/content.ts",
       "lib/connectors/contracts.ts",
       "lib/connectors/email-observation.ts",
@@ -336,6 +340,7 @@
       "lib/connectors/quote-action.ts",
       "lib/connectors/record-scope.ts",
       "lib/connectors/request.ts",
+      "lib/connectors/routing.ts",
       "lib/connectors/scopes.ts",
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
@@ -347,6 +352,7 @@
       "lib/durable/tenant-boundary-prototype-schema.sql",
       "lib/durable/tenant-pool.ts",
       "lib/durable/workload-pool.ts",
+      "lib/enquiries/contracts.ts",
       "lib/enquiries/dispatch.ts",
       "lib/orchestration/admission.ts",
       "lib/orchestration/quote-contract.ts",
@@ -415,6 +421,7 @@
     "connector": [
       "app/api/durable/connectors/route.ts",
       "app/api/durable/workflows/route.ts",
+      "app/api/workspace/agents/route.ts",
       "app/api/workspace/enquiries/route.ts",
       "lib/connectors/catalog.ts",
       "lib/connectors/content.ts",
@@ -535,6 +542,7 @@
       "lib/connectors/quote-action.ts",
       "lib/connectors/record-scope.ts",
       "lib/connectors/request.ts",
+      "lib/connectors/routing.ts",
       "lib/connectors/scopes.ts",
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
@@ -547,6 +555,7 @@
       "lib/durable/tenant-pool.ts",
       "lib/durable/workload-pool.ts",
       "lib/enquiries/chat-contract.ts",
+      "lib/enquiries/contracts.ts",
       "lib/enquiries/dispatch.ts",
       "lib/orchestration/quote-contract.ts",
       "lib/quotes/authority.ts",
@@ -636,6 +645,7 @@
       "lib/connectors/quote-action.ts",
       "lib/connectors/record-scope.ts",
       "lib/connectors/request.ts",
+      "lib/connectors/routing.ts",
       "lib/connectors/scopes.ts",
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
@@ -870,6 +880,7 @@
       "lib/connectors/quote-action.ts",
       "lib/connectors/record-scope.ts",
       "lib/connectors/request.ts",
+      "lib/connectors/routing.ts",
       "lib/connectors/schema.sql",
       "lib/connectors/scope-schema.sql",
       "lib/connectors/scopes.ts",
@@ -1042,6 +1053,7 @@
       "lib/connectors/quote-action.ts",
       "lib/connectors/record-scope.ts",
       "lib/connectors/request.ts",
+      "lib/connectors/routing.ts",
       "lib/connectors/scopes.ts",
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
@@ -1053,6 +1065,7 @@
       "lib/durable/tenant-boundary-prototype-schema.sql",
       "lib/durable/tenant-pool.ts",
       "lib/durable/workload-pool.ts",
+      "lib/enquiries/contracts.ts",
       "lib/enquiries/dispatch.ts",
       "lib/orchestration/admission.ts",
       "lib/orchestration/quote-contract.ts",
@@ -1385,6 +1398,7 @@
       "lib/connectors/quote-action.ts",
       "lib/connectors/record-scope.ts",
       "lib/connectors/request.ts",
+      "lib/connectors/routing.ts",
       "lib/connectors/scopes.ts",
       "lib/connectors/service.ts",
       "lib/connectors/twin.ts",
@@ -3310,6 +3324,158 @@
     },
     {
       "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/email-observation.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
       "to": "lib/durable/service.ts"
     },
     {
@@ -3581,14 +3747,6 @@
       "to": "lib/enquiries/contracts.ts"
     },
     {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
       "from": "lib/enquiries/chat.ts",
       "to": "lib/durable/contracts.ts"
     },
@@ -3659,6 +3817,14 @@
     {
       "from": "lib/workspace/agents.ts",
       "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/workspace/connector-member-access.ts"
     },
     {
       "from": "lib/workspace/agents.ts",
@@ -3783,30 +3949,6 @@
     {
       "from": "lib/quotes/native-demo-factory.ts",
       "to": "lib/connectors/twin.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/email-observation.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
     },
     {
       "from": "lib/quotes/native-demo-factory.ts",
@@ -4125,30 +4267,6 @@
       "to": "lib/connectors/hosted.ts"
     },
     {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/twin.ts"
-    },
-    {
       "from": "app/api/workspace/enquiries/route.ts",
       "to": "lib/workflows/service.ts"
     },
@@ -4163,74 +4281,6 @@
     {
       "from": "app/api/workspace/enquiries/route.ts",
       "to": "lib/connectors/routing.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/enquiries/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/twin.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/catalog.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/scopes.ts"
     },
     {
       "from": "app/api/workspace/enquiries/route.ts",
@@ -5130,6 +5180,158 @@
     },
     {
       "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/email-observation.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
       "to": "lib/durable/service.ts"
     },
     {
@@ -5433,30 +5635,6 @@
       "to": "lib/connectors/twin.ts"
     },
     {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/email-observation.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
       "from": "lib/quotes/worker-native-controls.ts",
       "to": "lib/connectors/quote-action.ts"
     },
@@ -5523,30 +5701,6 @@
     {
       "from": "runtime/temporal/record-routing.ts",
       "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/twin.ts"
     },
     {
       "from": "runtime/temporal/record-routing.ts",
@@ -6286,6 +6440,158 @@
     },
     {
       "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/email-observation.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
       "to": "lib/durable/service.ts"
     },
     {
@@ -6589,30 +6895,6 @@
       "to": "lib/connectors/twin.ts"
     },
     {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/email-observation.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
       "from": "lib/quotes/worker-native-controls.ts",
       "to": "lib/connectors/quote-action.ts"
     },
@@ -6679,30 +6961,6 @@
     {
       "from": "runtime/temporal/record-routing.ts",
       "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/twin.ts"
     },
     {
       "from": "runtime/temporal/record-routing.ts",
@@ -6842,43 +7100,31 @@
     },
     {
       "from": "scripts/connector-member-proof.ts",
-      "to": "lib/workspace/tenant-context.ts"
+      "to": "lib/enquiries/service.ts"
     },
     {
-      "from": "lib/workspace/tenant-context.ts",
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/connectors/content.ts",
       "to": "lib/durable/contracts.ts"
     },
     {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/durable/tenant-pool.ts"
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/enquiries/revision.ts"
     },
     {
-      "from": "lib/durable/tenant-pool.ts",
-      "to": "lib/durable/pg-transport.ts"
-    },
-    {
-      "from": "lib/durable/tenant-pool.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
-      "to": "lib/workspace/connector-member-access.ts"
-    },
-    {
-      "from": "lib/workspace/connector-member-access.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/durable/service.ts",
+      "from": "lib/enquiries/revision.ts",
       "to": "lib/workspace/identity.ts"
     },
     {
       "from": "lib/workspace/identity.ts",
       "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workspace/connector-member-access.ts",
+      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "lib/workspace/identity.ts",
@@ -6891,6 +7137,14 @@
     {
       "from": "lib/durable/recovery.ts",
       "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/durable/tenant-pool.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "lib/durable/tenant-pool.ts",
+      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "lib/durable/recovery.ts",
@@ -6905,6 +7159,70 @@
       "to": "lib/durable/contracts.ts"
     },
     {
+      "from": "lib/enquiries/revision.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/revision.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/revision.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/enquiries/revision.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/orchestration/admission.ts"
+    },
+    {
+      "from": "lib/orchestration/admission.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/durable/service.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
       "from": "lib/durable/service.ts",
       "to": "lib/durable/database.ts"
     },
@@ -6917,107 +7235,11 @@
       "to": "lib/durable/contracts.ts"
     },
     {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/workspace/tenant-context.ts",
-      "to": "lib/workspace/auth.ts"
-    },
-    {
-      "from": "lib/workspace/auth.ts",
+      "from": "lib/connectors/scopes.ts",
       "to": "lib/durable/contracts.ts"
     },
     {
-      "from": "lib/workspace/auth.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "scripts/connector-member-proof.ts",
-      "to": "lib/workspace/auth.ts"
-    },
-    {
-      "from": "scripts/connector-member-proof.ts",
-      "to": "lib/workspace/connector-member-access-migration.ts"
-    },
-    {
-      "from": "lib/workspace/connector-member-access-migration.ts",
-      "to": "lib/workspace/connector-member-access.ts"
-    },
-    {
-      "from": "scripts/connector-member-proof.ts",
-      "to": "lib/workspace/connector-member-access.ts"
-    },
-    {
-      "from": "scripts/connector-member-proof.ts",
-      "to": "lib/connectors/service.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/workspace/connector-member-access.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/connectors/native-quote-mail.ts"
-    },
-    {
-      "from": "lib/connectors/native-quote-mail.ts",
-      "to": "lib/quotes/digest.ts"
-    },
-    {
-      "from": "lib/quotes/digest.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/quotes/digest.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/connectors/native-quote-mail.ts",
-      "to": "lib/quotes/plan-v2.ts"
-    },
-    {
-      "from": "lib/quotes/plan-v2.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/quotes/plan-v2.ts",
-      "to": "lib/quotes/plan.ts"
-    },
-    {
-      "from": "lib/quotes/plan.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/quotes/plan-v2.ts",
-      "to": "lib/quotes/authority.ts"
-    },
-    {
-      "from": "lib/quotes/authority.ts",
-      "to": "lib/quotes/background.ts"
-    },
-    {
-      "from": "lib/quotes/background.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/quotes/background.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
-      "from": "lib/quotes/background.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/quotes/background.ts",
-      "to": "lib/quotes/digest.ts"
-    },
-    {
-      "from": "lib/quotes/background.ts",
-      "to": "lib/quotes/effect.ts"
-    },
-    {
-      "from": "lib/quotes/effect.ts",
+      "from": "lib/connectors/scopes.ts",
       "to": "lib/connectors/contracts.ts"
     },
     {
@@ -7025,40 +7247,16 @@
       "to": "lib/connectors/content.ts"
     },
     {
-      "from": "lib/connectors/content.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
       "from": "lib/connectors/contracts.ts",
       "to": "lib/connectors/scopes.ts"
     },
     {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/scopes.ts",
+      "from": "lib/connectors/contracts.ts",
       "to": "lib/connectors/record-scope.ts"
     },
     {
       "from": "lib/connectors/record-scope.ts",
       "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/contracts.ts",
-      "to": "lib/connectors/record-scope.ts"
     },
     {
       "from": "lib/connectors/contracts.ts",
@@ -7085,8 +7283,180 @@
       "to": "lib/durable/contracts.ts"
     },
     {
+      "from": "lib/connectors/scopes.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/workspace/agents.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/email-observation.ts"
+    },
+    {
+      "from": "lib/connectors/email-observation.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/workflows/service.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/native-quote.ts"
+    },
+    {
+      "from": "lib/connectors/native-quote.ts",
+      "to": "lib/quotes/digest.ts"
+    },
+    {
+      "from": "lib/quotes/digest.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/quotes/digest.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/native-quote.ts",
+      "to": "lib/quotes/effect.ts"
+    },
+    {
+      "from": "lib/quotes/effect.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
       "from": "lib/quotes/effect.ts",
       "to": "lib/quotes/plan.ts"
+    },
+    {
+      "from": "lib/quotes/plan.ts",
+      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "lib/quotes/effect.ts",
@@ -7129,12 +7499,40 @@
       "to": "lib/quotes/plan-v2.ts"
     },
     {
-      "from": "lib/quotes/store.ts",
+      "from": "lib/quotes/plan-v2.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/quotes/plan-v2.ts",
+      "to": "lib/quotes/plan.ts"
+    },
+    {
+      "from": "lib/quotes/plan-v2.ts",
       "to": "lib/quotes/authority.ts"
     },
     {
-      "from": "lib/quotes/store.ts",
-      "to": "lib/quotes/membership.ts"
+      "from": "lib/quotes/authority.ts",
+      "to": "lib/quotes/background.ts"
+    },
+    {
+      "from": "lib/quotes/background.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/quotes/background.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/quotes/background.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/quotes/background.ts",
+      "to": "lib/quotes/digest.ts"
+    },
+    {
+      "from": "lib/quotes/background.ts",
+      "to": "lib/quotes/effect.ts"
     },
     {
       "from": "lib/quotes/background.ts",
@@ -7171,10 +7569,6 @@
     {
       "from": "lib/quotes/native-email-transport.ts",
       "to": "lib/connectors/email-observation.ts"
-    },
-    {
-      "from": "lib/connectors/email-observation.ts",
-      "to": "lib/connectors/contracts.ts"
     },
     {
       "from": "lib/quotes/native-email-transport.ts",
@@ -7261,32 +7655,12 @@
       "to": "lib/quotes/plan-v2.ts"
     },
     {
-      "from": "lib/connectors/native-quote-mail.ts",
-      "to": "lib/durable/contracts.ts"
+      "from": "lib/quotes/store.ts",
+      "to": "lib/quotes/authority.ts"
     },
     {
-      "from": "lib/connectors/native-quote-mail.ts",
-      "to": "lib/quotes/effect.ts"
-    },
-    {
-      "from": "lib/connectors/native-quote-mail.ts",
-      "to": "lib/quotes/native-email-transport.ts"
-    },
-    {
-      "from": "lib/connectors/native-quote-mail.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/native-quote-mail.ts",
-      "to": "lib/connectors/native-quote.ts"
-    },
-    {
-      "from": "lib/connectors/native-quote.ts",
-      "to": "lib/quotes/digest.ts"
-    },
-    {
-      "from": "lib/connectors/native-quote.ts",
-      "to": "lib/quotes/effect.ts"
+      "from": "lib/quotes/store.ts",
+      "to": "lib/quotes/membership.ts"
     },
     {
       "from": "lib/connectors/native-quote.ts",
@@ -7309,160 +7683,36 @@
       "to": "lib/connectors/contracts.ts"
     },
     {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/connectors/native-quote.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/connectors/quote-action.ts"
-    },
-    {
-      "from": "lib/connectors/quote-action.ts",
-      "to": "lib/quotes/transaction-context.ts"
-    },
-    {
-      "from": "lib/quotes/transaction-context.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/quotes/transaction-context.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/quotes/transaction-context.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
-      "from": "lib/connectors/quote-action.ts",
+      "from": "lib/workflows/service.ts",
       "to": "lib/connectors/native-quote-mail.ts"
     },
     {
-      "from": "lib/connectors/quote-action.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/quote-action.ts",
-      "to": "lib/quotes/authority.ts"
-    },
-    {
-      "from": "lib/connectors/quote-action.ts",
+      "from": "lib/connectors/native-quote-mail.ts",
       "to": "lib/quotes/digest.ts"
     },
     {
-      "from": "lib/connectors/quote-action.ts",
+      "from": "lib/connectors/native-quote-mail.ts",
       "to": "lib/quotes/plan-v2.ts"
     },
     {
-      "from": "lib/connectors/quote-action.ts",
-      "to": "lib/connectors/scopes.ts"
+      "from": "lib/connectors/native-quote-mail.ts",
+      "to": "lib/durable/contracts.ts"
     },
     {
-      "from": "lib/connectors/quote-action.ts",
+      "from": "lib/connectors/native-quote-mail.ts",
+      "to": "lib/quotes/effect.ts"
+    },
+    {
+      "from": "lib/connectors/native-quote-mail.ts",
+      "to": "lib/quotes/native-email-transport.ts"
+    },
+    {
+      "from": "lib/connectors/native-quote-mail.ts",
       "to": "lib/connectors/contracts.ts"
     },
     {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/quotes/digest.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/workspace/membership-authority.ts"
-    },
-    {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/connectors/scopes.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/enquiries/dispatch.ts"
-    },
-    {
-      "from": "lib/enquiries/dispatch.ts",
-      "to": "lib/quotes/background.ts"
-    },
-    {
-      "from": "lib/enquiries/dispatch.ts",
-      "to": "lib/workspace/membership-authority.ts"
-    },
-    {
-      "from": "lib/enquiries/dispatch.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/enquiries/dispatch.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/service.ts",
-      "to": "lib/workflows/guard.ts"
-    },
-    {
-      "from": "lib/workflows/guard.ts",
-      "to": "lib/workspace/membership-authority.ts"
-    },
-    {
-      "from": "lib/workflows/guard.ts",
-      "to": "lib/connectors/scopes.ts"
-    },
-    {
-      "from": "lib/workflows/guard.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/workflows/guard.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workflows/guard.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "scripts/connector-member-proof.ts",
-      "to": "lib/connectors/scopes.ts"
-    },
-    {
-      "from": "scripts/connector-member-proof.ts",
-      "to": "lib/workflows/service.ts"
-    },
-    {
-      "from": "lib/workflows/service.ts",
+      "from": "lib/connectors/native-quote-mail.ts",
       "to": "lib/connectors/native-quote.ts"
-    },
-    {
-      "from": "lib/workflows/service.ts",
-      "to": "lib/connectors/native-quote-mail.ts"
     },
     {
       "from": "lib/workflows/service.ts",
@@ -7525,8 +7775,76 @@
       "to": "lib/enquiries/dispatch.ts"
     },
     {
+      "from": "lib/enquiries/dispatch.ts",
+      "to": "lib/quotes/background.ts"
+    },
+    {
+      "from": "lib/enquiries/dispatch.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/enquiries/dispatch.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/dispatch.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
       "from": "lib/workflows/service.ts",
       "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
     },
     {
       "from": "lib/workflows/service.ts",
@@ -7541,36 +7859,200 @@
       "to": "lib/connectors/service.ts"
     },
     {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/connectors/native-quote-mail.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/connectors/native-quote.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/connectors/quote-action.ts"
+    },
+    {
+      "from": "lib/connectors/quote-action.ts",
+      "to": "lib/quotes/transaction-context.ts"
+    },
+    {
+      "from": "lib/quotes/transaction-context.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/quotes/transaction-context.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/quotes/transaction-context.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/connectors/quote-action.ts",
+      "to": "lib/connectors/native-quote-mail.ts"
+    },
+    {
+      "from": "lib/connectors/quote-action.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/quote-action.ts",
+      "to": "lib/quotes/authority.ts"
+    },
+    {
+      "from": "lib/connectors/quote-action.ts",
+      "to": "lib/quotes/digest.ts"
+    },
+    {
+      "from": "lib/connectors/quote-action.ts",
+      "to": "lib/quotes/plan-v2.ts"
+    },
+    {
+      "from": "lib/connectors/quote-action.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/quote-action.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/quotes/digest.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/enquiries/dispatch.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/service.ts",
+      "to": "lib/workflows/guard.ts"
+    },
+    {
+      "from": "lib/workflows/guard.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/workflows/guard.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/workflows/guard.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/workflows/guard.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workflows/guard.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
       "from": "lib/workflows/service.ts",
       "to": "lib/connectors/request.ts"
     },
     {
+      "from": "lib/enquiries/service.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
       "from": "scripts/connector-member-proof.ts",
-      "to": "lib/connectors/twin.ts"
+      "to": "lib/workspace/tenant-context.ts"
     },
     {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/email-observation.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
+      "from": "lib/workspace/tenant-context.ts",
       "to": "lib/durable/contracts.ts"
     },
     {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/workspace/tenant-context.ts",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "lib/workspace/auth.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/auth.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "scripts/connector-member-proof.ts",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "scripts/connector-member-proof.ts",
+      "to": "lib/workspace/connector-member-access-migration.ts"
+    },
+    {
+      "from": "lib/workspace/connector-member-access-migration.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "scripts/connector-member-proof.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "scripts/connector-member-proof.ts",
+      "to": "lib/connectors/service.ts"
+    },
+    {
+      "from": "scripts/connector-member-proof.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "scripts/connector-member-proof.ts",
+      "to": "lib/workflows/service.ts"
+    },
+    {
+      "from": "scripts/connector-member-proof.ts",
+      "to": "lib/connectors/twin.ts"
     },
     {
       "from": "scripts/connector-member-proof.ts",
@@ -7607,62 +8089,6 @@
     {
       "from": "runtime/temporal/staging-preflight.ts",
       "to": "lib/connectors/catalog.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/twin.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/scopes.ts"
     },
     {
       "from": "runtime/temporal/staging-preflight.ts",
@@ -7809,98 +8235,6 @@
       "to": "lib/enquiries/service.ts"
     },
     {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/enquiries/revision.ts"
-    },
-    {
-      "from": "lib/enquiries/revision.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/enquiries/revision.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/enquiries/revision.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/enquiries/revision.ts",
-      "to": "lib/workspace/membership-authority.ts"
-    },
-    {
-      "from": "lib/enquiries/revision.ts",
-      "to": "lib/enquiries/contracts.ts"
-    },
-    {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/workspace/membership-authority.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/orchestration/admission.ts"
-    },
-    {
-      "from": "lib/orchestration/admission.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/connectors/scopes.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/workspace/agents.ts"
-    },
-    {
-      "from": "lib/workspace/agents.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/agents.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/workspace/agents.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/workflows/service.ts"
-    },
-    {
-      "from": "lib/enquiries/service.ts",
-      "to": "lib/enquiries/contracts.ts"
-    },
-    {
       "from": "scripts/connector-proof.ts",
       "to": "lib/connectors/scopes.ts"
     },
@@ -7977,42 +8311,6 @@
       "to": "lib/connectors/routing.ts"
     },
     {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/enquiries/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/twin.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/catalog.ts"
-    },
-    {
       "from": "app/api/durable/workflows/route.ts",
       "to": "lib/connectors/hosted.ts"
     },
@@ -8047,6 +8345,22 @@
     {
       "from": "app/api/durable/connectors/route.ts",
       "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "scripts/workflow-http-proof-server.ts",
+      "to": "app/api/workspace/agents/route.ts"
+    },
+    {
+      "from": "app/api/workspace/agents/route.ts",
+      "to": "lib/workspace/tenant-context.ts"
+    },
+    {
+      "from": "app/api/workspace/agents/route.ts",
+      "to": "lib/durable/http.ts"
+    },
+    {
+      "from": "app/api/workspace/agents/route.ts",
+      "to": "lib/workspace/agents.ts"
     },
     {
       "from": "scripts/workflow-http-proof-server.ts",
@@ -8954,6 +9268,134 @@
     },
     {
       "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
       "to": "lib/durable/service.ts"
     },
     {
@@ -9207,62 +9649,6 @@
     {
       "from": "runtime/temporal/staging-preflight.ts",
       "to": "lib/connectors/catalog.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/twin.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/scopes.ts"
     },
     {
       "from": "runtime/temporal/staging-preflight.ts",
@@ -9526,6 +9912,118 @@
     },
     {
       "from": "lib/workspace/agents.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/email-observation.ts"
+    },
+    {
+      "from": "lib/connectors/email-observation.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
       "to": "lib/durable/service.ts"
     },
     {
@@ -9551,14 +10049,6 @@
     {
       "from": "runtime/temporal/outbox.ts",
       "to": "lib/workspace/membership-authority.ts"
-    },
-    {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/workspace/identity.ts"
     },
     {
       "from": "runtime/temporal/outbox.ts",
@@ -9731,10 +10221,6 @@
     {
       "from": "lib/quotes/native-email-transport.ts",
       "to": "lib/connectors/email-observation.ts"
-    },
-    {
-      "from": "lib/connectors/email-observation.ts",
-      "to": "lib/connectors/contracts.ts"
     },
     {
       "from": "lib/quotes/native-email-transport.ts",
@@ -9959,6 +10445,66 @@
     {
       "from": "lib/workflows/service.ts",
       "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
     },
     {
       "from": "lib/workflows/service.ts",
@@ -10277,86 +10823,6 @@
       "to": "lib/connectors/catalog.ts"
     },
     {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/twin.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/email-observation.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/scopes.ts"
-    },
-    {
       "from": "runtime/temporal/staging-preflight.ts",
       "to": "lib/connectors/twin.ts"
     },
@@ -10435,14 +10901,6 @@
     {
       "from": "lib/enquiries/revision.ts",
       "to": "lib/enquiries/contracts.ts"
-    },
-    {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "lib/enquiries/service.ts",
@@ -10879,6 +11337,26 @@
     {
       "from": "lib/connectors/catalog.ts",
       "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
     },
     {
       "from": "lib/connectors/catalog.ts",
@@ -11349,14 +11827,6 @@
       "to": "lib/workspace/membership-authority.ts"
     },
     {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
       "from": "lib/connectors/service.ts",
       "to": "lib/connectors/scopes.ts"
     },
@@ -11477,6 +11947,10 @@
       "to": "lib/connectors/catalog.ts"
     },
     {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
       "from": "app/api/durable/connectors/route.ts",
       "to": "lib/connectors/hosted.ts"
     },
@@ -11583,6 +12057,18 @@
     {
       "from": "lib/workflows/service.ts",
       "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
     },
     {
       "from": "lib/workflows/service.ts",
@@ -12262,6 +12748,26 @@
     },
     {
       "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
       "to": "lib/durable/database.ts"
     },
     {
@@ -12817,14 +13323,6 @@
       "to": "lib/workspace/membership-authority.ts"
     },
     {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
       "from": "runtime/temporal/outbox.ts",
       "to": "lib/durable/database.ts"
     },
@@ -13210,6 +13708,66 @@
     },
     {
       "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
       "to": "lib/durable/service.ts"
     },
     {
@@ -13481,14 +14039,6 @@
       "to": "lib/enquiries/contracts.ts"
     },
     {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
       "from": "lib/enquiries/chat.ts",
       "to": "lib/durable/contracts.ts"
     },
@@ -13559,6 +14109,14 @@
     {
       "from": "lib/workspace/agents.ts",
       "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/workspace/connector-member-access.ts"
     },
     {
       "from": "lib/workspace/agents.ts",
@@ -14238,6 +14796,26 @@
     },
     {
       "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
       "to": "lib/durable/database.ts"
     },
     {
@@ -14769,14 +15347,6 @@
       "to": "lib/workspace/membership-authority.ts"
     },
     {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
       "from": "runtime/temporal/outbox.ts",
       "to": "lib/durable/database.ts"
     },
@@ -14947,6 +15517,66 @@
     {
       "from": "lib/workflows/service.ts",
       "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
     },
     {
       "from": "lib/workflows/service.ts",
@@ -15690,6 +16320,118 @@
     },
     {
       "from": "lib/workspace/agents.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/workspace/membership-authority.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/email-observation.ts"
+    },
+    {
+      "from": "lib/connectors/email-observation.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/twin.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
       "to": "lib/durable/service.ts"
     },
     {
@@ -15885,10 +16627,6 @@
       "to": "lib/connectors/email-observation.ts"
     },
     {
-      "from": "lib/connectors/email-observation.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
       "from": "lib/quotes/native-email-transport.ts",
       "to": "lib/connectors/contracts.ts"
     },
@@ -16081,14 +16819,6 @@
       "to": "lib/workspace/membership-authority.ts"
     },
     {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/workspace/membership-authority.ts",
-      "to": "lib/workspace/identity.ts"
-    },
-    {
       "from": "lib/connectors/service.ts",
       "to": "lib/connectors/scopes.ts"
     },
@@ -16238,6 +16968,66 @@
     },
     {
       "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
       "to": "lib/durable/service.ts"
     },
     {
@@ -16283,14 +17073,6 @@
     {
       "from": "lib/enquiries/revision.ts",
       "to": "lib/enquiries/contracts.ts"
-    },
-    {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/durable/contracts.ts"
     },
     {
       "from": "lib/enquiries/service.ts",
@@ -16459,86 +17241,6 @@
     {
       "from": "runtime/temporal/staging-preflight.ts",
       "to": "lib/connectors/catalog.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/twin.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/email-observation.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/twin.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/scopes.ts"
     },
     {
       "from": "runtime/temporal/staging-preflight.ts",
@@ -16791,42 +17493,6 @@
     {
       "from": "app/api/durable/connectors/route.ts",
       "to": "lib/connectors/routing.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/enquiries/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/twin.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/routing.ts",
-      "to": "lib/connectors/catalog.ts"
     },
     {
       "from": "app/api/durable/connectors/route.ts",
@@ -18722,6 +19388,134 @@
     },
     {
       "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/routing.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/enquiries/contracts.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/connectors/content.ts"
+    },
+    {
+      "from": "lib/enquiries/contracts.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/request.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/hosted.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/twin.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/service.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/membership-authority.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/identity.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/record-scope.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/hosted.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/contracts.ts"
+    },
+    {
+      "from": "lib/connectors/catalog.ts",
+      "to": "lib/connectors/scopes.ts"
+    },
+    {
+      "from": "lib/connectors/routing.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
+      "to": "lib/workspace/connector-member-access.ts"
+    },
+    {
+      "from": "lib/workflows/service.ts",
       "to": "lib/durable/service.ts"
     },
     {
@@ -18769,14 +19563,6 @@
       "to": "lib/enquiries/contracts.ts"
     },
     {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/connectors/content.ts"
-    },
-    {
-      "from": "lib/enquiries/contracts.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
       "from": "lib/enquiries/service.ts",
       "to": "lib/workspace/membership-authority.ts"
     },
@@ -18819,6 +19605,14 @@
     {
       "from": "lib/workspace/agents.ts",
       "to": "lib/durable/database.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/connectors/catalog.ts"
+    },
+    {
+      "from": "lib/workspace/agents.ts",
+      "to": "lib/workspace/connector-member-access.ts"
     },
     {
       "from": "lib/workspace/agents.ts",
@@ -18919,62 +19713,6 @@
     {
       "from": "runtime/temporal/staging-preflight.ts",
       "to": "lib/connectors/catalog.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/service.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/durable/database.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/hosted.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/record-scope.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/request.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/hosted.ts",
-      "to": "lib/connectors/twin.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/contracts.ts"
-    },
-    {
-      "from": "lib/connectors/catalog.ts",
-      "to": "lib/connectors/scopes.ts"
     },
     {
       "from": "runtime/temporal/staging-preflight.ts",
@@ -19137,10 +19875,10 @@
     "Dockerfile.connector-twin": "0de9d8a188631e57c831c292b03eeb284833e5e5112ef1d36be86adbeb4e4726",
     "Dockerfile.staging-provisioner": "67db35e052f69348e739f8165746e12f284493f130388a3f22b22d27c10c96ab",
     "Dockerfile.temporal": "c91cbd9a95619fda023224ba0eb1b11545333f4f8d86ba71c7382ab7bb6f5932",
-    "app/api/durable/connectors/route.ts": "d5ad9870868142d8ec301f97f01cc6b2d3036f674781a3e8358e8317620e96c4",
+    "app/api/durable/connectors/route.ts": "d5872478455f929ad84ba3179f43205df739ec5089b3a427ae90aefc6300c76d",
     "app/api/durable/refunds/route.ts": "fcdd7df26762dc9be63ae89409c2b04d33e2ecacb8e390609c6c1007bd2d311d",
     "app/api/durable/route.ts": "7bcdbf6718446dcc082f5bd79efe66f679cad5711e4fbed9747dcc5014186eff",
-    "app/api/durable/workflows/route.ts": "2a448b416ad2f70e87bbea03afdffd2dd0d2814fdd64fd40c4bb1660d194ba64",
+    "app/api/durable/workflows/route.ts": "73c57cad44266653c63e0dd332d1a598270c2fffec52031e88d0e1d400420b91",
     "app/api/sales/route.ts": "334f5e84b73db7a0de9678d8361f1cd30aeae112da783b9884dbc2465eb1662e",
     "app/api/workspace/agents/route.ts": "29c130f1ea1b824edf9a4a84198d0b3c99559fdb28c7ae7144a7361f3e3b6e81",
     "app/api/workspace/company/route.ts": "2916690f1e9f6d433bfdfca70deff00723d3e495ca4d8abb1ac51b869c942b25",
@@ -19176,7 +19914,7 @@
     "components/brand/loop-mark.tsx": "a520ee6e522a488f2e081d217f219099f48e3eca4cf5c67104eacea7616bdf79",
     "components/control-plane/access.tsx": "58afb59e52aedf7d3fa55a3f2f82d3aeb52d771ea253e2b1a69492a56497f6bc",
     "components/control-plane/actions-workspace.tsx": "43a857ac5f846bc93d253805dc20cc2db6ac970d1837b9dfbbe786d50deb1aa5",
-    "components/control-plane/agents-workspace.tsx": "60059f9dd43bfa3fc5c04c836899c08da4ddc68b3d631c07df8858385b968b7f",
+    "components/control-plane/agents-workspace.tsx": "01f075a8a2e849efa76cadaf09d182bd692a7a65bfdf51e726cdb443b7f94d46",
     "components/control-plane/aws-connection-journey.tsx": "ae2b1adea24783c0f5fc2668ee6f36612fe876f7b29cae8155b0051b6c4ab5d7",
     "components/control-plane/aws-execution-browser.tsx": "990bc78dad75b4da6ed33c37085f1e3c2da82baf34e4720225b7c7f2acec33d6",
     "components/control-plane/aws-workflow-history.tsx": "7bcf83f6aee341d6da9a40ecb35442b3b96fa31cdd0a0249cf42e06cdbda8fad",
@@ -19228,7 +19966,7 @@
     "instrumentation.ts": "de978ea9fdb19208b48df6b454989dfc9f064c87397eb07769230bad3813e7fc",
     "lib/analytics.ts": "4e0970fca48cd652730ad5c1ebef97181e44e1f98849185479bb8ed1244b480c",
     "lib/coding-agents/demo.ts": "59fccbae2f32263f5f8b2ff7105b2ced00cf2334beb5f76d5a58365ff9719311",
-    "lib/connectors/catalog.ts": "46e84cb81c602edf0799f19a70af6a42a4ced6dd66d3e2e2634356c50baf9fd7",
+    "lib/connectors/catalog.ts": "d44e323fa30bae6d5007b89440aca92a5c35075ffd8eab5c7fe63ccdc09ae8d2",
     "lib/connectors/content.ts": "891cb662e2ee4cd397b28e3433453ca5c60c8468ab0e016cb9fecf8e10597ba0",
     "lib/connectors/contracts.ts": "45a2e5a89a381ba5db3fd344fb4ce1ca929b6d1063ea14de113fa86edc22b1dc",
     "lib/connectors/email-observation.ts": "52282105eef31416e42df1b7e7a41f8bb23090038fef5e8865de32635d7a6565",
@@ -19239,7 +19977,7 @@
     "lib/connectors/quote-action.ts": "bccb1fd0ba4eb1143d247eecaca5b116f2c222e4b3a6b28623ba866e55e679fb",
     "lib/connectors/record-scope.ts": "d84de98f4e00e4a0d50ae3b8ecf6f30d3286c62d3d64546145d8d1a2b8dd04f7",
     "lib/connectors/request.ts": "92b64f4b384d11d3434126c60709f56a9f8490d1117d96ff42925b4f5d0210aa",
-    "lib/connectors/routing.ts": "b57b0a248884a42974234d5126e3a32fcb9862fa7589c101defa4b41cccb1945",
+    "lib/connectors/routing.ts": "d1fea99ea7f191a327eb02e8dead56d05c98629635773a7e9e1081de8068da22",
     "lib/connectors/schema.sql": "31482fffe2fa5388747d7c584f8d4e1eae35f188b372b3e47d7bd55da0cfcc27",
     "lib/connectors/scope-schema.sql": "5afe3769e0fd64301f0da62ff09a7202987656b2dff430de722c2638e5be99f7",
     "lib/connectors/scopes.ts": "4915dd59986762a5efdec7e94d6f29bd918e647f97e04c78c30c25428f1f1d2e",
@@ -19327,8 +20065,8 @@
     "lib/workflows/guard.ts": "b68617f0147b052e5ed113fb42527103a41b7d0cd7dc7895a17411fb2755be03",
     "lib/workflows/request.ts": "3dc1cfcfc429977ffbf7d627ef07dc80081c089fb7e2b2adbc396b0c9180b1ff",
     "lib/workflows/schema.sql": "fad98c6bed6e4cdc0168b5248ca5cbf7411c35ec49cd3bcbd24b27eb11bf3e4d",
-    "lib/workflows/service.ts": "32ff35d23710d33230f84648ad172026340c4432d06981048dcdd271ea02d479",
-    "lib/workspace/agents.ts": "a7dc16a213f2699679593dc11a2e8aead7533d4832df6180372a9133ea810fe2",
+    "lib/workflows/service.ts": "304fa8586eb507f0456a0776370f489c06c34d62ff3073fcdca4ada6c9613cae",
+    "lib/workspace/agents.ts": "646a6a1d4170eff27c3b892b436a7662343033cd9aa43e734c6b08df477bbf20",
     "lib/workspace/auth.ts": "c76a1d2373604da598bb9195e16a001a4e09fccd8e5d7adc8f7b8c04a0d00604",
     "lib/workspace/aws-authorization-contract.ts": "473a6c00918aab5d5d86c1c37bb180f0d74bdcb0401c37588dd927f75b6cfd82",
     "lib/workspace/aws-guided-access.ts": "faf94eaa55607db84c4500ed34f3179186dd545975263ecd2134440404fce5cb",
@@ -19437,12 +20175,12 @@
     "scripts/company-directory-setup.ts": "ab713d9ea2a32c2c891a9314830724c17273204e758e6203ddad0442b2e29298",
     "scripts/company-directory-upgrade-process.ts": "fe57760f2a147c1d4483e40b47128ff3d3f6bc4bafbc0855bb48c3d8e979a603",
     "scripts/connector-member-access-setup.ts": "44f8cb144ee744334c68b971807be7e945afeeb24664e97885b68f6e76955990",
-    "scripts/connector-member-proof.ts": "0864519e6a56ec675de9d509debc38e388d93613694c367f9bc6e254603f4fa9",
+    "scripts/connector-member-proof.ts": "cba1f898d2c353c88582829ee497307fe8efce3f19822eb9d17de4fe24ae0534",
     "scripts/connector-proof-diagnostic.ts": "d9d999b495c00138a0f01053331003031e6cbe40710b0a76291a2f996c3ca84c",
     "scripts/connector-proof-installation.ts": "c5081c3b7818502f0978811c4b3420b13b13aefc56fc5ad6b1e720fa59e4509d",
-    "scripts/connector-proof-sources.ts": "ec00cc3adaa5c1b7f104da9078dd0c813756fd0db36c66a3258db6ccf9cebd0a",
+    "scripts/connector-proof-sources.ts": "249af5b14c904f9d65739e1a623ec485ff511dea94f5e25f0c9e798a8f27aa29",
     "scripts/connector-proof-worker.ts": "6a580f6996343c492306cfeb9bf5c61386b2f4ef8988a2dcfafd6619941563a5",
-    "scripts/connector-proof.ts": "0d20d4e5062119adb19ac7ba355632fc61293e497b6b10d14ef2ab86336a43f5",
+    "scripts/connector-proof.ts": "752dd57378c76e8f117a547996a3f68b801bdc1e4ab9f05f1fdfa2a443bdc804",
     "scripts/connector-twin-tls.py": "c4dbb1320d0868f6bd3051de53e9857b0757a934cb0a50fa527f1e990210e925",
     "scripts/connector-twin.py": "6d174e8290df8bfc4449422fdfc8bbe671b3db0d40286c752f96f367a4cd9055",
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
@@ -19510,7 +20248,7 @@
     "scripts/typed-quote-held-barrier.mjs": "f6f864ab7c5a5eeb18354d0a9b5324373a47e042ec9731787961e30b3253d3b5",
     "scripts/worker-artifact-enrollment.mjs": "8ecbe6a3da05f233540fe99a764dd328316ab8133c109a25a31b584502e2774a",
     "scripts/workflow-agent.mjs": "ba686dbe89ee3b5e999666d31597728016dc6aade2b0f3fc806db9c24acb85be",
-    "scripts/workflow-http-proof-server.ts": "e3de80fb1d00f5a455c1fdf5d6d3d28c870f1b7271cc62cd4c579c7835d8d50f",
+    "scripts/workflow-http-proof-server.ts": "a753b93df521b8c246aacc4830593af0c4112d8120a40d5e595751ee723984e0",
     "scripts/workspace-restore-proof.ts": "1cc8a10084e9db84bbcd1dfe8e980abb99d9bbcc03371ae54a669f911296420f",
     "tsconfig.json": "feec4b19d9acba4e15b6c95ad652ed3f7d9c09cd62afadc7c2d8e9416699073b"
   }

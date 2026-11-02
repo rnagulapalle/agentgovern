@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PageTitle } from "./ui";
 import { agentPresentation, agentReviewDestination } from "@/lib/workspace/presentation";
 interface Directory {
+  canManage?: boolean;
   agents: {
     id: string;
     name: string | null;
@@ -47,7 +48,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
           {error}
         </p>
       )}
-      <section className="cp-panel cp-durable-card">
+      {data?.canManage !== false && <section className="cp-panel cp-durable-card">
         <h2>Onboard an agent</h2>
         <p>
           Choose the system this agent may act on. Its allowed action and request allowance are saved on the server. Customer-record changes and messages require independent approval. {!scriptDemo && "The prepared refund agent has its own payment boundary."}
@@ -190,7 +191,7 @@ export function AgentsWorkspace({ scriptDemo = false }: { scriptDemo?: boolean }
             </button>
           </div>
         )}
-      </section>
+      </section>}
       <section className="cp-panel cp-durable-card">
         <h2>Registered agents</h2>
         {data?.agents.map((a) => (
