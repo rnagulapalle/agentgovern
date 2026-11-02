@@ -271,3 +271,12 @@ not inherit that role from neighboring steps or the workflow catalog. Older even
 without role attribution retain their timeline and show “Workflow agent / Name not
 reported.” Conflicting evidence does not establish a named role. This is source
 attribution, not verified agent identity, human reviewer identity or proof of effect.
+
+The separately named November 1 Meta-preparation discovery successor preserves
+its own receipt, seven screenshots and cleanup evidence. The maintained producer
+measured 30 discovery assertions against 202 source files on a disposable verified
+TLS database. Its three observed build artifacts replace only those artifacts in
+the private CI fixture archive; the other 296 fixture files retain their original
+bytes. This scope does not establish hosted approval acceptance or native Meta
+execution. The prior company-member discovery receipt remains historical and is
+explicitly refused against the changed parser source.
