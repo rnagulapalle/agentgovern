@@ -1,3 +1,18 @@
+## Bounded campaign review snapshots (November 1)
+
+Shared approval records accept an exact `after` snapshot up to 32,768 characters.
+The four-action campaign preparation record exceeded the old 500-character
+limit and was refused before it could be displayed. Only this field's bound is
+extended: other text fields, control-character rejection, exact keys, revision
+hashes, response signatures and the 131,072-byte total response cap remain.
+Oversized or malformed snapshots are refused, never truncated. A large list can
+still exceed the response cap and be unavailable; do not treat that as an empty
+approval list or retry a decision automatically.
+
+Parser and signed-client checks are separate from a deployed connection and an
+authenticated human decision. Native requester metadata must still be bound by
+its invoking integration; a customer email is not identity attestation.
+
 ## Exact approval reference correlation (October 18)
 
 An execution's reported approval IDs now constrain its review panel and business
