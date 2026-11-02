@@ -1,3 +1,5 @@
+import {EnquiryControl} from "../enquiries/service";
+import {agentDirectory,registerAgent} from "./agents";
 import {companyDirectory} from "./company-profile";
 import {beforeAll,beforeEach,afterAll,expect,it} from 'vitest';
 import {randomBytes,randomUUID} from 'node:crypto';
@@ -9,6 +11,8 @@ import {ConnectorControl} from '../connectors/service';
 import {WorkflowControl} from '../workflows/service';
 import {authorize} from '../durable/service';
 import {ScopeControl} from '../connectors/scopes';
+import {savedProvider} from '../connectors/routing';
+import type {FetchSandboxConnectors} from '../connectors/twin';
 import type {ConnectorProvider} from '../connectors/contracts';
 import type {Actor} from '../durable/contracts';
 import {installConnectorMemberAccess} from './connector-member-access-migration';
@@ -34,6 +38,26 @@ afterAll(async()=>fixture?.close());
 beforeEach(async()=>{calls=0;policy.version++;await installConnectorMemberAccess(fixture.owner,'company',policy);});
 const proposal=()=>({actionId:randomUUID(),agentId:'crm',connector:'crm',payload:{lifecycle:'customer'}});
 const ready=async()=>{const a=await control.propose(actors.owner,proposal());return control.review(actors.reviewer,a.id,a.payload_hash,true);};
+it('routes a saved scoped action for its named reader without requiring company administration',async()=>{
+ const a=await control.propose(actors.owner,proposal());
+ expect((await control.read(actors.owner,a.id)).id).toBe(a.id);
+ const resolved=await savedProvider(fixture.web('company'),actors.owner,'action',a.id,null,false,()=>provider as FetchSandboxConnectors);
+ expect(resolved.bindingId).toBe(provider.bindingId);
+});
+it('saved routing denies an observer mutation, another record, and a changed connection before dispatch',async()=>{
+ const a=await control.propose(actors.owner,proposal());
+ const resolve=(operation:'read'|'execute'='read',selected:string|null=null,factory=()=>provider as FetchSandboxConnectors)=>savedProvider(fixture.web('company'),actors.observer,'action',a.id,selected,false,factory,operation);
+ await expect(resolve('execute')).rejects.toMatchObject({status:403});
+ await expect(resolve('read',randomUUID())).rejects.toMatchObject({status:409});
+ await expect(resolve('read',null,()=>({...provider,bindingId:'c'.repeat(64)}) as FetchSandboxConnectors)).rejects.toMatchObject({status:409});
+ expect(calls).toBe(0);
+});
+it('employee agent directory exposes only granted agents and never offers registration authority',async()=>{
+ const view=await agentDirectory(fixture.web('company'),actors.observer);
+ expect(view.canManage).toBe(false);expect(view.agents.map(a=>a.id)).toEqual(['crm']);expect(view.owners).toEqual([]);
+ const admin=await agentDirectory(fixture.web('company'),actors.admin);expect(admin.canManage).toBe(true);expect(admin.agents).toHaveLength(2);
+ await expect(registerAgent(fixture.web('company'),actors.observer,{id:'forbidden',name:'Forbidden',owner:actors.observer.subject,role:'crm_agent',connector:'crm_twin',actionLimit:1})).rejects.toMatchObject({status:403});
+});
 it('named members receive only exact connector operations, broad member authority remains admin-only',async()=>{
  for(const [role,allowed]of [['admin',true],['owner',false],['observer',false]]as const)expect(await transaction(fixture.web('company'),'company',c=>memberAuthority(c,actors[role]))).toBe(allowed);
  const a=await ready();await expect(control.review(actors.observer,a.id,a.payload_hash,true)).rejects.toMatchObject({status:403});await expect(control.execute(actors.owner,a.id)).rejects.toMatchObject({status:403});expect((await control.execute(actors.executor,a.id)).state).toBe('succeeded');expect((await control.execute(actors.executor,a.id)).state).toBe('succeeded');expect(calls).toBe(1);
@@ -81,4 +105,25 @@ it('scoped members cannot read a malformed run with no authorization-bearing ste
 it('a legacy operator token cannot impersonate a named administrator in an opted-in company',async()=>{
  const tokenHash=randomBytes(32).toString('hex');await fixture.owner.query("INSERT INTO ll_tokens(hash,org_id,subject,role)VALUES($1,'company',$2,'operator')",[tokenHash,actors.admin.subject]);
  const legacy={...actors.admin,tokenHash};await expect(transaction(fixture.web('company'),'company',c=>authorize(c,legacy,['operator']))).rejects.toMatchObject({status:403});
+});
+
+it('lists only readable administrator-prepared record runs and fails closed after grant removal',async()=>{
+ const grants=structuredClone(policy.members.map(m=>m.grants));
+ try{
+  for(const member of policy.members)member.grants.push({...member.grants[0],agentId:'mail',connector:'email'});
+  policy.version++;await installConnectorMemberAccess(fixture.owner,'company',policy);
+  const workflows=new WorkflowControl(fixture.web('company'),control);
+  const enquiry=new EnquiryControl(fixture.web('company'),workflows,async()=>({id:'4001',email:'assigned@example.test',version:'v1',lifecycle:'lead'}));
+  const id=randomUUID(),prepared=await enquiry.prepare(actors.admin,id,'service');
+  if(!('saved' in prepared))throw Error('Saved plan required');
+  await enquiry.start(actors.admin,id,prepared.saved.plan_hash,'crm','mail');
+  const factory=()=>provider as FetchSandboxConnectors;
+  expect((await workflows.list(actors.observer,factory)).map(r=>r.id)).toContain(id);
+  const unscopedDirectory=new WorkflowControl(fixture.web('company'),new ConnectorControl(fixture.web('company'),{...provider,workspaceId:'unscoped-placeholder'}));
+  expect((await unscopedDirectory.list(actors.observer,factory)).map(r=>r.id)).toContain(id);
+  const selected=await savedProvider(fixture.web('company'),actors.owner,'run',id,null,false,factory,'propose');expect(selected.bindingId).toBe(provider.bindingId);
+  policy.members.find(m=>m.subject===actors.observer.subject)!.grants=[];policy.version++;await installConnectorMemberAccess(fixture.owner,'company',policy);
+  expect((await workflows.list(actors.observer,factory)).map(r=>r.id)).not.toContain(id);
+  await expect(savedProvider(fixture.web('company'),actors.observer,'run',id,null,false,factory)).rejects.toMatchObject({status:403});
+ }finally{policy.members.forEach((m,i)=>{m.grants=grants[i];});}
 });

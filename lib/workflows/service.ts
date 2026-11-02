@@ -16,6 +16,9 @@ import { managedWorker } from "../enquiries/dispatch";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
+import {savedProvider,type ProviderFactory} from "../connectors/routing";
+import {connectorRoutingIdentity} from "../connectors/catalog";
+import {memberConnectorAllowed} from "../workspace/connector-member-access";
 import { authorize } from "../durable/service";
 import { ControlError, type Actor } from "../durable/contracts";
 import { ConnectorControl } from "../connectors/service";
@@ -234,10 +237,15 @@ export class WorkflowControl {
       };
     });
   }
-  async list(actor: Actor) {
-    return transaction(this.db, actor.orgId, async (c) => {
-      await this.connectors.authority(c, actor, ["operator"]);
-      return (
+  async list(actor: Actor, factory?:ProviderFactory) {
+    const listing=await transaction(this.db, actor.orgId, async (c) => {
+      await connectorRoutingIdentity(c,actor,["operator"]);
+      const administrator=await memberConnectorAllowed(c,actor.orgId,actor.subject);
+      // Administrators retain the original configured-workspace boundary.
+      // Restricted members resolve each saved run independently below; the
+      // unscoped default provider is never their record authority.
+      if(administrator)await this.connectors.identity(c,actor,["operator"]);
+      const runs=(
         await c.query(
           // This list is consumed by the customer-handoff workspace. Quote
           // graphs require their own reader and current named quote authority.
@@ -246,7 +254,18 @@ export class WorkflowControl {
           [actor.orgId],
         )
       ).rows;
+      return {administrator,runs};
     });
+    if(listing.administrator)return listing.runs;
+    const visible=[];
+    for(const run of listing.runs){
+      try{
+        const provider=await savedProvider(this.db,actor,"run",run.id,null,false,factory);
+        await new WorkflowControl(this.db,new ConnectorControl(this.db,provider)).read(actor,run.id);
+        visible.push(run);
+      }catch(e){if(!(e instanceof ControlError)||![403,404,409].includes(e.status))throw e;}
+    }
+    return visible;
   }
   async pause(actor: Actor, id: string) {
     await this.read(actor, id);

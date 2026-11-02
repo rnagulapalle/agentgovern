@@ -7,7 +7,7 @@ in an internal pull request. There is no special one-PR Mac runner route.
 The public application repository does not contain private FetchSandbox source.
 The `quality-fixtures` GitHub environment permits only branch deployments named
 `main` or `codex/**`; tags and pull-request merge refs are not admitted. Its AWS
-OIDC role can read one hash-pinned fixture object and cannot write objects or
+OIDC role can read explicitly hash-pinned fixture objects and cannot write objects or
 access the production runtime. No long-lived AWS key is stored in GitHub.
 Fork contributions need a maintainer to review the commit and push it to an
 internal `codex/**` branch. Until that full check passes, the required check is
@@ -34,5 +34,6 @@ cleanup assertions remain unchanged. Product-operation deadlines are unchanged.
 
 If the pinned provider or measured artifacts change, prepare and authenticate a
 new private bundle, update its inventory and object digests, and grant the role
-access to that exact object. Never replace an unavailable artifact with a
+access to that exact object. Preserve concurrently used reviewed objects and their
+existing policies; never add a bucket wildcard. Never replace an unavailable artifact with a
 synthetic success receipt or remove the corresponding tests.

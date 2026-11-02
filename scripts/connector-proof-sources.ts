@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { readFile,lstat } from 'node:fs/promises';
 import { resolve,sep } from 'node:path';
 export const connectorProofSources=Object.freeze([
+  "app/api/workspace/agents/route.ts",
   "app/api/durable/connectors/route.ts",
   "app/api/durable/workflows/route.ts",
   "app/api/workspace/enquiries/route.ts",

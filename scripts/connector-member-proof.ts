@@ -1,5 +1,6 @@
 /** Extension of connector-proof.ts's existing installed PostgreSQL / private HTTP
  * fixture. No server, provider, dispatcher or parallel proof runner is created. */
+import {EnquiryControl} from '../lib/enquiries/service';
 import assert from 'node:assert/strict';
 import {randomUUID,randomBytes} from 'node:crypto';
 import type {Pool} from 'pg';
@@ -12,12 +13,14 @@ import {ScopeControl} from '../lib/connectors/scopes';
 import {WorkflowControl} from '../lib/workflows/service';
 import type {FetchSandboxConnectors} from '../lib/connectors/twin';
 import type {Actor} from '../lib/durable/contracts';
+type MemberHttpData={canManage?:boolean;agents?:unknown[];owners?:unknown[];steps?:{action_id:string;agent_id:string;connector:string;payload:unknown}[];payload_hash?:string;state?:string;verified?:boolean};
+type MemberHttp=(path:string,key:string,value?:object)=>Promise<{status:number;data:MemberHttpData}>;
 type Check=(name:string,run:()=>Promise<void>,limit:string)=>Promise<void>;
-export async function proveConnectorMembers(input:{owner:Pool;web:Pool;context:TenantContext;provider:FetchSandboxConnectors;check:Check;effectCount:()=>Promise<number>}){
+export async function proveConnectorMembers(input:{owner:Pool;web:Pool;context:TenantContext;provider:FetchSandboxConnectors;check:Check;withApi:(run:(http:MemberHttp)=>Promise<void>)=>Promise<void>;effectCount:()=>Promise<number>}){
  const {owner,web,context,provider,check,effectCount}=input,org=provider.workspaceId;
  const entries=[['admin','person-001'],['requester','person-142'],['reviewer','person-141'],['executor','person-143'],['observer','person-144']] as const;
- const actors:Record<string,Actor>={};
- for(const [role] of entries){const email=role+'@fetchsandbox.example',password=randomBytes(24).toString('base64url');await owner.query('INSERT INTO ll_members(org_id,email,name,password_hash)VALUES($1,$2,$3,$4)',[org,email,'FetchSandbox '+role,passwordHash(password)]);const token=await context.login({email,password});actors[role]=(await context.authenticated(token)).actor;}
+ const actors:Record<string,Actor>={},keys:Record<string,string>={};
+ for(const [role] of entries){const email=role+'@fetchsandbox.example',password=randomBytes(24).toString('base64url');await owner.query('INSERT INTO ll_members(org_id,email,name,password_hash)VALUES($1,$2,$3,$4)',[org,email,'FetchSandbox '+role,passwordHash(password)]);const token=await context.login({email,password});actors[role]=(await context.authenticated(token)).actor;keys[role]=token;}
  const admin=actors.admin,requester=actors.requester,reviewer=actors.reviewer,executor=actors.executor,observer=actors.observer;
  await owner.query("INSERT INTO ll_connector_policies(org_id,connector)VALUES($1,'crm'),($1,'email') ON CONFLICT DO NOTHING",[org]);
  for(const [id,tool,role,connector]of [['fs-crm','twin.crm','crm_agent','crm_twin'],['fs-email','twin.email','email_agent','email_twin']]){
@@ -52,6 +55,30 @@ export async function proveConnectorMembers(input:{owner:Pool;web:Pool;context:T
   const wrong=Object.create(provider) as FetchSandboxConnectors;Object.defineProperty(wrong,'recordScope',{value:{...provider.recordScope,contactId:'9999',recipient:'wrong@example.test'}});await assert.rejects(()=>new ConnectorControl(web,wrong).propose(requester,{actionId:randomUUID(),agentId:'fs-crm',connector:'crm',payload:{lifecycle:'customer'}}));
   const foreign={...requester,orgId:'local-proof'};await assert.rejects(()=>control.read(foreign,a.id));
  },'Denied cases produce no new effects. Provider destinations and recipients are server-owned; no client-selected fallback.');
+ await check('FetchSandbox actual Next HTTP routes preserve named record grants across an administrator-prepared workflow',async()=>{
+  const before=await effectCount(),id=randomUUID();
+  const enquiry=new EnquiryControl(web,flows,async()=>{const r=await provider.contact();return{id:r.id,email:r.properties.email,lifecycle:r.properties.lifecyclestage,version:r.updatedAt};});
+  const prepared=await enquiry.prepare(admin,id,'service');assert('saved' in prepared);await enquiry.start(admin,id,prepared.saved.plan_hash,'fs-crm','fs-email');
+  await input.withApi(async http=>{
+   const directory=await http('/api/workspace/agents',keys.observer);assert.equal(directory.status,200);assert.equal(directory.data.canManage,false);assert.equal(directory.data.agents?.length,2);assert.equal(directory.data.owners?.length,0);
+   const listing=await http('/api/durable/workflows',keys.observer);assert.equal(listing.status,200);assert((listing.data as unknown as {id:string}[]).some(r=>r.id===id));
+   const read=await http('/api/durable/workflows?run='+id,keys.requester);assert.equal(read.status,200);assert.equal(read.data.steps?.length,2);
+   for(const step of read.data.steps!){
+    const proposal={operation:'propose',actionId:step.action_id,agentId:step.agent_id,connector:step.connector,payload:step.payload};
+    assert.equal((await http('/api/durable/connectors',keys.observer,proposal)).status,403);
+    const proposed=await http('/api/durable/connectors',keys.requester,proposal);assert.equal(proposed.status,200);
+    assert.equal((await http('/api/durable/connectors?action='+step.action_id,keys.observer)).status,200);
+    const review={operation:'approve',actionId:step.action_id,payloadHash:proposed.data.payload_hash};
+    assert.equal((await http('/api/durable/connectors',keys.requester,review)).status,403);
+    assert.equal((await http('/api/durable/connectors',keys.reviewer,review)).status,200);
+    assert.equal((await http('/api/durable/connectors',keys.observer,{operation:'execute',actionId:step.action_id})).status,403);
+    const executed=await http('/api/durable/connectors',keys.executor,{operation:'execute',actionId:step.action_id});assert.equal(executed.status,200);assert.equal(executed.data.state,'succeeded');
+    assert.equal((await http('/api/durable/connectors',keys.executor,{operation:'execute',actionId:step.action_id})).data.state,'succeeded');
+   }
+   const verified=await http('/api/durable/workflows',keys.executor,{operation:'verify',runId:id});assert.equal(verified.status,200);assert.equal(verified.data.verified,true);
+  });
+  assert.equal(await effectCount(),before+2);
+ },'Actual Next HTTP handlers, named cookie sessions and installed tenant database; two private provider-twin HTTP effects only. Administrator prepares the saved scope; employees receive no enrollment or registration authority. Not hosted/browser/native-agent acceptance.');
  let runId:string,completed:unknown;
  await check('FetchSandbox existing CRM-to-message graph: named requester, independent reviewer, scoped executor, two actual private HTTP effects and replay',async()=>{
   const before=await effectCount();runId=randomUUID();await flows.create(requester,'fs-crm','fs-email',runId);

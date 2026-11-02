@@ -1,0 +1,7 @@
+{
+  "pgReady": true,
+  "wrongPasswordRefused": true,
+  "plaintextRefused": true,
+  "ownedCleanupTerminal": true,
+  "production": false
+}
