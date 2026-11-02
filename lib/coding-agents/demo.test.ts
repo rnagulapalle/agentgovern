@@ -24,9 +24,9 @@ describe('presentation-only coding control examples',()=>{
  it('refuses empty identity, malformed allowance and incompatible template configuration',()=>{for(const patch of [{id:''},{tokens:NaN},{spent:-1},{policy:{...engineer().policy,modelIds:[]}},{policy:{...engineer().policy,tokenLimit:Infinity}},{policy:{...engineer().policy,skillIds:['review'],promptIds:['repair-v2']}}])expect(evaluateDemo({...engineer(),...patch},base).outcome).toBe('blocked');expect(validPolicy({...engineer().policy,dollarLimit:0})).toBe(false);});
 });
 
-it('assigns every fictional engineer to the explicit Acme organization and a known team with valid model access',async()=>{
+it('assigns every fictional engineer to the explicit FetchSandbox sample organization and a known team with valid model access',async()=>{
  const {organization,teams}=await import('./demo');
  expect(engineers).toHaveLength(6);expect(teams).toHaveLength(3);expect(new Set(engineers.map(e=>e.id)).size).toBe(6);
- for(const e of engineers){expect(e.orgId).toBe(organization.id);expect(teams.some(t=>t.name===e.team)).toBe(true);expect(e.email).toMatch(/@acme\.example\.test$/);expect(validPolicy(e.policy)).toBe(true);}
+ for(const e of engineers){expect(e.orgId).toBe(organization.id);expect(teams.some(t=>t.name===e.team)).toBe(true);expect(e.email).toMatch(/@fetchsandbox\.example$/);expect(validPolicy(e.policy)).toBe(true);}
  for(const t of teams){expect(engineers.filter(e=>e.team===t.name)).toHaveLength(2);expect(engineers.some(e=>e.team===t.name&&e.name===t.lead)).toBe(true);}
 });
