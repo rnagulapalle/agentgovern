@@ -37,3 +37,9 @@ new private bundle, update its inventory and object digests, and grant the role
 access to that exact object. Preserve concurrently used reviewed objects and their
 existing policies; never add a bucket wildcard. Never replace an unavailable artifact with a
 synthetic success receipt or remove the corresponding tests.
+
+Archive portability: pack only the inventory’s regular files and `inventory.json`
+with a normalized portable tar format. macOS resource forks/AppleDouble (`._*`)
+and extended-attribute headers are not fixture files. Verify restoration with the
+unchanged inventory checks on Linux before publishing a new bundle; a local Mac
+restore can conceal these metadata members. Do not relax the inventory gate.
