@@ -49,3 +49,20 @@ Optional second illustration: the separately recorded preparation-v5 API case on
 Ask what the current native stack already provides. LangGraph documents checkpointed interrupts and same-thread resume, including restarting the interrupted node from its beginning. Code before the interrupt can run again. This supports inspecting idempotence and boundary placement; it is not evidence of a vulnerability or a LoopLabs feature. Source: [LangGraph interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts), read November2.
 
 Stop after two independent owners find their native controls sufficient or cannot identify recurring pain/integration ownership. Record unknowns and the next evidence request privately; no invitations or public distribution are authorized by this worksheet. No participant has been counted by preparing it.
+
+
+## November 4: exact email approval and response-loss evidence
+
+Reuse this worksheet and the existing executor/harness; this is a proposed acceptance sequence, not a passing trace or invitation. Keep these fault paths separate before attempting a combined scenario:
+
+| Path | Required observation | Refusal / uncertainty evidence |
+| --- | --- | --- |
+| Baseline | Independent approval binds exact recipient/content and relevant versions; permitted request uses the existing execution owner. | Record decision and actual provider result separately. |
+| Offer changes after approval | Change approved content or its bound source version before dispatch. | Old approval cannot authorize the changed send; record refusal/fresh approval requirement and independently verify no unauthorized effect. |
+| Accepted, response lost | Provider accepts the exact approved email, then transport response is lost. | Correlate stable action key/acceptance and independently retrieve exact recipient/content; no blind resend. Acceptance is not inbox delivery. |
+| Acceptance cannot be resolved | Acceptance lookup/read-back is absent, contradictory or inaccessible. | Preserve uncertainty/containment; do not relabel timeout as success/failure, invent delivery or retry an irreversible send. |
+| Replay | Retry the same logical action through its sole owner after verified outcome. | Independently show no duplicate effect; a new action ID is not the same replay test. |
+
+For each actual receipt record build/workflow/tool-contract versions, execution owner, request/payload binding, policy/grant/source versions, decision, independent reviewer, transport observation, correlated provider acceptance, effect lookup and retry disposition. Keep IDs and payloads private. Record runner/provider and adapter prerequisites before promising compatibility. Separate fixtures, native provider behavior and deployed UI/account acceptance. A synthetic failure injection is not an observed customer incident. No production credentials/customer data are needed for the initial guided test; no general zero-code integration is implied.
+
+Stop the trial if native controls already satisfy the owner or the exact proposed integration cannot enforce the boundary. Do not promise a passing trace or count agreement from preparing this protocol.
