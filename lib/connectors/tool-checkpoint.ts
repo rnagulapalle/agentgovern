@@ -7,6 +7,39 @@ export interface CheckpointTicket {
   connector: "crm" | "email";
   payloadHash: string;
 }
+const ticketKeys = ["actionId", "agentId", "connector", "payloadHash"];
+function checkedTicket(value: unknown): CheckpointTicket {
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype)
+    throw new ToolRequestError("refused");
+  const fields = Object.getOwnPropertyDescriptors(value);
+  if (Reflect.ownKeys(value).length !== ticketKeys.length || !ticketKeys.every(key => fields[key] && "value" in fields[key] && fields[key].enumerable))
+    throw new ToolRequestError("refused");
+  const v = value as CheckpointTicket;
+  if (typeof v.actionId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v.actionId)
+    || typeof v.agentId !== "string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(v.agentId)
+    || !["crm", "email"].includes(v.connector) || typeof v.payloadHash !== "string" || !/^[a-f0-9]{64}$/.test(v.payloadHash))
+    throw new ToolRequestError("refused");
+  return { actionId: v.actionId, agentId: v.agentId, connector: v.connector, payloadHash: v.payloadHash };
+}
+/** Persist in the existing runner's durable checkpoint, never in an agent prompt.
+ * This is a reference to saved state, not signed evidence or execution authority. */
+export function serializeCheckpointTicket(ticket: CheckpointTicket): string {
+  return JSON.stringify({ contract: "looplabs-checkpoint-ticket-1", ticket: checkedTicket(ticket) });
+}
+export function parseCheckpointTicket(encoded: string): CheckpointTicket {
+  try {
+    if (typeof encoded !== "string" || encoded.length > 512) throw new ToolRequestError("refused");
+    const v = JSON.parse(encoded);
+    if (!v || v.contract !== "looplabs-checkpoint-ticket-1") throw new ToolRequestError("refused");
+    const ticket = checkedTicket(v.ticket);
+    // Accept only our canonical representation: rejects duplicate keys, unknown
+    // fields, credentials, trailing data and ambiguous version reinterpretation.
+    if (serializeCheckpointTicket(ticket) !== encoded) throw new ToolRequestError("refused");
+    return ticket;
+  } catch {
+    throw new ToolRequestError("refused");
+  }
+}
 export interface CheckpointResult {
   ticket: CheckpointTicket;
   status: "held" | "execution-pending" | "executing" | "action-verified" | "uncertain" | "needs-review" | "rejected" | "cancelled";
@@ -32,13 +65,16 @@ export class LoopLabsToolCheckpoint {
     return this.result(decision);
   }
   async read(ticket: CheckpointTicket): Promise<CheckpointResult> {
-    if (!ticket || Object.keys(ticket).sort().join() !== "actionId,agentId,connector,payloadHash"
-      || ticket.agentId !== this.agentId || !["crm", "email"].includes(ticket.connector)
-      || typeof ticket.payloadHash !== "string" || !/^[a-f0-9]{64}$/.test(ticket.payloadHash)) throw new ToolRequestError("refused");
-    const pinned = { ...ticket };
+    const pinned = checkedTicket(ticket);
+    if (pinned.agentId !== this.agentId) throw new ToolRequestError("refused");
     const decision = await this.client.read(pinned.actionId);
     if (decision.connector !== pinned.connector || decision.payload_hash !== pinned.payloadHash) throw new ToolRequestError("unconfirmed");
     return this.result(decision);
+  }
+  /** Fresh credentials and current server checks on every restart. GET only;
+   * never generates an action ID, repeats a proposal or dispatches a provider. */
+  async resume(encodedTicket: string): Promise<CheckpointResult> {
+    return this.read(parseCheckpointTicket(encodedTicket));
   }
   private result(decision: ToolDecision): CheckpointResult {
     const statuses = {
