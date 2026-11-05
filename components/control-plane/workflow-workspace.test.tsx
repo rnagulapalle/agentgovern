@@ -67,3 +67,38 @@ it("final-step copy requires both exact verified effects, never a completion lab
  expect(view(run,{...first,action_id:"foreign-step"})).not.toContain("passed their final check");
  const uncertain={...first,state:"uncertain"},html=view({...run,steps:[uncertain,run.steps[1]]},uncertain);expect(html).toContain("may have taken effect");expect(html).not.toContain("passed their final check");
 });
+
+// Reuse the component's existing fixture contract; no provider calls or action
+// execution. SDK property filtering is evaluated separately in analytics.test.
+import {chromium} from '@playwright/test';
+import {createRequire} from 'node:module';
+const requireProof=createRequire(import.meta.url);
+async function mountedProofRead(response:unknown,status:number,verify:(page:import('@playwright/test').Page,methods:string[])=>Promise<void>){
+ const esbuild=requireProof(requireProof.resolve('esbuild',{paths:[requireProof.resolve('@temporalio/worker')]}));
+ const built=await esbuild.build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{WorkflowWorkspace}from'./components/control-plane/workflow-workspace';window.proofCaptures=[];createRoot(document.getElementById('root')).render(<WorkflowWorkspace/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',jsx:'automatic',define:{'process.env':'{}','process.env.NODE_ENV':'"test"','process.env.NEXT_PUBLIC_POSTHOG_KEY':'"public-test-key"'},plugins:[{name:'capture-observer',setup(build:{onResolve:(a:unknown,b:()=>unknown)=>void;onLoad:(a:unknown,b:()=>unknown)=>void}){build.onResolve({filter:/^posthog-js$/},()=>({path:'sdk',namespace:'proof-fixture'}));build.onLoad({filter:/.*/,namespace:'proof-fixture'},()=>({contents:'export default {capture:(...args)=>window.proofCaptures.push(args)}',loader:'js'}));}}],logLevel:'silent'});
+ const browser=await chromium.launch({headless:true});const page=await browser.newPage();const methods:string[]=[];const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ try{
+  await page.route('http://proof.fixture/**',async route=>{
+   const url=new URL(route.request().url());
+   if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:'<div data-private class="ph-no-capture"><div id="root"></div></div>'});
+   methods.push(route.request().method());
+   if(url.pathname==='/api/workspace/agents')return route.fulfill({json:{agents:[]}});
+   if(url.searchParams.has('run'))return route.fulfill({status,json:response});
+   return route.fulfill({json:[{id:'private-run',state:'completed'}]});
+  });
+  await page.goto('http://proof.fixture/');await page.addScriptTag({content:built.outputFiles[0].text});await page.getByRole('button',{name:'private- · completed',exact:true}).waitFor({timeout:2000}).catch(async()=>{throw Error(JSON.stringify({errors,body:await page.locator('body').innerText(),methods}))});await verify(page,methods);
+ }finally{await browser.close();}
+}
+const captured=(page:import('@playwright/test').Page)=>page.evaluate(()=> (window as unknown as {proofCaptures:unknown[]}).proofCaptures);
+it('mounted explicit Open captures one permitted saved-proof display, not initial load or repeated read; makes only GET requests',()=>mountedProofRead(run,200,async(page,methods)=>{
+ expect(await captured(page)).toEqual([]);await page.getByRole('button',{name:'private- · completed',exact:true}).click();await page.getByRole('status').getByText('Acknowledgement verified',{exact:true}).waitFor();
+ expect(await captured(page)).toEqual([['workflow_proof_viewed',{proof_kind:'crm_to_message_private_twin',verification_state:'verified'}]]);
+ await page.getByRole('button',{name:'private- · completed',exact:true}).click();expect(await captured(page)).toHaveLength(1);expect(methods.every(m=>m==='GET')).toBe(true);
+ expect(await page.locator('[data-private].ph-no-capture').count()).toBe(1);
+}));
+it('mounted denied Open emits nothing and shows the existing error without POST or execution',()=>mountedProofRead({error:'Read denied'},403,async(page,methods)=>{
+ await page.getByRole('button',{name:'private- · completed',exact:true}).click();await page.getByRole('alert').getByText('Read denied',{exact:true}).waitFor();expect(await captured(page)).toEqual([]);expect(methods.every(m=>m==='GET')).toBe(true);
+}));
+it('mounted wrong-run successful HTTP response cannot emit proof engagement',()=>mountedProofRead({...run,id:'foreign-run'},200,async(page)=>{
+ await page.getByRole('button',{name:'private- · completed',exact:true}).click();await page.getByRole('status').getByText('Acknowledgement verified',{exact:true}).waitFor();expect(await captured(page)).toEqual([]);
+}));
