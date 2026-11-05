@@ -60,3 +60,13 @@ that receipt. Update the existing measurement insight only after native acceptan
 keep the legacy simulated-tour definition and raw historical events intact.
 Confirmed bookings, attendance and independent operator qualification remain
 unavailable until supported by their own records.
+
+## CI prerequisite recovery
+
+The first candidate CI run 42006189225 failed before the full quality suite:
+runner-default Python 3.14 exceeded the retained pydantic-core/PyO3 supported
+maximum of 3.13. The existing connector fixture Dockerfile uses Python 3.12.
+The quality job now selects 3.12 explicitly through the official setup-python
+action before creating its venv. Dependency pins, fixture-source verification,
+permissions, tests and thresholds remain unchanged. This setup repair is not an
+application or native-workflow pass; the successor exact-source CI must run.
