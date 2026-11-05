@@ -30,7 +30,7 @@ company, record, recipient, message, payload or provider reference is passed to
 capture. The run ID stays only in a component-memory set.
 
 The existing SDK's `before_send` hook separately allowlists this event's final
-properties: the two category fields, an opaque anonymous `distinct_id`, optional
+properties: the existing configured public project token, the two category fields, an opaque anonymous `distinct_id`, optional
 opaque device/session/window IDs, existing `$is_test: true`, and
 `$process_person_profile: false`. Only SDK event name, UUID and valid timestamp
 are retained outside properties. URL/referrer/acquisition context, arbitrary
@@ -41,7 +41,10 @@ filter, not a claim that all existing analytics are free of sensitive data.
 
 PostHog documents this final redaction hook at
 https://posthog.com/docs/libraries/js/usage#redacting-information-in-events .
-The hook still needs deployed/native observation; fixture-level serialization is
+The actual SDK fixture reaches the final hook, verifies its public ingestion token
+and QA flag, then returns null; all external requests are blocked. The fixture
+only disables SDK bot filtering locally so headless processing reaches that hook.
+No SDK production/bot-filter setting is changed. The hook still needs deployed/native observation; fixture-level serialization is
 not production SDK ingestion acceptance.
 
 ## Separate acceptance
@@ -70,3 +73,9 @@ The quality job now selects 3.12 explicitly through the official setup-python
 action before creating its venv. Dependency pins, fixture-source verification,
 permissions, tests and thresholds remain unchanged. This setup repair is not an
 application or native-workflow pass; the successor exact-source CI must run.
+
+The SDK-hook fixture exposed a required ingestion field absent from the initial
+candidate: the public project token. The filter now retains only the exact
+configured existing public token and drops a missing/mismatched token. This is
+public browser configuration, not an additional credential. The earlier candidate
+and failed fixture attempts remain separate from the corrected source result.

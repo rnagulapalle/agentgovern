@@ -73,13 +73,14 @@ it("final-step copy requires both exact verified effects, never a completion lab
 import {chromium} from '@playwright/test';
 import {createRequire} from 'node:module';
 const requireProof=createRequire(import.meta.url);
-async function mountedProofRead(response:unknown,status:number,verify:(page:import('@playwright/test').Page,methods:string[])=>Promise<void>){
+async function mountedProofRead(response:unknown,status:number,verify:(page:import('@playwright/test').Page,methods:string[])=>Promise<void>,realSdk=false){
  const esbuild=requireProof(requireProof.resolve('esbuild',{paths:[requireProof.resolve('@temporalio/worker')]}));
- const built=await esbuild.build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{WorkflowWorkspace}from'./components/control-plane/workflow-workspace';window.proofCaptures=[];createRoot(document.getElementById('root')).render(<WorkflowWorkspace/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',jsx:'automatic',define:{'process.env':'{}','process.env.NODE_ENV':'"test"','process.env.NEXT_PUBLIC_POSTHOG_KEY':'"public-test-key"'},plugins:[{name:'capture-observer',setup(build:{onResolve:(a:unknown,b:()=>unknown)=>void;onLoad:(a:unknown,b:()=>unknown)=>void}){build.onResolve({filter:/^posthog-js$/},()=>({path:'sdk',namespace:'proof-fixture'}));build.onLoad({filter:/.*/,namespace:'proof-fixture'},()=>({contents:'export default {capture:(...args)=>window.proofCaptures.push(args)}',loader:'js'}));}}],logLevel:'silent'});
+ const built=await esbuild.build({stdin:{contents:`import React from 'react';import{createRoot}from'react-dom/client';import{WorkflowWorkspace}from'./components/control-plane/workflow-workspace';${realSdk?`import posthog from 'posthog-js';import{filterWorkflowProofEvent}from'./lib/analytics';`:''}window.proofCaptures=[];${realSdk?`posthog.init('public-test-key',{api_host:'http://proof.fixture',opt_out_useragent_filter:true,autocapture:false,capture_pageview:false,capture_pageleave:false,disable_session_recording:true,advanced_disable_feature_flags:true,person_profiles:'never',before_send:event=>{if(event?.event==='workflow_proof_viewed'){window.proofSdkKeys=Object.keys(event.properties);window.proofFiltered=filterWorkflowProofEvent(event)}return null}});posthog.register_for_session({$is_test:true});`:''}createRoot(document.getElementById('root')).render(<WorkflowWorkspace/>);`,resolveDir:process.cwd(),loader:'tsx'},bundle:true,write:false,format:'iife',jsx:'automatic',define:{'process.env':'{}','process.env.NODE_ENV':'"test"','process.env.NEXT_PUBLIC_POSTHOG_KEY':'"public-test-key"'},plugins:realSdk?[]:[{name:'capture-observer',setup(build:{onResolve:(a:unknown,b:()=>unknown)=>void;onLoad:(a:unknown,b:()=>unknown)=>void}){build.onResolve({filter:/^posthog-js$/},()=>({path:'sdk',namespace:'proof-fixture'}));build.onLoad({filter:/.*/,namespace:'proof-fixture'},()=>({contents:'export default {capture:(...args)=>window.proofCaptures.push(args)}',loader:'js'}));}}],logLevel:'silent'});
  const browser=await chromium.launch({headless:true});const page=await browser.newPage();const methods:string[]=[];const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  try{
-  await page.route('http://proof.fixture/**',async route=>{
+  await page.route('**/*',async route=>{
    const url=new URL(route.request().url());
+   if(url.origin!=='http://proof.fixture')return route.abort();
    if(url.pathname==='/')return route.fulfill({contentType:'text/html',body:'<div data-private class="ph-no-capture"><div id="root"></div></div>'});
    methods.push(route.request().method());
    if(url.pathname==='/api/workspace/agents')return route.fulfill({json:{agents:[]}});
@@ -102,3 +103,13 @@ it('mounted denied Open emits nothing and shows the existing error without POST 
 it('mounted wrong-run successful HTTP response cannot emit proof engagement',()=>mountedProofRead({...run,id:'foreign-run'},200,async(page)=>{
  await page.getByRole('button',{name:'private- · completed',exact:true}).click();await page.getByRole('status').getByText('Acknowledgement verified',{exact:true}).waitFor();expect(await captured(page)).toEqual([]);
 }));
+
+// This local fixture admits headless SDK processing only to evaluate the hook.
+// Its hook returns null and all external requests are blocked: no analytics delivery.
+it('actual SDK final hook retains its configured public ingestion token and QA-safe classification while stripping automatic context',()=>mountedProofRead(run,200,async(page)=>{
+ await page.getByRole('button',{name:'private- · completed',exact:true}).click();await page.getByRole('status').getByText('Acknowledgement verified',{exact:true}).waitFor();
+ await expect.poll(()=>page.evaluate(()=>(window as unknown as {proofSdkKeys:unknown}).proofSdkKeys),{timeout:2000}).toBeDefined();
+ const value=await page.evaluate(()=>({keys:(window as unknown as {proofSdkKeys:string[]}).proofSdkKeys,filtered:(window as unknown as {proofFiltered:{event:string;properties:Record<string,unknown>}}).proofFiltered}));
+ expect(value.keys).toContain('token');expect(value.keys).toContain('$current_url');expect(value.filtered.event).toBe('workflow_proof_viewed');expect(value.filtered.properties.token).toBe('public-test-key');expect(value.filtered.properties.verification_state).toBe('verified');expect(value.filtered.properties.$is_test).toBe(true);
+ expect(value.filtered.properties).not.toHaveProperty('$current_url');expect(value.filtered.properties).not.toHaveProperty('$set');expect(JSON.stringify(value.filtered)).not.toContain('private-run');
+},true));

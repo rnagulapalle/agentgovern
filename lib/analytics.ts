@@ -136,8 +136,9 @@ export function filterWorkflowProofEvent<T extends { event: string; properties: 
   const p = event.properties;
   if (!p || typeof p !== "object" || Array.isArray(p)) return null;
   const opaque = (v: unknown): v is string => typeof v === "string" && /^[a-zA-Z0-9-]{8,128}$/.test(v);
-  if (p.proof_kind !== "crm_to_message_private_twin" || !["verified", "not_verified"].includes(String(p.verification_state)) || !opaque(p.distinct_id)) return null;
-  const properties: Record<string, unknown> = { proof_kind: p.proof_kind, verification_state: p.verification_state, distinct_id: p.distinct_id, $process_person_profile: false };
+  const token = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  if (!token || p.token !== token || p.proof_kind !== "crm_to_message_private_twin" || !["verified", "not_verified"].includes(String(p.verification_state)) || !opaque(p.distinct_id)) return null;
+  const properties: Record<string, unknown> = { token, proof_kind: p.proof_kind, verification_state: p.verification_state, distinct_id: p.distinct_id, $process_person_profile: false };
   for (const key of ["$device_id", "$session_id", "$window_id"]) if (opaque(p[key])) properties[key] = p[key];
   if (p.$is_test === true) properties.$is_test = true;
   const filtered = { event: event.event, properties } as T;

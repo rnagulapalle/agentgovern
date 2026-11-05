@@ -337,3 +337,18 @@ A separate privacy finding changed the implementation: safe explicit properties 
 Persona remains the automation/platform owner evaluating existing consequential workflows. Pain: distinguishing a permitted proof read from a legacy simulated tour and from a business outcome. Confidence high for the local classification/filter boundaries, unknown for commercial effect. Worked: reuse the current route, receipt classifier, SDK hook and test file; compare actual pre-change source with the same permitted-read assertion. Initial mounted tests failed because the fixture selected an Open/heading label that the real component does not render; corrected locators to its saved-run button and status text, retaining the failed logs. No test failure is counted as a pass. Lesson: test the actual interaction and final SDK context, not merely custom event arguments.
 
 Next: exact candidate CI/release, then one labeled read-only QA view, received sanitized event and saved growth exclusion through the existing account owner. No business effects replayed, new account grants, publication, indexing request, paid renewal or private outreach. Last November4 GSC158/110impressions,3/0clicks,primary12/8 are retained as dated actuals, not re-extracted today. Fresh account outcome/booking/attendance measurement is not performed or inferred; current proof engagement remains unavailable until deployment/native acceptance. OriginalNovember18targets100/5/20 remain. Four requiredHTTPSpaths returned200. Product Hunt remains canceled; restaurant watch stays weekly,nextNovember9, with no daily revisit. Private receipt directory: /Users/raj/.codex/looplabs-research/2026-11-05-nightly-growth/.
+
+The final local candidate passed30 focused checks in2files, TypeScript, focused
+lint and diff hygiene. A separate actual-SDK fixture reached before_send with its
+real automatically added context, preserved the required configured public project
+token and QA flag, discarded private context, then returned null with external
+requests blocked. Initial hook attempts were suppressed by the SDK headless-bot
+filter; the local-only fixture explicitly admits headless processing, without any
+production bot-filter change or delivery. The actual SDK check exposed the missing
+ingestion-token field in the earlier candidate; the successor retains only the
+exact configured public token. None of these fixture events entered growth metrics.
+First CI42006189225 failed before full quality because runner-default Python3.14
+exceeds the retained pydantic-core/PyO3 maximum3.13. Existing fixture image uses3.12;
+the smallest CI setup repair pins3.12 without changing dependency pins, permissions,
+fixture verification or test/coverage gates. Successor exact-source CI and native
+production ingestion remain separate and pending; no deployment is claimed.
