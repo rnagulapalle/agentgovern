@@ -867,6 +867,7 @@
       "components/marketing/chrome.tsx",
       "components/marketing/product-overview.tsx",
       "install-order.json",
+      "instrumentation-client.ts",
       "instrumentation.ts",
       "lib/analytics.ts",
       "lib/connectors/catalog.ts",
@@ -908,6 +909,7 @@
       "lib/enquiries/contracts.ts",
       "lib/enquiries/dispatch.ts",
       "lib/enquiries/managed-schema.sql",
+      "lib/enquiries/presentation.ts",
       "lib/enquiries/record-routing-schema.sql",
       "lib/enquiries/reset-intent-schema.sql",
       "lib/enquiries/revision-schema.sql",
@@ -1005,6 +1007,7 @@
       "lib/workspace/membership-authority.ts",
       "lib/workspace/navigation.ts",
       "lib/workspace/owned-private-file.ts",
+      "lib/workspace/quote-execution-migrations.ts",
       "lib/workspace/quote-workload-installation.ts",
       "lib/workspace/recovery-capture.ts",
       "lib/workspace/reference-company.ts",
@@ -1037,6 +1040,8 @@
       "scripts/discovery-installed-evidence.mjs",
       "scripts/discovery-installed-source-contract.mjs",
       "scripts/staging-browser-tls.mjs",
+      "scripts/staging-owned-installed-fixture.mjs",
+      "scripts/temporal-installed-fixture.ts",
       "tsconfig.json"
     ],
     "assembly": [
@@ -1669,6 +1674,10 @@
     {
       "from": "components/marketing/sales-form.tsx",
       "to": "lib/analytics.ts"
+    },
+    {
+      "from": "lib/analytics.ts",
+      "to": "lib/enquiries/presentation.ts"
     },
     {
       "from": "components/marketing/sales-form.tsx",
@@ -4061,6 +4070,10 @@
     {
       "from": "components/control-plane/enquiry-progress.tsx",
       "to": "components/control-plane/workflow-workspace.tsx"
+    },
+    {
+      "from": "components/control-plane/workflow-workspace.tsx",
+      "to": "lib/analytics.ts"
     },
     {
       "from": "components/control-plane/workflow-workspace.tsx",
@@ -12847,6 +12860,70 @@
       "to": "scripts/staging-browser-tls.mjs"
     },
     {
+      "from": "scripts/discovery-browser-proof.mjs",
+      "to": "scripts/staging-owned-installed-fixture.mjs"
+    },
+    {
+      "from": "scripts/staging-owned-installed-fixture.mjs",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/staging-owned-installed-fixture.mjs",
+      "to": "lib/workspace/auth.ts"
+    },
+    {
+      "from": "scripts/staging-owned-installed-fixture.mjs",
+      "to": "scripts/temporal-installed-fixture.ts"
+    },
+    {
+      "from": "scripts/temporal-installed-fixture.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "scripts/temporal-installed-fixture.ts",
+      "to": "lib/durable/workload-pool.ts"
+    },
+    {
+      "from": "lib/durable/workload-pool.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "lib/durable/workload-pool.ts",
+      "to": "lib/durable/pg-transport.ts"
+    },
+    {
+      "from": "lib/durable/workload-pool.ts",
+      "to": "lib/durable/contracts.ts"
+    },
+    {
+      "from": "lib/durable/workload-pool.ts",
+      "to": "lib/durable/tenant-pool.ts"
+    },
+    {
+      "from": "scripts/temporal-installed-fixture.ts",
+      "to": "lib/workspace/tenant-installer.ts"
+    },
+    {
+      "from": "scripts/temporal-installed-fixture.ts",
+      "to": "lib/workspace/tenant-bootstrap.ts"
+    },
+    {
+      "from": "scripts/temporal-installed-fixture.ts",
+      "to": "lib/workspace/tenant-read-inventory.ts"
+    },
+    {
+      "from": "scripts/temporal-installed-fixture.ts",
+      "to": "lib/workspace/quote-execution-migrations.ts"
+    },
+    {
+      "from": "lib/workspace/quote-execution-migrations.ts",
+      "to": "runtime/temporal/staging-preflight.ts"
+    },
+    {
+      "from": "scripts/temporal-installed-fixture.ts",
+      "to": "runtime/temporal/staging-preflight.ts"
+    },
+    {
       "from": "app/api/workspace/discovery/route.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
@@ -13161,6 +13238,10 @@
     {
       "from": "components/control-plane/provider.tsx",
       "to": "lib/analytics.ts"
+    },
+    {
+      "from": "lib/analytics.ts",
+      "to": "lib/enquiries/presentation.ts"
     },
     {
       "from": "components/control-plane/shell.tsx",
@@ -14267,22 +14348,6 @@
       "to": "lib/quotes/demo-control.ts"
     },
     {
-      "from": "lib/durable/workload-pool.ts",
-      "to": "lib/workspace/tenant-bootstrap.ts"
-    },
-    {
-      "from": "lib/durable/workload-pool.ts",
-      "to": "lib/durable/pg-transport.ts"
-    },
-    {
-      "from": "lib/durable/workload-pool.ts",
-      "to": "lib/durable/contracts.ts"
-    },
-    {
-      "from": "lib/durable/workload-pool.ts",
-      "to": "lib/durable/tenant-pool.ts"
-    },
-    {
       "from": "app/api/workspace/discovery/onboarding/route.ts",
       "to": "lib/workspace/tenant-context.ts"
     },
@@ -14393,6 +14458,10 @@
     {
       "from": "app/api/workspace/discovery/approvals/route.ts",
       "to": "lib/workspace/external-approvals.ts"
+    },
+    {
+      "from": "instrumentation-client.ts",
+      "to": "lib/analytics.ts"
     },
     {
       "from": "scripts/discovery-installed-evidence.mjs",
@@ -19954,7 +20023,7 @@
     "components/control-plane/ui.tsx": "c923100ad0cb557532ad432d5e436abbab6a89e7b8ffb9f00652543c32e340e3",
     "components/control-plane/workflow-catalog-import.tsx": "a66b29952045117b513033ee3116de342b532a5715dc739555b0b604cdb46672",
     "components/control-plane/workflow-catalog-view.tsx": "5d641079d5435bf846311841df9df8d057c72443303535fce42c5317bfd6800f",
-    "components/control-plane/workflow-workspace.tsx": "98922abdd9abaf7b4659ac0897ad3256d584195b643af76f2e8a9de757a4bc91",
+    "components/control-plane/workflow-workspace.tsx": "5b62f7c1ca6a9a9754da83ccfeac45617f0a9dab8e8068c2cacbd6fc23034255",
     "components/control-plane/workspace-gate.tsx": "a29c737a46790dc6d1b6bf13eb95fc3aac9ba8bf2910e2951b891641327b5466",
     "components/control-plane/workspace-overview.tsx": "a15f1c75b912dddef7a41e1d97d8887a0421a0d32ca13e23f11f50fec82a413e",
     "components/marketing/chrome.tsx": "fe6f2b0efec182a07310c190c35782ba5aff5d4d2c823b4e6fbdf7572c5e9496",
@@ -19963,8 +20032,9 @@
     "current-profile-image-bytes-component.mjs": "d9612f5d505a9e957b859be6010a352270e2ed389d150bb1779f6386de491e59",
     "docs/evidence/historical-chat-artifact-sources-v1.json.gz": "98cdb5fa86b3ca17d5523e95e1479251f05293a2f0a0c1452ed2f3ecf3a59cb1",
     "install-order.json": "3e6c0b898fd23454acfca056d1785449a934db73b02446b019086f9ed13c4621",
+    "instrumentation-client.ts": "3b197bb78dfdca260cfa938d041e5e14c600c939db42ed3f7c93271411573da3",
     "instrumentation.ts": "de978ea9fdb19208b48df6b454989dfc9f064c87397eb07769230bad3813e7fc",
-    "lib/analytics.ts": "4e0970fca48cd652730ad5c1ebef97181e44e1f98849185479bb8ed1244b480c",
+    "lib/analytics.ts": "f96c731f94b05ccfffbc1681d58b803cc2d2c5458efb180eca1ce531a5e3c344",
     "lib/coding-agents/demo.ts": "cc7531bf79cb0590e543872ede874bff49e385420bd424a8dbb3acce31c816b4",
     "lib/connectors/catalog.ts": "d44e323fa30bae6d5007b89440aca92a5c35075ffd8eab5c7fe63ccdc09ae8d2",
     "lib/connectors/content.ts": "891cb662e2ee4cd397b28e3433453ca5c60c8468ab0e016cb9fecf8e10597ba0",
@@ -20186,9 +20256,9 @@
     "scripts/container-host-transport.ts": "0036e326e8edac4fc2f9739322df40578a38b4e6231971eadbc98ff6fbb12402",
     "scripts/current-proof-source-registry.mjs": "4e9b38ae491e2fc9059898e5281f4148e90f951296f6e09b0f796e9105bfd961",
     "scripts/discovery-azure-http-fixture.mjs": "8aa3c7e1ee037757df3688d7e0c8d8373871baaac6e9cf629b3b0c835f9387a6",
-    "scripts/discovery-browser-proof.mjs": "25beba194dd1e3fcb40034ee085e704441950a96f3dbb2b29f073c9aa203955b",
+    "scripts/discovery-browser-proof.mjs": "de5041a474b8bab06a52a83bf699379e27b6256f0257d067cd70f7d4175cf73d",
     "scripts/discovery-installed-evidence.mjs": "1c4318d84a81c85e7b76c1481972d445b8b685d06b5eec6e59d6bebf05ad8b77",
-    "scripts/discovery-installed-source-contract.mjs": "9ddb87a895e6c15c31cd188f4217e8efd5ff46234fe2d17e3bd87b7895b86d39",
+    "scripts/discovery-installed-source-contract.mjs": "d5771649417977935d39e01cbba7b333b587ee33ac408fc5ba04a4fc4d65a490",
     "scripts/gateway-bypass-record.mjs": "1ef2b20fa85cd2c0478885e35a436893f5091e7f9ad30b5a1dbed748c8d3774f",
     "scripts/gateway-installed-bypass-proof.mjs": "c0d65087a214bd8a5e29fc70dd64b4ab9c9a19228406659cc95e32ee6ecf09b8",
     "scripts/gateway-installed-controller.ts": "e96d8e91b0e877ba409963373f809b3cb2a44144aaab450ae99f54f4572ce281",
@@ -20228,6 +20298,7 @@
     "scripts/staging-native-policy-ready.mjs": "5033f7a802d5e4844f8029ad071ed3548eb8df9559155ab597819a1e006154b3",
     "scripts/staging-native-quote-provider.ts": "f1fe44322c1cd0cf9172ca3571af62e4992c067ecf2c87cda16159460a83b074",
     "scripts/staging-owned-builder.mjs": "4db747484d100c3cdd45a668589096cd753f16a87347f4b973a72c34148132f6",
+    "scripts/staging-owned-installed-fixture.mjs": "42e573a455ac609099e5c36b9552c46f7cd2a3a92c429e31a7e51a54a4e5292d",
     "scripts/staging-planner-attachment.mjs": "021115f6afad958f5b0c5e92074788efe864497b17f156f69994ff0e66f335b4",
     "scripts/staging-planner-inputs.mjs": "bb5f7b0e582e274336dd8c68fb9fbe52ffa3b72c8e4e28c3d4e8ffdb30868f4c",
     "scripts/staging-runtime-images.mjs": "29891a47d7bf259b865d56ebfe5558681ed456716aeb8f638727b0064603c6d6",

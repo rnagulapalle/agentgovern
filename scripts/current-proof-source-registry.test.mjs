@@ -14,6 +14,11 @@ test('current construction covers installed web, both compiled profiles, scope s
  expect(registry.families.quote).toContain('runtime/temporal/pinned-quote-workflow.ts');expect(registry.families.ack).toContain('runtime/temporal/pinned-workflow.ts');
  expect(registry.families.chat).toContain('scripts/chat-ui-installed-fixture.ts');expect(registry.families.load).toContain('scripts/temporal-installed-fixture.ts');expect(registry.families.gateway).toContain('scripts/gateway-installed-fixture.ts');
  expect(registry.families.assembly).toContain('scripts/staging-installed-publication.ts');expect(registry.families.assembly).toContain('lib/durable/workload-pool.ts');expect(registry.families.assembly).toContain('scripts/worker-artifact-enrollment.mjs');
+ expect(registry.families.discovery).toContain('instrumentation-client.ts');
+ expect(registry.edges).toContainEqual({from:'instrumentation-client.ts',to:'lib/analytics.ts'});
+ const omitted=structuredClone(registry);
+ omitted.families.discovery=omitted.families.discovery.filter(f=>f!=='instrumentation-client.ts');
+ expect(()=>validateCurrentProofRegistry(omitted)).toThrow();
  expect(validateCurrentProofRegistry(registry)).toBe(true);
 });
 test.each(['missing','extra','altered','edge'])('exact current registry rejects %s dependency construction',kind=>{

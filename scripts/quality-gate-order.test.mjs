@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
 const gate=readFileSync(new URL('./quality-gate.sh',import.meta.url),'utf8');
-const commands=['pnpm check:repo','pnpm lint','pnpm typecheck','pnpm temporal:build','node scripts/build-temporal-worker.mjs quote','pnpm test:coverage','node --import tsx scripts/staging-database-proof.mjs','node scripts/build-enquiry-worker.mjs','pnpm build','pnpm check:links','git diff --check'];
+const commands=['pnpm check:repo','pnpm lint','pnpm typecheck','pnpm temporal:build','node scripts/build-temporal-worker.mjs quote','pnpm build','node --import tsx scripts/discovery-browser-proof.mjs --owned-current','pnpm test:coverage','node --import tsx scripts/staging-database-proof.mjs','node scripts/build-enquiry-worker.mjs','pnpm check:links','git diff --check'];
 function attempt(fail=''){
  const root=mkdtempSync(join(tmpdir(),'ll-gate-order-'));try{
   const scripts=join(root,'scripts'),bin=join(root,'bin'),trace=join(root,'trace');mkdirSync(scripts);mkdirSync(bin);writeFileSync(join(scripts,'quality-gate.sh'),gate);
@@ -14,12 +14,12 @@ function attempt(fail=''){
   return {status:result.status,trace:readFileSync(trace,'utf8').trim().split('\n'),stdout:result.stdout};
  }finally{rmSync(root,{recursive:true,force:true});}
 }
-test('clean gate creates both workflow prerequisites before unfiltered coverage and retains every later gate',()=>{
+test('clean gate creates workflow, build and current installed-proof prerequisites before unfiltered coverage and retains every gate',()=>{
  const result=attempt();expect(result.status).toBe(0);expect(result.trace).toEqual(commands);expect(result.stdout).toContain('All quality gates passed.');
 });
-test.each(['pnpm temporal:build','node scripts/build-temporal-worker.mjs quote'])('failed prerequisite %s prevents coverage and all downstream gate claims',command=>{
+test.each(['pnpm temporal:build','node scripts/build-temporal-worker.mjs quote','pnpm build','node --import tsx scripts/discovery-browser-proof.mjs --owned-current'])('failed prerequisite %s prevents coverage and all downstream gate claims',command=>{
  const result=attempt(command);expect(result.status).toBe(23);expect(result.trace).toEqual(commands.slice(0,commands.indexOf(command)+1));expect(result.trace).not.toContain('pnpm test:coverage');expect(result.stdout).not.toContain('All quality gates passed.');
 });
 test('coverage or source-bound evidence failure remains fatal and cannot be bypassed by build readiness',()=>{
- const result=attempt('pnpm test:coverage');expect(result.status).toBe(23);expect(result.trace).toEqual(commands.slice(0,6));expect(result.stdout).not.toContain('All quality gates passed.');
+ const result=attempt('pnpm test:coverage');expect(result.status).toBe(23);expect(result.trace).toEqual(commands.slice(0,commands.indexOf('pnpm test:coverage')+1));expect(result.stdout).not.toContain('All quality gates passed.');
 });
