@@ -1,0 +1,202 @@
+{
+  "scope": "Illustrative ecosystem marks; not a claim of supported integrations or endorsement",
+  "repository": "https://github.com/simple-icons/simple-icons",
+  "icons": [
+    {
+      "slug": "cursor",
+      "name": "Cursor",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/cursor.svg",
+      "sha256": "71572a9be192cc069ec22b48d785e61d754eeed7edb7d082d615f6d5620f70ec",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "openai",
+      "name": "OpenAI",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/openai.svg",
+      "sha256": "2b4a04ddc2395b20d168694d3850ce2050a702c4a0cdeb4d8b31b9a970481a8c",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "claude",
+      "name": "Claude",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/claude.svg",
+      "sha256": "2d6fda79eb18ddccca35b799eeb3cece0dfabc22520ce3b10abd25668df9fa93",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "anthropic",
+      "name": "Anthropic",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/anthropic.svg",
+      "sha256": "1cc599f6ebce2016dc388cf84e54a52c6b13487655c7e243554d654c7bce1882",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "googlegemini",
+      "name": "Google Gemini",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/googlegemini.svg",
+      "sha256": "a6228d8846040401e941a39ed17459785e8324dbb7b870ce84233c9b3e9863a0",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "langchain",
+      "name": "LangChain",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/langchain.svg",
+      "sha256": "7886444fa437debc26c8e9a51fd86943ad2cbc24b0f8185f15421190f48ab362",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "crewai",
+      "name": "CrewAI",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/crewai.svg",
+      "sha256": "6551b4dae99b4143b7105280fc878ff465a762fd9149ea7bd80200fbe1285461",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "n8n",
+      "name": "n8n",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/n8n.svg",
+      "sha256": "f5a606188c78bf134fe7d85ae3d1310f6f4b7beafcd1d2fbdef2af02c92240a8",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "google",
+      "name": "Google",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/google.svg",
+      "sha256": "d8cf9fb2d5e234e03254f1d6400d8cc8160c309b010d031a64f37084b5a21d01",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "twilio",
+      "name": "Twilio",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/twilio.svg",
+      "sha256": "52dcf3b6cea65fdc9b5b525aa2bb9517f405a58c68d464f207f0ddf60c0114ea",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "amazonwebservices",
+      "name": "AWS",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/amazonwebservices.svg",
+      "sha256": "f67734a0f5a7f925c84b6a9ea6e5489fe7af96e4ae167da6b71506a5d6afcab4",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "asana",
+      "name": "Asana",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/asana.svg",
+      "sha256": "ecdcda759ad672b2f4c90a872ba69ed0071e019741e01308f4bbbf8d4c54be0c",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "stripe",
+      "name": "Stripe",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/stripe.svg",
+      "sha256": "130c6d957b8977f5eda2928267b9df531ca038a400a801765d263801bb1bd870",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "zoom",
+      "name": "Zoom",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/zoom.svg",
+      "sha256": "da5b2f13d38ca61c88a227f58e3bebcbcbb55412d97678ecff49ae7c603f9a7b",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "hubspot",
+      "name": "HubSpot",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/hubspot.svg",
+      "sha256": "f96cfb6bba27c8e70a03e782f07d4d649e9f39d2fb8bea7136b370ab2c3f04a9",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "github",
+      "name": "GitHub",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/github.svg",
+      "sha256": "3bf8cceead820aec50d4ee825a3fd02c5a1cd6665cc9cf4cbf3d9c8861a204bb",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "salesforce",
+      "name": "Salesforce",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/salesforce.svg",
+      "sha256": "9f8adb4f73acb235b2fe1c721f17d915d3559c905d1de9c7b678d76d0687eb08",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "dropbox",
+      "name": "Dropbox",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/dropbox.svg",
+      "sha256": "1c9ea4ac8e318f3f6a598568df1a38ece03b7bc52a3a72d48c9e760340d7aeec",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "squarespace",
+      "name": "Squarespace",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/squarespace.svg",
+      "sha256": "180f06fc3906938d3051e1c4509f2decddb3aa85dc20a4c5dde11a05ab5e50dc",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "notion",
+      "name": "Notion",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/notion.svg",
+      "sha256": "b17d2a2b592a06252efef522d5205f0c7a958f748d40df1011ed081417e42f85",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "microsoft",
+      "name": "Microsoft",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/11.15.0/icons/microsoft.svg",
+      "sha256": "f0fdaef83e59660c4da6e3988ca41fbe907e420cb86b48a94746caefec015bf9",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "jira",
+      "name": "Jira",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/jira.svg",
+      "sha256": "68f8703698538ee7863bf69b72bf9f0d78a72d218e7eb7e0617237ae43ae5ade",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "slack",
+      "name": "Slack",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/slack.svg",
+      "sha256": "f23c317b279f53dcd2260a6cd2e279f7a696f87dcb3da259d6201f05bbc45b0d",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "figma",
+      "name": "Figma",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/figma.svg",
+      "sha256": "2f86fca501dfed321a62f28743f29d9dd738dac91668eac5260ab746d1ef8840",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "confluence",
+      "name": "Confluence",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/confluence.svg",
+      "sha256": "b9f1e0ae738e22ca281af813e8cc53e808a4c71d41adfa44bdc1a8d2c8134be3",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "linear",
+      "name": "Linear",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/linear.svg",
+      "sha256": "90b91b61090f4f9c94f9cb24769642278f03e8eedcfe5680738cf3a186bfc00f",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "googledrive",
+      "name": "Google Drive",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/googledrive.svg",
+      "sha256": "7e678aba9e463140ec8603f0e6cc78bb80f6caf9cd3ee73335026a90729a1a40",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "zendesk",
+      "name": "Zendesk",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/zendesk.svg",
+      "sha256": "0770c2be1029e226eb77ac653722f4a05763a580178eb1e8c2853d6d0811d416",
+      "license": "CC0-1.0"
+    }
+  ]
+}
