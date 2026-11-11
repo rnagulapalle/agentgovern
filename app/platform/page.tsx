@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { quoteDemoProfile, scriptDemoProfile } from "@/lib/workspace/deployment-capabilities";
 export const dynamic = "force-dynamic";
-import {
-  MarketingHeader,
-  MarketingFooter,
-} from "@/components/marketing/chrome";
-import { ProductOverview } from "@/components/marketing/product-overview";
+import { ClarityPlatform } from "@/components/marketing/clarity-pages";
+import "../landing.css";
+import "../marketing-clarity.css";
 import "../sales.css";
 export const metadata: Metadata = {
   title: "Agent workflow controls",
@@ -14,11 +12,5 @@ export const metadata: Metadata = {
   alternates: { canonical: "/platform" },
 };
 export default function PlatformPage() {
-  return (
-    <div className="sales-page">
-      <MarketingHeader />
-      <ProductOverview quoteOnly={process.env.LOOPLABS_DEPLOYMENT_PROFILE === quoteDemoProfile} scriptDemo={process.env.LOOPLABS_DEPLOYMENT_PROFILE === scriptDemoProfile} />
-      <MarketingFooter />
-    </div>
-  );
+  return <ClarityPlatform quoteOnly={process.env.LOOPLABS_DEPLOYMENT_PROFILE === quoteDemoProfile} scriptDemo={process.env.LOOPLABS_DEPLOYMENT_PROFILE === scriptDemoProfile}/>;
 }
