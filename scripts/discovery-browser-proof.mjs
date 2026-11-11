@@ -7,7 +7,7 @@ import { createServer } from "node:net";
 import { randomBytes, randomUUID, createHash } from "node:crypto";
 import { mkdtemp, mkdir, writeFile, readFile, rm, access, realpath } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
 import { chromium, expect } from "@playwright/test";
@@ -237,6 +237,35 @@ export async function discoveryBrowserProof(outputDirectory) {
   receipt.assertions.ownedResourcesRemoved = true;
   await writeFile(join(outputDirectory, "receipt.json"), JSON.stringify(receipt, null, 2) + "\n", { mode: 0o600, flag: "wx" }); return receipt;
 }
+export async function ownedCurrentDiscoveryProof(outputDirectory) {
+  assert(process.env.LOOPLABS_DISCOVERY_BROWSER_PROOF === "isolated", "Explicit disposable discovery browser opt-in required");
+  assert(typeof outputDirectory === "string" && isAbsolute(outputDirectory) && !outputDirectory.split("/").includes(".."), "Explicit private absolute evidence directory required");
+  const { withOwnedInstalledStagingFixture } = await import("./staging-owned-installed-fixture.mjs");
+  const names = ["LOOPLABS_TEST_DATABASE_URL", "LOOPLABS_PROOF_TRANSPORT_FILE"];
+  const previous = Object.fromEntries(names.map(name => [name, process.env[name]]));
+  let receipt;
+  try {
+    receipt = await withOwnedInstalledStagingFixture(async fixture => {
+      const transportFile = join(fixture.directory, "discovery-transport.json");
+      await writeFile(transportFile, JSON.stringify(fixture.transport), { mode: 0o600, flag: "wx" });
+      process.env.LOOPLABS_TEST_DATABASE_URL = fixture.url;
+      process.env.LOOPLABS_PROOF_TRANSPORT_FILE = transportFile;
+      return discoveryBrowserProof(outputDirectory);
+    });
+  } finally {
+    for (const name of names) {
+      if (previous[name] === undefined) delete process.env[name];
+      else process.env[name] = previous[name];
+    }
+  }
+  // Written only after the existing lifecycle's TLS/auth refusal assertions and
+  // exact owned SQL/container/network/volume cleanup have returned successfully.
+  await writeFile(join(outputDirectory, "pg-proof.json"), JSON.stringify({ pgReady: true, wrongPasswordRefused: true, plaintextRefused: true, ownedCleanupTerminal: true, production: false }) + "\n", { mode: 0o600, flag: "wx" });
+  return receipt;
+}
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  discoveryBrowserProof(process.argv[2]).then(r => console.log(JSON.stringify({ proof: r.proof, assertions: r.assertions, notProved: r.notProved }))).catch(e => { console.error(e.message); process.exitCode = 1; });
+  const run = process.argv[2] === "--owned-current"
+    ? ownedCurrentDiscoveryProof(process.env.LOOPLABS_CURRENT_DISCOVERY_PROOF_DIR)
+    : discoveryBrowserProof(process.argv[2]);
+  run.then(r => console.log(JSON.stringify({ proof: r.proof, assertions: r.assertions, notProved: r.notProved }))).catch(e => { console.error(e.message); process.exitCode = 1; });
 }

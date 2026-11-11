@@ -1,4 +1,5 @@
 import posthog from "posthog-js";
+import { filterWorkflowProofEvent } from "./lib/analytics";
 
 const token = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const isLoopLabs =
@@ -12,6 +13,7 @@ if (token && (isLoopLabs || isDebugSession)) {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ph",
     ui_host: "https://us.posthog.com",
     defaults: "2026-05-30",
+    before_send: filterWorkflowProofEvent,
     capture_pageview: "history_change",
     capture_pageleave: true,
     persistence: "localStorage+cookie",

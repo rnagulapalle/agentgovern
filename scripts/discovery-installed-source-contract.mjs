@@ -7,4 +7,6 @@ discoveryInstalledSources.push(...["components/brand/loop-mark.tsx", "components
 
 discoveryInstalledSources.push("app/api/workspace/discovery/onboarding/route.ts", "lib/workspace/cloud-observation-schema.sql");
 discoveryInstalledSources.push("app/api/workspace/discovery/approvals/route.ts");
+// Next loads this entry by convention, so no application import reaches it.
+discoveryInstalledSources.push("instrumentation-client.ts");
 Object.freeze(discoveryInstalledSources);

@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState, useRef, type ReactNode } from "react";
 import Link from "next/link";
+import { captureWorkflowProofView } from "@/lib/analytics";
 import { PageTitle } from "./ui";
 import { RequestPlanner } from "./request-planner";
 import { explainStep } from "@/lib/workflows/request";
@@ -38,6 +39,8 @@ async function call(url: string, p?: object) {
 export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: boolean; embeddedRunId?: string }) {
   const [reviewed, setReviewed] = useState(false);
   const creation = useRef<string>("");
+  const viewedProof = useRef(new Set<string>());
+  const pendingProof = useRef<string | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]),
     [runs, setRuns] = useState<{ id: string; state: string }[]>([]),
     [run, setRun] = useState<Run | null>(null),
@@ -73,8 +76,17 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
       setBusy(false);
     }
   }
-  async function open(id: string) {
-    setRun(await call("/api/durable/workflows?run=" + id));
+  useEffect(() => {
+    if (run && pendingProof.current) {
+      const expectedId = pendingProof.current;
+      pendingProof.current = null;
+      captureWorkflowProofView(run, expectedId, viewedProof.current);
+    }
+  }, [run]);
+  async function open(id: string, explicitView = false) {
+    const saved = await call("/api/durable/workflows?run=" + encodeURIComponent(id));
+    pendingProof.current = explicitView ? id : null;
+    setRun(saved);
   }
   async function action(s: Step, operation: string, lostResponse = false) {
     await task(async () => {
@@ -173,7 +185,7 @@ export function WorkflowWorkspace({ guided = false, embeddedRunId }: { guided?: 
         <p>For pricing workflows and their approval history, open <Link href="/control-plane/quotes">Distributor quotes →</Link></p>
         {runs.map((r) => (
           <p key={r.id}>
-            <button disabled={busy} onClick={() => task(() => open(r.id))}>
+            <button disabled={busy} onClick={() => task(() => open(r.id, true))}>
               {r.id.slice(0, 8)} · {r.state}
             </button>
           </p>

@@ -4,6 +4,8 @@ import {test,expect,vi} from "vitest";
 // Keep every rejection assertion and give this file a bounded 30s deadline.
 vi.setConfig({testTimeout:30000});
 import{readFile}from"node:fs/promises";import{createHash}from"node:crypto";
+import assert from "node:assert/strict";
+import { isAbsolute, join } from "node:path";
 import{discoveryInstalledSources,validateInstalledDiscovery}from"./discovery-installed-evidence.mjs";
 const hash=b=>createHash("sha256").update(b).digest("hex");
 import {constructInstalledDiscoveryRegistry} from "./current-proof-source-registry.mjs";
@@ -26,11 +28,21 @@ async function fixture(){
 }
 const ASSERTIONS=["threeProviderOwnerReviewSavedThroughUi", "ownerReviewReplayAndChangedDecisionRefused", "ownerReviewSurvivesMobileReload", "revokedOwnerRequiresRenewalWithoutAuthority", "foreignOwnerDirectoryAndReviewDenied", "azureMobile390SavedScanReadable", "azureUiScanPersistsThroughCliHttpFixture", "azureChangedBindingRefusedAndEvidencePreserved", "azureProviderMetadataMinimized", "projectScopesSavedThroughUi", "projectFixtureEvidenceSurvivesReload", "projectNativeScanNotClaimed", "projectMobile390Readable", "projectCrossCompanyAndRevocationDenied", "anonymousDenied", "namedSignIn", "secureHttpOnlyCookie", "configuredIsNotObserved", "actualLocalCliFixtureScanPersisted", "refreshPersistence", "expiredBindingRefusedAndPriorEvidencePreserved", "mobileMenuClosesOnCurrentPageSelection", "mobile390NoOverflow", "mobileInputsAtLeast16px", "technicalReferencesExpandable", "noRawJson", "crossCompanyDenied", "revokedMemberDenied", "noExecutionAuthorityCreated", "ownedResourcesRemoved"];
 async function actual(){
- // Separately named genuine CIO fleet/observation execution; prior evidence stays unchanged.
- const bytes=await readFile("docs/evidence/discovery-installed-browser-v3-20261102-fetchsandbox-labels-proof.json");
- expect(hash(bytes)).toBe("b2bf9a161a4ddf78396fc9a593cc028dae1fd940af0e0a2c2b7e48478da485f5");
- return{receipt:JSON.parse(bytes),cleanup:JSON.parse(await readFile("docs/evidence/discovery-installed-browser-v3-20261102-fetchsandbox-labels-cleanup.json")),pg:JSON.parse(await readFile("docs/evidence/discovery-installed-browser-v3-20261102-fetchsandbox-labels-pg-proof.json")),sourceHash:async f=>hash(await readFile(f)),artifactHash:async(kind,f)=>hash(await readFile(kind==="compiled"?f:"docs/evidence/discovery-installed-browser-v3-20261102-fetchsandbox-labels-"+f))};
+ // The existing quality gate executes the sole browser proof against this build.
+ // Historical bytes remain pinned and cannot supply current acceptance.
+ const historical=await readFile("docs/evidence/discovery-installed-browser-v3-20261102-fetchsandbox-labels-proof.json");
+ expect(hash(historical)).toBe("b2bf9a161a4ddf78396fc9a593cc028dae1fd940af0e0a2c2b7e48478da485f5");
+ const directory=process.env.LOOPLABS_CURRENT_DISCOVERY_PROOF_DIR;
+ assert(directory && isAbsolute(directory) && !directory.split("/").includes(".."), "Fresh current discovery proof directory required; no historical fallback");
+ const bytes=await readFile(join(directory,"receipt.json"));
+ return{receipt:JSON.parse(bytes),cleanup:JSON.parse(await readFile(join(directory,"cleanup.json"))),pg:JSON.parse(await readFile(join(directory,"pg-proof.json"))),sourceHash:async f=>hash(await readFile(f)),artifactHash:async(kind,f)=>hash(await readFile(kind==="compiled"?f:join(directory,f)))};
 }
+test("current evidence refuses absent generated-proof configuration instead of falling back to history",async()=>{const prior=process.env.LOOPLABS_CURRENT_DISCOVERY_PROOF_DIR;delete process.env.LOOPLABS_CURRENT_DISCOVERY_PROOF_DIR;try{await expect(actual()).rejects.toThrow("Fresh current discovery proof directory required");}finally{if(prior===undefined)delete process.env.LOOPLABS_CURRENT_DISCOVERY_PROOF_DIR;else process.env.LOOPLABS_CURRENT_DISCOVERY_PROOF_DIR=prior;}});
+test("November2 receipt remains historical and is refused against the current source",async()=>{
+ const current=await actual();
+ const historical=JSON.parse(await readFile("docs/evidence/discovery-installed-browser-v3-20261102-fetchsandbox-labels-proof.json"));
+ await expect(validateInstalledDiscovery({...current,receipt:historical})).rejects.toThrow();
+});
 test("current installed discovery evidence retains exact runtime closure and actual scoped TLS/epoch observations",async()=>{expect(await validateInstalledDiscovery(await actual())).toMatchObject({contract:"installed-discovery-intake-3",sourceCount:syntheticConstruction.families.discovery.length,assertions:30,production:false});expect(discoveryInstalledSources).toContain("instrumentation.ts");expect(discoveryInstalledSources).toContain("lib/workspace/tenant-bootstrap.ts");expect(discoveryInstalledSources).toContain("lib/durable/tenant-boundary-prototype-schema.sql");});
 test.each(["missing","extra","stale"])("refuses %s dependency observations",async kind=>{const v=await fixture(),f="lib/workspace/tenant-bootstrap.ts";if(kind==="missing")delete v.receipt.sourceFingerprints[f];if(kind==="extra")v.receipt.sourceFingerprints["unreviewed.ts"]="a".repeat(64);if(kind==="stale")v.sourceHash=async file=>file===f?"0".repeat(64):hash(await readFile(file));await expect(validateInstalledDiscovery(v)).rejects.toThrow();});
 test.each(["epoch","role","tls","cleanup","schema","privilege","assertion","historical"])("refuses altered %s authority/measurement evidence",async kind=>{const v=await fixture();if(kind==="epoch")v.receipt.installation.currentEpochs[0].epoch="00000000-0000-4000-8000-000000000099";if(kind==="role")v.cleanup.capturedRoles[0].oid="1";if(kind==="tls")v.receipt.installation.webTLS[0].verified_tls=false;if(kind==="cleanup")v.cleanup.passed=false;if(kind==="schema")v.cleanup.capturedSchema.oid="1";if(kind==="privilege")v.receipt.installation.webRoles[0].bypass=true;if(kind==="assertion")v.receipt.assertions.revokedMemberDenied=false;if(kind==="historical")v.receipt.version=1;await expect(validateInstalledDiscovery(v)).rejects.toThrow();});

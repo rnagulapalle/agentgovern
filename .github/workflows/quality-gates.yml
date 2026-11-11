@@ -53,6 +53,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      # The private connector fixture image uses Python 3.12. Runner-default
+      # Python 3.14 cannot build the retained pydantic-core/PyO3 dependency.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       - run: pnpm install --frozen-lockfile
       - name: Install browser and matching archive tools
         run: |
