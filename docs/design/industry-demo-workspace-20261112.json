@@ -1,0 +1,8 @@
+{
+  "request": "Replace the narrow export presentation with healthcare and freight interactive operational workflows",
+  "owners": ["lib/examples", "lib/engine/evaluate.ts", "lib/control-plane/model.ts:outputCheck", "components/examples"],
+  "gap": "Existing public example shows only a row count and review choice. Original Agent Govern has identity, plan, policy, approval and history but no healthcare/freight configuration; its layout redirects to the private workspace.",
+  "reuse": "Extend existing public examples presentation; reuse evaluate and outputCheck. Browser-only review/effect/readback stages are sample presentation state, not a new production workflow engine or connector. Private workspace, execution owners and historical receipts unchanged.",
+  "scope": "Fictional administrative referral and freight exception records. No clinical decision, patient data, live platform calls, compliance certification or enterprise reliability claim. Pattern checker only detects configured patterns. No provider/native acceptance established.",
+  "checks": ["Same inputs retain engine verdicts", "blocked cannot be approved", "request changes invalidate review", "source revision recheck", "reject prevents local apply", "lost acknowledgement requires readback", "repeat apply/reconcile adds no local duplicate", "switch/reset isolates state", "malformed input fails closed", "desktop/mobile/keyboard checks", "pnpm quality", "exact head CI and normal release gates before deployment"]
+}

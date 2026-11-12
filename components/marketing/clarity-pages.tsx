@@ -11,7 +11,7 @@ import workflow from "@/lib/marketing-tab-workflow-copy.json";
 import exampleCopy from "@/lib/marketing-export-example-copy.json";
 
 function Actions({ platform = false }: { platform?: boolean }) {
-  return <div className="clarity-actions"><Link className="clarity-primary" href="/contact-sales">{copy.hero.primary}<ArrowUpRight size={17}/></Link><Link className="clarity-secondary" href={platform ? "#workflow-boundaries" : "/examples/controlled-export"}>{platform ? copy.hero.secondary : exampleCopy.diagram.exampleLink}<ArrowRight size={17}/></Link></div>;
+  return <div className="clarity-actions"><Link className="clarity-primary" href="/contact-sales">{copy.hero.primary}<ArrowUpRight size={17}/></Link><Link className="clarity-secondary" href={platform ? "#workflow-boundaries" : "/examples"}>{platform ? copy.hero.secondary : exampleCopy.diagram.exampleLink}<ArrowRight size={17}/></Link></div>;
 }
 function Closing() {
   return <section className="clarity-closing" id="demo"><span className="clarity-label">LoopLabs / Early access</span><h2>{copy.cta.title}</h2><p>{copy.cta.body}</p><Actions/></section>;

@@ -19,7 +19,7 @@ describe("public product narrative",()=>{
   expect(html.match(/<h1/g)).toHaveLength(1);
   expect(html).toContain('href="/contact-sales"');
   expect(html).toContain('href="/platform"');
-  expect(html).toContain('href="/examples/controlled-export"');
+  expect(html).toContain('href="/examples"');
   expect(html).not.toContain('clarity-recovery');
   expect(html).not.toContain('ll-recovery-diagram');
   expect(html.match(/id="recovery"/g)).toHaveLength(1);
