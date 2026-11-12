@@ -7,20 +7,20 @@ import { LoopMark } from "@/components/brand/loop-mark";
 import { EcosystemMark, type EcosystemIcon } from "./ecosystem-mark";
 import { capabilityStage } from "./capability-scroll";
 import { CapabilityAnimation } from "./capability-animation";
-import connectionLine from "@/lib/marketing-connection-line.json";
 import copy from "@/lib/marketing-clarity-copy.json";
 import workflow from "@/lib/marketing-tab-workflow-copy.json";
+import exampleCopy from "@/lib/marketing-export-example-copy.json";
 
 const clientGroups: { label: string; icons: EcosystemIcon[] }[] = [
   { label: "MCP clients", icons: ["cursor", "openai", "claude"] },
-  { label: "Models", icons: ["openai", "anthropic", "googlegemini"] },
+  { label: exampleCopy.diagram.enterpriseGroup, icons: ["salesforce", "databricks", "snowflake"] },
   { label: "Frameworks", icons: ["langchain", "crewai", "n8n"] },
 ];
 const businessSystems: EcosystemIcon[] = [
   "google", "twilio", "amazonwebservices", "asana",
   "stripe", "zoom", "hubspot", "github",
-  "salesforce", "dropbox", "squarespace", "notion",
-  "microsoft", "jira", "slack", "figma",
+  "salesforce", "dropbox", "databricks", "notion",
+  "microsoft", "jira", "slack", "snowflake",
   "confluence", "linear", "googledrive", "zendesk",
 ];
 
@@ -39,13 +39,13 @@ export function ArchitectureFlow() {
       <div className="clarity-flow-line" aria-hidden="true"><span/><span/></div>
       <div className="clarity-flow-core"><div className="clarity-orbit" aria-hidden="true"/><div className="clarity-orbit clarity-orbit-inner" aria-hidden="true"/><div className="clarity-center-disc"><LoopMark/><strong>{copy.architecture.center}</strong><div className="clarity-center-stages">{workflow.items.map(item => <span key={item.label}>{item.label}</span>)}</div></div></div>
       <div className="clarity-flow-line" aria-hidden="true"><span/><span/></div>
-      <div className="clarity-ecosystem-panel clarity-systems-panel" role="group" aria-label={copy.architecture.right}>
-        <span className="clarity-ecosystem-heading">{copy.architecture.right}</span>
+      <div className="clarity-ecosystem-panel clarity-systems-panel" role="group" aria-label={exampleCopy.diagram.systemsHeading}>
+        <span className="clarity-ecosystem-heading">{exampleCopy.diagram.systemsHeading}</span>
         <div className="clarity-system-marks">{businessSystems.map(name => <EcosystemMark key={name} name={name}/>)}</div>
       </div>
     </div>
     <div className="clarity-return"><Undo2 size={16}/><span>{copy.architecture.return}</span></div>
-    <figcaption>{connectionLine.text}</figcaption>
+    <figcaption>{exampleCopy.diagram.connectionLine}</figcaption>
   </figure>;
 }
 

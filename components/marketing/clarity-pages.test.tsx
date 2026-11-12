@@ -9,6 +9,7 @@ import { ProductScope } from "./public-scope";
 import workflowCopy from "@/lib/marketing-workflows-copy.json";
 import copy from "@/lib/marketing-clarity-copy.json";
 import workflow from "@/lib/marketing-tab-workflow-copy.json";
+import exampleCopy from "@/lib/marketing-export-example-copy.json";
 
 function render(platform=false, profile:Record<string,boolean>={}) { return renderToStaticMarkup(createElement(platform?ClarityPlatform:ClarityHome,profile)); }
 describe("public product narrative",()=>{
@@ -18,6 +19,7 @@ describe("public product narrative",()=>{
   expect(html.match(/<h1/g)).toHaveLength(1);
   expect(html).toContain('href="/contact-sales"');
   expect(html).toContain('href="/platform"');
+  expect(html).toContain('href="/examples"');
   expect(html).not.toContain('clarity-recovery');
   expect(html).not.toContain('ll-recovery-diagram');
   expect(html.match(/id="recovery"/g)).toHaveLength(1);
@@ -103,7 +105,7 @@ describe("public product narrative",()=>{
 describe("illustrative ecosystem diagram",()=>{
  it("groups recognizable locally rendered marks without implying connected integrations",()=>{
   const html=renderToStaticMarkup(createElement(ArchitectureFlow));
-  for(const label of ["MCP clients","Models","Frameworks","Google","AWS","HubSpot","GitHub","Slack","Salesforce"])
+  for(const label of ["MCP clients",exampleCopy.diagram.enterpriseGroup,"Frameworks","Google","AWS","HubSpot","GitHub","Slack","Salesforce","Databricks","Snowflake"])
    expect(html).toContain(`aria-label="${label}"`);
   expect(html.match(/class="clarity-brand-mark"/g)).toHaveLength(29);
   expect(html).not.toContain(copy.architecture.note);
