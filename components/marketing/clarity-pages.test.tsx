@@ -8,6 +8,7 @@ import { ProductOverview } from "./product-overview";
 import { ProductScope } from "./public-scope";
 import workflowCopy from "@/lib/marketing-workflows-copy.json";
 import copy from "@/lib/marketing-clarity-copy.json";
+import workflow from "@/lib/marketing-tab-workflow-copy.json";
 
 function render(platform=false, profile:Record<string,boolean>={}) { return renderToStaticMarkup(createElement(platform?ClarityPlatform:ClarityHome,profile)); }
 describe("public product narrative",()=>{
@@ -112,24 +113,44 @@ describe("illustrative ecosystem diagram",()=>{
  });
 });
 
-describe("capability animation meaning",()=>{
- it("gives each stage a distinct labeled visual with pause and sample disclosure",()=>{
-  for(const [stage,label] of ["Define","Approve","Verify","Recover"].entries()){
+describe("one customer acknowledgement across all control stages",()=>{
+ it("keeps one workflow and customer record across all four diagrams",()=>{
+  for(const [stage,label] of ["Define","Approve","Verify","Reconcile"].entries()) {
    const html=renderToStaticMarkup(createElement(CapabilityAnimation,{stage}));
    expect(html).toContain(`aria-label="${label} workflow illustration"`);
+   expect(html).toContain(workflow.diagram.workflow);
+   expect(html).toContain(workflow.diagram.record);
+   expect(html).toContain(workflow.diagram.sampleNote);
    expect(html).toContain('aria-label="Pause tab animation"');
-   expect(html).toContain('Illustrative workflow · sample data');
+   expect(html).not.toMatch(/Net 90|Net 30|discount|25%|Recover/);
+  }
+  for(const platform of [false,true]) {
+   const html=render(platform);
+   expect(html).toContain('Reconcile');
+   expect(html).not.toContain('Treat uncertainty carefully');
+   expect(html).toContain(workflow.title);
+   expect(html).toContain(workflow.items[0].body);
   }
  });
- it("never paints a held send or proposed compensation as an animated dispatch",()=>{
-  for(const [stage,name] of [[1,"motion-held-path"],[3,"motion-proposed-path"]] as const){
+ it("keeps approval and dependent email held rather than illustrating an outgoing effect",()=>{
+  for(const stage of [0,1,2,3]) {
    const html=renderToStaticMarkup(createElement(CapabilityAnimation,{stage}));
-   const path=html.match(new RegExp(`<path[^>]*class="[^"]*${name}[^"]*"[^>]*>`))?.[0];
-   expect(path).toBeDefined();
-   expect(path).not.toContain('motion-packet');
+   const held=html.match(/<path[^>]*class="[^"]*motion-held-path[^"]*"[^>]*>/g);
+   expect(held?.length).toBeGreaterThan(0);
+   for(const path of held??[])expect(path).not.toContain('motion-packet');
   }
+  const approval=renderToStaticMarkup(createElement(CapabilityAnimation,{stage:1}));
+  expect(approval).toContain('Sarah Chen');
+  expect(approval).toContain(workflow.diagram.crmApproval);
+  expect(approval).toContain(workflow.diagram.emailApproval);
+  expect(approval).toContain(workflow.diagram.dependency);
+ });
+ it("distinguishes verified readback from an uncertain response without prescribing a blind retry",()=>{
   const verify=renderToStaticMarkup(createElement(CapabilityAnimation,{stage:2}));
-  expect(verify).toContain('Held · verify CRM first');
-  expect(verify).toContain('Uncertain');
+  expect(verify).toContain(workflow.diagram.crmReadback);
+  expect(verify).toContain(workflow.diagram.mayContinue);
+  const reconcile=renderToStaticMarkup(createElement(CapabilityAnimation,{stage:3}));
+  for(const value of [workflow.diagram.lostResponse,workflow.diagram.checkExisting,workflow.diagram.foundOnce,workflow.diagram.noDuplicate,workflow.diagram.unknownHeld])expect(reconcile).toContain(value);
+  expect(reconcile).not.toMatch(/Restore|Rollback|Retry now|motion-proposed-path/);
  });
 });

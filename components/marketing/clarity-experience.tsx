@@ -9,6 +9,7 @@ import { capabilityStage } from "./capability-scroll";
 import { CapabilityAnimation } from "./capability-animation";
 import connectionLine from "@/lib/marketing-connection-line.json";
 import copy from "@/lib/marketing-clarity-copy.json";
+import workflow from "@/lib/marketing-tab-workflow-copy.json";
 
 const clientGroups: { label: string; icons: EcosystemIcon[] }[] = [
   { label: "MCP clients", icons: ["cursor", "openai", "claude"] },
@@ -36,7 +37,7 @@ export function ArchitectureFlow() {
         </div>)}
       </div>
       <div className="clarity-flow-line" aria-hidden="true"><span/><span/></div>
-      <div className="clarity-flow-core"><div className="clarity-orbit" aria-hidden="true"/><div className="clarity-orbit clarity-orbit-inner" aria-hidden="true"/><div className="clarity-center-disc"><LoopMark/><strong>{copy.architecture.center}</strong><div className="clarity-center-stages">{copy.capabilities.items.map(item => <span key={item.label}>{item.label}</span>)}</div></div></div>
+      <div className="clarity-flow-core"><div className="clarity-orbit" aria-hidden="true"/><div className="clarity-orbit clarity-orbit-inner" aria-hidden="true"/><div className="clarity-center-disc"><LoopMark/><strong>{copy.architecture.center}</strong><div className="clarity-center-stages">{workflow.items.map(item => <span key={item.label}>{item.label}</span>)}</div></div></div>
       <div className="clarity-flow-line" aria-hidden="true"><span/><span/></div>
       <div className="clarity-ecosystem-panel clarity-systems-panel" role="group" aria-label={copy.architecture.right}>
         <span className="clarity-ecosystem-heading">{copy.architecture.right}</span>
@@ -97,7 +98,7 @@ export function CapabilityTabs() {
       window.scrollTo({ top: window.scrollY + track.current.getBoundingClientRect().top - geometry.top + index * geometry.step + 1, behavior: "instant" });
     }
   }
-  const item = copy.capabilities.items[active];
+  const item = workflow.items[active];
   function keys(event:KeyboardEvent<HTMLButtonElement>, index:number) {
     let next=index;
     if(event.key==="ArrowRight") next=(index+1)%4;
@@ -109,7 +110,7 @@ export function CapabilityTabs() {
   }
   return <div ref={track} className={`clarity-scroll-track${scrollMode ? " is-scroll-driven" : ""}`} style={scrollMode ? { height: geometry.height + geometry.step * 4 } : undefined}>
     <div ref={pinned} className="clarity-capabilities" style={scrollMode ? { top: geometry.top } : undefined}>
-    <div role="tablist" aria-label="Workflow control stages" className="clarity-tabs">{copy.capabilities.items.map((tab,i)=><button ref={el=>{refs.current[i]=el;}} type="button" key={tab.label} id={`${uid}-tab-${i}`} role="tab" aria-selected={active===i} aria-controls={`${uid}-panel`} tabIndex={active===i?0:-1} onClick={()=>select(i)} onKeyDown={e=>keys(e,i)}>{tab.label}<ArrowRight size={16}/></button>)}</div>
+    <div role="tablist" aria-label="Workflow control stages" className="clarity-tabs">{workflow.items.map((tab,i)=><button ref={el=>{refs.current[i]=el;}} type="button" key={tab.label} id={`${uid}-tab-${i}`} role="tab" aria-selected={active===i} aria-controls={`${uid}-panel`} tabIndex={active===i?0:-1} onClick={()=>select(i)} onKeyDown={e=>keys(e,i)}>{tab.label}<ArrowRight size={16}/></button>)}</div>
     <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${active}`} tabIndex={0} className="clarity-capability-panel">
       <div className="clarity-capability-copy"><span className="clarity-label">{item.label}</span><h3>{item.title}</h3><p>{item.body}</p><Link href={`/platform#${["workflow-boundaries","approved-execution","verified-outcomes","recovery"][active]}`}>{copy.hero.secondary}<ArrowRight size={16}/></Link></div>
       <CapabilityAnimation stage={active}/>
