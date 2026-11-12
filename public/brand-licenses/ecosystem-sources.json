@@ -197,6 +197,20 @@
       "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/zendesk.svg",
       "sha256": "0770c2be1029e226eb77ac653722f4a05763a580178eb1e8c2853d6d0811d416",
       "license": "CC0-1.0"
+    },
+    {
+      "slug": "snowflake",
+      "name": "Snowflake",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/snowflake.svg",
+      "sha256": "75690c4c666a406278286284f89896e8ef55dd0bfbc791acb910ce40e4a46aa9",
+      "license": "CC0-1.0"
+    },
+    {
+      "slug": "databricks",
+      "name": "Databricks",
+      "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/icons/databricks.svg",
+      "sha256": "454aa3efdb318c655e3da2ea844e3577a9c47a20e24d20fff6489362176e5fe4",
+      "license": "CC0-1.0"
     }
   ]
 }
