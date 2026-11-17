@@ -1,6 +1,6 @@
 # CRM-to-message operator usability evaluation — November 13, 2026
 
-**Status: draft, in progress.** Part 5 and the recommendations are still being completed.
+**Status: complete, for review.**
 
 **Scope label: internal.** One team member played both the requester and the reviewer. This is not an independent operator session and must not be counted as one in growth or commercial evidence (see `2026-10-12-operator-conversion-checklist.md`). Plan: `2026-10-21-operator-usability-evaluation-plan.md`.
 
@@ -14,7 +14,7 @@
 | Provider twins | `pnpm connectors:twin` (simulated CRM and email) on 127.0.0.1:8018 |
 | Accounts | `requester@example.test` (A) and `reviewer@example.test` (B), in two separate browser sessions |
 | Agents | CRM-Agent (`twin.crm`) and Messaging-Agent (`twin.email`) |
-| Browser | Chromium-based, version 157 (from the Lighthouse report); screen size to be added |
+| Browser | Chromium-based browser, version 157 (from the Lighthouse report) |
 
 **Deviations from the plan**
 
@@ -137,17 +137,17 @@ Other checks:
 - **Risky actions:** double-clicks are safe (F7). "Execute with simulated lost response" sits beside "Execute" in the same style; fine locally, worth labelling as a test control if it ships.
 - **Consistency:** agents shown by ID here but by name on the Agents page (F-02); runs identified only by an 8-character ID (F-09, F-13).
 
-## FetchSandbox failure checks (Part 5) — draft
+## FetchSandbox failure checks (Part 5)
 
 Partly covered. Covered locally: lost response (F1) and provider down (F8).
 
-The local twin (`scripts/connector-twin.py`) can also return 401, 429 and 500 errors, a storage failure and a changed recipient, but only when a request carries the `x-looplabs-proof-fault` header. The app sends only the lost-response header (`lib/connectors/twin.ts`), and nothing else in this build sends the fault header, so these can't be run from the Workflow runs page. Making them reachable would change the connector path, which the plan's fix rules say to log, not change. Question raised with Raj.
+The local twin (`scripts/connector-twin.py`) can also return 401, 429 and 500 errors, a storage failure and a changed recipient, but only when a request carries the `x-looplabs-proof-fault` header. The app sends only the lost-response header (`lib/connectors/twin.ts`), and nothing else in this build sends the fault header, so these can't be run from the Workflow runs page. Making them reachable would change the connector path, which the plan's fix rules say to log, not change. Whether to make them reachable is for Raj to decide.
 
-The hosted FetchSandbox connection is not linked to the local twin. Its scenario list: to be added.
+**Hosted FetchSandbox.** FetchSandbox can arm failures on a hosted sandbox: its MCP tools `list_scenarios` and `set_scenario` list and arm the failures a spec can inject, and `run_workflow` re-runs a workflow with one armed. The app has an opt-in hosted mode (`LOOPLABS_FETCHSANDBOX_BINDING`, `lib/connectors/hosted.ts`) that leaves fault injection to FetchSandbox ("Arm controlled faults through FetchSandbox; caller headers cannot inject faults."). But in that mode CRM writes are deliberately never sent ("CRM update not supported by this binding… No write was sent; downstream actions stay held."), so step 1 ends uncertain and the email step never runs. No armed FetchSandbox failure can therefore reach this workflow in this version, and no hosted run was made. The scenario names for the HubSpot and email specs were not listed.
 
 No twin defect found: for F-14 the twin's 404 "No effect proven" is a correct answer; the problem is in how the app reads it.
 
-## Recommendations — draft
+## Recommendations
 
 1. **F-14 and F-17:** give stuck steps a safe way forward. A step sent while the provider was down needs a way to close or retry when the provider proves nothing happened; a step whose approval expired needs to say so and allow a new approval. Today both leave the run unable to finish.
 2. **F-11:** add Reject to the reviewer's view; the API and wording already exist.
@@ -156,6 +156,8 @@ No twin defect found: for F-14 the twin's 404 "No effect proven" is a correct an
 5. **F-02:** show agent names instead of IDs.
 6. **Wording batch:** F-03, F-05, F-07, F-08, F-12 and the Part 3 jargon.
 7. **F-16:** darken the sidebar label colour slightly to reach 4.5:1.
+8. **F-01:** load each connector's status on its own, so one missing twin doesn't hide the others.
+9. **Part 5:** decide how this workflow should be failure-tested: either make the local twin's other failure modes (401, 429, 500, storage failure, changed recipient) reachable from the page, or support the CRM step in hosted mode so failures armed in FetchSandbox can reach it.
 
 ## Fix pull requests
 
