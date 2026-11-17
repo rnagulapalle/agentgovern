@@ -1,6 +1,6 @@
 # CRM-to-message operator usability evaluation — November 13, 2026
 
-**Status: draft, in progress.** The baseline table, Part 3 and Part 5 are still being completed.
+**Status: draft, in progress.** Part 5 and the recommendations are still being completed.
 
 **Scope label: internal.** One team member played both the requester and the reviewer. This is not an independent operator session and must not be counted as one in growth or commercial evidence (see `2026-10-12-operator-conversion-checklist.md`). Plan: `2026-10-21-operator-usability-evaluation-plan.md`.
 
@@ -89,6 +89,7 @@ Severity follows the plan: critical (wrong or unsafe result), major (task blocke
 | F-13 | Workflow runs | Open a run, then refresh or sign out and back in | The open run is still shown; reviewers see pending requests | The run disappears from view (kept only in page memory). It must be reopened by clicking its 8-character ID, a button styled like plain text. The reviewer gets no notice of pending requests. Saved state is intact | major | bug | Raj to decide (notice); page part Aayush, after Raj confirms |
 | F-14 | Workflow runs | Stop the twin, Execute a step, restart the twin, click Verify outcome | The step can be shown as "not sent" and closed or retried safely | Stays "uncertain" for good: "Outcome evidence unavailable. Do not retry." The twin answers 404 "No effect proven" (correct, it never got the write), but the app treats any non-OK answer as "evidence unavailable". No cancel, close or retry path; the run can never finish | major | bug | Raj (recovery path; log only) |
 | F-15 | Workflow runs | A submits; B has the run open (or B approves; A has it open) | The other window shows the new state | Neither window updates until reloaded; the page doesn't check for changes. The evaluator needed refresh or reload clicks in T5 and T6 | minor | bug | Aayush, after Raj confirms |
+| F-17 | Workflow runs | B approves step 1; wait 16 minutes; A clicks Execute | The step says the approval expired and offers a way to ask for a new approval | The step turns "cancelled": "This step was cancelled. Earlier steps may still have taken effect." Nobody cancelled it, step 1 has no earlier steps, and "Approved by: reviewer@example.test" is still shown. The real reason ("Authority or approval expired before dispatch.", `lib/connectors/service.ts`) appears only inside the collapsed "Action and verification details". No message appears at the top of the page. The run headline becomes "Work needs a decision", but a cancelled step gets no buttons, so the run can't continue or finish and stays "active" | major | bug | Raj (approvals; log only); wording Aayush, after Raj confirms |
 | F-16 | All control-plane pages (sidebar) | Run Lighthouse on Workflow runs | Text contrast at least 4.5:1 | All inactive sidebar labels fail: #726e65 on #f0f0ec is 4.45:1 (`app/control-plane/control-plane.css`, `.cp-nav-item`); 20 elements | minor | accessibility | Aayush, after Raj confirms |
 
 ## Failure-path results (Part 2)
@@ -111,7 +112,7 @@ Severity follows the plan: critical (wrong or unsafe result), major (task blocke
 - **Automated scan:** Lighthouse 13.5.0, Accessibility, desktop, Workflow runs page as first loaded (before a run is opened): score 96. One failed audit, colour contrast (F-16). 22 passed, 10 manual checks, 40 not applicable.
 - **Screen reader:** out of scope (see deviations).
 
-## Heuristic review (Part 3) — draft
+## Heuristic review (Part 3)
 
 Checks from the plan: Is the current state obvious? Is the next action obvious? Is jargon explained? Are errors specific? Is a risky action easy to trigger by mistake? Is it consistent with other pages?
 
@@ -121,13 +122,13 @@ Step status texts (`lib/workflows/request.ts`):
 |---|---|
 | Not submitted | Clear, but the run headline says "Submission incomplete" at the same time (F-03) |
 | held | "dispatched" is unexplained. Says a reviewer is needed, yet the requester sees "Approve this action" (F-04) and the reviewer gets no notice (F-13) |
-| ready | "Current authority is checked again before dispatch" uses two unexplained terms. Doesn't say the approval lasts 15 minutes (set in `lib/connectors/service.ts`; not mentioned on the page). Not yet observed: what the page shows when an approval expires |
+| ready | "Current authority is checked again before dispatch" uses two unexplained terms. Doesn't say the approval lasts 15 minutes (set in `lib/connectors/service.ts`; not mentioned on the page). When it expires, clicking Execute turns the step to "cancelled" with no explanation on the step (F-17) |
 | executing | "do not repeat the action" is a clear safety line; "Dispatched" is jargon |
 | succeeded | Says "confirmed", but Verify outcome is still offered (F-07, F-08) and repeat clicks add history (F-10) |
 | uncertain | Says "Verify the external result before any retry", but the page has no retry control, and after a failed check the advice becomes "Do not retry" (F-14). "external result" is unexplained |
 | conflict | Says "review it", but the page has no review, cancel or history control. Code only, not observed |
 | rejected | Wording exists but can't be reached (F-11) |
-| cancelled | Wording exists but the page has no cancel control. Code only |
+| cancelled | Shown after an approval expires (F-17). Says "cancelled" although nobody cancelled, and "Earlier steps may still have taken effect" even on step 1. The page has no cancel control of its own |
 
 Other checks:
 
@@ -148,7 +149,7 @@ No twin defect found: for F-14 the twin's 404 "No effect proven" is a correct an
 
 ## Recommendations — draft
 
-1. **F-14:** give a step sent while the provider was down a safe way to close or retry when the provider proves nothing happened. Today the run can never finish.
+1. **F-14 and F-17:** give stuck steps a safe way forward. A step sent while the provider was down needs a way to close or retry when the provider proves nothing happened; a step whose approval expired needs to say so and allow a new approval. Today both leave the run unable to finish.
 2. **F-11:** add Reject to the reviewer's view; the API and wording already exist.
 3. **F-13 and F-15:** remember the open run, update it without reloading, and tell reviewers when a request is waiting.
 4. **F-06:** show refusals next to the button that failed, and clear old ones.
