@@ -1,0 +1,65 @@
+{
+  "paletteSources": [
+    "https://raw.githubusercontent.com/simple-icons/simple-icons/14.0.0/_data/simple-icons.json",
+    "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/data/simple-icons.json"
+  ],
+  "assets": [
+    {
+      "slug": "slack",
+      "source": "https://www.vectorlogo.zone/logos/slack/slack-icon.svg",
+      "sourceSha256": "b39c87ca0e1e14a242fdf702d8618fe9318321bb37d5d91080d2ef0accf819fe",
+      "localSha256": "a6f8976324102fb93609aeda2cb8f77bb8d6c31fdbbc29d11b977ad55da47c45",
+      "processing": "Removed editor metadata and active/external attributes; retained original color/gradient shapes"
+    },
+    {
+      "slug": "microsoft",
+      "source": "https://www.vectorlogo.zone/logos/microsoft/microsoft-icon.svg",
+      "sourceSha256": "c0cef521be053d3b39d1666e71663af459c7c9c45d17c17e5a2d8e77fc2dab74",
+      "localSha256": "22fb5ecb7c21511ea3b05190bda337e56b28036ae7105479617eb39ba796f48e",
+      "processing": "Removed editor metadata and active/external attributes; retained original color/gradient shapes"
+    },
+    {
+      "slug": "figma",
+      "source": "https://www.vectorlogo.zone/logos/figma/figma-icon.svg",
+      "sourceSha256": "3f64dae550b874563318db5aa44ced0c6c9acc8980075c0ec6ad8c32195a2070",
+      "localSha256": "a8e6571032f526a8057040878fe59acbc653183bdd21d2219a1e9dcde9ec3612",
+      "processing": "Removed editor metadata and active/external attributes; retained original color/gradient shapes"
+    },
+    {
+      "slug": "googledrive",
+      "source": "https://www.vectorlogo.zone/logos/google_drive/google_drive-icon.svg",
+      "sourceSha256": "09170a8d678198ce6511171e4f933f80772ecac8e7aa6995cf07f1b1b6551a98",
+      "localSha256": "51da9f1ee6e921f33381b3ee25a576e2ab9088d5d944e124899f2c55972c72b7",
+      "processing": "Removed editor metadata and active/external attributes; retained original color/gradient shapes"
+    },
+    {
+      "slug": "googlegemini",
+      "source": "https://raw.githubusercontent.com/pheralb/svgl/main/static/library/gemini.svg",
+      "sourceSha256": "c11d94a9e3ecb32f67dd9350848cf3124d617680533275c672e1e6bf61ce8cd4",
+      "localSha256": "73026771ccd394d9bb4bfd1cf7918deb9c2da4de0cd104b6022413ac3dd5eb4a",
+      "processing": "Removed editor metadata and active/external attributes; retained original color/gradient shapes"
+    },
+    {
+      "slug": "google",
+      "source": "https://www.vectorlogo.zone/logos/google/google-icon.svg",
+      "sourceSha256": "1e17a31032d2f43652982fc69ade56febbc27e3aa907183c0701ff524cf8d20e",
+      "localSha256": "ea916a0791f398f4551e7edde8882552070303baafa272e1fd71302b22856d77",
+      "processing": "Retained color shapes, gradients and local fragment references; removed metadata and external/active attributes"
+    },
+    {
+      "slug": "amazonwebservices",
+      "source": "https://raw.githubusercontent.com/pheralb/svgl/main/static/library/aws_light.svg",
+      "sourceSha256": "c1fb8aee6d30937b2dfd3282d74a1e509f8ff15ce948107dd31f891cd2e6d890",
+      "localSha256": "98bec8f38940e12e17858659176b459f8a238d794f77316ab30edf51a8495f35",
+      "processing": "Retained color shapes, gradients and local fragment references; removed metadata and external/active attributes"
+    }
+  ],
+  "scope": "Brand colors and illustrative ecosystem only, no integration/endorsement claim",
+  "paletteOverrides": {
+    "openai": {
+      "hex": "000000",
+      "source": "https://openai.com/brand/",
+      "reason": "Official Blossom is monochrome, not the retired purple metadata"
+    }
+  }
+}

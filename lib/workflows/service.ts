@@ -16,6 +16,9 @@ import { managedWorker } from "../enquiries/dispatch";
 import { randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { transaction } from "../durable/database";
+import {savedProvider,type ProviderFactory} from "../connectors/routing";
+import {connectorRoutingIdentity} from "../connectors/catalog";
+import {memberConnectorAllowed} from "../workspace/connector-member-access";
 import { authorize } from "../durable/service";
 import { ControlError, type Actor } from "../durable/contracts";
 import { ConnectorControl } from "../connectors/service";
@@ -37,7 +40,8 @@ export class WorkflowControl {
   ) {
     const emailPayload = emailContent ? {template:"reviewed_acknowledgement_v2" as const,...reviewedMessageV2(emailContent)} : {template:"case_received" as const};
     const create = async (c: PoolClient) => {
-      await this.connectors.authority(c, actor, ["operator"]);
+      await this.connectors.authority(c, actor, ["operator"],{operation:"propose",agentId:crmAgent,connector:"crm"});
+      await this.connectors.authority(c, actor, ["operator"],{operation:"propose",agentId:emailAgent,connector:"email"});
       if (!["lead", "customer"].includes(lifecycle))
         throw new ControlError(400, "Choose a supported contact lifecycle.");
       if (
@@ -183,11 +187,7 @@ export class WorkflowControl {
     if (!/^[0-9a-f-]{36}$/i.test(id))
       throw new ControlError(400, "Choose a valid workflow.");
     return transaction(this.db, actor.orgId, async (c) => {
-      await this.connectors.authority(c, actor, [
-        "operator",
-        "agent",
-        "worker",
-      ]);
+      await this.connectors.identity(c,actor,["operator","agent","worker"]);
       if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal", "quote-temporal"].includes(actor.subject)) await managedWorker(c, actor, id);
       const run = (
         await c.query(
@@ -196,6 +196,7 @@ export class WorkflowControl {
         )
       ).rows[0];
       if (run?.workflow_kind === "distributor-quote") {
+        await this.connectors.authority(c,actor,["operator","agent","worker"]);
         const quotes=this.quotes;
         if(actor.role!=="operator" && !(actor.role==="worker" && actor.subject==="quote-temporal"))throw new ControlError(403,"A current named quote owner or exact bound quote workload is required.");
         if(!quotes || quotes.authority.db!==this.db)throw new ControlError(503,"Server-owned quote review authority is required.");
@@ -220,6 +221,9 @@ export class WorkflowControl {
           !steps.some((s) => s.agent_id === actor.subject))
       )
         throw new ControlError(404, "Workflow not found.");
+      // An incomplete graph carries no record context; only an administrator may inspect it.
+      if(steps.length===0)await this.connectors.authority(c,actor,["operator","agent","worker"]);
+      for(const step of steps)if(actor.role!=="agent"||step.agent_id===actor.subject)await this.connectors.authority(c,actor,["operator","agent","worker"],{operation:"read",agentId:step.agent_id,connector:step.connector});
       // Agents receive only their own immutable step instructions, never peer action payloads.
       return {
         ...run,
@@ -233,10 +237,15 @@ export class WorkflowControl {
       };
     });
   }
-  async list(actor: Actor) {
-    return transaction(this.db, actor.orgId, async (c) => {
-      await this.connectors.authority(c, actor, ["operator"]);
-      return (
+  async list(actor: Actor, factory?:ProviderFactory) {
+    const listing=await transaction(this.db, actor.orgId, async (c) => {
+      await connectorRoutingIdentity(c,actor,["operator"]);
+      const administrator=await memberConnectorAllowed(c,actor.orgId,actor.subject);
+      // Administrators retain the original configured-workspace boundary.
+      // Restricted members resolve each saved run independently below; the
+      // unscoped default provider is never their record authority.
+      if(administrator)await this.connectors.identity(c,actor,["operator"]);
+      const runs=(
         await c.query(
           // This list is consumed by the customer-handoff workspace. Quote
           // graphs require their own reader and current named quote authority.
@@ -245,7 +254,18 @@ export class WorkflowControl {
           [actor.orgId],
         )
       ).rows;
+      return {administrator,runs};
     });
+    if(listing.administrator)return listing.runs;
+    const visible=[];
+    for(const run of listing.runs){
+      try{
+        const provider=await savedProvider(this.db,actor,"run",run.id,null,false,factory);
+        await new WorkflowControl(this.db,new ConnectorControl(this.db,provider)).read(actor,run.id);
+        visible.push(run);
+      }catch(e){if(!(e instanceof ControlError)||![403,404,409].includes(e.status))throw e;}
+    }
+    return visible;
   }
   async pause(actor: Actor, id: string) {
     await this.read(actor, id);
@@ -366,7 +386,7 @@ export class WorkflowControl {
       await control.reconcile(actor, step.action_id);
     }
     return transaction(this.db, actor.orgId, async (c) => {
-      await this.connectors.authority(c, actor, ["operator", "worker"]);
+      for(const step of run.steps)await this.connectors.authority(c,actor,["operator","worker"],{operation:"reconcile",agentId:step.agent_id,connector:step.connector});
       if (actor.role === "worker") await managedWorker(c, actor, id);
       const state = (
         await c.query(

@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { NextRequest } from "next/server";
 import * as workflows from "../app/api/durable/workflows/route";
 import * as connectors from "../app/api/durable/connectors/route";
+import * as agents from "../app/api/workspace/agents/route";
 import * as enquiries from "../app/api/workspace/enquiries/route";
 import { proofWebInstallation } from "./connector-proof-installation";
 const server = createServer(async (req, res) => {
@@ -35,7 +36,7 @@ const server = createServer(async (req, res) => {
       ? workflows
       : req.url?.startsWith("/api/durable/connectors")
         ? connectors
-        : req.url?.startsWith("/api/workspace/enquiries") ? enquiries : null;
+        : req.url?.startsWith("/api/workspace/enquiries") ? enquiries : req.url?.startsWith("/api/workspace/agents") ? agents : null;
     if (!handler) {
       res.writeHead(404);
       res.end();

@@ -1,0 +1,9 @@
+{
+  "request": "Enterprise ecosystem icons and a recordable, self-drive industry example for implementation-partner discovery",
+  "existing_owner": ["lib/scenarios.ts", "lib/engine/evaluate.ts", "app/agent-governance-demo/page.tsx", "components/marketing/clarity-experience.tsx"],
+  "reproduced_gap": "Three original browser examples remain in source, but legacy layout redirects to invited control-plane. No separate public self-drive route. Existing ecosystem groups omit major data/agent platforms.",
+  "reuse_decision": "Reuse original export scenario and evaluator in a small public presentation. Keep original private routes and authentication unchanged. No new engine, connector, workflow owner, approval service or telemetry.",
+  "scope": "Public example uses sample data, browser-only state and no business-system calls. Example decision record is neither named-member approval nor durable/cryptographic evidence. 500 records is a sample organization policy, not a legal threshold. Existing historical scenario source remains unchanged.",
+  "public_claims": "Illustrative enterprise agent/platform marks are not certified/prebuilt LoopLabs connectors. Workday/Oracle integration must be validated separately. No healthcare-client implementation, customer partnership, regulated certification or real incident claim.",
+  "acceptance": ["Original scenario boundary reused", "Malformed input refused", "Changed scope invalidates prior example decision", "Reject remains reject", "No private API/effect dispatch", "Private gate preserved", "Responsive interactive browser checks", "Focused tests/lint/types", "Required repository quality and release gates"]
+}

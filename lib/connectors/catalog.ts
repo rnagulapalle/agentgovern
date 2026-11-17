@@ -2,7 +2,10 @@ import {createHash} from "node:crypto";
 import type {Pool} from "pg";
 import type {Actor} from "../durable/contracts";
 import {ControlError} from "../durable/contracts";
-import {authorize} from "../durable/service";
+import {authorize,authorizeIdentity} from "../durable/service";
+import {namedActorCurrent} from "../workspace/membership-authority";
+import {memberSessionAuthority} from "../workspace/identity";
+import {connectorMemberPolicyEnabled,memberConnectorAllowed,connectorMemberContext,type MemberConnectorOperation} from "../workspace/connector-member-access";
 import {transaction} from "../durable/database";
 import {recordScope,type RecordScope} from "./record-scope";
 import {connectorProvider} from "./hosted";
@@ -17,10 +20,16 @@ export function recordCatalog(org:string,raw=process.env.LOOPLABS_RECORD_CATALOG
  if(new Set(records.map(s=>`${s.workspaceId}:${s.contactId}`)).size!==records.length || new Set(records.map(s=>`${s.workspaceId}:${s.recipient}`)).size!==records.length)throw new ControlError(503,"Supported customer records are ambiguous.");
  return records.filter(s=>s.workspaceId===org).map(scope=>({key:createHash("sha256").update(JSON.stringify(scope)).digest("hex"),scope}));
 }
-export async function providerForScope<T extends ConnectorProvider>(db:Pool,actor:Actor,id:string,factory:(scope:RecordScope)=>T):Promise<T>{
+export type ScopedConnectorAccess={agentId:string;connector:string;operation:MemberConnectorOperation};
+export async function connectorRoutingIdentity(c:import('pg').PoolClient,actor:Actor,roles:Actor['role'][]){
+ await authorizeIdentity(c,actor,roles,actor.role==='worker'?'enquiries':undefined);
+ if(!await namedActorCurrent(c,actor)||(actor.role==='operator'&&await connectorMemberPolicyEnabled(c,actor.orgId)&&!await memberSessionAuthority(c,actor)))throw new ControlError(403,'A current named company member session is required.');
+}
+export async function providerForScope<T extends ConnectorProvider>(db:Pool,actor:Actor,id:string,factory:(scope:RecordScope)=>T,access?:ScopedConnectorAccess[]):Promise<T>{
  if(typeof id!=="string" || !/^[a-f0-9-]{36}$/i.test(id))throw new ControlError(400,"Choose an enrolled customer record.");
  const scope=await transaction(db,actor.orgId,async c=>{
-  await authorize(c,actor,["operator","agent","worker"],actor.role==="worker"?"enquiries":undefined);
+  if(access?.length)await connectorRoutingIdentity(c,actor,["operator","agent","worker"]);
+  else await authorize(c,actor,["operator","agent","worker"],actor.role==="worker"?"enquiries":undefined);
   if(!(await c.query("SELECT to_regclass('ll_connector_scopes') AS present")).rows[0].present)throw new ControlError(503,"Customer record setup is unavailable.");
   const row=(await c.query("SELECT contact_id,recipient,binding_id FROM ll_connector_scopes WHERE org_id=$1 AND id=$2",[actor.orgId,id])).rows[0];
   if(!row)throw new ControlError(404,"Customer record not found.");
@@ -28,6 +37,10 @@ export async function providerForScope<T extends ConnectorProvider>(db:Pool,acto
  });
  const provider=factory(scope.scope);
  if(provider.bindingId!==scope.binding_id)throw new ControlError(409,"The configured connection differs from this saved record. No action was sent.");
+ if(access?.length)await transaction(db,actor.orgId,async c=>{
+  await connectorRoutingIdentity(c,actor,["operator","agent","worker"]);
+  for(const item of access)if(actor.role==='operator'&&!await memberConnectorAllowed(c,actor.orgId,actor.subject,connectorMemberContext(provider,item.operation,item.agentId,item.connector)))throw new ControlError(403,'This member cannot perform that tool operation on this record.');
+ });
  return provider;
 }
 export class RecordOnboarding{

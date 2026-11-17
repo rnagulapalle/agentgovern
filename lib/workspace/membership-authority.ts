@@ -1,6 +1,6 @@
 import type { PoolClient } from "pg";
 import type { Actor } from "../durable/contracts";
-import { memberAuthority } from "./identity";
+import { memberSessionAuthority } from "./identity";
 
 type Identity = { kind: "member"; subject: string; generation: string } | { kind: "legacy"; subject: string; role: "operator" | "agent" };
 const object = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -11,7 +11,7 @@ export async function membershipAuthorityInstalled(c: PoolClient): Promise<boole
 export async function namedActorCurrent(c: PoolClient, actor: Actor): Promise<boolean> {
   if (!(await membershipAuthorityInstalled(c))) return true;
   const row = (await c.query("SELECT email FROM ll_members WHERE email=$1 FOR SHARE NOWAIT", [actor.subject])).rows[0];
-  return (!row && !(await c.query("SELECT ll_named_subject_exists($1) AS present", [actor.subject])).rows[0].present) || actor.role === "operator" && await memberAuthority(c, actor);
+  return (!row && !(await c.query("SELECT ll_named_subject_exists($1) AS present", [actor.subject])).rows[0].present) || actor.role === "operator" && await memberSessionAuthority(c, actor);
 }
 async function currentIdentity(c: PoolClient, org: string, value: unknown): Promise<boolean> {
   if (!object(value) || typeof value.subject !== "string" || !value.subject || value.subject.length > 254) return false;

@@ -5,6 +5,11 @@ set -euo pipefail
 [[ $# == 0 ]] || { echo 'No caller target or eligibility arguments accepted.' >&2; exit 1; }
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_DIR"
+# Require explicitly supplied public browser inputs before CI or any SSH call.
+export NEXT_PUBLIC_POSTHOG_KEY="${NEXT_PUBLIC_POSTHOG_KEY:-}"
+export NEXT_PUBLIC_POSTHOG_HOST="${NEXT_PUBLIC_POSTHOG_HOST:-/ph}"
+node scripts/control-demo-web-release.mjs analytics-check
+readonly NEXT_PUBLIC_POSTHOG_KEY NEXT_PUBLIC_POSTHOG_HOST
 [[ "$(git branch --show-current)" == main ]] || { echo 'Control demo release requires main.' >&2; exit 1; }
 [[ -z "$(git status --porcelain --untracked-files=all)" ]] || { echo 'Control demo release requires clean committed source.' >&2; exit 1; }
 git fetch --quiet origin main
@@ -22,6 +27,6 @@ SERVER=looplabs@54.189.146.124
 stage="/srv/looplabs-production/web-releases/$commit"
 ssh "${SSH_ARGS[@]}" "$SERVER" "test ! -e '$stage' && mkdir -m 700 '$stage' && mkdir -m 755 '$stage/app'"
 git archive "$commit" | ssh "${SSH_ARGS[@]}" "$SERVER" "umask 022; tar --no-same-permissions --no-same-owner -xf - -C '$stage/app'"
-ssh "${SSH_ARGS[@]}" "$SERVER" "cd '$stage/app' && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/home/looplabs COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/home/looplabs node --import tsx scripts/control-demo-web-release.mjs build"
+ssh "${SSH_ARGS[@]}" "$SERVER" "cd '$stage/app' && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/home/looplabs COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install --frozen-lockfile && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/home/looplabs NEXT_PUBLIC_POSTHOG_KEY='$NEXT_PUBLIC_POSTHOG_KEY' NEXT_PUBLIC_POSTHOG_HOST='$NEXT_PUBLIC_POSTHOG_HOST' node --import tsx scripts/control-demo-web-release.mjs build"
 ssh "${SSH_ARGS[@]}" "$SERVER" "cd '$stage/app' && env -i PATH=/usr/local/bin:/usr/bin:/bin HOME=/home/looplabs node --import tsx scripts/control-demo-web-release.mjs activate"
 printf 'Bounded control demo web release activated for %s. Named-member workflow acceptance and recording remain separate.\n' "$commit"

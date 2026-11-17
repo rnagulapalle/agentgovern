@@ -62,6 +62,19 @@ export function ProductOverview({ gated = false, quoteOnly = false, scriptDemo =
           </p>
         </article>
       </div>
+      <section id="coding-agent-controls" className="sales-scope" aria-labelledby="coding-controls-title">
+        <span className="sales-eyebrow">CODING AGENT CONTROLS · DEMO</span>
+        <h2 id="coding-controls-title">Team budgets. Clear model access.</h2>
+        <p>
+          Explore engineers, teams and organization-level controls in a guided demo.
+          Review allowed models, token and spend budgets, skills and versioned prompts.
+        </p>
+        <p>
+          These are sample controls. Demo changes affect the page only; they do not
+          connect coding clients, meter real usage or enforce model access or budgets.
+        </p>
+        <Link className="sales-link" href="/contact-sales">See the coding agent demo ↗</Link>
+      </section>
       <h2>Start with the work your team already owns.</h2>
       <p>
         Bring one CRM change, customer credit or approval-heavy process. We map

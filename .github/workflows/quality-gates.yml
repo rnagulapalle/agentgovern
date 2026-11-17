@@ -84,6 +84,10 @@ jobs:
           execFileSync('aws',['s3api','get-object','--bucket',m.bucket,'--key',m.key,process.env.RUNNER_TEMP+'/quality-fixtures.tar.gz'],{stdio:['ignore','ignore','pipe']});
           JS
           node scripts/quality-fixtures.mjs "$RUNNER_TEMP/quality-fixtures.tar.gz" "$RUNNER_TEMP/quality-fixtures"
+      - name: Select supported Python for pinned provider fixtures
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Install isolated pinned Python dependencies
         run: |
           python3 -m venv "$FETCHSANDBOX_BACKEND_PATH/.venv"

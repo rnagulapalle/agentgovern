@@ -37,7 +37,7 @@ export function HorizontalFlowScene({ step, paused, onInspect }: {
                 const path = `M204 ${125 + offset} C246 ${125 + offset},264 ${y + offset},304 ${y + offset}`;
                 return <g key={offset} style={{ "--flow-delay": `${-lane * .4}s` } as CSSProperties}>
                   <path d={path} stroke="#dedfd7" strokeWidth=".8" />
-                  {branch.dispatch && <path d={path} pathLength="100" className="ll-action-pulse ll-horizontal-dispatch ll-action-allowed" />}
+                  {branch.dispatch && <path d={path} pathLength="100" className={`ll-action-pulse ll-horizontal-dispatch ll-action-allowed ll-action-team-${index % 3}`} />}
                 </g>;
               })}
               {!branch.dispatch && branch.status !== "Effect verified" && (

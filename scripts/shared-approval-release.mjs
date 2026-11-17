@@ -4,12 +4,16 @@ import {lstat,readFile,readlink,realpath} from 'node:fs/promises';
 import {join} from 'node:path';
 export const approvalTarget='/run/looplabs-approvals';
 export function validateApprovalAttachment(source,rows){
- assert(/^\/srv\/looplabs-production\/config\/shared-approvals-[a-f0-9]{16}$/.test(source));assert(Array.isArray(rows)&&rows.length>=1&&rows.length<=2);
+ assert(/^\/srv\/looplabs-production\/config\/shared-approvals-[a-f0-9]{16}$/.test(source));assert(Array.isArray(rows)&&rows.length>=1&&rows.length<=3);
  const seen=new Set();for(const row of rows){
  assert.deepEqual(Object.keys(row).sort(),['allowSelfReview','connectionId','endpoint','epoch','resourceArn','reviewers','secretPath','tenantId','version'].sort());
  for(const name of ['tenantId','connectionId','epoch'])assert(typeof row[name]==='string'&&/^[A-Za-z0-9_.-]{1,128}$/.test(row[name]));
- const quote='arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/quote_agent_demo_20261015-P3t39c2UvD',cancellation='arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/acme_product_cancellation-OXtwF22hKd';assert([quote,cancellation].includes(row.resourceArn));const identity=row.resourceArn;assert(!seen.has(identity));seen.add(identity);
- assert(/^[1-9][0-9]*$/.test(row.version));assert.equal(row.secretPath,approvalTarget+(row.resourceArn===quote?'/signing.hex':'/cancellation-signing.hex'));assert(typeof row.allowSelfReview==='boolean');assert(Array.isArray(row.reviewers)&&row.reviewers.length===1&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.reviewers[0]));
+ const paths={
+  'arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/quote_agent_demo_20261015-P3t39c2UvD':'/signing.hex',
+  'arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/acme_product_cancellation-OXtwF22hKd':'/cancellation-signing.hex',
+  'arn:aws:bedrock-agentcore:us-west-2:342206308838:runtime/acme_ad_campaign_preparation-d4VxBH8KHG':'/preparation-signing.hex',
+ };assert(Object.hasOwn(paths,row.resourceArn));const identity=row.resourceArn;assert(!seen.has(identity));seen.add(identity);
+ assert(/^[1-9][0-9]*$/.test(row.version));assert.equal(row.secretPath,approvalTarget+paths[row.resourceArn]);assert(typeof row.allowSelfReview==='boolean');if(paths[row.resourceArn]==='/preparation-signing.hex')assert.equal(row.allowSelfReview,false);assert(Array.isArray(row.reviewers)&&row.reviewers.length===1&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.reviewers[0]));
  const u=new URL(row.endpoint);assert.equal(u.protocol,'https:');assert(!u.username&&!u.password&&!u.port&&!u.search&&!u.hash);assert(/^[a-z0-9]+\.execute-api\.us-west-2\.amazonaws\.com$/.test(u.hostname));assert.equal(u.pathname,'/looplabs/approval-bridge');
  }
  return {source,target:approvalTarget,environment:JSON.stringify(rows)};

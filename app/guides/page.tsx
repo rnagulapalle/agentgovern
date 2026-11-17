@@ -7,6 +7,13 @@ import {
 } from "@/components/seo/SeoPageShell";
 import { buildSeoMetadata } from "@/lib/seo-metadata";
 import { AGENTGOVERN_SEO_TOOLS } from "@/lib/seo-tools";
+import { loadNewsPost, newsPath } from "@/lib/news-markdown";
+
+const startingGuides = [
+  "2026-09-30-what-is-an-agent-control-plane",
+  "2026-09-30-agent-permissions-approvals-recovery",
+  "2026-10-20-langchain-langgraph-deep-agents-types",
+];
 
 export const metadata = buildSeoMetadata({
   title: "Agent Workflow and Control Guides",
@@ -14,10 +21,10 @@ export const metadata = buildSeoMetadata({
     "Practical guides for building agent workflows, controlling actions and execution, checking outputs, and recovering failed state.",
   path: "/guides",
   keywords: [
-    "AI governance mid size company",
-    "Copilot governance SMB",
-    "enterprise AI controls",
-    "AI compliance small team",
+    "agent control plane",
+    "AI agent approvals",
+    "agent workflow controls",
+    "agent recovery",
   ],
 });
 
@@ -27,8 +34,8 @@ export default function GuidesPage() {
       eyebrow="Guides"
       title="Build useful agent workflows without losing control"
       description="Practical guidance for teams automating work with agents. Start with a real workflow, give every agent a role, control what it can do, supervise the full execution, and recover when production state changes unexpectedly."
-      primaryCta={{ href: "/ai-governance-for-mid-size-companies", label: "Start with the overview" }}
-      secondaryCta={{ href: "/control-plane", label: "Product tour" }}
+      primaryCta={{ href: newsPath(startingGuides[0]), label: "What is an agent control plane?" }}
+      secondaryCta={{ href: "/platform", label: "Product overview" }}
     >
       <SeoSection title="Who these guides are for">
         <p>
@@ -43,6 +50,25 @@ export default function GuidesPage() {
             "Operators who need to stop a bad run and recover affected state without guessing",
           ]}
         />
+      </SeoSection>
+
+      <SeoSection title="Start here">
+        <ul className="mt-5 grid gap-3">
+          {startingGuides.map((slug) => {
+            const post = loadNewsPost(slug);
+            if (!post) return null;
+            return (
+              <li key={slug}>
+                <Link
+                  href={newsPath(slug)}
+                  className="card block p-4 text-[16px] font-medium text-fg transition-colors hover:border-hairline/20"
+                >
+                  {post.frontmatter.title}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </SeoSection>
 
       <SeoSection title="Industry guides">

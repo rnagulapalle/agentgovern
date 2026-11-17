@@ -1,3 +1,4 @@
+import {memberConnectorAllowed} from "./connector-member-access";
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import type { Actor } from "../durable/contracts";
@@ -25,7 +26,7 @@ export async function memberSession(
       }
     : null;
 }
-export async function memberAuthority(c: PoolClient, actor: Actor) {
+export async function memberSessionAuthority(c: PoolClient, actor: Actor) {
   if (actor.role !== "operator") return false;
   const { rows } = await c.query(
     "SELECT 1 FROM ll_sessions s JOIN ll_members m ON m.email=s.email WHERE s.hash=$1 AND s.expires_at>now() AND m.active=true AND m.org_id=$2 AND m.email=$3",
@@ -33,6 +34,9 @@ export async function memberAuthority(c: PoolClient, actor: Actor) {
   );
   if (rows[0]) await recoveryFence(c, actor.orgId);
   return Boolean(rows[0]);
+}
+export async function memberAuthority(c: PoolClient, actor: Actor) {
+  return await memberSessionAuthority(c,actor) && await memberConnectorAllowed(c,actor.orgId,actor.subject);
 }
 export async function activeApprover(
   c: PoolClient,

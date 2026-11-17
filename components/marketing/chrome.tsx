@@ -13,7 +13,7 @@ const NAV = [
   { href: "/guides", label: "Guides" },
   { href: "/blog", label: "Blog" },
 ];
-const SOLUTIONS = [
+export const marketingSolutions = [
   {
     href: "/#automation",
     label: "Governed workflow launch",
@@ -23,6 +23,11 @@ const SOLUTIONS = [
     href: "/#controls",
     label: "Agent controls",
     description: "Set permissions, approvals, output checks, and recovery.",
+  },
+  {
+    href: "/platform#coding-agent-controls",
+    label: "Coding agent controls",
+    description: "Explore team budgets, model access, skills and prompts in a demo.",
   },
 ];
 
@@ -58,7 +63,7 @@ export function MarketingHeader({ section, bookingUrl = CAL_URL }: { section?: s
           {solutionsOpen && (
             <div id="marketing-solutions" className="marketing-solutions-popover">
               <span>Solutions</span>
-              {SOLUTIONS.map((item) => (
+              {marketingSolutions.map((item) => (
                 <Link prefetch={false} key={item.href} href={item.href} onClick={() => setSolutionsOpen(false)}>
                   <span><strong>{item.label}</strong><small>{item.description}</small></span>
                   <ArrowUpRight size={15} />
@@ -88,7 +93,7 @@ export function MarketingHeader({ section, bookingUrl = CAL_URL }: { section?: s
       {open && (
         <nav id="marketing-navigation" className="marketing-mobile-nav" aria-label="Mobile navigation">
           <span className="marketing-mobile-group-title">Solutions</span>
-          {SOLUTIONS.map((item) => (
+          {marketingSolutions.map((item) => (
             <Link prefetch={false} className="marketing-mobile-solution" key={item.href} href={item.href} onClick={() => setOpen(false)}>
               <span><strong>{item.label}</strong><small>{item.description}</small></span>
               <ArrowUpRight size={16} />
@@ -120,6 +125,7 @@ export function MarketingFooter() {
           <strong>SOLUTIONS</strong>
           <Link prefetch={false} href="/#automation">Governed workflow launch</Link>
           <Link prefetch={false} href="/#controls">Action controls</Link>
+          <Link prefetch={false} href="/platform#coding-agent-controls">Coding agent controls</Link>
           <Link prefetch={false} href="/#how-it-works">Execution controls</Link>
           <Link prefetch={false} href="/#controls">Output controls</Link>
           <Link prefetch={false} href="/#recovery">Recovery</Link>

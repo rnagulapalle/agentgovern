@@ -1,6 +1,7 @@
+import {connectorMemberPolicyEnabled,memberConnectorAllowed,type MemberConnectorContext} from "../workspace/connector-member-access";
 import { createHash, randomUUID } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
-import { activeApprover, memberAuthority, memberSession } from "../workspace/identity";
+import { activeApprover, memberSessionAuthority, memberSession } from "../workspace/identity";
 import { transaction } from "./database";
 import { recoveryFence } from "./recovery";
 import {
@@ -35,7 +36,7 @@ export async function authenticate(db: Pool, token: string): Promise<Actor> {
     tokenHash: hash,
   };
 }
-export async function authorize(c: PoolClient, actor: Actor, roles: Role[], purpose?: "enquiries" | "quotes") {
+export async function authorizeIdentity(c: PoolClient, actor: Actor, roles: Role[], purpose?: "enquiries" | "quotes") {
   await recoveryFence(c, actor.orgId);
   if (actor.role === "worker" && ["enquiry-runner", "enquiry-temporal"].includes(actor.subject) && purpose !== "enquiries")
     throw new ControlError(403, "This worker is scoped to reviewed enquiry runs.");
@@ -45,8 +46,14 @@ export async function authorize(c: PoolClient, actor: Actor, roles: Role[], purp
     "SELECT 1 FROM ll_tokens WHERE hash=$1 AND org_id=$2 AND subject=$3 AND role=$4 AND active=true",
     [actor.tokenHash, actor.orgId, actor.subject, actor.role],
   );
-  if ((!rows[0] && !(await memberAuthority(c, actor))) || !roles.includes(actor.role))
+  if ((!rows[0] && !(await memberSessionAuthority(c, actor))) || !roles.includes(actor.role))
     throw new ControlError(403, "This identity cannot perform that operation.");
+
+}
+export async function authorize(c:PoolClient,actor:Actor,roles:Role[],purpose?:"enquiries"|"quotes",connectorAccess?:MemberConnectorContext|(()=>MemberConnectorContext)){
+ await authorizeIdentity(c,actor,roles,purpose);
+ if(actor.role==="operator"&&await connectorMemberPolicyEnabled(c,actor.orgId)&&!await memberSessionAuthority(c,actor))throw new ControlError(403,"A current named company member session is required.");
+ if(actor.role==="operator"&&!await memberConnectorAllowed(c,actor.orgId,actor.subject,connectorAccess))throw new ControlError(403,"This member cannot perform that tool operation on this record.");
 }
 async function event(
   c: PoolClient,

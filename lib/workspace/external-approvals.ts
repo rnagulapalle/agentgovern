@@ -22,7 +22,7 @@ export function approvalHash(a:ExternalApproval){
 export function externalApproval(v:unknown):ExternalApproval {
  const keys="action,after,allowedReviewers,before,channel,decidedAt,decidedBy,executionStatus,expiresAt,id,policyVersion,reason,requestedBy,revision,runId,status,system,title";
  if(!object(v)||Object.keys(v).sort().join()!==keys||!id(v.id)||!id(v.runId)||!id(v.policyVersion)||!text(v.title,160)||!text(v.reason,1000)
-  ||![v.action,v.system,v.before,v.after].every(x=>text(x,500))||!email(v.requestedBy)||!Array.isArray(v.allowedReviewers)||v.allowedReviewers.length<1||v.allowedReviewers.length>20||!v.allowedReviewers.every(email)||new Set(v.allowedReviewers).size!==v.allowedReviewers.length
+  ||![v.action,v.system,v.before].every(x=>text(x,500))||!text(v.after,32768)||!email(v.requestedBy)||!Array.isArray(v.allowedReviewers)||v.allowedReviewers.length<1||v.allowedReviewers.length>20||!v.allowedReviewers.every(email)||new Set(v.allowedReviewers).size!==v.allowedReviewers.length
   ||!instant(v.expiresAt)||!["pending","approved","rejected","expired","cancelled"].includes(v.status as string)||!["slack","email","internal"].includes(v.channel as string)
   ||!["held","running","completed","failed","uncertain"].includes(v.executionStatus as string)||!(v.decidedBy===null||email(v.decidedBy))||!(v.decidedAt===null||instant(v.decidedAt)))throw new ControlError(502,"The workflow returned an unsupported approval record.");
  const a=v as unknown as ExternalApproval;

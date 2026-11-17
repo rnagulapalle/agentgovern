@@ -63,4 +63,4 @@ Start with a narrow workflow that touches a real system. Give the agent an ident
 
 That small loop tells you more than a long policy document. It shows whether your controls work at the moment an agent tries to act.
 
-[Explore the LoopLabs product tour](/control-plane) to see identities, policies, approvals, execution traces, output checks, and recovery in one workflow.
+[Explore the LoopLabs product overview](/platform).

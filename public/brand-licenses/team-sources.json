@@ -1,0 +1,12 @@
+[
+  {
+    "name": "meta",
+    "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/meta.svg",
+    "sha256": "e3e9db62f59dc477e5917687349b8aa9685b841d40300c1afad60ad85075cd2e"
+  },
+  {
+    "name": "whatsapp",
+    "url": "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/whatsapp.svg",
+    "sha256": "8fb209a53a61618c3483594b3e070481a35575d6aaecbe00a6fe386670c8fb1c"
+  }
+]

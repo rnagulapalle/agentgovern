@@ -1,0 +1,27 @@
+{
+  "startedUtc": "2026-11-01T18:26:03.180980+00:00",
+  "completedUtc": "2026-11-01T18:26:07.815508+00:00",
+  "scope": "Existing shipped company metadata API only",
+  "codeDeployment": false,
+  "permissionChanges": 0,
+  "workflowInvocations": 0,
+  "newAwsResources": 0,
+  "metadataSaved": true,
+  "preparationEnrollmentUnchanged": true,
+  "rajReadback": {
+    "company": "FetchSandbox",
+    "revision": 6,
+    "catalog": 28,
+    "assignments": 24
+  },
+  "pratibhaReadback": {
+    "company": "FetchSandbox",
+    "revision": 6,
+    "profileMatchesRaj": true
+  },
+  "profileSha256": "e3049fcc2462da4c77eda99338b2adfcaec4e5b32c6fd1dd7356acc2b9dda455",
+  "scanId": "f621d7da-72ad-49b6-a1f9-500d13d85d7c",
+  "scanObservedAt": "2026-11-01T18:22:21.484Z",
+  "state": "metadata-applied-and-two-account-api-readback",
+  "remaining": "240-person reference extension and member policy not installed; no whole-UI/no-Acme or native permission acceptance claimed"
+}

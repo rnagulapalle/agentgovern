@@ -35,8 +35,8 @@ for (const file of requiredFiles) {
 
 console.log("Shipped invariants");
 const invariants = [
-  ["homepage positioning", "app/page.tsx", "Control actions,"],
-  ["demo disclosure", "app/page.tsx", "uses sample browser data"],
+  ["homepage positioning", "lib/marketing-clarity-copy.json", "Workflow control for AI agents"],
+  ["demo disclosure", "lib/marketing-workflows-copy.json", "No real money moves and no customer email is sent."],
   [
     "analytics sample disclosure",
     "components/landing/execution-integrity.tsx",
@@ -78,13 +78,13 @@ for (const [name, file, expected] of invariants) {
 }
 
 console.log("Unsupported public claims");
-const sourceFiles = execFileSync("git", ["ls-files", "app", "components", "lib"], {
+const sourceFiles = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "app", "components", "lib"], {
   cwd: root,
   encoding: "utf8",
 })
   .trim()
   .split("\n")
-  .filter((file) => /\.(?:ts|tsx|js|jsx|md|mdx)$/.test(file));
+  .filter((file) => /\.(?:ts|tsx|js|jsx|md|mdx)$/.test(file) || /^lib\/marketing-.*\.json$/.test(file));
 const forbiddenClaims = [
   /\bimmutable (?:audit )?(?:log|ledger|receipt)s?\b/i,
   /\bproduction[- ]ready\b/i,

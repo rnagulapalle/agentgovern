@@ -19,6 +19,28 @@ function source(options:{badSignature?:boolean;badNonce?:boolean;timeout?:boolea
  return {send,commands,effects:()=>effects,set:(r:ExternalApproval)=>{saved=r;}};
 }
 describe("shared approval authority",()=>{
+ it.each([500,501,4001,32768])("preserves the exact signed review snapshot at %i characters",async size=>{
+  const s=source(),a=request();a.after="x".repeat(size);a.revision=approvalHash(a);s.set(a);
+  const b=new ExternalApprovalBridge(binding,s.send as typeof fetch);expect((await b.list())[0]).toEqual(a);
+  expect((await b.decide(actor,{id:a.id,revision:a.revision,decision:"approved"}))[0]).toMatchObject({after:a.after,revision:a.revision,status:"approved"});expect(s.effects()).toBe(1);
+ });
+ it.each(["x".repeat(32769),"review\nchanged","review\u0000changed"])("refuses oversized or malformed review details without truncation",after=>{
+  const a=request();a.after=after;a.revision=approvalHash(a);expect(()=>externalApproval(a)).toThrow();
+ });
+ it("does not enlarge unrelated fields or accept a modified snapshot with its old hash",()=>{
+  const a=request();expect(()=>externalApproval({...a,before:"x".repeat(501)})).toThrow();
+  a.after="x".repeat(4001);a.revision=approvalHash(a);expect(()=>externalApproval({...a,after:a.after+"y"})).toThrow();
+ });
+ it("retains the signed response byte limit for multiple large snapshots",async()=>{
+  const send=vi.fn(async(_url:unknown,init?:RequestInit)=>{
+   const raw=String(init?.body),command=JSON.parse(raw);const requests=Array.from({length:4},(_,i)=>{
+    const a=request();a.id+="-"+i;a.after="x".repeat(32768);a.revision=approvalHash(a);return a;
+   });
+   const response=JSON.stringify({nonce:command.nonce,requests});expect(Buffer.byteLength(response)).toBeGreaterThan(131072);
+   return new Response(response,{headers:{"x-looplabs-response-signature":createHmac("sha256",binding.secret).update(`response\n${createHash("sha256").update(raw).digest("hex")}\n${response}`).digest("hex")}});
+  });
+  await expect(new ExternalApprovalBridge(binding,send as typeof fetch).list()).rejects.toMatchObject({status:503});expect(send).toHaveBeenCalledTimes(1);
+ });
  it("reads the exact source and signs the configured scope",async()=>{const s=source();expect((await new ExternalApprovalBridge(binding,s.send as typeof fetch).list())[0].status).toBe("pending");expect(s.commands[0].scope).toEqual({tenantId:binding.tenantId,connectionId:binding.connectionId,resourceArn:binding.resourceArn,version:binding.version,epoch:binding.epoch});});
  it("named reviewer decides and duplicate browser retry cannot resume twice",async()=>{const s=source(),b=new ExternalApprovalBridge(binding,s.send as typeof fetch),v={id:request().id,revision:request().revision,decision:"approved"};expect((await b.decide(actor,v))[0].status).toBe("approved");await expect(b.decide(actor,v)).rejects.toMatchObject({status:409});expect(s.effects()).toBe(1);expect(s.commands.filter(c=>c.operation==="decide")).toHaveLength(1);});
  it("Slack decision is read from the same source; later LoopLabs decision rejected",async()=>{const s=source(),a=request();s.set({...a,status:"rejected",decidedBy:actor.subject,decidedAt:"2026-10-16T12:00:00Z"});const b=new ExternalApprovalBridge(binding,s.send as typeof fetch);expect((await b.list())[0].status).toBe("rejected");await expect(b.decide(actor,{id:a.id,revision:a.revision,decision:"approved"})).rejects.toMatchObject({status:409});expect(s.effects()).toBe(0);});

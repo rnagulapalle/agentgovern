@@ -1,0 +1,3313 @@
+{
+  "name": "FetchSandbox",
+  "revision": 0,
+  "departments": [
+    {
+      "id": "executive",
+      "name": "Executive",
+      "businessUnit": "Corporate"
+    },
+    {
+      "id": "engineering",
+      "name": "Engineering",
+      "businessUnit": "Product and Technology"
+    },
+    {
+      "id": "product",
+      "name": "Product and Design",
+      "businessUnit": "Product and Technology"
+    },
+    {
+      "id": "security",
+      "name": "Security and Compliance",
+      "businessUnit": "Trust"
+    },
+    {
+      "id": "it",
+      "name": "IT and Infrastructure",
+      "businessUnit": "Operations"
+    },
+    {
+      "id": "sales",
+      "name": "Sales",
+      "businessUnit": "Revenue"
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing",
+      "businessUnit": "Revenue"
+    },
+    {
+      "id": "success",
+      "name": "Customer Success",
+      "businessUnit": "Customers"
+    },
+    {
+      "id": "support",
+      "name": "Customer Support",
+      "businessUnit": "Customers"
+    },
+    {
+      "id": "finance",
+      "name": "Finance and Procurement",
+      "businessUnit": "Corporate"
+    },
+    {
+      "id": "people",
+      "name": "People Operations",
+      "businessUnit": "Corporate"
+    },
+    {
+      "id": "legal",
+      "name": "Legal and Business Operations",
+      "businessUnit": "Corporate"
+    }
+  ],
+  "teams": [
+    {
+      "id": "executive-1",
+      "name": "Leadership",
+      "departmentId": "executive"
+    },
+    {
+      "id": "executive-2",
+      "name": "Business Operations",
+      "departmentId": "executive"
+    },
+    {
+      "id": "engineering-1",
+      "name": "Platform Engineering",
+      "departmentId": "engineering"
+    },
+    {
+      "id": "engineering-2",
+      "name": "Application Engineering",
+      "departmentId": "engineering"
+    },
+    {
+      "id": "product-1",
+      "name": "Product Management",
+      "departmentId": "product"
+    },
+    {
+      "id": "product-2",
+      "name": "Design and Research",
+      "departmentId": "product"
+    },
+    {
+      "id": "security-1",
+      "name": "Security Engineering",
+      "departmentId": "security"
+    },
+    {
+      "id": "security-2",
+      "name": "Risk and Compliance",
+      "departmentId": "security"
+    },
+    {
+      "id": "it-1",
+      "name": "Corporate IT",
+      "departmentId": "it"
+    },
+    {
+      "id": "it-2",
+      "name": "Site Reliability",
+      "departmentId": "it"
+    },
+    {
+      "id": "sales-1",
+      "name": "Enterprise Sales",
+      "departmentId": "sales"
+    },
+    {
+      "id": "sales-2",
+      "name": "Sales Operations",
+      "departmentId": "sales"
+    },
+    {
+      "id": "marketing-1",
+      "name": "Demand Generation",
+      "departmentId": "marketing"
+    },
+    {
+      "id": "marketing-2",
+      "name": "Creative Operations",
+      "departmentId": "marketing"
+    },
+    {
+      "id": "success-1",
+      "name": "Account Management",
+      "departmentId": "success"
+    },
+    {
+      "id": "success-2",
+      "name": "Implementation",
+      "departmentId": "success"
+    },
+    {
+      "id": "support-1",
+      "name": "Support Operations",
+      "departmentId": "support"
+    },
+    {
+      "id": "support-2",
+      "name": "Customer Resolution",
+      "departmentId": "support"
+    },
+    {
+      "id": "finance-1",
+      "name": "Financial Operations",
+      "departmentId": "finance"
+    },
+    {
+      "id": "finance-2",
+      "name": "Procurement",
+      "departmentId": "finance"
+    },
+    {
+      "id": "people-1",
+      "name": "People Experience",
+      "departmentId": "people"
+    },
+    {
+      "id": "people-2",
+      "name": "Talent Operations",
+      "departmentId": "people"
+    },
+    {
+      "id": "legal-1",
+      "name": "Commercial Legal",
+      "departmentId": "legal"
+    },
+    {
+      "id": "legal-2",
+      "name": "Business Systems",
+      "departmentId": "legal"
+    }
+  ],
+  "assignments": [],
+  "reference": {
+    "version": "fetchsandbox-company-1",
+    "provenance": "synthetic-reference-company",
+    "controlPlanePartner": "LoopLabs",
+    "employees": [
+      {
+        "id": "person-001",
+        "name": "Avery Bennett",
+        "title": "Chief Executive Officer",
+        "email": "avery.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": null,
+        "status": "active"
+      },
+      {
+        "id": "person-002",
+        "name": "Jordan Bennett",
+        "title": "Business Operations Manager",
+        "email": "jordan.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-003",
+        "name": "Morgan Bennett",
+        "title": "Chief of Staff",
+        "email": "morgan.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-004",
+        "name": "Taylor Bennett",
+        "title": "Strategy Analyst",
+        "email": "taylor.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-005",
+        "name": "Riley Bennett",
+        "title": "Executive Assistant",
+        "email": "riley.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-006",
+        "name": "Casey Bennett",
+        "title": "Operations Analyst",
+        "email": "casey.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-007",
+        "name": "Alex Bennett",
+        "title": "Business Systems Analyst",
+        "email": "alex.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-008",
+        "name": "Sam Bennett",
+        "title": "Planning Analyst",
+        "email": "sam.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": "person-001",
+        "status": "leave"
+      },
+      {
+        "id": "person-009",
+        "name": "Cameron Bennett",
+        "title": "Operations Coordinator",
+        "email": "cameron.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-010",
+        "name": "Drew Bennett",
+        "title": "Business Operations Intern",
+        "email": "drew.bennett@fetchsandbox.example",
+        "teamId": "executive-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-011",
+        "name": "Jamie Bennett",
+        "title": "Chief Operating Officer",
+        "email": "jamie.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-012",
+        "name": "Robin Bennett",
+        "title": "Program Manager",
+        "email": "robin.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-011",
+        "status": "active"
+      },
+      {
+        "id": "person-013",
+        "name": "Quinn Bennett",
+        "title": "Business Analyst",
+        "email": "quinn.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-011",
+        "status": "active"
+      },
+      {
+        "id": "person-014",
+        "name": "Dakota Bennett",
+        "title": "Process Analyst",
+        "email": "dakota.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-011",
+        "status": "active"
+      },
+      {
+        "id": "person-015",
+        "name": "Skyler Bennett",
+        "title": "Board Operations Coordinator",
+        "email": "skyler.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-011",
+        "status": "active"
+      },
+      {
+        "id": "person-016",
+        "name": "Reese Bennett",
+        "title": "Executive Operations Specialist",
+        "email": "reese.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-011",
+        "status": "active"
+      },
+      {
+        "id": "person-017",
+        "name": "Parker Bennett",
+        "title": "Portfolio Analyst",
+        "email": "parker.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-011",
+        "status": "active"
+      },
+      {
+        "id": "person-018",
+        "name": "Rowan Bennett",
+        "title": "Operations Associate",
+        "email": "rowan.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-011",
+        "status": "departed"
+      },
+      {
+        "id": "person-019",
+        "name": "Finley Bennett",
+        "title": "Project Coordinator",
+        "email": "finley.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-011",
+        "status": "active"
+      },
+      {
+        "id": "person-020",
+        "name": "Harper Bennett",
+        "title": "Strategy Intern",
+        "email": "harper.bennett@fetchsandbox.example",
+        "teamId": "executive-2",
+        "managerId": "person-011",
+        "status": "active"
+      },
+      {
+        "id": "person-021",
+        "name": "Avery Chen",
+        "title": "VP of Engineering",
+        "email": "avery.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-022",
+        "name": "Jordan Chen",
+        "title": "Staff Platform Engineer",
+        "email": "jordan.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-021",
+        "status": "active"
+      },
+      {
+        "id": "person-023",
+        "name": "Morgan Chen",
+        "title": "Backend Engineer",
+        "email": "morgan.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-021",
+        "status": "active"
+      },
+      {
+        "id": "person-024",
+        "name": "Taylor Chen",
+        "title": "Frontend Engineer",
+        "email": "taylor.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-021",
+        "status": "active"
+      },
+      {
+        "id": "person-025",
+        "name": "Riley Chen",
+        "title": "Site Reliability Engineer",
+        "email": "riley.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-021",
+        "status": "active"
+      },
+      {
+        "id": "person-026",
+        "name": "Casey Chen",
+        "title": "Quality Engineer",
+        "email": "casey.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-021",
+        "status": "active"
+      },
+      {
+        "id": "person-027",
+        "name": "Alex Chen",
+        "title": "Developer Experience Engineer",
+        "email": "alex.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-021",
+        "status": "active"
+      },
+      {
+        "id": "person-028",
+        "name": "Sam Chen",
+        "title": "Security Engineer",
+        "email": "sam.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-021",
+        "status": "leave"
+      },
+      {
+        "id": "person-029",
+        "name": "Cameron Chen",
+        "title": "Contract QA Engineer",
+        "email": "cameron.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-021",
+        "status": "active"
+      },
+      {
+        "id": "person-030",
+        "name": "Drew Chen",
+        "title": "Software Engineering Intern",
+        "email": "drew.chen@fetchsandbox.example",
+        "teamId": "engineering-1",
+        "managerId": "person-021",
+        "status": "active"
+      },
+      {
+        "id": "person-031",
+        "name": "Jamie Chen",
+        "title": "Engineering Manager",
+        "email": "jamie.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-021",
+        "status": "active"
+      },
+      {
+        "id": "person-032",
+        "name": "Robin Chen",
+        "title": "Senior Backend Engineer",
+        "email": "robin.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-031",
+        "status": "active"
+      },
+      {
+        "id": "person-033",
+        "name": "Quinn Chen",
+        "title": "Data Engineer",
+        "email": "quinn.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-031",
+        "status": "active"
+      },
+      {
+        "id": "person-034",
+        "name": "Dakota Chen",
+        "title": "Mobile Engineer",
+        "email": "dakota.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-031",
+        "status": "active"
+      },
+      {
+        "id": "person-035",
+        "name": "Skyler Chen",
+        "title": "Release Engineer",
+        "email": "skyler.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-031",
+        "status": "active"
+      },
+      {
+        "id": "person-036",
+        "name": "Reese Chen",
+        "title": "Test Automation Engineer",
+        "email": "reese.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-031",
+        "status": "active"
+      },
+      {
+        "id": "person-037",
+        "name": "Parker Chen",
+        "title": "Infrastructure Engineer",
+        "email": "parker.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-031",
+        "status": "active"
+      },
+      {
+        "id": "person-038",
+        "name": "Rowan Chen",
+        "title": "Application Engineer",
+        "email": "rowan.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-031",
+        "status": "departed"
+      },
+      {
+        "id": "person-039",
+        "name": "Finley Chen",
+        "title": "Contract Technical Writer",
+        "email": "finley.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-031",
+        "status": "active"
+      },
+      {
+        "id": "person-040",
+        "name": "Harper Chen",
+        "title": "QA Intern",
+        "email": "harper.chen@fetchsandbox.example",
+        "teamId": "engineering-2",
+        "managerId": "person-031",
+        "status": "active"
+      },
+      {
+        "id": "person-041",
+        "name": "Avery Patel",
+        "title": "Head of Product",
+        "email": "avery.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-042",
+        "name": "Jordan Patel",
+        "title": "Senior Product Manager",
+        "email": "jordan.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-041",
+        "status": "active"
+      },
+      {
+        "id": "person-043",
+        "name": "Morgan Patel",
+        "title": "Product Designer",
+        "email": "morgan.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-041",
+        "status": "active"
+      },
+      {
+        "id": "person-044",
+        "name": "Taylor Patel",
+        "title": "User Researcher",
+        "email": "taylor.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-041",
+        "status": "active"
+      },
+      {
+        "id": "person-045",
+        "name": "Riley Patel",
+        "title": "Product Analyst",
+        "email": "riley.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-041",
+        "status": "active"
+      },
+      {
+        "id": "person-046",
+        "name": "Casey Patel",
+        "title": "UX Writer",
+        "email": "casey.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-041",
+        "status": "active"
+      },
+      {
+        "id": "person-047",
+        "name": "Alex Patel",
+        "title": "Design Systems Engineer",
+        "email": "alex.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-041",
+        "status": "active"
+      },
+      {
+        "id": "person-048",
+        "name": "Sam Patel",
+        "title": "Accessibility Specialist",
+        "email": "sam.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-041",
+        "status": "leave"
+      },
+      {
+        "id": "person-049",
+        "name": "Cameron Patel",
+        "title": "Contract Product Designer",
+        "email": "cameron.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-041",
+        "status": "active"
+      },
+      {
+        "id": "person-050",
+        "name": "Drew Patel",
+        "title": "Product Intern",
+        "email": "drew.patel@fetchsandbox.example",
+        "teamId": "product-1",
+        "managerId": "person-041",
+        "status": "active"
+      },
+      {
+        "id": "person-051",
+        "name": "Jamie Patel",
+        "title": "Design Manager",
+        "email": "jamie.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-041",
+        "status": "active"
+      },
+      {
+        "id": "person-052",
+        "name": "Robin Patel",
+        "title": "Product Manager",
+        "email": "robin.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-051",
+        "status": "active"
+      },
+      {
+        "id": "person-053",
+        "name": "Quinn Patel",
+        "title": "UX Researcher",
+        "email": "quinn.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-051",
+        "status": "active"
+      },
+      {
+        "id": "person-054",
+        "name": "Dakota Patel",
+        "title": "Interaction Designer",
+        "email": "dakota.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-051",
+        "status": "active"
+      },
+      {
+        "id": "person-055",
+        "name": "Skyler Patel",
+        "title": "Content Designer",
+        "email": "skyler.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-051",
+        "status": "active"
+      },
+      {
+        "id": "person-056",
+        "name": "Reese Patel",
+        "title": "Design Operations Specialist",
+        "email": "reese.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-051",
+        "status": "active"
+      },
+      {
+        "id": "person-057",
+        "name": "Parker Patel",
+        "title": "Product Operations Analyst",
+        "email": "parker.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-051",
+        "status": "active"
+      },
+      {
+        "id": "person-058",
+        "name": "Rowan Patel",
+        "title": "Service Designer",
+        "email": "rowan.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-051",
+        "status": "departed"
+      },
+      {
+        "id": "person-059",
+        "name": "Finley Patel",
+        "title": "Contract Research Coordinator",
+        "email": "finley.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-051",
+        "status": "active"
+      },
+      {
+        "id": "person-060",
+        "name": "Harper Patel",
+        "title": "Design Intern",
+        "email": "harper.patel@fetchsandbox.example",
+        "teamId": "product-2",
+        "managerId": "person-051",
+        "status": "active"
+      },
+      {
+        "id": "person-061",
+        "name": "Avery Garcia",
+        "title": "Chief Information Security Officer",
+        "email": "avery.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-062",
+        "name": "Jordan Garcia",
+        "title": "Security Operations Lead",
+        "email": "jordan.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-061",
+        "status": "active"
+      },
+      {
+        "id": "person-063",
+        "name": "Morgan Garcia",
+        "title": "Security Analyst",
+        "email": "morgan.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-061",
+        "status": "active"
+      },
+      {
+        "id": "person-064",
+        "name": "Taylor Garcia",
+        "title": "Detection Engineer",
+        "email": "taylor.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-061",
+        "status": "active"
+      },
+      {
+        "id": "person-065",
+        "name": "Riley Garcia",
+        "title": "Application Security Engineer",
+        "email": "riley.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-061",
+        "status": "active"
+      },
+      {
+        "id": "person-066",
+        "name": "Casey Garcia",
+        "title": "Governance Analyst",
+        "email": "casey.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-061",
+        "status": "active"
+      },
+      {
+        "id": "person-067",
+        "name": "Alex Garcia",
+        "title": "Compliance Analyst",
+        "email": "alex.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-061",
+        "status": "active"
+      },
+      {
+        "id": "person-068",
+        "name": "Sam Garcia",
+        "title": "Privacy Analyst",
+        "email": "sam.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-061",
+        "status": "leave"
+      },
+      {
+        "id": "person-069",
+        "name": "Cameron Garcia",
+        "title": "Contract Penetration Tester",
+        "email": "cameron.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-061",
+        "status": "active"
+      },
+      {
+        "id": "person-070",
+        "name": "Drew Garcia",
+        "title": "Security Intern",
+        "email": "drew.garcia@fetchsandbox.example",
+        "teamId": "security-1",
+        "managerId": "person-061",
+        "status": "active"
+      },
+      {
+        "id": "person-071",
+        "name": "Jamie Garcia",
+        "title": "Security Engineering Manager",
+        "email": "jamie.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-061",
+        "status": "active"
+      },
+      {
+        "id": "person-072",
+        "name": "Robin Garcia",
+        "title": "Identity Security Engineer",
+        "email": "robin.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-071",
+        "status": "active"
+      },
+      {
+        "id": "person-073",
+        "name": "Quinn Garcia",
+        "title": "Risk Analyst",
+        "email": "quinn.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-071",
+        "status": "active"
+      },
+      {
+        "id": "person-074",
+        "name": "Dakota Garcia",
+        "title": "Security Program Manager",
+        "email": "dakota.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-071",
+        "status": "active"
+      },
+      {
+        "id": "person-075",
+        "name": "Skyler Garcia",
+        "title": "Incident Response Analyst",
+        "email": "skyler.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-071",
+        "status": "active"
+      },
+      {
+        "id": "person-076",
+        "name": "Reese Garcia",
+        "title": "Cloud Security Engineer",
+        "email": "reese.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-071",
+        "status": "active"
+      },
+      {
+        "id": "person-077",
+        "name": "Parker Garcia",
+        "title": "Audit Coordinator",
+        "email": "parker.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-071",
+        "status": "active"
+      },
+      {
+        "id": "person-078",
+        "name": "Rowan Garcia",
+        "title": "Vendor Risk Analyst",
+        "email": "rowan.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-071",
+        "status": "departed"
+      },
+      {
+        "id": "person-079",
+        "name": "Finley Garcia",
+        "title": "Contract Compliance Specialist",
+        "email": "finley.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-071",
+        "status": "active"
+      },
+      {
+        "id": "person-080",
+        "name": "Harper Garcia",
+        "title": "Risk Intern",
+        "email": "harper.garcia@fetchsandbox.example",
+        "teamId": "security-2",
+        "managerId": "person-071",
+        "status": "active"
+      },
+      {
+        "id": "person-081",
+        "name": "Avery Kim",
+        "title": "Head of IT",
+        "email": "avery.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-082",
+        "name": "Jordan Kim",
+        "title": "IT Operations Lead",
+        "email": "jordan.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-081",
+        "status": "active"
+      },
+      {
+        "id": "person-083",
+        "name": "Morgan Kim",
+        "title": "Systems Administrator",
+        "email": "morgan.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-081",
+        "status": "active"
+      },
+      {
+        "id": "person-084",
+        "name": "Taylor Kim",
+        "title": "Identity Administrator",
+        "email": "taylor.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-081",
+        "status": "active"
+      },
+      {
+        "id": "person-085",
+        "name": "Riley Kim",
+        "title": "Endpoint Engineer",
+        "email": "riley.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-081",
+        "status": "active"
+      },
+      {
+        "id": "person-086",
+        "name": "Casey Kim",
+        "title": "Network Engineer",
+        "email": "casey.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-081",
+        "status": "active"
+      },
+      {
+        "id": "person-087",
+        "name": "Alex Kim",
+        "title": "Service Desk Analyst",
+        "email": "alex.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-081",
+        "status": "active"
+      },
+      {
+        "id": "person-088",
+        "name": "Sam Kim",
+        "title": "Cloud Operations Engineer",
+        "email": "sam.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-081",
+        "status": "leave"
+      },
+      {
+        "id": "person-089",
+        "name": "Cameron Kim",
+        "title": "Contract Support Technician",
+        "email": "cameron.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-081",
+        "status": "active"
+      },
+      {
+        "id": "person-090",
+        "name": "Drew Kim",
+        "title": "IT Intern",
+        "email": "drew.kim@fetchsandbox.example",
+        "teamId": "it-1",
+        "managerId": "person-081",
+        "status": "active"
+      },
+      {
+        "id": "person-091",
+        "name": "Jamie Kim",
+        "title": "Infrastructure Manager",
+        "email": "jamie.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-081",
+        "status": "active"
+      },
+      {
+        "id": "person-092",
+        "name": "Robin Kim",
+        "title": "Cloud Engineer",
+        "email": "robin.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-091",
+        "status": "active"
+      },
+      {
+        "id": "person-093",
+        "name": "Quinn Kim",
+        "title": "Database Administrator",
+        "email": "quinn.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-091",
+        "status": "active"
+      },
+      {
+        "id": "person-094",
+        "name": "Dakota Kim",
+        "title": "Business Applications Administrator",
+        "email": "dakota.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-091",
+        "status": "active"
+      },
+      {
+        "id": "person-095",
+        "name": "Skyler Kim",
+        "title": "IT Asset Analyst",
+        "email": "skyler.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-091",
+        "status": "active"
+      },
+      {
+        "id": "person-096",
+        "name": "Reese Kim",
+        "title": "Service Reliability Engineer",
+        "email": "reese.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-091",
+        "status": "active"
+      },
+      {
+        "id": "person-097",
+        "name": "Parker Kim",
+        "title": "Workspace Administrator",
+        "email": "parker.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-091",
+        "status": "active"
+      },
+      {
+        "id": "person-098",
+        "name": "Rowan Kim",
+        "title": "Access Operations Analyst",
+        "email": "rowan.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-091",
+        "status": "departed"
+      },
+      {
+        "id": "person-099",
+        "name": "Finley Kim",
+        "title": "Contract Network Technician",
+        "email": "finley.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-091",
+        "status": "active"
+      },
+      {
+        "id": "person-100",
+        "name": "Harper Kim",
+        "title": "Infrastructure Intern",
+        "email": "harper.kim@fetchsandbox.example",
+        "teamId": "it-2",
+        "managerId": "person-091",
+        "status": "active"
+      },
+      {
+        "id": "person-101",
+        "name": "Avery Okafor",
+        "title": "VP of Sales",
+        "email": "avery.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-102",
+        "name": "Jordan Okafor",
+        "title": "Sales Operations Lead",
+        "email": "jordan.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-101",
+        "status": "active"
+      },
+      {
+        "id": "person-103",
+        "name": "Morgan Okafor",
+        "title": "Account Executive",
+        "email": "morgan.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-101",
+        "status": "active"
+      },
+      {
+        "id": "person-104",
+        "name": "Taylor Okafor",
+        "title": "Account Executive",
+        "email": "taylor.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-101",
+        "status": "active"
+      },
+      {
+        "id": "person-105",
+        "name": "Riley Okafor",
+        "title": "Sales Development Representative",
+        "email": "riley.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-101",
+        "status": "active"
+      },
+      {
+        "id": "person-106",
+        "name": "Casey Okafor",
+        "title": "Solutions Engineer",
+        "email": "casey.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-101",
+        "status": "active"
+      },
+      {
+        "id": "person-107",
+        "name": "Alex Okafor",
+        "title": "Revenue Analyst",
+        "email": "alex.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-101",
+        "status": "active"
+      },
+      {
+        "id": "person-108",
+        "name": "Sam Okafor",
+        "title": "Sales Enablement Specialist",
+        "email": "sam.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-101",
+        "status": "leave"
+      },
+      {
+        "id": "person-109",
+        "name": "Cameron Okafor",
+        "title": "Contract Sales Researcher",
+        "email": "cameron.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-101",
+        "status": "active"
+      },
+      {
+        "id": "person-110",
+        "name": "Drew Okafor",
+        "title": "Sales Intern",
+        "email": "drew.okafor@fetchsandbox.example",
+        "teamId": "sales-1",
+        "managerId": "person-101",
+        "status": "active"
+      },
+      {
+        "id": "person-111",
+        "name": "Jamie Okafor",
+        "title": "Sales Manager",
+        "email": "jamie.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-101",
+        "status": "active"
+      },
+      {
+        "id": "person-112",
+        "name": "Robin Okafor",
+        "title": "Account Executive",
+        "email": "robin.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-111",
+        "status": "active"
+      },
+      {
+        "id": "person-113",
+        "name": "Quinn Okafor",
+        "title": "Sales Development Representative",
+        "email": "quinn.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-111",
+        "status": "active"
+      },
+      {
+        "id": "person-114",
+        "name": "Dakota Okafor",
+        "title": "Solutions Consultant",
+        "email": "dakota.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-111",
+        "status": "active"
+      },
+      {
+        "id": "person-115",
+        "name": "Skyler Okafor",
+        "title": "Channel Account Manager",
+        "email": "skyler.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-111",
+        "status": "active"
+      },
+      {
+        "id": "person-116",
+        "name": "Reese Okafor",
+        "title": "Deal Desk Analyst",
+        "email": "reese.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-111",
+        "status": "active"
+      },
+      {
+        "id": "person-117",
+        "name": "Parker Okafor",
+        "title": "Revenue Operations Analyst",
+        "email": "parker.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-111",
+        "status": "active"
+      },
+      {
+        "id": "person-118",
+        "name": "Rowan Okafor",
+        "title": "Sales Coordinator",
+        "email": "rowan.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-111",
+        "status": "departed"
+      },
+      {
+        "id": "person-119",
+        "name": "Finley Okafor",
+        "title": "Contract Proposal Writer",
+        "email": "finley.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-111",
+        "status": "active"
+      },
+      {
+        "id": "person-120",
+        "name": "Harper Okafor",
+        "title": "Revenue Operations Intern",
+        "email": "harper.okafor@fetchsandbox.example",
+        "teamId": "sales-2",
+        "managerId": "person-111",
+        "status": "active"
+      },
+      {
+        "id": "person-121",
+        "name": "Avery Singh",
+        "title": "Head of Marketing",
+        "email": "avery.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-122",
+        "name": "Jordan Singh",
+        "title": "Marketing Operations Lead",
+        "email": "jordan.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-121",
+        "status": "active"
+      },
+      {
+        "id": "person-123",
+        "name": "Morgan Singh",
+        "title": "Content Strategist",
+        "email": "morgan.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-121",
+        "status": "active"
+      },
+      {
+        "id": "person-124",
+        "name": "Taylor Singh",
+        "title": "Growth Marketer",
+        "email": "taylor.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-121",
+        "status": "active"
+      },
+      {
+        "id": "person-125",
+        "name": "Riley Singh",
+        "title": "Campaign Manager",
+        "email": "riley.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-121",
+        "status": "active"
+      },
+      {
+        "id": "person-126",
+        "name": "Casey Singh",
+        "title": "Brand Designer",
+        "email": "casey.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-121",
+        "status": "active"
+      },
+      {
+        "id": "person-127",
+        "name": "Alex Singh",
+        "title": "SEO Analyst",
+        "email": "alex.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-121",
+        "status": "active"
+      },
+      {
+        "id": "person-128",
+        "name": "Sam Singh",
+        "title": "Community Manager",
+        "email": "sam.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-121",
+        "status": "leave"
+      },
+      {
+        "id": "person-129",
+        "name": "Cameron Singh",
+        "title": "Contract Copywriter",
+        "email": "cameron.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-121",
+        "status": "active"
+      },
+      {
+        "id": "person-130",
+        "name": "Drew Singh",
+        "title": "Marketing Intern",
+        "email": "drew.singh@fetchsandbox.example",
+        "teamId": "marketing-1",
+        "managerId": "person-121",
+        "status": "active"
+      },
+      {
+        "id": "person-131",
+        "name": "Jamie Singh",
+        "title": "Creative Director",
+        "email": "jamie.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-121",
+        "status": "active"
+      },
+      {
+        "id": "person-132",
+        "name": "Robin Singh",
+        "title": "Product Marketing Manager",
+        "email": "robin.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-131",
+        "status": "active"
+      },
+      {
+        "id": "person-133",
+        "name": "Quinn Singh",
+        "title": "Lifecycle Marketer",
+        "email": "quinn.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-131",
+        "status": "active"
+      },
+      {
+        "id": "person-134",
+        "name": "Dakota Singh",
+        "title": "Events Manager",
+        "email": "dakota.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-131",
+        "status": "active"
+      },
+      {
+        "id": "person-135",
+        "name": "Skyler Singh",
+        "title": "Marketing Analyst",
+        "email": "skyler.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-131",
+        "status": "active"
+      },
+      {
+        "id": "person-136",
+        "name": "Reese Singh",
+        "title": "Video Producer",
+        "email": "reese.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-131",
+        "status": "active"
+      },
+      {
+        "id": "person-137",
+        "name": "Parker Singh",
+        "title": "Social Media Manager",
+        "email": "parker.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-131",
+        "status": "active"
+      },
+      {
+        "id": "person-138",
+        "name": "Rowan Singh",
+        "title": "Web Content Editor",
+        "email": "rowan.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-131",
+        "status": "departed"
+      },
+      {
+        "id": "person-139",
+        "name": "Finley Singh",
+        "title": "Contract Illustrator",
+        "email": "finley.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-131",
+        "status": "active"
+      },
+      {
+        "id": "person-140",
+        "name": "Harper Singh",
+        "title": "Design Intern",
+        "email": "harper.singh@fetchsandbox.example",
+        "teamId": "marketing-2",
+        "managerId": "person-131",
+        "status": "active"
+      },
+      {
+        "id": "person-141",
+        "name": "Avery Martinez",
+        "title": "VP of Customer Success",
+        "email": "avery.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-142",
+        "name": "Jordan Martinez",
+        "title": "Customer Operations Lead",
+        "email": "jordan.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-141",
+        "status": "active"
+      },
+      {
+        "id": "person-143",
+        "name": "Morgan Martinez",
+        "title": "Customer Success Manager",
+        "email": "morgan.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-141",
+        "status": "active"
+      },
+      {
+        "id": "person-144",
+        "name": "Taylor Martinez",
+        "title": "Implementation Specialist",
+        "email": "taylor.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-141",
+        "status": "active"
+      },
+      {
+        "id": "person-145",
+        "name": "Riley Martinez",
+        "title": "Technical Account Manager",
+        "email": "riley.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-141",
+        "status": "active"
+      },
+      {
+        "id": "person-146",
+        "name": "Casey Martinez",
+        "title": "Onboarding Specialist",
+        "email": "casey.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-141",
+        "status": "active"
+      },
+      {
+        "id": "person-147",
+        "name": "Alex Martinez",
+        "title": "Customer Education Specialist",
+        "email": "alex.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-141",
+        "status": "active"
+      },
+      {
+        "id": "person-148",
+        "name": "Sam Martinez",
+        "title": "Customer Operations Analyst",
+        "email": "sam.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-141",
+        "status": "leave"
+      },
+      {
+        "id": "person-149",
+        "name": "Cameron Martinez",
+        "title": "Contract Training Specialist",
+        "email": "cameron.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-141",
+        "status": "active"
+      },
+      {
+        "id": "person-150",
+        "name": "Drew Martinez",
+        "title": "Customer Success Intern",
+        "email": "drew.martinez@fetchsandbox.example",
+        "teamId": "success-1",
+        "managerId": "person-141",
+        "status": "active"
+      },
+      {
+        "id": "person-151",
+        "name": "Jamie Martinez",
+        "title": "Customer Success Manager",
+        "email": "jamie.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-141",
+        "status": "active"
+      },
+      {
+        "id": "person-152",
+        "name": "Robin Martinez",
+        "title": "Renewals Manager",
+        "email": "robin.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-151",
+        "status": "active"
+      },
+      {
+        "id": "person-153",
+        "name": "Quinn Martinez",
+        "title": "Customer Success Associate",
+        "email": "quinn.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-151",
+        "status": "active"
+      },
+      {
+        "id": "person-154",
+        "name": "Dakota Martinez",
+        "title": "Solutions Specialist",
+        "email": "dakota.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-151",
+        "status": "active"
+      },
+      {
+        "id": "person-155",
+        "name": "Skyler Martinez",
+        "title": "Customer Insights Analyst",
+        "email": "skyler.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-151",
+        "status": "active"
+      },
+      {
+        "id": "person-156",
+        "name": "Reese Martinez",
+        "title": "Implementation Engineer",
+        "email": "reese.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-151",
+        "status": "active"
+      },
+      {
+        "id": "person-157",
+        "name": "Parker Martinez",
+        "title": "Customer Programs Manager",
+        "email": "parker.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-151",
+        "status": "active"
+      },
+      {
+        "id": "person-158",
+        "name": "Rowan Martinez",
+        "title": "Adoption Specialist",
+        "email": "rowan.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-151",
+        "status": "departed"
+      },
+      {
+        "id": "person-159",
+        "name": "Finley Martinez",
+        "title": "Contract Documentation Specialist",
+        "email": "finley.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-151",
+        "status": "active"
+      },
+      {
+        "id": "person-160",
+        "name": "Harper Martinez",
+        "title": "Customer Operations Intern",
+        "email": "harper.martinez@fetchsandbox.example",
+        "teamId": "success-2",
+        "managerId": "person-151",
+        "status": "active"
+      },
+      {
+        "id": "person-161",
+        "name": "Avery Nguyen",
+        "title": "Head of Support",
+        "email": "avery.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-162",
+        "name": "Jordan Nguyen",
+        "title": "Support Operations Lead",
+        "email": "jordan.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-161",
+        "status": "active"
+      },
+      {
+        "id": "person-163",
+        "name": "Morgan Nguyen",
+        "title": "Support Engineer",
+        "email": "morgan.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-161",
+        "status": "active"
+      },
+      {
+        "id": "person-164",
+        "name": "Taylor Nguyen",
+        "title": "Support Specialist",
+        "email": "taylor.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-161",
+        "status": "active"
+      },
+      {
+        "id": "person-165",
+        "name": "Riley Nguyen",
+        "title": "Customer Support Representative",
+        "email": "riley.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-161",
+        "status": "active"
+      },
+      {
+        "id": "person-166",
+        "name": "Casey Nguyen",
+        "title": "Technical Support Engineer",
+        "email": "casey.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-161",
+        "status": "active"
+      },
+      {
+        "id": "person-167",
+        "name": "Alex Nguyen",
+        "title": "Support Quality Analyst",
+        "email": "alex.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-161",
+        "status": "active"
+      },
+      {
+        "id": "person-168",
+        "name": "Sam Nguyen",
+        "title": "Knowledge Base Editor",
+        "email": "sam.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-161",
+        "status": "leave"
+      },
+      {
+        "id": "person-169",
+        "name": "Cameron Nguyen",
+        "title": "Contract Support Specialist",
+        "email": "cameron.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-161",
+        "status": "active"
+      },
+      {
+        "id": "person-170",
+        "name": "Drew Nguyen",
+        "title": "Support Intern",
+        "email": "drew.nguyen@fetchsandbox.example",
+        "teamId": "support-1",
+        "managerId": "person-161",
+        "status": "active"
+      },
+      {
+        "id": "person-171",
+        "name": "Jamie Nguyen",
+        "title": "Support Manager",
+        "email": "jamie.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-161",
+        "status": "active"
+      },
+      {
+        "id": "person-172",
+        "name": "Robin Nguyen",
+        "title": "Escalation Engineer",
+        "email": "robin.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-171",
+        "status": "active"
+      },
+      {
+        "id": "person-173",
+        "name": "Quinn Nguyen",
+        "title": "Support Specialist",
+        "email": "quinn.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-171",
+        "status": "active"
+      },
+      {
+        "id": "person-174",
+        "name": "Dakota Nguyen",
+        "title": "Customer Support Representative",
+        "email": "dakota.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-171",
+        "status": "active"
+      },
+      {
+        "id": "person-175",
+        "name": "Skyler Nguyen",
+        "title": "Support Systems Analyst",
+        "email": "skyler.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-171",
+        "status": "active"
+      },
+      {
+        "id": "person-176",
+        "name": "Reese Nguyen",
+        "title": "Technical Support Engineer",
+        "email": "reese.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-171",
+        "status": "active"
+      },
+      {
+        "id": "person-177",
+        "name": "Parker Nguyen",
+        "title": "Support Trainer",
+        "email": "parker.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-171",
+        "status": "active"
+      },
+      {
+        "id": "person-178",
+        "name": "Rowan Nguyen",
+        "title": "Incident Liaison",
+        "email": "rowan.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-171",
+        "status": "departed"
+      },
+      {
+        "id": "person-179",
+        "name": "Finley Nguyen",
+        "title": "Contract Support Translator",
+        "email": "finley.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-171",
+        "status": "active"
+      },
+      {
+        "id": "person-180",
+        "name": "Harper Nguyen",
+        "title": "Support Operations Intern",
+        "email": "harper.nguyen@fetchsandbox.example",
+        "teamId": "support-2",
+        "managerId": "person-171",
+        "status": "active"
+      },
+      {
+        "id": "person-181",
+        "name": "Avery Reed",
+        "title": "Chief Financial Officer",
+        "email": "avery.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-182",
+        "name": "Jordan Reed",
+        "title": "Billing Operations Lead",
+        "email": "jordan.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-181",
+        "status": "active"
+      },
+      {
+        "id": "person-183",
+        "name": "Morgan Reed",
+        "title": "Financial Analyst",
+        "email": "morgan.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-181",
+        "status": "active"
+      },
+      {
+        "id": "person-184",
+        "name": "Taylor Reed",
+        "title": "Accounts Receivable Specialist",
+        "email": "taylor.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-181",
+        "status": "active"
+      },
+      {
+        "id": "person-185",
+        "name": "Riley Reed",
+        "title": "Accounts Payable Specialist",
+        "email": "riley.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-181",
+        "status": "active"
+      },
+      {
+        "id": "person-186",
+        "name": "Casey Reed",
+        "title": "Procurement Specialist",
+        "email": "casey.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-181",
+        "status": "active"
+      },
+      {
+        "id": "person-187",
+        "name": "Alex Reed",
+        "title": "Revenue Accountant",
+        "email": "alex.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-181",
+        "status": "active"
+      },
+      {
+        "id": "person-188",
+        "name": "Sam Reed",
+        "title": "Billing Specialist",
+        "email": "sam.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-181",
+        "status": "leave"
+      },
+      {
+        "id": "person-189",
+        "name": "Cameron Reed",
+        "title": "Contract Bookkeeper",
+        "email": "cameron.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-181",
+        "status": "active"
+      },
+      {
+        "id": "person-190",
+        "name": "Drew Reed",
+        "title": "Finance Intern",
+        "email": "drew.reed@fetchsandbox.example",
+        "teamId": "finance-1",
+        "managerId": "person-181",
+        "status": "active"
+      },
+      {
+        "id": "person-191",
+        "name": "Jamie Reed",
+        "title": "Controller",
+        "email": "jamie.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-181",
+        "status": "active"
+      },
+      {
+        "id": "person-192",
+        "name": "Robin Reed",
+        "title": "Senior Accountant",
+        "email": "robin.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-191",
+        "status": "active"
+      },
+      {
+        "id": "person-193",
+        "name": "Quinn Reed",
+        "title": "Payroll Accountant",
+        "email": "quinn.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-191",
+        "status": "active"
+      },
+      {
+        "id": "person-194",
+        "name": "Dakota Reed",
+        "title": "Procurement Analyst",
+        "email": "dakota.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-191",
+        "status": "active"
+      },
+      {
+        "id": "person-195",
+        "name": "Skyler Reed",
+        "title": "Treasury Analyst",
+        "email": "skyler.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-191",
+        "status": "active"
+      },
+      {
+        "id": "person-196",
+        "name": "Reese Reed",
+        "title": "Revenue Operations Accountant",
+        "email": "reese.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-191",
+        "status": "active"
+      },
+      {
+        "id": "person-197",
+        "name": "Parker Reed",
+        "title": "Financial Planning Analyst",
+        "email": "parker.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-191",
+        "status": "active"
+      },
+      {
+        "id": "person-198",
+        "name": "Rowan Reed",
+        "title": "Expense Analyst",
+        "email": "rowan.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-191",
+        "status": "departed"
+      },
+      {
+        "id": "person-199",
+        "name": "Finley Reed",
+        "title": "Contract Tax Advisor",
+        "email": "finley.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-191",
+        "status": "active"
+      },
+      {
+        "id": "person-200",
+        "name": "Harper Reed",
+        "title": "Accounting Intern",
+        "email": "harper.reed@fetchsandbox.example",
+        "teamId": "finance-2",
+        "managerId": "person-191",
+        "status": "active"
+      },
+      {
+        "id": "person-201",
+        "name": "Avery Shah",
+        "title": "Head of People",
+        "email": "avery.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-202",
+        "name": "Jordan Shah",
+        "title": "People Operations Lead",
+        "email": "jordan.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-201",
+        "status": "active"
+      },
+      {
+        "id": "person-203",
+        "name": "Morgan Shah",
+        "title": "People Partner",
+        "email": "morgan.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-201",
+        "status": "active"
+      },
+      {
+        "id": "person-204",
+        "name": "Taylor Shah",
+        "title": "Recruiter",
+        "email": "taylor.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-201",
+        "status": "active"
+      },
+      {
+        "id": "person-205",
+        "name": "Riley Shah",
+        "title": "Talent Coordinator",
+        "email": "riley.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-201",
+        "status": "active"
+      },
+      {
+        "id": "person-206",
+        "name": "Casey Shah",
+        "title": "Compensation Analyst",
+        "email": "casey.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-201",
+        "status": "active"
+      },
+      {
+        "id": "person-207",
+        "name": "Alex Shah",
+        "title": "Learning and Development Specialist",
+        "email": "alex.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-201",
+        "status": "active"
+      },
+      {
+        "id": "person-208",
+        "name": "Sam Shah",
+        "title": "People Systems Analyst",
+        "email": "sam.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-201",
+        "status": "leave"
+      },
+      {
+        "id": "person-209",
+        "name": "Cameron Shah",
+        "title": "Contract Recruiting Sourcer",
+        "email": "cameron.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-201",
+        "status": "active"
+      },
+      {
+        "id": "person-210",
+        "name": "Drew Shah",
+        "title": "People Operations Intern",
+        "email": "drew.shah@fetchsandbox.example",
+        "teamId": "people-1",
+        "managerId": "person-201",
+        "status": "active"
+      },
+      {
+        "id": "person-211",
+        "name": "Jamie Shah",
+        "title": "Talent Acquisition Manager",
+        "email": "jamie.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-201",
+        "status": "active"
+      },
+      {
+        "id": "person-212",
+        "name": "Robin Shah",
+        "title": "Recruiter",
+        "email": "robin.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-211",
+        "status": "active"
+      },
+      {
+        "id": "person-213",
+        "name": "Quinn Shah",
+        "title": "Employee Experience Specialist",
+        "email": "quinn.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-211",
+        "status": "active"
+      },
+      {
+        "id": "person-214",
+        "name": "Dakota Shah",
+        "title": "Benefits Administrator",
+        "email": "dakota.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-211",
+        "status": "active"
+      },
+      {
+        "id": "person-215",
+        "name": "Skyler Shah",
+        "title": "People Analytics Specialist",
+        "email": "skyler.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-211",
+        "status": "active"
+      },
+      {
+        "id": "person-216",
+        "name": "Reese Shah",
+        "title": "HR Operations Specialist",
+        "email": "reese.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-211",
+        "status": "active"
+      },
+      {
+        "id": "person-217",
+        "name": "Parker Shah",
+        "title": "Workforce Planning Analyst",
+        "email": "parker.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-211",
+        "status": "active"
+      },
+      {
+        "id": "person-218",
+        "name": "Rowan Shah",
+        "title": "Onboarding Coordinator",
+        "email": "rowan.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-211",
+        "status": "departed"
+      },
+      {
+        "id": "person-219",
+        "name": "Finley Shah",
+        "title": "Contract Learning Designer",
+        "email": "finley.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-211",
+        "status": "active"
+      },
+      {
+        "id": "person-220",
+        "name": "Harper Shah",
+        "title": "Talent Intern",
+        "email": "harper.shah@fetchsandbox.example",
+        "teamId": "people-2",
+        "managerId": "person-211",
+        "status": "active"
+      },
+      {
+        "id": "person-221",
+        "name": "Avery Williams",
+        "title": "General Counsel",
+        "email": "avery.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-001",
+        "status": "active"
+      },
+      {
+        "id": "person-222",
+        "name": "Jordan Williams",
+        "title": "Legal Operations Lead",
+        "email": "jordan.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-221",
+        "status": "active"
+      },
+      {
+        "id": "person-223",
+        "name": "Morgan Williams",
+        "title": "Commercial Counsel",
+        "email": "morgan.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-221",
+        "status": "active"
+      },
+      {
+        "id": "person-224",
+        "name": "Taylor Williams",
+        "title": "Contracts Analyst",
+        "email": "taylor.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-221",
+        "status": "active"
+      },
+      {
+        "id": "person-225",
+        "name": "Riley Williams",
+        "title": "Privacy Counsel",
+        "email": "riley.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-221",
+        "status": "active"
+      },
+      {
+        "id": "person-226",
+        "name": "Casey Williams",
+        "title": "Compliance Manager",
+        "email": "casey.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-221",
+        "status": "active"
+      },
+      {
+        "id": "person-227",
+        "name": "Alex Williams",
+        "title": "Legal Operations Specialist",
+        "email": "alex.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-221",
+        "status": "active"
+      },
+      {
+        "id": "person-228",
+        "name": "Sam Williams",
+        "title": "Vendor Contracts Specialist",
+        "email": "sam.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-221",
+        "status": "leave"
+      },
+      {
+        "id": "person-229",
+        "name": "Cameron Williams",
+        "title": "Contract Legal Researcher",
+        "email": "cameron.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-221",
+        "status": "active"
+      },
+      {
+        "id": "person-230",
+        "name": "Drew Williams",
+        "title": "Legal Operations Intern",
+        "email": "drew.williams@fetchsandbox.example",
+        "teamId": "legal-1",
+        "managerId": "person-221",
+        "status": "active"
+      },
+      {
+        "id": "person-231",
+        "name": "Jamie Williams",
+        "title": "Legal Operations Manager",
+        "email": "jamie.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-221",
+        "status": "active"
+      },
+      {
+        "id": "person-232",
+        "name": "Robin Williams",
+        "title": "Contracts Manager",
+        "email": "robin.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-231",
+        "status": "active"
+      },
+      {
+        "id": "person-233",
+        "name": "Quinn Williams",
+        "title": "Regulatory Analyst",
+        "email": "quinn.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-231",
+        "status": "active"
+      },
+      {
+        "id": "person-234",
+        "name": "Dakota Williams",
+        "title": "Privacy Operations Specialist",
+        "email": "dakota.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-231",
+        "status": "active"
+      },
+      {
+        "id": "person-235",
+        "name": "Skyler Williams",
+        "title": "Corporate Paralegal",
+        "email": "skyler.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-231",
+        "status": "active"
+      },
+      {
+        "id": "person-236",
+        "name": "Reese Williams",
+        "title": "Commercial Operations Analyst",
+        "email": "reese.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-231",
+        "status": "active"
+      },
+      {
+        "id": "person-237",
+        "name": "Parker Williams",
+        "title": "Document Control Specialist",
+        "email": "parker.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-231",
+        "status": "active"
+      },
+      {
+        "id": "person-238",
+        "name": "Rowan Williams",
+        "title": "Compliance Coordinator",
+        "email": "rowan.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-231",
+        "status": "departed"
+      },
+      {
+        "id": "person-239",
+        "name": "Finley Williams",
+        "title": "Contract Translation Reviewer",
+        "email": "finley.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-231",
+        "status": "active"
+      },
+      {
+        "id": "person-240",
+        "name": "Harper Williams",
+        "title": "Compliance Intern",
+        "email": "harper.williams@fetchsandbox.example",
+        "teamId": "legal-2",
+        "managerId": "person-231",
+        "status": "active"
+      }
+    ],
+    "tools": [
+      {
+        "id": "slack",
+        "name": "Slack",
+        "ownerId": "person-081",
+        "purpose": "Internal collaboration and approvals",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "github",
+        "name": "GitHub",
+        "ownerId": "person-021",
+        "purpose": "Code and change management",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "jira",
+        "name": "Jira",
+        "ownerId": "person-041",
+        "purpose": "Product delivery and issue tracking",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "notion",
+        "name": "Notion",
+        "ownerId": "person-041",
+        "purpose": "Approved company knowledge",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "google-drive",
+        "name": "Google Drive",
+        "ownerId": "person-081",
+        "purpose": "Company documents",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "google-sheets",
+        "name": "Google Sheets",
+        "ownerId": "person-181",
+        "purpose": "Operational reporting",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "gmail",
+        "name": "Gmail",
+        "ownerId": "person-161",
+        "purpose": "Customer correspondence",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "google-calendar",
+        "name": "Google Calendar",
+        "ownerId": "person-201",
+        "purpose": "Scheduling",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "hubspot",
+        "name": "HubSpot",
+        "ownerId": "person-101",
+        "purpose": "Sales and customer records",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "stripe",
+        "name": "Stripe",
+        "ownerId": "person-181",
+        "purpose": "Test billing and subscriptions",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "zendesk",
+        "name": "Zendesk",
+        "ownerId": "person-161",
+        "purpose": "Customer support cases",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "resend",
+        "name": "Resend",
+        "ownerId": "person-121",
+        "purpose": "Simulated transactional messages",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "asana",
+        "name": "Asana",
+        "ownerId": "person-221",
+        "purpose": "Cross-team operational tasks",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "pagerduty",
+        "name": "PagerDuty",
+        "ownerId": "person-081",
+        "purpose": "Incident coordination",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "datadog",
+        "name": "Datadog",
+        "ownerId": "person-081",
+        "purpose": "Service monitoring",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "twilio",
+        "name": "Twilio",
+        "ownerId": "person-161",
+        "purpose": "Simulated service notifications",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "square",
+        "name": "Square",
+        "ownerId": "person-181",
+        "purpose": "Simulated store credit and gift cards",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "box",
+        "name": "Box",
+        "ownerId": "person-061",
+        "purpose": "Controlled compliance documents",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "okta",
+        "name": "Okta",
+        "ownerId": "person-081",
+        "purpose": "Simulated workforce directory",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "bamboohr",
+        "name": "BambooHR",
+        "ownerId": "person-201",
+        "purpose": "Synthetic employee lifecycle",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "zoom",
+        "name": "Zoom",
+        "ownerId": "person-101",
+        "purpose": "Customer meetings",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "docusign",
+        "name": "DocuSign",
+        "ownerId": "person-221",
+        "purpose": "Simulated agreement review",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "aws",
+        "name": "AWS",
+        "ownerId": "person-081",
+        "purpose": "Declared infrastructure inventory",
+        "mode": "simulated",
+        "binding": "unbound"
+      },
+      {
+        "id": "digitalocean",
+        "name": "DigitalOcean",
+        "ownerId": "person-081",
+        "purpose": "Simulated development environments",
+        "mode": "simulated",
+        "binding": "unbound"
+      }
+    ],
+    "infrastructure": [
+      {
+        "id": "customer-api",
+        "name": "Customer API",
+        "kind": "application",
+        "environment": "sandbox",
+        "ownerId": "person-021"
+      },
+      {
+        "id": "billing-service",
+        "name": "Billing service",
+        "kind": "application",
+        "environment": "sandbox",
+        "ownerId": "person-021"
+      },
+      {
+        "id": "support-service",
+        "name": "Support integration",
+        "kind": "application",
+        "environment": "sandbox",
+        "ownerId": "person-161"
+      },
+      {
+        "id": "control-plane",
+        "name": "LoopLabs partner workspace",
+        "kind": "application",
+        "environment": "sandbox",
+        "ownerId": "person-061"
+      },
+      {
+        "id": "company-pg",
+        "name": "Company PostgreSQL",
+        "kind": "database",
+        "environment": "sandbox",
+        "ownerId": "person-081"
+      },
+      {
+        "id": "billing-pg",
+        "name": "Billing PostgreSQL",
+        "kind": "database",
+        "environment": "sandbox",
+        "ownerId": "person-181"
+      },
+      {
+        "id": "workflow-queue",
+        "name": "Business work queue",
+        "kind": "queue",
+        "environment": "sandbox",
+        "ownerId": "person-081"
+      },
+      {
+        "id": "event-queue",
+        "name": "Business event queue",
+        "kind": "queue",
+        "environment": "sandbox",
+        "ownerId": "person-081"
+      },
+      {
+        "id": "document-store",
+        "name": "Company documents",
+        "kind": "storage",
+        "environment": "sandbox",
+        "ownerId": "person-061"
+      },
+      {
+        "id": "artifact-store",
+        "name": "Release artifacts",
+        "kind": "storage",
+        "environment": "sandbox",
+        "ownerId": "person-021"
+      },
+      {
+        "id": "workforce-directory",
+        "name": "Workforce identity directory",
+        "kind": "identity",
+        "environment": "sandbox",
+        "ownerId": "person-081"
+      },
+      {
+        "id": "service-monitoring",
+        "name": "Service monitoring",
+        "kind": "monitoring",
+        "environment": "sandbox",
+        "ownerId": "person-081"
+      }
+    ],
+    "workflows": [
+      {
+        "id": "customer-onboarding",
+        "name": "Customer onboarding",
+        "purpose": "Customer onboarding for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "success-1",
+        "ownerId": "person-142",
+        "reviewerIds": [
+          "person-141"
+        ],
+        "toolIds": [
+          "hubspot",
+          "stripe",
+          "zendesk",
+          "slack"
+        ],
+        "actions": [
+          "Prepare customer record",
+          "Review subscription start"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "customer-handoff",
+        "name": "Sales-to-success handoff",
+        "purpose": "Sales-to-success handoff for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "success-1",
+        "ownerId": "person-142",
+        "reviewerIds": [
+          "person-141"
+        ],
+        "toolIds": [
+          "hubspot",
+          "resend",
+          "asana"
+        ],
+        "actions": [
+          "Review account context",
+          "Prepare customer acknowledgement"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "subscription-cancellation",
+        "name": "Subscription cancellation",
+        "purpose": "Subscription cancellation for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "support-1",
+        "ownerId": "person-162",
+        "reviewerIds": [
+          "person-161"
+        ],
+        "toolIds": [
+          "stripe",
+          "zendesk",
+          "slack"
+        ],
+        "actions": [
+          "Research cancellation policy",
+          "Request exception approval",
+          "Verify cancellation"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "original-payment-refund",
+        "name": "Original-payment refund",
+        "purpose": "Original-payment refund for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "finance-1",
+        "ownerId": "person-182",
+        "reviewerIds": [
+          "person-181"
+        ],
+        "toolIds": [
+          "stripe",
+          "zendesk"
+        ],
+        "actions": [
+          "Review refund eligibility",
+          "Approve refund",
+          "Reconcile uncertain effect"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "store-credit-review",
+        "name": "Store-credit review",
+        "purpose": "Store-credit review for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "finance-1",
+        "ownerId": "person-182",
+        "reviewerIds": [
+          "person-181"
+        ],
+        "toolIds": [
+          "stripe",
+          "square",
+          "zendesk"
+        ],
+        "actions": [
+          "Review customer choice",
+          "Approve bounded credit"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "quote-exception",
+        "name": "Quote discount exception",
+        "purpose": "Quote discount exception for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "sales-1",
+        "ownerId": "person-102",
+        "reviewerIds": [
+          "person-101"
+        ],
+        "toolIds": [
+          "hubspot",
+          "stripe",
+          "slack"
+        ],
+        "actions": [
+          "Prepare exact quote",
+          "Review discount exception"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "renewal-preparation",
+        "name": "Renewal preparation",
+        "purpose": "Renewal preparation for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "success-1",
+        "ownerId": "person-142",
+        "reviewerIds": [
+          "person-141"
+        ],
+        "toolIds": [
+          "stripe",
+          "hubspot",
+          "gmail"
+        ],
+        "actions": [
+          "Review renewal terms",
+          "Approve customer draft"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "collections-followup",
+        "name": "Invoice follow-up",
+        "purpose": "Invoice follow-up for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "finance-1",
+        "ownerId": "person-182",
+        "reviewerIds": [
+          "person-181"
+        ],
+        "toolIds": [
+          "stripe",
+          "gmail",
+          "slack"
+        ],
+        "actions": [
+          "Check invoice status",
+          "Review reminder"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "credit-hold",
+        "name": "Credit hold review",
+        "purpose": "Credit hold review for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "finance-1",
+        "ownerId": "person-182",
+        "reviewerIds": [
+          "person-181"
+        ],
+        "toolIds": [
+          "stripe",
+          "hubspot",
+          "slack"
+        ],
+        "actions": [
+          "Check dispute exclusions",
+          "Approve hold"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "billing-reconciliation",
+        "name": "Billing reconciliation",
+        "purpose": "Billing reconciliation for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "finance-1",
+        "ownerId": "person-182",
+        "reviewerIds": [
+          "person-181"
+        ],
+        "toolIds": [
+          "stripe",
+          "hubspot",
+          "zendesk"
+        ],
+        "actions": [
+          "Compare source records",
+          "Review proposed correction"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "support-escalation",
+        "name": "Support escalation",
+        "purpose": "Support escalation for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "support-1",
+        "ownerId": "person-162",
+        "reviewerIds": [
+          "person-161"
+        ],
+        "toolIds": [
+          "zendesk",
+          "hubspot",
+          "pagerduty"
+        ],
+        "actions": [
+          "Classify case",
+          "Review customer response"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "incident-communications",
+        "name": "Incident communications",
+        "purpose": "Incident communications for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "it-1",
+        "ownerId": "person-082",
+        "reviewerIds": [
+          "person-081"
+        ],
+        "toolIds": [
+          "pagerduty",
+          "datadog",
+          "slack",
+          "gmail"
+        ],
+        "actions": [
+          "Read incident evidence",
+          "Approve external notice"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "employee-joiner",
+        "name": "Employee joiner",
+        "purpose": "Employee joiner for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "people-1",
+        "ownerId": "person-202",
+        "reviewerIds": [
+          "person-201"
+        ],
+        "toolIds": [
+          "bamboohr",
+          "okta",
+          "jira"
+        ],
+        "actions": [
+          "Prepare standard access",
+          "Review privileged role"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "employee-mover",
+        "name": "Employee role change",
+        "purpose": "Employee role change for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "people-1",
+        "ownerId": "person-202",
+        "reviewerIds": [
+          "person-201"
+        ],
+        "toolIds": [
+          "bamboohr",
+          "okta",
+          "asana"
+        ],
+        "actions": [
+          "Compare access changes",
+          "Review additions"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "employee-leaver",
+        "name": "Employee leaver",
+        "purpose": "Employee leaver for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "people-1",
+        "ownerId": "person-202",
+        "reviewerIds": [
+          "person-201"
+        ],
+        "toolIds": [
+          "bamboohr",
+          "okta",
+          "slack"
+        ],
+        "actions": [
+          "Approve deprovisioning",
+          "Verify access removal"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "license-reclaim",
+        "name": "Inactive license review",
+        "purpose": "Inactive license review for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "it-1",
+        "ownerId": "person-082",
+        "reviewerIds": [
+          "person-081"
+        ],
+        "toolIds": [
+          "okta",
+          "google-sheets",
+          "slack"
+        ],
+        "actions": [
+          "Notify owner",
+          "Review seat reclamation"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "access-review",
+        "name": "Quarterly access review",
+        "purpose": "Quarterly access review for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "security-1",
+        "ownerId": "person-062",
+        "reviewerIds": [
+          "person-061"
+        ],
+        "toolIds": [
+          "okta",
+          "github",
+          "google-drive"
+        ],
+        "actions": [
+          "Collect access evidence",
+          "Review exceptions"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "security-questionnaire",
+        "name": "Security questionnaire",
+        "purpose": "Security questionnaire for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "security-1",
+        "ownerId": "person-062",
+        "reviewerIds": [
+          "person-061"
+        ],
+        "toolIds": [
+          "notion",
+          "box",
+          "asana"
+        ],
+        "actions": [
+          "Retrieve approved answers",
+          "Review missing evidence"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "vendor-onboarding",
+        "name": "Vendor onboarding",
+        "purpose": "Vendor onboarding for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "finance-1",
+        "ownerId": "person-182",
+        "reviewerIds": [
+          "person-181"
+        ],
+        "toolIds": [
+          "asana",
+          "docusign",
+          "box"
+        ],
+        "actions": [
+          "Review vendor record",
+          "Approve agreement"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "purchase-review",
+        "name": "Purchase request review",
+        "purpose": "Purchase request review for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "finance-1",
+        "ownerId": "person-182",
+        "reviewerIds": [
+          "person-181"
+        ],
+        "toolIds": [
+          "asana",
+          "google-sheets",
+          "slack"
+        ],
+        "actions": [
+          "Check budget",
+          "Review purchase request"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "contract-renewal",
+        "name": "Vendor contract renewal",
+        "purpose": "Vendor contract renewal for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "legal-1",
+        "ownerId": "person-222",
+        "reviewerIds": [
+          "person-221"
+        ],
+        "toolIds": [
+          "docusign",
+          "google-calendar",
+          "asana"
+        ],
+        "actions": [
+          "Review renewal window",
+          "Approve negotiation brief"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "contract-amendment",
+        "name": "Contract amendment",
+        "purpose": "Contract amendment for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "legal-1",
+        "ownerId": "person-222",
+        "reviewerIds": [
+          "person-221"
+        ],
+        "toolIds": [
+          "docusign",
+          "hubspot",
+          "box"
+        ],
+        "actions": [
+          "Check exact counterparty",
+          "Review amendment"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "release-approval",
+        "name": "Release approval",
+        "purpose": "Release approval for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "engineering-1",
+        "ownerId": "person-022",
+        "reviewerIds": [
+          "person-021"
+        ],
+        "toolIds": [
+          "github",
+          "jira",
+          "slack"
+        ],
+        "actions": [
+          "Check required test evidence",
+          "Review release"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "change-review",
+        "name": "Infrastructure change review",
+        "purpose": "Infrastructure change review for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "it-1",
+        "ownerId": "person-082",
+        "reviewerIds": [
+          "person-081"
+        ],
+        "toolIds": [
+          "aws",
+          "github",
+          "pagerduty"
+        ],
+        "actions": [
+          "Prepare scoped change",
+          "Review rollback plan"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "service-recovery",
+        "name": "Service recovery",
+        "purpose": "Service recovery for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "it-1",
+        "ownerId": "person-082",
+        "reviewerIds": [
+          "person-081"
+        ],
+        "toolIds": [
+          "datadog",
+          "pagerduty",
+          "slack"
+        ],
+        "actions": [
+          "Inspect incident state",
+          "Review recovery action"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "data-export",
+        "name": "Customer data export",
+        "purpose": "Customer data export for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "security-1",
+        "ownerId": "person-062",
+        "reviewerIds": [
+          "person-061"
+        ],
+        "toolIds": [
+          "hubspot",
+          "box",
+          "zendesk"
+        ],
+        "actions": [
+          "Verify request scope",
+          "Approve recipient"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "customer-health",
+        "name": "Customer health review",
+        "purpose": "Customer health review for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "success-1",
+        "ownerId": "person-142",
+        "reviewerIds": [
+          "person-141"
+        ],
+        "toolIds": [
+          "hubspot",
+          "stripe",
+          "zendesk"
+        ],
+        "actions": [
+          "Review account signals",
+          "Approve outreach"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "campaign-brief",
+        "name": "Campaign preparation",
+        "purpose": "Campaign preparation for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "marketing-1",
+        "ownerId": "person-122",
+        "reviewerIds": [
+          "person-121"
+        ],
+        "toolIds": [
+          "notion",
+          "hubspot",
+          "asana"
+        ],
+        "actions": [
+          "Prepare campaign brief",
+          "Review claims"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "creative-publication",
+        "name": "Creative publication",
+        "purpose": "Creative publication for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "marketing-1",
+        "ownerId": "person-122",
+        "reviewerIds": [
+          "person-121"
+        ],
+        "toolIds": [
+          "google-drive",
+          "asana",
+          "slack"
+        ],
+        "actions": [
+          "Check asset ownership",
+          "Approve publication"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "candidate-scheduling",
+        "name": "Candidate scheduling",
+        "purpose": "Candidate scheduling for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "people-1",
+        "ownerId": "person-202",
+        "reviewerIds": [
+          "person-201"
+        ],
+        "toolIds": [
+          "bamboohr",
+          "google-calendar",
+          "gmail"
+        ],
+        "actions": [
+          "Check authorized availability",
+          "Review invitation"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "business-report",
+        "name": "Executive business report",
+        "purpose": "Executive business report for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "executive-1",
+        "ownerId": "person-002",
+        "reviewerIds": [
+          "person-001"
+        ],
+        "toolIds": [
+          "google-sheets",
+          "hubspot",
+          "stripe"
+        ],
+        "actions": [
+          "Read scoped metrics",
+          "Review report"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      },
+      {
+        "id": "compliance-documents",
+        "name": "Compliance document sharing",
+        "purpose": "Compliance document sharing for FetchSandbox, with exact scope, an independent review where required, and explicit outcome checks.",
+        "teamId": "security-1",
+        "ownerId": "person-062",
+        "reviewerIds": [
+          "person-061"
+        ],
+        "toolIds": [
+          "box",
+          "zendesk",
+          "gmail"
+        ],
+        "actions": [
+          "Select approved document",
+          "Approve external sharing"
+        ],
+        "state": "declared",
+        "executionBinding": null
+      }
+    ]
+  }
+}

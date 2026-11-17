@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { readFile,lstat } from 'node:fs/promises';
 import { resolve,sep } from 'node:path';
 export const connectorProofSources=Object.freeze([
+  "app/api/workspace/agents/route.ts",
   "app/api/durable/connectors/route.ts",
   "app/api/durable/workflows/route.ts",
   "app/api/workspace/enquiries/route.ts",
@@ -85,6 +86,9 @@ export const connectorProofSources=Object.freeze([
   "lib/workspace/cloud-owner-review-schema.sql",
   "lib/workspace/cloud-project-schema.sql",
   "lib/workspace/identity.ts",
+  "lib/workspace/connector-member-access.ts",
+  "lib/workspace/connector-member-access-migration.ts",
+  "lib/workspace/connector-member-access-schema.sql",
   "lib/workspace/installed-tenant-fixture.ts",
   "lib/workspace/membership-authority-schema.sql",
   "lib/workspace/membership-authority.ts",
@@ -112,6 +116,9 @@ export const connectorProofSources=Object.freeze([
   "scripts/connector-proof-sources.ts",
   "scripts/connector-proof-worker.ts",
   "scripts/connector-proof.ts",
+  "scripts/connector-member-proof.ts",
+  "scripts/owned-python-fixture.ts",
+  "scripts/owned-connector-twin-lease.ts",
   "scripts/connector-twin.py",
   "scripts/current-proof-source-registry.mjs",
   "scripts/discovery-installed-source-contract.mjs",

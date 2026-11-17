@@ -2,6 +2,8 @@ import { randomBytes } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { ControlError, type Actor } from "../durable/contracts";
 import { transaction } from "../durable/database";
+import {connectorRoutingIdentity} from "../connectors/catalog";
+import {memberConnectorAllowed} from "./connector-member-access";
 import { authorize, tokenHash } from "../durable/service";
 export interface AgentInput {
   id: string;
@@ -49,20 +51,27 @@ export function parseAgent(v: Record<string, unknown>): AgentInput {
 }
 export async function agentDirectory(db: Pool, actor: Actor) {
   return transaction(db, actor.orgId, async (c) => {
-    await authorize(c, actor, ["operator"]);
+    await connectorRoutingIdentity(c, actor, ["operator"]);
+    const canManage=await memberConnectorAllowed(c,actor.orgId,actor.subject);
     const agents = (
       await c.query(
         "SELECT a.id,a.active,a.tools,a.action_limit,a.reserved,p.name,p.owner,p.role,p.connector FROM ll_agents a LEFT JOIN ll_agent_profiles p ON p.org_id=a.org_id AND p.agent_id=a.id WHERE a.org_id=$1 ORDER BY a.id",
         [actor.orgId],
       )
     ).rows;
-    const owners = (
+    const visible=[];
+    for(const agent of agents){
+      if(canManage){visible.push(agent);continue;}
+      const scopes=(await c.query("SELECT binding_id,contact_id,recipient FROM ll_connector_scopes WHERE org_id=$1 AND active=true",[actor.orgId])).rows;
+      for(const scope of scopes)if(await memberConnectorAllowed(c,actor.orgId,actor.subject,{operation:"read",agentId:agent.id,connector:agent.connector==="crm_twin"?"crm":agent.connector==="email_twin"?"email":"discount",bindingId:scope.binding_id,contactId:scope.contact_id,recipient:scope.recipient})){visible.push(agent);break;}
+    }
+    const owners = canManage ? (
       await c.query(
         "SELECT email,name FROM ll_members WHERE org_id=$1 AND active=true ORDER BY name",
         [actor.orgId],
       )
-    ).rows;
-    return { agents, owners };
+    ).rows : [];
+    return { agents:visible, owners, canManage };
   });
 }
 export async function registerAgent(

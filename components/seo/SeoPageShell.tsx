@@ -17,7 +17,7 @@ export function SeoPageShell({
   title,
   description,
   stats,
-  primaryCta = { href: "/control-plane", label: "Explore the product tour" },
+  primaryCta = { href: "/platform", label: "Product overview" },
   secondaryCta = { href: "/#demo", label: "Book a demo" },
   faq,
   children,
@@ -97,10 +97,10 @@ export function SeoPageShell({
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
-              href="/control-plane"
+              href="/platform"
               className={marketingPrimaryButton}
             >
-              Explore the product tour <ArrowRight className="h-4 w-4" />
+              Product overview <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/#demo"
