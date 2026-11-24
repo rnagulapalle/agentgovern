@@ -7,18 +7,22 @@ import { SITE } from "@/lib/site";
 const UPDATED = new Date("2026-10-04");
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const posts = listNewsPosts();
+  const articleDates = posts.map(post => Date.parse(post.frontmatter.updated ?? post.frontmatter.published))
+    .filter(Number.isFinite);
+  const blogModified = new Date(Math.max(UPDATED.getTime(), ...articleDates));
   const pages: MetadataRoute.Sitemap = AGENTGOVERN_SITEMAP_PATHS.map((path) => ({
     url: `${SITE.url}${path === "/" ? "" : path}`,
-    lastModified: UPDATED,
+    lastModified: path === "/blog" ? blogModified : UPDATED,
     changeFrequency: path === "/" ? ("weekly" as const) : ("monthly" as const),
     priority: path === "/" ? 1 : path === "/platform" ? 0.85 : 0.75,
   }));
 
   // News articles are content-driven: enumerate from the markdown files so the
   // sitemap stays in sync as posts ship (no need to hardcode slugs here).
-  const articles: MetadataRoute.Sitemap = listNewsPosts().map((post) => ({
+  const articles: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${SITE.url}${newsPath(post.slug)}`,
-    lastModified: new Date(post.frontmatter.published),
+    lastModified: new Date(post.frontmatter.updated ?? post.frontmatter.published),
     changeFrequency: "monthly" as const,
     priority: 0.7,
   }));

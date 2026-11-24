@@ -113,6 +113,7 @@ export function NewsArticleShell({
   title,
   description,
   published,
+  updated,
   category,
   relatedGuide,
   children,
@@ -120,6 +121,7 @@ export function NewsArticleShell({
   title: string;
   description: string;
   published: string;
+  updated?: string;
   category: string;
   relatedGuide?: string;
   children: React.ReactNode;
@@ -133,6 +135,7 @@ export function NewsArticleShell({
         <div className="flex flex-wrap items-center gap-3">
           <NewsCategoryBadge category={category} />
           <time className="text-[12px] text-faint">{published}</time>
+          {updated && <time dateTime={updated} className="text-[12px] text-faint">Updated {updated}</time>}
         </div>
         <h1 className="marketing-page-title">
           {title}
