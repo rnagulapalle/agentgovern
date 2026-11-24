@@ -1,55 +1,80 @@
 ---
-title: "Agent action, execution, and output controls are different"
-description: "A clear framework for controlling what an AI agent may do, how the work runs, and what result can be released."
+title: "Evaluating AI agent action controls, audit trails and recovery"
+description: "What to check before an AI agent writes or sends: authorization, enforcement, audit records and recovery from uncertain outcomes."
 published: "2026-09-30"
+updated: "2026-11-24"
 category: governance
-tags: agent action control, agent execution control, agent output control, AI approvals, agent policy engine
-relatedGuide: /agent-governance-demo
+tags: "AI agent action controls, AI agent audit trail, AI agent recovery, agent control plane, human approval, idempotency"
+relatedGuide: /platform
 ---
 
-Teams often put every agent safeguard under one label: guardrails. That makes architecture and ownership harder than they need to be.
+AI agent action controls decide whether a specific agent may perform a specific write or send, on whose behalf, against the current state of the target, before the call runs. A useful evaluation checks three things. A deny should actually stop the call, the audit trail should record what happened, and recovery should handle outcomes nobody can confirm.
 
-There are three separate decisions to make: **what the agent may do, how the work may run, and what result may leave the system**. Each needs a different control.
+## Three controls that are easy to confuse
 
-## Action controls: what may happen
+An agent control plane is an architectural layer for evaluating authority and supervising consequential actions. Keep three controls apart inside it:
 
-An action is one proposed operation against a tool or system. Examples include sending an email, updating a CRM field, issuing a refund, exporting a file, or creating a cloud resource.
+- Action authorization: may this agent take this action on this target now?
+- Run supervision: is the run on track, and who steps in if not?
+- Output checks: is the generated content acceptable?
 
-An action policy uses the agent's identity and the current business context to return a decision: allow when the action is within the role, hold when a named person needs to approve it, or block when it falls outside authority.
+An output check can pass while the action it feeds is still unauthorized. For background, read [what an agent control plane is](/blog/2026-09-30-what-is-an-agent-control-plane).
 
-A useful decision record includes the policy version, relevant facts, reason, and resulting action. “The model decided” is not an audit record.
+## Decision criteria
 
-## Execution controls: how the run behaves
+A policy decision needs an enforcement point. A dashboard can't stop a call, and neither can a model's promise. [Microsoft's agent controls documentation](https://learn.microsoft.com/en-us/azure/foundry/agent-controls/overview) covers a preview product. It describes runtime policy evaluation and says the runtime or application must enforce returned decisions.
 
-An execution is the whole attempt to complete a task. It may include planning, multiple tool calls, retries, agent-to-agent handoffs, and changes across several systems.
+Ask how a tool handles:
 
-Execution controls set step and tool limits, delegation rules, time and spending budgets, pause conditions, and stop behavior. This is where multi-agent systems need more than individual allow lists. The control plane needs a view of the entire run and the authority passed between participants.
+- Target: the exact system, record or recipient.
+- Permissions: what this agent may do, and for whom.
+- Action: the exact request and its parameters.
+- Approval: who approved it, and whether the approval is bound to that exact request.
+- Current state: whether it is rechecked at execution, not only at approval.
+- Uncertain effects: what happens when nobody knows whether the action worked.
 
-## Output controls: what may be released
+## A hypothetical uncertain outcome
 
-An output is the result delivered to a person, system, or external party. It might be a customer response, report, code change, data export, or structured API payload.
+In this hypothetical example, an agent sends a customer message. The provider accepts it, but the response is lost and the agent sees a timeout. Sending again could duplicate the message. Accepted also does not mean delivered.
 
-Output controls inspect the completed result before release. They can detect sensitive data, require citations, enforce a destination rule, redact prohibited fields, or hold the result for review.
+Idempotency keys help only within each provider's rules. [Stripe's idempotency docs](https://docs.stripe.com/api/idempotent_requests) say API v1 caches the first result, including 500 errors, and that key retention and parameter matching matter. API v2 differs. Don't assume any provider or key guarantees exactly one effect.
 
-Output checks should preserve lineage. A reviewer needs to know which inputs, tools, policies, and execution produced the result.
+Blind retries are not safe in every case, and reading state back isn't either. A safer pattern marks the outcome as unknown, pauses automatic sends for that action and routes it to a defined reconciliation step.
 
-## One workflow, three decisions
+## What the audit trail should hold
 
-Imagine a sales agent preparing a renewal offer:
+- The actor, and who it acted for
+- The exact request
+- The authorization or policy version
+- The state version that was checked
+- Every tool attempt
+- What the provider reported
+- Unknown or conflicting outcomes
+- The reconciliation decision, and who made it
 
-1. It reads the account and drafts a 25% discount.
-2. The action policy sees that the role can offer only 10% and holds the send.
-3. The execution pauses while a sales manager reviews that exact offer.
-4. The manager approves 15%, so the agent revises the draft.
-5. The output check removes a private email address from an internal note.
-6. The approved message is sent, and the complete chain is recorded.
+Ordinary logs are not cryptographically tamper-proof by default. Ask how integrity is protected.
 
-The action, execution, and output controls are connected, but they are not interchangeable. Separating them gives product teams clearer APIs and security teams clearer evidence.
+## Recovery is a new action
 
-## A practical ownership model
+Compensation, such as a correction or a refund, is a new consequential action. It needs its own authorization and can fail in its own ways. It is not a guaranteed undo. There is more in [agent permissions, approvals and recovery](/blog/2026-09-30-agent-permissions-approvals-recovery).
 
-Business owners define authority and approval thresholds. Security defines access boundaries and prohibited data flows. Platform teams operate the execution layer. Compliance defines evidence and retention needs.
+## What LoopLabs demonstrates today
 
-The control plane brings those decisions into one enforceable record. Each team can own its policy without rebuilding the agent workflow around every rule.
+- Public [prepared workflow examples](/examples) model deterministic state transitions locally in the browser.
+- Separate invited workspaces show bounded, persisted approval, execution and reconciliation proofs against private provider twins and controlled fixtures. Access requires an invitation, and public visitors cannot run them.
+- None of this proves general live customer integrations, arbitrary workflow building, industry-grade reliability or cryptographic audit records. These are not production features, and LoopLabs is not a general security platform.
+- Founder-led work starts by scoping one workflow and evaluating fit. It is not a production guarantee.
 
-[See the three control points in the LoopLabs product tour](/control-plane).
+See the [product overview](/platform), or [bring one workflow](/contact-sales).
+
+## FAQ
+
+### What evidence should I ask a vendor for?
+
+Ask for evidence on one specific write or send workflow. That means a deny that stops the call, approval bound to the exact request, state rechecked at execution and the record left behind when the outcome is unknown.
+
+### Does a retry fix a lost response?
+
+Not reliably. The result depends on the provider, the API version and how keys are handled. Treat the outcome as unknown until it is reconciled.
+
+If one of your agent workflows writes or sends something that matters, start there. [Bring one workflow](/contact-sales), and we can scope it with you and check whether it fits.

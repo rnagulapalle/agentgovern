@@ -1,58 +1,54 @@
 ---
-title: "A practical permissions model for AI agents"
-description: "Treat every agent like a service identity with an owner, role, scoped access, approval thresholds, and a tested recovery path."
+title: "Human approval for AI agent tool calls: what CISOs should verify"
+description: "What human approval for an AI agent tool call should authorize, what it cannot prove, and which controls security teams should test."
 published: "2026-09-30"
+updated: "2026-11-24"
 category: governance
-tags: AI agent permissions, agent identity, human approval workflow, least privilege, agent recovery
-relatedGuide: /ai-governance-for-mid-size-companies
+tags: "human approval, AI agent tool calls, AI agent permissions, agent control plane, idempotency"
+relatedGuide: /platform
 ---
 
-An AI agent should not inherit every permission of the employee who started it. It may run longer, act faster, delegate work, and touch more systems than the person expects.
+Human approval for AI agent tool calls should authorize one exact request. That means a named target, payload, amount and scope, approved by the right person, valid for a limited time, and checked against current state before execution. Approval cannot prove what the provider did. Verify binding, enforcement, replay handling and unknown-outcome reconciliation.
 
-A safer model treats each agent like a service identity with employee-like accountability: a role, an owner, explicit authority, and a record of every important action.
+## Approval needs an enforcement point
 
-## Give the agent a durable identity
+An [agent control plane](/blog/2026-09-30-what-is-an-agent-control-plane) is an architectural layer that evaluates authority and supervises consequential actions. A policy decision only matters if something in the execution path enforces it. A dashboard or a model promise to wait is not enforcement.
 
-The identity should include a unique agent ID, a human or team owner, a business purpose, an environment, an approved model and tool set, and review dates. This makes it possible to suspend one agent without disabling a whole application or user account.
+Microsoft's [Foundry agent controls documentation](https://learn.microsoft.com/en-us/azure/foundry/agent-controls/overview) describes runtime policy evaluation, currently in preview. It also says the application or runtime must enforce the decision that comes back. Ask any vendor where its enforcement point sits and what happens when a call goes around it.
 
-## Separate access from authority
+## What to verify
 
-Access answers whether the agent can reach a system. Authority answers what it may do once it gets there.
+- Exact request binding. Approval should attach to the specific request, not to a session or an agent. If the payload changes, the approval no longer applies.
+- Scoped AI agent permissions. Target, fields and amount limits should be explicit. "Can update CRM" is too broad for a consequential write.
+- Named approver. Record who approved. Where separation of duties is required, the requester and the approver should be different identities.
+- Expiry and revalidation. Approvals should expire, and the target's current state should be rechecked right before execution.
+- Replay handling. One approval should not authorize repeated sends.
+- Unknown outcomes. A timeout is neither success nor failure, so it needs a defined reconciliation path.
 
-An agent may need read access to all open support tickets while being allowed to close only low-risk tickets. It may need access to a payment API while requiring approval for every transaction above a threshold.
+## A hypothetical stale approval
 
-Keep three layers explicit:
+This example is made up. An agent proposes changing the billing contact on one CRM account, and a manager approves it. Before the agent runs, someone else edits that record. The agent then executes the approved payload and overwrites the newer value. The approval was real, but the record it described had changed. A current-state check would have stopped the write and asked for a fresh approval.
 
-- **Resource scope:** systems, databases, APIs, files, and model endpoints.
-- **Action scope:** read, create, update, send, delete, approve, and delegate.
-- **Conditions:** amount, data class, destination, freshness, time window, and environment.
+## What approval cannot prove
 
-## Bind approvals to one request
+Approval authorizes a request. It cannot tell you whether the provider applied it once, applied it twice or failed partway through. Idempotency helps, but it is provider-specific. [Stripe's idempotency documentation](https://docs.stripe.com/api/idempotent_requests) explains that in API v1 the first response for a key is cached, even a 500. Keys are retained only for a limited time, and parameters are compared on reuse. API v2 works differently. Don't assume every provider or key guarantees a single effect. The post on [action, execution and output controls](/blog/2026-09-30-action-execution-output-controls) covers where these checks sit.
 
-Human approval should describe the exact action being authorized. The request should show the agent, target, affected data, proposed change, policy reason, and expiration time.
+## What to ask a vendor
 
-When the context changes, the approval should expire. A manager approving a $600 refund should not authorize a later $900 refund or a different customer record.
+Choose one specific write or send workflow. Ask the vendor to show five things against it: a changed payload being rejected, an expired approval being refused, a stale record forcing revalidation, a retry that does not create a second effect, and a timeout that lands in reconciliation.
 
-## Control delegation
+## What LoopLabs demonstrates today
 
-Multi-agent workflows pass work and authority from one agent to another. Record each handoff. The receiving agent should get the smallest scope needed for that task, for a limited time.
+The public [prepared workflow examples](/examples) model deterministic state transitions locally in the browser. Separate workspaces hold bounded, persisted approval, execution and reconciliation proofs against private provider twins and controlled fixtures. These workspaces require an invitation. Neither proves general live customer integrations, arbitrary workflow building, industry-grade reliability or cryptographic audit records. LoopLabs is not a general security platform. Founder-led work starts by scoping one workflow and evaluating fit, and it is not a production guarantee. See the [product overview](/platform) or [bring one workflow](/contact-sales).
 
-Delegation must never increase authority. A research agent that cannot send email should not gain that ability by handing work to a communications agent unless a policy explicitly permits the handoff and its purpose.
+## Does human approval make an agent action safe?
 
-## Design recovery before production
+No. It authorizes one request. Safety also depends on enforcement, current-state checks, replay handling and reconciliation.
 
-For every write action, decide how the system will review and repair an unwanted change.
+## Is an idempotency key enough to prevent duplicate effects?
 
-Store the prior state or a reliable version reference. On failure, suspend the agent, stop queued work, compare the current version, and prepare a recovery plan. Do not overwrite newer human work. Record the repair as a new change so the audit trail remains complete.
+Not by itself. Behavior varies by provider and API version, and keys expire.
 
-Some actions cannot be reversed. Messages, external disclosures, and completed payments need containment and human follow-up. Label those actions clearly before an agent receives permission to perform them.
+## Bring one workflow
 
-## Review the role like an employee role
-
-Review agent access when the owner changes, the workflow expands, a new model or tool is added, or the agent has not run for a defined period. Remove unused permissions and expire temporary grants.
-
-The goal is to make authority visible, bounded, and recoverable before automation reaches production scale.
-
-[Explore the LoopLabs product overview](/platform#workflow-boundaries) to see agent identities, roles, permissions, approvals, and recovery together.
-
-For a concrete starting point, read [what an AI CRM workflow pilot involves](/blog/2026-10-02-ai-crm-workflow-pilot): one record update, a named owner, and agreed tests for approval and uncertain outcomes.
+If you have one consequential write or send workflow you want examined, [bring it to us](/contact-sales). We'll scope it together and see whether it fits.

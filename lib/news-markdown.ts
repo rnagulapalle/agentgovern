@@ -7,6 +7,7 @@ export type NewsFrontmatter = {
   title: string;
   description: string;
   published: string;
+  updated?: string;
   category: NewsCategory;
   tags: string[];
   relatedGuide?: string;
@@ -57,12 +58,20 @@ export function loadNewsPost(slug: string): NewsPost | null {
     .map((t) => t.trim())
     .filter(Boolean);
 
+  const published = frontmatter.published ?? "2026-01-01";
+  const candidate = frontmatter.updated;
+  const updated = candidate && /^\d{4}-\d{2}-\d{2}$/.test(candidate)
+    && Number.isFinite(Date.parse(candidate))
+    && new Date(candidate).toISOString().slice(0, 10) === candidate
+    && candidate >= published ? candidate : undefined;
+
   return {
     slug,
     frontmatter: {
       title: frontmatter.title ?? slug,
       description: frontmatter.description ?? "",
-      published: frontmatter.published ?? "2026-01-01",
+      published,
+      updated,
       category: (frontmatter.category as NewsCategory) ?? "governance",
       tags,
       relatedGuide: frontmatter.relatedGuide,
@@ -74,7 +83,9 @@ export function loadNewsPost(slug: string): NewsPost | null {
 export function listNewsPosts(): NewsPost[] {
   return listNewsSlugs()
     .map((slug) => loadNewsPost(slug))
-    .filter((p): p is NewsPost => p !== null);
+    .filter((p): p is NewsPost => p !== null)
+    .sort((a, b) => (b.frontmatter.updated ?? b.frontmatter.published)
+      .localeCompare(a.frontmatter.updated ?? a.frontmatter.published));
 }
 
 export function newsPath(slug: string) {

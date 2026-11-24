@@ -32,7 +32,7 @@ export default async function BlogArticlePage({ params }: { params: Params }) {
     description: post.frontmatter.description,
     path: newsPath(slug),
     datePublished: post.frontmatter.published,
-    dateModified: post.frontmatter.published,
+    dateModified: post.frontmatter.updated ?? post.frontmatter.published,
   });
   const breadcrumb = {
     "@context": "https://schema.org",
@@ -51,6 +51,7 @@ export default async function BlogArticlePage({ params }: { params: Params }) {
         title={post.frontmatter.title}
         description={post.frontmatter.description}
         published={post.frontmatter.published}
+        updated={post.frontmatter.updated}
         category={post.frontmatter.category}
         relatedGuide={post.frontmatter.relatedGuide}
       >
